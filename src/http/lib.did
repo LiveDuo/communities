@@ -1,0 +1,17 @@
+
+type HttpRequest = record {
+    method : text;
+    url : text;
+    headers : vec record { text; text; };
+    body : blob;
+};
+
+type HttpResponse = record {
+    status_code : nat16;
+    headers : vec record { text; text; };
+    body : blob;
+};
+
+service : () -> {
+    http_request : (HttpRequest) -> (HttpResponse) query;
+}

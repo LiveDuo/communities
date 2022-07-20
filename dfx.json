@@ -1,0 +1,58 @@
+{
+  "canisters": {
+    "child": {
+      "package": "child",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --package  child --release",
+        "ic-cdk-optimizer target/wasm32-unknown-unknown/release/child.wasm -o target/wasm32-unknown-unknown/release/child_opt.wasm"
+      ],
+      "candid": "src/child/child.did",
+      "wasm": "target/wasm32-unknown-unknown/release/child_opt.wasm",
+      "type": "custom"
+    },
+    "parent": {
+      "package": "parent",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --package  parent --release",
+        "ic-cdk-optimizer target/wasm32-unknown-unknown/release/parent.wasm -o target/wasm32-unknown-unknown/release/parent_opt.wasm"
+      ],
+      "candid": "src/parent/parent.did",
+      "wasm": "target/wasm32-unknown-unknown/release/parent_opt.wasm",
+      "type": "custom",
+      "dependencies": []
+    },
+    "ledger": {
+      "type": "custom",
+      "candid": "src/ledger/ledger.public.did",
+      "wasm": "src/ledger/ledger.wasm"
+    },
+    "cmc": {
+      "type": "custom",
+      "candid": "src/cycles/cmc.did",
+      "wasm": "src/cycles/cmc.wasm"
+    },
+    "utils": {
+      "main": "src/utils/main.mo",
+      "type": "motoko"
+    },
+    "http": {
+      "type": "rust",
+      "candid": "src/http/lib.did",
+      "package": "http"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "dfx": "0.10.1",
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,16 @@
+{
+  "name": "dfx_backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@dfinity/agent": "^0.11.2",
+    "@dfinity/principal": "^0.11.2",
+    "jest": "^28.1.0",
+    "node-fetch": "^2.6.7",
+    "tree-kill": "^1.2.2"
+  }
+}
