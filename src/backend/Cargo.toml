@@ -1,0 +1,19 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+ic-cdk = "0.4.0"
+ic-cdk-macros = "0.4.0"
+ic-types = "0.4.1"
+lazy_static = "1.4.0"
+serde = "1.0.140"
+hex = "0.4.3"
+libsecp256k1 = "0.6.0"
+easy-hasher = "2.2.1"
+candid = "0.7.15"

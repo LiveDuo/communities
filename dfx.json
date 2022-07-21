@@ -1,5 +1,14 @@
 {
   "canisters": {
+    "backend": {
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --package  backend --release",
+        "ic-cdk-optimizer target/wasm32-unknown-unknown/release/backend.wasm -o target/wasm32-unknown-unknown/release/backend_opt.wasm"
+      ],
+      "candid": "src/backend/backend.did",
+      "wasm": "target/wasm32-unknown-unknown/release/backend_opt.wasm",
+      "type": "custom"
+    },
     "child": {
       "package": "child",
       "build": [
