@@ -50,4 +50,4 @@ const actor = Actor.createActor(idlFactory, { agent, canisterId })
 	}
 })()
 
-// dfx canister call parent createBackendCanister '()' 
+// dfx canister call parent createChildCanister '()' 

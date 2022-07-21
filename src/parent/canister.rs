@@ -7,12 +7,6 @@ use candid::{CandidType, Principal};
 use serde::{Deserialize};
 
 use std::cell::RefCell;
-use std::collections::HashMap;
-
-
-const FRONTEND_WASM: &[u8] = std::include_bytes!("../../canisters/http.wasm");
-const BACKEND_WASM: &[u8] = std::include_bytes!("../../canisters/http.wasm");
-
 
 thread_local! {
 	static WASM: RefCell<Vec<u8>> = RefCell::new(Vec::new());
@@ -82,8 +76,8 @@ pub async fn commit_wasm_batch() {
 	});
 }
 
-#[ic_cdk_macros::update(name = "createBackendCanister")]
-#[candid_method(update, rename = "createBackendCanister")]
+#[ic_cdk_macros::update(name = "createChildCanister")]
+#[candid_method(update, rename = "createChildCanister")]
 pub async fn create_backend_canister() -> Result<Principal, String> {
 
 	let create_args = CreateCanisterArgs {
@@ -103,7 +97,9 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 	};
 
 	let wasm_bytes: Vec<u8> = WASM.with(|w| w.borrow_mut().clone());
-	// println!("Bytes {:?}", wasm_bytes.clone());
+	if wasm_bytes.is_empty() {
+		return Err(format!("WASM is not yet uploaded"))
+	}
 
 
 	let install_args = InstallCanisterArgs {
@@ -118,55 +114,19 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
 	}
 
-	Ok(create_result.canister_id)
-}
-
-
-#[ic_cdk_macros::update(name = "createFrontendCanister")]
-#[candid_method(update, rename = "createFrontendCanister")]
-pub async fn create_frontend_canister() -> Result<Principal, String> {
-
-	let create_args = CreateCanisterArgs {
-		settings: CreateCanisterSettings {
-			controllers: Some(vec![id(), caller()]),
-			compute_allocation: None,
-			memory_allocation: None,
-			freezing_threshold: None
-		}
-	};
-
-	let (create_result,): (CreateCanisterResult,) = match call::call_with_payment(
-		Principal::management_canister(), "create_canister", (create_args,), 200_000_000_000)
-	.await {
-		Ok(x) => x,
-		Err((code, msg)) => { return Err(format!("Create canister error: {}: {}", code as u8, msg)) }
-	};
-
-	let install_args = InstallCanisterArgs {
-		mode: InstallMode::Install,
-		canister_id: create_result.canister_id,
-		wasm_module: BACKEND_WASM.to_vec(),
-		arg: b" ".to_vec(),
-	};
-	
-	match call::call(Principal::management_canister(), "install_code", (install_args,),).await {
-		Ok(x) => x,
-		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
-	}
-
 	// node -e "console.log('<html><body><b>Welcome</b></body></html>\n'.split('').map(r => r.charCodeAt(0)).join(', '))"
-	// let content = vec![60, 104, 116, 109, 108, 62, 60, 98, 111, 100, 121, 62, 60, 98, 62, 87, 101, 108, 99, 111, 109, 101, 60, 47, 98, 62, 60, 47, 98, 111, 100, 121, 62, 60, 47, 104, 116, 109, 108, 62, 10];
-	// let store_args = StoreAssetArgs {
-	// 	key: "/index.html".to_owned(),
-	// 	content_type: "text/html".to_owned(),
-	// 	content_encoding: "identity".to_owned(),
-	// 	content: content,
-	// };
+	let content = vec![60, 104, 116, 109, 108, 62, 60, 98, 111, 100, 121, 62, 60, 98, 62, 87, 101, 108, 99, 111, 109, 101, 60, 47, 98, 62, 60, 47, 98, 111, 100, 121, 62, 60, 47, 104, 116, 109, 108, 62, 10];
+	let store_args = StoreAssetArgs {
+		key: "/index.html".to_owned(),
+		content_type: "text/html".to_owned(),
+		content_encoding: "identity".to_owned(),
+		content: content,
+	};
 
-	// match call::call(create_result.canister_id, "store", (store_args,),).await {
-	// 	Ok(x) => x,
-	// 	Err((code, msg)) => { return Err(format!("Store asset error: {}: {}", code as u8, msg)) }
-	// }
+	match call::call(create_result.canister_id, "store", (store_args,),).await {
+		Ok(x) => x,
+		Err((code, msg)) => { return Err(format!("Store asset error: {}: {}", code as u8, msg)) }
+	}
 
 	Ok(create_result.canister_id)
 }

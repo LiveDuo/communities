@@ -59,7 +59,7 @@ const getSignatureAndMessage = async (signer) => {
 
 const idlParentFactory = ({ IDL }) => {
 	return IDL.Service({
-    	'createBackendCanister' : IDL.Func([], [IDL.Variant({ 'Ok' : IDL.Principal, 'Err' : IDL.Text })], []),
+    	'createChildCanister' : IDL.Func([], [IDL.Variant({ 'Ok' : IDL.Principal, 'Err' : IDL.Text })], []),
 	})
 }
 
@@ -145,8 +145,8 @@ describe('Testing with done', () => {
 		// create parent actor
 		const actorParent = Actor.createActor(idlParentFactory, { agent, canisterId: canisterIds['parent'] })
 		
-		// create backend actor
-		const childPrincipalid = await actorParent.createBackendCanister().then(p => p.Ok.toString())
+		// create child actor
+		const childPrincipalid = await actorParent.createChildCanister().then(p => p.Ok.toString())
 		actorBackend = Actor.createActor(idlBackendFactory, { agent, canisterId: childPrincipalid })
 
 	})
