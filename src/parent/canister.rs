@@ -60,7 +60,6 @@ struct CreateCanisterResult { canister_id: Principal, }
 #[ic_cdk_macros::update(name = "create_batch")]
 #[candid_method(update, rename = "create_batch")]
 pub async fn create_batch(key: String) {
-	// TODO: implement replace
 	STATE.with(|c| {
 		(*c.borrow_mut()).insert(key.to_string(), Asset { data: vec![], temp: vec![] });
 	});
@@ -74,10 +73,8 @@ pub async fn append_chunk(key: String, append_bytes: Vec<u8>) {
 			Some(x) => x.temp.clone(),
 			None => vec![]
 		};
-
 		let asset: Asset = Asset { data: vec![], temp: [temp_bytes.as_slice(), append_bytes.as_slice()].concat() };
 		(*c.borrow_mut()).insert(key.to_string(), asset);
-
 	});
 }
 
@@ -89,8 +86,16 @@ pub async fn commit_batch(key: String) {
 			Some(x) => x.temp.clone(),
 			None => vec![]
 		};
-
 		let asset: Asset = Asset { data: bytes, temp: vec![] };
+		(*c.borrow_mut()).insert(key.to_string(), asset);
+	});
+}
+
+#[ic_cdk_macros::update(name = "store_batch")]
+#[candid_method(update, rename = "store_batch")]
+pub async fn store_batch(key: String, append_bytes: Vec<u8>) {
+	STATE.with(|c| {
+		let asset: Asset = Asset { data: append_bytes, temp: vec![] };
 		(*c.borrow_mut()).insert(key.to_string(), asset);
 	});
 }

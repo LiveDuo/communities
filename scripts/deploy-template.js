@@ -20,33 +20,47 @@ const idlFactory = ({ IDL }) => IDL.Service({
 	'create_batch': IDL.Func([IDL.Text], [], []),
 	'append_chunk': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
 	'commit_batch': IDL.Func([IDL.Text], [], []),
+	'store_batch': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
 })
 const actor = Actor.createActor(idlFactory, { agent, canisterId })
 
+const uploadFile = async (key, assetBuffer) => {
+	const chunksNumber = Math.ceil(assetBuffer.byteLength / SIZE_CHUNK)
+
+	if (chunksNumber === 1) {
+		console.log(`Storing ${key} batch...`)
+		await actor.store_batch(key, Array.from(assetBuffer))
+	} else {
+		const chunks = []
+
+		for (let i = 0; i < assetBuffer.byteLength / SIZE_CHUNK; i++) {
+			const startIndex = i * SIZE_CHUNK
+			chunks.push(assetBuffer.subarray(startIndex, startIndex + SIZE_CHUNK))
+		}
+		
+		try {
+			console.log(`Creating ${key} batch...`)
+			await actor.create_batch(key)
+	
+			console.log(`Appending ${key} chunk(s)...`)
+			for (let i = 0; i < chunks.length; i++) {
+				await actor.append_chunk(key, Array.from(chunks[i]))
+			}
+	
+			console.log(`Commiting ${key} batch...`)
+			await actor.commit_batch(key)
+	
+		} catch (e) {
+			console.error('error', e)
+		}
+	}
+}
 ; (async () => {
 	const wasm = await fs.readFile('./canisters/backend.wasm')
-
-	const chunks = []
-	for (let i = 0; i < wasm.byteLength / SIZE_CHUNK; i++) {
-		const startIndex = i * SIZE_CHUNK
-		chunks.push(wasm.subarray(startIndex, startIndex + SIZE_CHUNK))
-	}
-
-	try {
-		console.log('Creating wasm batch...')
-		await actor.create_batch('wasm')
-
-		console.log('Appending wasm chunk(s)...')
-		for (let i = 0; i < chunks.length; i++) {
-			await actor.append_chunk('wasm', Array.from(chunks[i]))
-		}
-
-		console.log('Commiting wasm batch...')
-		await actor.commit_batch('wasm')
-
-	} catch (e) {
-		console.error('error', e)
-	}
+	await uploadFile('wasm', wasm)
+	
+	const asset = await fs.readFile('./build/index.html')
+	await uploadFile('asset', asset)
 })()
 
 // dfx canister call parent createChildCanister '()' 
