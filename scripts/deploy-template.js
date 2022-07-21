@@ -73,6 +73,5 @@ const uploadFile = async (key, assetBuffer) => {
 	// -> create_assets_batch, append_assets_chunk, commit_assets_batch
 
 // EXTRA
-// 1. add prepare-wasm.sh
-// 2. remove install-code?
+// - include prepare-wasm.sh
 
