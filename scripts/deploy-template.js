@@ -17,10 +17,9 @@ const canisterId = 'rrkah-fqaaa-aaaaa-aaaaq-cai'
 const SIZE_CHUNK = 1024000 // one megabyte
 
 const idlFactory = ({ IDL }) => IDL.Service({
-	'upload_wasm': IDL.Func([IDL.Vec(IDL.Nat8)], [], []),
-	'create_wasm_batch': IDL.Func([], [], []),
-	'append_wasm_chunk': IDL.Func([IDL.Vec(IDL.Nat8)], [], []),
-	'commit_wasm_batch': IDL.Func([], [], []),
+	'create_batch': IDL.Func([IDL.Text], [], []),
+	'append_chunk': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
+	'commit_batch': IDL.Func([IDL.Text], [], []),
 })
 const actor = Actor.createActor(idlFactory, { agent, canisterId })
 
@@ -35,15 +34,15 @@ const actor = Actor.createActor(idlFactory, { agent, canisterId })
 
 	try {
 		console.log('Creating wasm batch...')
-		await actor.create_wasm_batch()
+		await actor.create_batch('wasm')
 
 		console.log('Appending wasm chunk(s)...')
 		for (let i = 0; i < chunks.length; i++) {
-			await actor.append_wasm_chunk(Array.from(chunks[i]))
+			await actor.append_chunk('wasm', Array.from(chunks[i]))
 		}
 
 		console.log('Commiting wasm batch...')
-		await actor.commit_wasm_batch()
+		await actor.commit_batch('wasm')
 
 	} catch (e) {
 		console.error('error', e)
@@ -52,3 +51,14 @@ const actor = Actor.createActor(idlFactory, { agent, canisterId })
 
 // dfx canister call parent createChildCanister '()' 
 // https://github.com/ORIGYN-SA/large_canister_deployer_internal/blob/master/chunker_appender/index.js
+
+
+// TODO
+// 1. need frontend build script
+// 2. add upload frontend assets (for forum)
+	// -> create_assets_batch, append_assets_chunk, commit_assets_batch
+
+// EXTRA
+// 1. add prepare-wasm.sh
+// 2. remove install-code?
+
