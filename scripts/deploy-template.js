@@ -51,3 +51,4 @@ const actor = Actor.createActor(idlFactory, { agent, canisterId })
 })()
 
 // dfx canister call parent createChildCanister '()' 
+// https://github.com/ORIGYN-SA/large_canister_deployer_internal/blob/master/chunker_appender/index.js
