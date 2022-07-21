@@ -1,6 +1,5 @@
 [workspace]
 members = [
     "src/parent",
-    "src/backend",
-    "src/http",
+    "src/backend"
 ]

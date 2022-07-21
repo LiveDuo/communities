@@ -60,7 +60,7 @@ const uploadFile = async (key, assetBuffer) => {
 	await uploadFile('wasm', wasm)
 	
 	const asset = await fs.readFile('./build/index.html')
-	await uploadFile('asset', asset)
+	await uploadFile('index.html', asset)
 })()
 
 // dfx canister call parent createChildCanister '()' 

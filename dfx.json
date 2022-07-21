@@ -43,11 +43,6 @@
     "utils": {
       "main": "src/utils/main.mo",
       "type": "motoko"
-    },
-    "http": {
-      "type": "rust",
-      "candid": "src/http/lib.did",
-      "package": "http"
     }
   },
   "defaults": {
