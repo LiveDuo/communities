@@ -1,17 +1,19 @@
 const fs = require('fs/promises')
 
+const path = require('path')
+
 const { Actor, HttpAgent } = require('@dfinity/agent')
 
 global.fetch = require('node-fetch')
 
-const agent = new HttpAgent({ host: 'http://localhost:8000' })
+// const agent = new HttpAgent({ host: 'http://localhost:8000' })
 
-if (process.env.NODE_ENV !== 'production') {
-	agent.fetchRootKey().catch(err => {
-		console.warn('Unable to fetch root key. Check to ensure that your local replica is running')
-		console.error(err)
-	})
-}
+// if (process.env.NODE_ENV !== 'production') {
+// 	agent.fetchRootKey().catch(err => {
+// 		console.warn('Unable to fetch root key. Check to ensure that your local replica is running')
+// 		console.error(err)
+// 	})
+// }
 
 const canisterId = 'rrkah-fqaaa-aaaaa-aaaaq-cai'
 const SIZE_CHUNK = 1024000 // one megabyte
@@ -22,7 +24,23 @@ const idlFactory = ({ IDL }) => IDL.Service({
 	'commit_batch': IDL.Func([IDL.Text], [], []),
 	'store_batch': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
 })
-const actor = Actor.createActor(idlFactory, { agent, canisterId })
+// const actor = Actor.createActor(idlFactory, { agent, canisterId })
+
+async function getFiles(dir, initial) {
+  let fileList = []
+	const rootFolder = initial ?? dir
+  const files = await fs.readdir(dir)
+  for (const file of files) {
+		const currentPath = path.join(dir, file)
+		const stat = await fs.stat(currentPath)
+    if (stat.isDirectory()) {
+			fileList = [...fileList, ...(await getFiles(currentPath, rootFolder))]
+    } else {
+			fileList.push(path.relative(rootFolder, currentPath))
+    }
+  }
+  return fileList
+}
 
 const uploadFile = async (key, assetBuffer) => {
 	const chunksNumber = Math.ceil(assetBuffer.byteLength / SIZE_CHUNK)
@@ -56,11 +74,19 @@ const uploadFile = async (key, assetBuffer) => {
 	}
 }
 ; (async () => {
-	const wasm = await fs.readFile('./canisters/backend.wasm')
-	await uploadFile('wasm', wasm)
+	// const wasm = await fs.readFile('./canisters/backend.wasm')
+	// await uploadFile('wasm', wasm)
 	
-	const asset = await fs.readFile('./build/index.html')
-	await uploadFile('index.html', asset)
+	const buildPath = path.join(__dirname, '..', 'build')
+	const assets = await getFiles(buildPath).then(r => r.filter(f => !f.endsWith('.DS_Store')))
+	// console.log(assets)
+
+	for (let asset of assets) {
+		const filepath = path.join(buildPath, asset)
+		const assetBuf = await fs.readFile(filepath)
+		console.log(path.basename(filepath), !!assetBuf)
+		// await uploadFile(path.basename(filepath), assetBuf)
+	}
 })()
 
 // dfx canister call parent createChildCanister '()' 
@@ -68,9 +94,9 @@ const uploadFile = async (key, assetBuffer) => {
 
 
 // TODO
-// 1. need frontend build script
-// 2. add upload frontend assets (for forum)
-	// -> create_assets_batch, append_assets_chunk, commit_assets_batch
+// 1. add upload frontend assets to "deploy-template.js"
+// 2. deploy frontend assets in parent canister "create_backend_canister"
+	// NOTE: issue to list frontend asset files
 
 // EXTRA
 // - include prepare-wasm.sh
