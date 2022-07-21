@@ -517,17 +517,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "http"
-version = "0.1.0"
-dependencies = [
- "candid",
- "ic-cdk 0.5.2",
- "ic-cdk-macros 0.5.2",
- "ic-certified-assets",
- "serde",
-]
-
-[[package]]
 name = "ic-cdk"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

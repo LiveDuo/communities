@@ -6,14 +6,14 @@ const { Actor, HttpAgent } = require('@dfinity/agent')
 
 global.fetch = require('node-fetch')
 
-// const agent = new HttpAgent({ host: 'http://localhost:8000' })
+const agent = new HttpAgent({ host: 'http://localhost:8000' })
 
-// if (process.env.NODE_ENV !== 'production') {
-// 	agent.fetchRootKey().catch(err => {
-// 		console.warn('Unable to fetch root key. Check to ensure that your local replica is running')
-// 		console.error(err)
-// 	})
-// }
+if (process.env.NODE_ENV !== 'production') {
+	agent.fetchRootKey().catch(err => {
+		console.warn('Unable to fetch root key. Check to ensure that your local replica is running')
+		console.error(err)
+	})
+}
 
 const canisterId = 'rrkah-fqaaa-aaaaa-aaaaq-cai'
 const SIZE_CHUNK = 1024000 // one megabyte
@@ -24,7 +24,7 @@ const idlFactory = ({ IDL }) => IDL.Service({
 	'commit_batch': IDL.Func([IDL.Text], [], []),
 	'store_batch': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
 })
-// const actor = Actor.createActor(idlFactory, { agent, canisterId })
+const actor = Actor.createActor(idlFactory, { agent, canisterId })
 
 async function getFiles(dir, initial) {
   let fileList = []
@@ -74,17 +74,14 @@ const uploadFile = async (key, assetBuffer) => {
 	}
 }
 ; (async () => {
-	// const wasm = await fs.readFile('./canisters/backend.wasm')
-	// await uploadFile('wasm', wasm)
+	const wasm = await fs.readFile('./canisters/backend.wasm')
+	await uploadFile('wasm', wasm)
 	
 	const buildPath = path.join(__dirname, '..', 'build')
 	const assets = await getFiles(buildPath).then(r => r.filter(f => !f.endsWith('.DS_Store')))
-	// console.log(assets)
-
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(path.join(buildPath, asset))
-		console.log(asset, !!assetBuf)
-		// await uploadFile(asset, assetBuf)
+		await uploadFile(asset, assetBuf)
 	}
 })()
 
