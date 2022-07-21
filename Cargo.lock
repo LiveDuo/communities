@@ -64,6 +64,7 @@ dependencies = [
  "hex",
  "ic-cdk 0.4.0",
  "ic-cdk-macros 0.4.0",
+ "ic-certified-assets",
  "ic-types 0.4.1",
  "lazy_static",
  "libsecp256k1",

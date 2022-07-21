@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 ic-cdk = "0.4.0"
 ic-cdk-macros = "0.4.0"
 ic-types = "0.4.1"
+ic-certified-assets = "0.2.4"
 lazy_static = "1.4.0"
 serde = "1.0.140"
 hex = "0.4.3"

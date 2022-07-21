@@ -1,13 +1,14 @@
 use ic_cdk::export::candid::{candid_method};
 use ic_cdk::api::{call, caller, id};
+// use ic_cdk::println;
 
 use candid::{CandidType, Principal};
 
 use serde::{Deserialize};
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 
-use ic_cdk::println;
 
 const FRONTEND_WASM: &[u8] = std::include_bytes!("../../canisters/http.wasm");
 const BACKEND_WASM: &[u8] = std::include_bytes!("../../canisters/http.wasm");
@@ -15,6 +16,7 @@ const BACKEND_WASM: &[u8] = std::include_bytes!("../../canisters/http.wasm");
 
 thread_local! {
 	static WASM: RefCell<Vec<u8>> = RefCell::new(Vec::new());
+	static WASM_TEMP: RefCell<Vec<u8>> = RefCell::new(Vec::new());
 }
 
 #[derive(CandidType, Deserialize)]
@@ -54,20 +56,35 @@ struct CreateCanisterArgs { settings: CreateCanisterSettings, }
 #[derive(CandidType, Deserialize)]
 struct CreateCanisterResult { canister_id: Principal, }
 
-#[ic_cdk_macros::update(name = "upload_wasm")]
-#[candid_method(update, rename = "upload_wasm")]
-
-pub async fn upload_wasm(bytes_str: Vec<u8>) {
-
-	// println!("Bytes {:?}", bytes_str.clone());
-
-	WASM.with(|c| *c.borrow_mut() = bytes_str);
+#[ic_cdk_macros::update(name = "create_wasm_batch")]
+#[candid_method(update, rename = "create_wasm_batch")]
+pub async fn create_wasm_batch() {
+	WASM_TEMP.with(|c| {
+		*c.borrow_mut() = vec![]; // clean WASM_TEMP
+	});
 }
 
+#[ic_cdk_macros::update(name = "append_wasm_chunk")]
+#[candid_method(update, rename = "append_wasm_chunk")]
+pub async fn append_wasm_chunk(mut bytes_str: Vec<u8>) {
+	WASM_TEMP.with(|c| {
+		(*c.borrow_mut()).append(&mut bytes_str); // append to WASM_TEMP
+	});
+	
+}
 
-#[ic_cdk_macros::update(name = "createFrontendCanister")]
-#[candid_method(update, rename = "createFrontendCanister")]
-pub async fn create_frontend_canister() -> Result<Principal, String> {
+#[ic_cdk_macros::update(name = "commit_wasm_batch")]
+#[candid_method(update, rename = "commit_wasm_batch")]
+pub async fn commit_wasm_batch() {
+	WASM_TEMP.with(|c| {
+		WASM.with(|j| *j.borrow_mut() = (*c.borrow_mut()).clone()); // copy WASM_TEMP to WASM
+		*c.borrow_mut() = vec![]; // clean WASM_TEMP
+	});
+}
+
+#[ic_cdk_macros::update(name = "createBackendCanister")]
+#[candid_method(update, rename = "createBackendCanister")]
+pub async fn create_backend_canister() -> Result<Principal, String> {
 
 	let create_args = CreateCanisterArgs {
 		settings: CreateCanisterSettings {
@@ -105,9 +122,9 @@ pub async fn create_frontend_canister() -> Result<Principal, String> {
 }
 
 
-#[ic_cdk_macros::update(name = "createBackendCanister")]
-#[candid_method(update, rename = "createBackendCanister")]
-pub async fn create_backend_canister() -> Result<Principal, String> {
+#[ic_cdk_macros::update(name = "createFrontendCanister")]
+#[candid_method(update, rename = "createFrontendCanister")]
+pub async fn create_frontend_canister() -> Result<Principal, String> {
 
 	let create_args = CreateCanisterArgs {
 		settings: CreateCanisterSettings {

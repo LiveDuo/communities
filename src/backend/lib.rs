@@ -33,6 +33,10 @@ impl Default for Profile {
     }
 }
 
+#[init]
+fn init() {
+    ic_certified_assets::init();
+}
 
 #[query(name = "getProfileByPrincipal")]
 #[candid_method(query, rename = "getProfileByPrincipal")]
@@ -124,9 +128,9 @@ fn search(text: String) -> Option<&'static Profile> {
     None
 }
 
-#[query(name = "list")]
-#[candid_method(query, rename = "list")]
-fn list() -> Vec<&'static Profile> {
+#[query(name = "profiles")]
+#[candid_method(query, rename = "profiles")]
+fn profiles() -> Vec<&'static Profile> {
     let profile_store = storage::get::<ProfileStore>();
 
     let mut profiles: Vec<&'static Profile> = Vec::new();
@@ -283,6 +287,10 @@ pub fn write(text: String)  {
 
 #[pre_upgrade]
 fn pre_upgrade() {
+
+    // ic_cdk::storage::stable_save((ic_certified_assets::pre_upgrade(),))
+    //  .expect("failed to save stable state");
+
     let profile_store = storage::get::<ProfileStore>();
 
     let mut profiles: Vec<(&Principal, &Profile)> = Vec::new();
@@ -298,6 +306,11 @@ fn pre_upgrade() {
 
 #[post_upgrade]
 fn post_upgrade() {
+    
+    //     let (stable_state,): (ic_certified_assets::StableState,) =
+    //         ic_cdk::storage::stable_restore().expect("failed to restore stable state");
+    //     ic_certified_assets::post_upgrade(stable_state);
+
     let profile_store = storage::get_mut::<ProfileStore>();
 
     let res:Result<(Vec<(Principal, Profile)>,), String> = storage::stable_restore();
