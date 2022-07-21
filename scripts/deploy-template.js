@@ -82,10 +82,9 @@ const uploadFile = async (key, assetBuffer) => {
 	// console.log(assets)
 
 	for (let asset of assets) {
-		const filepath = path.join(buildPath, asset)
-		const assetBuf = await fs.readFile(filepath)
-		console.log(path.basename(filepath), !!assetBuf)
-		// await uploadFile(path.basename(filepath), assetBuf)
+		const assetBuf = await fs.readFile(path.join(buildPath, asset))
+		console.log(asset, !!assetBuf)
+		// await uploadFile(asset, assetBuf)
 	}
 })()
 
