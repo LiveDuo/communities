@@ -83,6 +83,9 @@ const uploadFile = async (key, assetBuffer) => {
 		const assetBuf = await fs.readFile(path.join(buildPath, asset))
 		await uploadFile(asset, assetBuf)
 	}
+
+	const assetsList = Buffer.from(JSON.stringify(assets), 'utf8')
+	await uploadFile('frontend.assets', assetsList)
 })()
 
 // dfx canister call parent createChildCanister '()' 
@@ -90,9 +93,7 @@ const uploadFile = async (key, assetBuffer) => {
 
 
 // TODO
-// 1. add upload frontend assets to "deploy-template.js"
-// 2. deploy frontend assets in parent canister "create_backend_canister"
-	// NOTE: issue to list frontend asset files
+// 1. parse assets list + upload to child -> "src/backend/lib.rs"
 
 // EXTRA
 // - include prepare-wasm.sh
