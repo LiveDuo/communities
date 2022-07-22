@@ -90,11 +90,3 @@ const uploadFile = async (key, assetBuffer) => {
 
 // dfx canister call parent createChildCanister '()' 
 // https://github.com/ORIGYN-SA/large_canister_deployer_internal/blob/master/chunker_appender/index.js
-
-
-// TODO
-// 1. parse assets list + upload to child -> "src/backend/lib.rs"
-
-// EXTRA
-// - include prepare-wasm.sh
-

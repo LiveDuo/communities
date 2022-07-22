@@ -138,19 +138,39 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
 	}
 
-	// node -e "console.log('<html><body><b>Welcome</b></body></html>\n'.split('').map(r => r.charCodeAt(0)).join(', '))"
-	let content = vec![60, 104, 116, 109, 108, 62, 60, 98, 111, 100, 121, 62, 60, 98, 62, 87, 101, 108, 99, 111, 109, 101, 60, 47, 98, 62, 60, 47, 98, 111, 100, 121, 62, 60, 47, 104, 116, 109, 108, 62, 10];
-	let store_args = StoreAssetArgs {
-		key: "/index.html".to_owned(),
-		content_type: "text/html".to_owned(),
-		content_encoding: "identity".to_owned(),
-		content: content,
-	};
+	let assets_bytes: Vec<u8> = STATE.with(|w| {
+		let x = match (*w.borrow_mut()).get("frontend.assets") {
+			Some(w) => (&w.data).clone(),
+			None => vec![]
+		};
+		x
+	});
 
-	match call::call(create_result.canister_id, "store", (store_args,),).await {
-		Ok(x) => x,
-		Err((code, msg)) => { return Err(format!("Store asset error: {}: {}", code as u8, msg)) }
-	}
+	let assets_str = String::from_utf8(assets_bytes.clone()).expect("Invalid frontend.assets");
+	let assets: Vec<serde_json::Value> = serde_json::from_str(&assets_str).expect("Invalid JSON");
+	for asset in &assets {
+		
+		let asset_str = &asset.as_str().unwrap();		
+		let asset_bytes: Vec<u8> = STATE.with(|w| {
+			let x = match (*w.borrow_mut()).get(asset_str.clone()) {
+				Some(w) => (&w.data).clone(),
+				None => vec![]
+			};
+			x
+		});
+
+		let store_args = StoreAssetArgs {
+			key: ["/", asset_str.clone()].join(""),
+			content_type: "text/html".to_owned(),
+			content_encoding: "identity".to_owned(),
+			content: asset_bytes,
+		};
+	
+		match call::call(create_result.canister_id, "store", (store_args,),).await {
+			Ok(x) => x,
+			Err((_code, _msg)) => {}
+		}
+    }
 
 	Ok(create_result.canister_id)
 }
