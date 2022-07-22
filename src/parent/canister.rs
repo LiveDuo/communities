@@ -8,15 +8,10 @@ use serde::{Deserialize};
 
 use std::cell::RefCell;
 use std::collections::HashMap;
-// use std::borrow::BorrowMut;
 
 struct Asset { data: Vec<u8>, temp: Vec<u8> }
 
 thread_local! {
-	static WASM: RefCell<Vec<u8>> = RefCell::new(Vec::new());
-	static WASM_TEMP: RefCell<Vec<u8>> = RefCell::new(Vec::new());
-	
-	// static WASM_2: RefCell<HashMap<String, Vec<u8>>> = RefCell::new(HashMap::new());
 	static STATE: RefCell<HashMap<String, Asset>> = RefCell::new(HashMap::new());
 }
 
@@ -122,7 +117,7 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 
 	let wasm_bytes: Vec<u8> = STATE.with(|w| {
 		let x = match (*w.borrow_mut()).get("wasm") {
-			Some(w) => (&w.data).clone(), // w.borrow_mut().clone()
+			Some(w) => (&w.data).clone(),
 			None => vec![]
 		};
 		x
