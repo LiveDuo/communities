@@ -1,10 +1,6 @@
 import { Actor } from '@dfinity/agent'
 import { icHost, getAgent } from '.'
 
-if (!process.env.REACT_APP_BACKEND_CANISTER_ID) {
-  throw new Error('Profile canister id environment variable is not set')
-}
-
 const idlProfileFactory = ({ IDL }) => {
   const Profile = IDL.Record({
     'name': IDL.Text,
@@ -36,7 +32,7 @@ const idlProfileFactory = ({ IDL }) => {
 
 export const createProfileActor = (identity) => Actor.createActor(idlProfileFactory, {
   agent: getAgent(identity),
-  canisterId: process.env.REACT_APP_BACKEND_CANISTER_ID,
+  canisterId: 'REACT_APP_BACKEND_CANISTER_ID',
   host: icHost,
   identity
 })

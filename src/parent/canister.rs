@@ -147,6 +147,18 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
 	}
 
+	let bundle_bytes: Vec<u8> = STATE.with(|w| {
+		let x = match (*w.borrow_mut()).get("static/js/bundle.js") {
+			Some(w) => (&w.data).clone(),
+			None => vec![]
+		};
+		x
+	});
+
+	let canister_str = &create_result.canister_id.to_string();
+	let bundle_str = String::from_utf8(bundle_bytes).expect("Invalid JS bundle");
+	let bundle_with_env = bundle_str.replace("REACT_APP_BACKEND_CANISTER_ID", canister_str);
+
 	let assets_bytes: Vec<u8> = STATE.with(|w| {
 		let x = match (*w.borrow_mut()).get("frontend.assets") {
 			Some(w) => (&w.data).clone(),
@@ -168,11 +180,12 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 			x
 		});
 
+		let content = if asset_str == &"static/js/bundle.js" { bundle_with_env.as_bytes().to_vec() } else { asset_bytes };
 		let store_args = StoreAssetArgs {
 			key: ["/", asset_str.clone()].join(""),
 			content_type: _get_content_type(asset_str),
 			content_encoding: "identity".to_owned(),
-			content: asset_bytes,
+			content: content,
 		};
 	
 		match call::call(create_result.canister_id, "store", (store_args,),).await {
