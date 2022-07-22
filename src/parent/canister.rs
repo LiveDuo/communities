@@ -95,6 +95,15 @@ pub async fn store_batch(key: String, append_bytes: Vec<u8>) {
 	});
 }
 
+fn _get_content_type(name: &str) -> String {
+	if name.ends_with(".html") { return "text/html".to_string() }
+	else if name.ends_with(".js") { return "text/javascript".to_string() }
+	else if name.ends_with(".css") { return "text/css".to_string() } 
+	else if name.ends_with(".txt") { return "text/plain".to_string() }
+	else if name.ends_with(".md") { return "text/markdown".to_string() }
+	else { return "application/octet-stream".to_string() }
+}
+
 #[ic_cdk_macros::update(name = "createChildCanister")]
 #[candid_method(update, rename = "createChildCanister")]
 pub async fn create_backend_canister() -> Result<Principal, String> {
@@ -161,7 +170,7 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 
 		let store_args = StoreAssetArgs {
 			key: ["/", asset_str.clone()].join(""),
-			content_type: "text/html".to_owned(),
+			content_type: _get_content_type(asset_str),
 			content_encoding: "identity".to_owned(),
 			content: asset_bytes,
 		};
