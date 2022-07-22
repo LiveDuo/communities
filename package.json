@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "react-app-rewired start",
+    "start": "serve -s build",
+    "dev": "react-app-rewired start",
     "build": "react-app-rewired build"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
   "devDependencies": {
     "jest": "^28.1.3",
     "node-fetch": "^2.6.7",
+    "node-html-parser": "^5.3.3",
     "react-app-rewired": "^2.2.1",
     "react-scripts": "^5.0.1",
     "tree-kill": "^1.2.2"
