@@ -9,6 +9,7 @@ module.exports = {
         return config
     },
     paths: (paths, env) => {
+        paths.dotenv = path.resolve(__dirname, '.env')
         paths.appIndexJs = path.resolve(__dirname, 'src/frontend/index.js')
         paths.appSrc = path.resolve(__dirname, 'src/frontend')
         paths.appHtml = path.resolve(__dirname, 'src/frontend/public/index.html')
