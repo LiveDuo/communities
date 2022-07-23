@@ -1,8 +1,12 @@
 const fs = require('fs/promises')
 
 const path = require('path')
+const { exec } = require('child_process')
+const util = require('util')
 
 const { Actor, HttpAgent } = require('@dfinity/agent')
+
+const execP = util.promisify(exec)
 
 global.fetch = require('node-fetch')
 
@@ -15,7 +19,6 @@ if (process.env.REACT_APP_ICP_ENV !== 'production') {
 	})
 }
 
-const canisterId = 'rrkah-fqaaa-aaaaa-aaaaq-cai'
 const SIZE_CHUNK = 1024000 // one megabyte
 
 const idlFactory = ({ IDL }) => IDL.Service({
@@ -24,7 +27,6 @@ const idlFactory = ({ IDL }) => IDL.Service({
 	'commit_batch': IDL.Func([IDL.Text], [], []),
 	'store_batch': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
 })
-const actor = Actor.createActor(idlFactory, { agent, canisterId })
 
 async function getFiles(dir, initial) {
   let fileList = []
@@ -42,7 +44,7 @@ async function getFiles(dir, initial) {
   return fileList
 }
 
-const uploadFile = async (key, assetBuffer) => {
+const uploadFile = async (actor, key, assetBuffer) => {
 	const chunksNumber = Math.ceil(assetBuffer.byteLength / SIZE_CHUNK)
 
 	if (chunksNumber === 1) {
@@ -74,18 +76,24 @@ const uploadFile = async (key, assetBuffer) => {
 	}
 }
 ; (async () => {
+
+	const { stdout } = await execP(`dfx canister id parent`).catch((e) => { if (e.killed) throw e; return e })
+	const canisterId = stdout.trim()
+
+	const actor = Actor.createActor(idlFactory, { agent, canisterId })
+
 	const wasm = await fs.readFile('./canisters/backend.wasm')
-	await uploadFile('wasm', wasm)
+	await uploadFile(actor, 'wasm', wasm)
 	
 	const buildPath = path.join(__dirname, '..', 'build')
 	const assets = await getFiles(buildPath).then(r => r.filter(f => !f.endsWith('.DS_Store')))
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(path.join(buildPath, asset))
-		await uploadFile(asset, assetBuf)
+		await uploadFile(actor, asset, assetBuf)
 	}
 
 	const assetsList = Buffer.from(JSON.stringify(assets), 'utf8')
-	await uploadFile('frontend.assets', assetsList)
+	await uploadFile(actor, 'frontend.assets', assetsList)
 })()
 
 // dfx canister call parent createChildCanister '()' 
