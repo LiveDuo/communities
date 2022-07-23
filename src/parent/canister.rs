@@ -1,5 +1,7 @@
 use ic_cdk::export::candid::{candid_method};
 use ic_cdk::api::{call, caller, id};
+use ic_cdk::{storage};
+
 // use ic_cdk::println;
 
 use candid::{CandidType, Principal};
@@ -9,6 +11,7 @@ use serde::{Deserialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
 
+#[derive(CandidType, Deserialize, Debug, Clone)]
 struct Asset { data: Vec<u8>, temp: Vec<u8> }
 
 thread_local! {
@@ -195,4 +198,20 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
     }
 
 	Ok(create_result.canister_id)
+}
+
+#[export_name = "pre_upgrade"]
+fn pre_upgrade() {
+
+	let state = STATE.with(|s| s.borrow().clone());
+    storage::stable_save((state,)).unwrap();
+}
+
+#[export_name = "post_upgrade"]
+fn post_upgrade() {
+    let (state_stored, ) = storage::stable_restore().unwrap();
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        *state = state_stored;
+    });
 }
