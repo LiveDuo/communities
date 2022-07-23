@@ -1,12 +1,12 @@
 {
   "canisters": {
-    "backend": {
+    "child": {
       "build": [
-        "cargo build --target wasm32-unknown-unknown --package  backend --release",
-        "ic-cdk-optimizer target/wasm32-unknown-unknown/release/backend.wasm -o target/wasm32-unknown-unknown/release/backend_opt.wasm"
+        "cargo build --target wasm32-unknown-unknown --package  child --release",
+        "ic-cdk-optimizer target/wasm32-unknown-unknown/release/child.wasm -o target/wasm32-unknown-unknown/release/child_opt.wasm"
       ],
-      "candid": "src/backend/backend.did",
-      "wasm": "target/wasm32-unknown-unknown/release/backend_opt.wasm",
+      "candid": "src/_child/backend/child.did",
+      "wasm": "target/wasm32-unknown-unknown/release/child_opt.wasm",
       "type": "custom"
     },
     "parent": {
@@ -15,23 +15,23 @@
         "cargo build --target wasm32-unknown-unknown --package  parent --release",
         "ic-cdk-optimizer target/wasm32-unknown-unknown/release/parent.wasm -o target/wasm32-unknown-unknown/release/parent_opt.wasm"
       ],
-      "candid": "src/parent/parent.did",
+      "candid": "src/_parent/backend/parent.did",
       "wasm": "target/wasm32-unknown-unknown/release/parent_opt.wasm",
       "type": "custom",
       "dependencies": []
     },
     "ledger": {
       "type": "custom",
-      "candid": "src/ledger/ledger.public.did",
-      "wasm": "src/ledger/ledger.wasm"
+      "candid": "src/_meta/ledger/ledger.public.did",
+      "wasm": "src/_meta/ledger/ledger.wasm"
     },
     "cmc": {
       "type": "custom",
-      "candid": "src/minting/cmc.did",
-      "wasm": "src/minting/cmc.wasm"
+      "candid": "src/_meta/minting/cmc.did",
+      "wasm": "src/_meta/minting/cmc.wasm"
     },
     "utils": {
-      "main": "src/utils/main.mo",
+      "main": "src/_parent/utils/main.mo",
       "type": "motoko"
     }
   },

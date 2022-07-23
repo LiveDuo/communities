@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "src/parent",
-    "src/backend"
+    "src/_parent/backend",
+    "src/_child/backend"
 ]
