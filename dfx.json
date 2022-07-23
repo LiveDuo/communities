@@ -27,8 +27,8 @@
     },
     "cmc": {
       "type": "custom",
-      "candid": "src/cycles/cmc.did",
-      "wasm": "src/cycles/cmc.wasm"
+      "candid": "src/minting/cmc.did",
+      "wasm": "src/minting/cmc.wasm"
     },
     "utils": {
       "main": "src/utils/main.mo",
