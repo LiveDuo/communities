@@ -958,6 +958,7 @@ dependencies = [
  "candid",
  "ic-cdk 0.3.3",
  "ic-cdk-macros 0.3.3",
+ "ic-certified-assets",
  "ic-ledger-types",
  "serde",
  "serde_bytes",
