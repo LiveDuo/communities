@@ -1,0 +1,13 @@
+--- /Users/andreas/.cargo/registry/src/github.com-1ecc6299db9ec823/ic-certified-assets-0.2.4/src/state_machine.rs	2022-07-25 15:35:49.000000000 +0300
++++ /var/folders/0y/zt79z64s3z95vknnwqqq_1gh0000gn/T/tmp.IwDhQqlW	2022-07-25 22:04:03.000000000 +0300
+@@ -340,10 +340,6 @@
+             .collect::<Vec<_>>()
+     }
+ 
+-    pub fn get2(&self, key: &str) -> Result<Asset, String> {
+-        Ok(self.assets.get(key).unwrap().clone())
+-    }
+-
+     pub fn get(&self, arg: GetArg) -> Result<EncodedAsset, String> {
+         let asset = self
+             .assets

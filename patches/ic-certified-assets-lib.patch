@@ -1,0 +1,78 @@
+--- /Users/andreas/.cargo/registry/src/github.com-1ecc6299db9ec823/ic-certified-assets-0.2.4/src/lib.rs	2022-07-25 16:18:04.000000000 +0300
++++ /var/folders/0y/zt79z64s3z95vknnwqqq_1gh0000gn/T/tmp.wJFHdQXg	2022-07-25 22:04:03.000000000 +0300
+@@ -10,10 +10,10 @@
+ pub use crate::state_machine::StableState;
+ use crate::{
+     rc_bytes::RcBytes,
+-    state_machine::{AssetDetails, EncodedAsset, State, Asset},
++    state_machine::{AssetDetails, EncodedAsset, State},
+     types::*,
+ };
+-use candid::{candid_method, Principal, Nat};
++use candid::{candid_method, Principal};
+ use ic_cdk::api::{caller, data_certificate, set_certified_data, time, trap};
+ use ic_cdk_macros::{query, update};
+ use std::cell::RefCell;
+@@ -35,7 +35,7 @@
+ 
+ #[query]
+ #[candid_method(query)]
+-pub fn retrieve(key: Key) -> RcBytes {
++fn retrieve(key: Key) -> RcBytes {
+     STATE.with(|s| match s.borrow().retrieve(&key) {
+         Ok(bytes) => bytes,
+         Err(msg) => trap(&msg),
+@@ -132,33 +132,15 @@
+     });
+ }
+ 
+-// #[query]
+-// #[candid_method(query)]
+-pub fn get_asset(key: &str) -> Asset {
+-    STATE.with(|s| match s.borrow().get2(key) {
++#[query]
++#[candid_method(query)]
++fn get(arg: GetArg) -> EncodedAsset {
++    STATE.with(|s| match s.borrow().get(arg) {
+         Ok(asset) => asset,
+         Err(msg) => trap(&msg),
+     })
+ }
+ 
+-// #[query]
+-// #[candid_method(query)]
+-pub fn get_asset_b(key: &str) -> RcBytes {
+-    let arg = GetChunkArg {
+-        index: Nat::from(0),
+-        key: key.to_string(),
+-        content_encoding: "identity".to_string(),
+-        sha256: None
+-    };
+-    STATE.with(|s| match s.borrow().get_chunk(arg) {
+-        Ok(content) => content,
+-        Err(msg) => trap(&msg),
+-    })
+-    
+-    // pub fn s.borrow().list_assets -> for getting chunk lenth
+-    // pub fn s.borrow().get_chunk -> returns ith chunk
+-}
+-
+ #[query]
+ #[candid_method(query)]
+ fn get_chunk(arg: GetChunkArg) -> GetChunkResponse {
+@@ -170,13 +152,13 @@
+ 
+ #[query]
+ #[candid_method(query)]
+-pub fn list() -> Vec<AssetDetails> {
++fn list() -> Vec<AssetDetails> {
+     STATE.with(|s| s.borrow().list_assets())
+ }
+ 
+ #[query]
+ #[candid_method(query)]
+-pub fn http_request(req: HttpRequest) -> HttpResponse {
++fn http_request(req: HttpRequest) -> HttpResponse {
+     let certificate = data_certificate().unwrap_or_else(|| trap("no data certificate available"));
+ 
+     STATE.with(|s| {
