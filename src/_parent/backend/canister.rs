@@ -1,22 +1,13 @@
 use ic_cdk::export::candid::{candid_method};
 use ic_cdk::api::{call, caller, id};
-use ic_cdk::{storage};
-
-// use ic_cdk::println;
+use ic_cdk_macros::*;
 
 use candid::{CandidType, Principal};
 
 use serde::{Deserialize};
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-
 #[derive(CandidType, Deserialize, Debug, Clone)]
 struct Asset { data: Vec<u8>, temp: Vec<u8> }
-
-thread_local! {
-	static STATE: RefCell<HashMap<String, Asset>> = RefCell::new(HashMap::new());
-}
 
 #[derive(CandidType, Deserialize)]
 enum InstallMode {
@@ -55,47 +46,42 @@ struct CreateCanisterArgs { settings: CreateCanisterSettings, }
 #[derive(CandidType, Deserialize)]
 struct CreateCanisterResult { canister_id: Principal, }
 
-#[ic_cdk_macros::update(name = "create_batch")]
-#[candid_method(update, rename = "create_batch")]
-pub async fn create_batch(key: String) {
-	STATE.with(|c| {
-		(*c.borrow_mut()).insert(key.to_string(), Asset { data: vec![], temp: vec![] });
-	});
+#[init]
+fn init() {
+    ic_certified_assets::init();
 }
 
-#[ic_cdk_macros::update(name = "append_chunk")]
-#[candid_method(update, rename = "append_chunk")]
-pub async fn append_chunk(key: String, append_bytes: Vec<u8>) {
-	STATE.with(|c| {
-		let temp_bytes = match (*c.borrow()).get(&key) {
-			Some(x) => x.temp.clone(),
-			None => vec![]
-		};
-		let asset: Asset = Asset { data: vec![], temp: [temp_bytes.as_slice(), append_bytes.as_slice()].concat() };
-		(*c.borrow_mut()).insert(key.to_string(), asset);
-	});
+#[ic_cdk_macros::query(name = "g")]
+#[candid_method(query, rename = "g")]
+fn g(key: String) -> Vec<u8> {
+	let asset = ic_certified_assets::get_asset_b(&key).as_ref().to_vec();
+	return asset;
 }
 
-#[ic_cdk_macros::update(name = "commit_batch")]
-#[candid_method(update, rename = "commit_batch")]
-pub async fn commit_batch(key: String) {
-	STATE.with(|c| {
-		let bytes = match (*c.borrow()).get(&key) {
-			Some(x) => x.temp.clone(),
-			None => vec![]
-		};
-		let asset: Asset = Asset { data: bytes, temp: vec![] };
-		(*c.borrow_mut()).insert(key.to_string(), asset);
-	});
+#[ic_cdk_macros::query(name = "l")]
+#[candid_method(query, rename = "l")]
+fn l() -> candid::Nat {
+	let asset = &ic_certified_assets::list()[0];
+	return asset.clone().encodings.get(0).expect("Encoding has no elements").clone().length;
+
+	// get total_length
+	// get chunk i
+	// current_length += chunk[0].length
+	// if (current_length >= total_length) break
 }
 
-#[ic_cdk_macros::update(name = "store_batch")]
-#[candid_method(update, rename = "store_batch")]
-pub async fn store_batch(key: String, append_bytes: Vec<u8>) {
-	STATE.with(|c| {
-		let asset: Asset = Asset { data: append_bytes, temp: vec![] };
-		(*c.borrow_mut()).insert(key.to_string(), asset);
-	});
+#[ic_cdk_macros::query(name = "get_asset")]
+#[candid_method(query, rename = "get_asset")]
+fn get_asset(key: String) -> Vec<u8> {
+	let asset = ic_certified_assets::get_asset(&key);
+	let encodings = asset.encodings.get("identity").expect("There is no identity encoding").clone();
+	let mut chunks_vec: Vec<u8> = vec![];
+	for chunk in encodings.content_chunks.iter() {
+		let chunk = chunk.clone();
+		let chunk_vec = chunk.as_ref().to_vec();
+		chunks_vec.extend(chunk_vec.iter().cloned());
+	}
+	return chunks_vec;
 }
 
 fn _get_content_type(name: &str) -> String {
@@ -127,13 +113,7 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 		Err((code, msg)) => { return Err(format!("Create canister error: {}: {}", code as u8, msg)) }
 	};
 
-	let wasm_bytes: Vec<u8> = STATE.with(|w| {
-		let x = match (*w.borrow_mut()).get("wasm") {
-			Some(w) => (&w.data).clone(),
-			None => vec![]
-		};
-		x
-	});
+	let wasm_bytes: Vec<u8> = get_asset("/child/child.wasm".to_string());
 	if wasm_bytes.is_empty() {
 		return Err(format!("WASM is not yet uploaded"))
 	}
@@ -150,47 +130,28 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
 	}
 
-	let bundle_bytes: Vec<u8> = STATE.with(|w| {
-		let x = match (*w.borrow_mut()).get("static/js/bundle.js") {
-			Some(w) => (&w.data).clone(),
-			None => vec![]
-		};
-		x
-	});
+	let bundle_bytes: Vec<u8> = get_asset("/child/static/js/bundle.js".to_string());
 
 	let canister_str = &create_result.canister_id.to_string();
 	let bundle_str = String::from_utf8(bundle_bytes).expect("Invalid JS bundle");
 	let bundle_with_env = bundle_str.replace("REACT_APP_BACKEND_CANISTER_ID", canister_str);
-
-	let assets_bytes: Vec<u8> = STATE.with(|w| {
-		let x = match (*w.borrow_mut()).get("frontend.assets") {
-			Some(w) => (&w.data).clone(),
-			None => vec![]
-		};
-		x
-	});
-
+	
+	let assets_bytes: Vec<u8> = get_asset("/child/frontend.assets".to_string());
 	let assets_str = String::from_utf8(assets_bytes.clone()).expect("Invalid frontend.assets");
 	let assets: Vec<serde_json::Value> = serde_json::from_str(&assets_str).expect("Invalid JSON");
 	for asset in &assets {
 		
-		let asset_str = &asset.as_str().unwrap();		
-		let asset_bytes: Vec<u8> = STATE.with(|w| {
-			let x = match (*w.borrow_mut()).get(asset_str.clone()) {
-				Some(w) => (&w.data).clone(),
-				None => vec![]
-			};
-			x
-		});
+		let asset_str = &asset.as_str().unwrap();
+		let asset_bytes: Vec<u8> = get_asset(["/child", asset_str].join(""));
+		let content = if asset_str == &"/static/js/bundle.js" { bundle_with_env.as_bytes().to_vec() } else { asset_bytes };
 
-		let content = if asset_str == &"static/js/bundle.js" { bundle_with_env.as_bytes().to_vec() } else { asset_bytes };
 		let store_args = StoreAssetArgs {
-			key: ["/", asset_str.clone()].join(""),
+			key: asset_str.to_string(), // remove "/child" prefix
 			content_type: _get_content_type(asset_str),
 			content_encoding: "identity".to_owned(),
 			content: content,
 		};
-	
+
 		match call::call(create_result.canister_id, "store", (store_args,),).await {
 			Ok(x) => x,
 			Err((_code, _msg)) => {}
@@ -202,16 +163,13 @@ pub async fn create_backend_canister() -> Result<Principal, String> {
 
 #[export_name = "pre_upgrade"]
 fn pre_upgrade() {
-
-	let state = STATE.with(|s| s.borrow().clone());
-    storage::stable_save((state,)).unwrap();
+	ic_cdk::storage::stable_save((ic_certified_assets::pre_upgrade(),))
+        .expect("failed to save stable state");
 }
 
 #[export_name = "post_upgrade"]
 fn post_upgrade() {
-    let (state_stored, ) = storage::stable_restore().unwrap();
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
-        *state = state_stored;
-    });
+	let (stable_state,): (ic_certified_assets::StableState,) =
+        ic_cdk::storage::stable_restore().expect("failed to restore stable state");
+    ic_certified_assets::post_upgrade(stable_state);
 }

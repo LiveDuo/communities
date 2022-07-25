@@ -21,7 +21,7 @@ for file in $(find $child_frontend_folder -not -path '*/.*'); do
     file_relative="/child${file/$child_frontend_folder/}"
     icx_output=$(icx-asset --pem $pem_file upload $canister_id $file_relative=$file)
     if [[ $icx_output == "Starting batch." ]]; then exit 1; else echo $file_relative; fi
-    child_assets+="\"${file_relative:1}\", "
+    child_assets+="\"${file/$child_frontend_folder/}\", "
 done
 
 # upload child assets list
