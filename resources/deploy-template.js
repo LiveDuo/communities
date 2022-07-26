@@ -96,5 +96,5 @@ const uploadFile = async (actor, key, assetBuffer) => {
 	await uploadFile(actor, 'frontend.assets', assetsList)
 })()
 
-// dfx canister call parent createChildCanister '()' 
+// dfx canister call parent create_child_canister '()' 
 // https://github.com/ORIGYN-SA/large_canister_deployer_internal/blob/master/chunker_appender/index.js

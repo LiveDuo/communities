@@ -93,9 +93,9 @@ fn _get_content_type(name: &str) -> String {
 	else { return "application/octet-stream".to_string() }
 }
 
-#[ic_cdk_macros::update(name = "createChildCanister")]
-#[candid_method(update, rename = "createChildCanister")]
-pub async fn create_backend_canister() -> Result<Principal, String> {
+#[ic_cdk_macros::update]
+#[candid_method(update)]
+pub async fn create_child_canister() -> Result<Principal, String> {
 
 	let create_args = CreateCanisterArgs {
 		settings: CreateCanisterSettings {
@@ -173,3 +173,12 @@ fn post_upgrade() {
         ic_cdk::storage::stable_restore().expect("failed to restore stable state");
     ic_certified_assets::post_upgrade(stable_state);
 }
+
+// #[export_name = "canister_query http_request"]
+// fn http_request() {
+
+// 	let req = call::arg_data::<(ic_certified_assets::types::HttpRequest,)>().0;
+// 	ic_cdk::println!("{} {}", req.method, req.url);
+
+// 	ic_certified_assets::http_request_edit(req);
+// }

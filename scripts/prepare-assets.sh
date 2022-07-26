@@ -5,7 +5,7 @@ pem_file=~/.config/dfx/identity/default/identity.pem
 if [[ $canister_id == "" ]]; then exit 1; fi
 
 # upload parent frontend files
-parent_frontend_folder="src/_parent/frontend"
+parent_frontend_folder="build/parent"
 for file in $(find $parent_frontend_folder -not -path '*/.*'); do
     if [[ -d $file ]]; then continue; fi
     file_relative=${file/$parent_frontend_folder/""}
@@ -15,7 +15,7 @@ done
 
 # upload child frontend files
 child_assets=""
-child_frontend_folder="build"
+child_frontend_folder="build/child"
 for file in $(find $child_frontend_folder -not -path '*/.*'); do
     if [[ -d $file ]]; then continue; fi
     file_relative="/child${file/$child_frontend_folder/}"
