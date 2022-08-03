@@ -1,10 +1,13 @@
 use ic_cdk::export::candid::{candid_method};
+use ic_ledger_types::{AccountIdentifier, DEFAULT_SUBACCOUNT, Memo, Tokens};
 use ic_cdk::api::{call, caller, id};
 use ic_cdk_macros::*;
 
 use candid::{CandidType, Principal};
 
 use serde::{Deserialize};
+
+use crate::helpers::principal_to_subaccount;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 struct Asset { data: Vec<u8>, temp: Vec<u8> }
@@ -182,3 +185,43 @@ fn post_upgrade() {
 
 // 	ic_certified_assets::http_request_edit(req);
 // }
+
+#[ic_cdk_macros::update]
+#[candid_method(update)]
+async fn create_canister() -> Result<Principal, String> {
+    let caller = ic_cdk::caller();
+    let canister_id = ic_cdk::api::id();
+    let ledger_canister_id = Principal::from_text("rrkah-fqaaa-aaaaa-aaaaq-cai").unwrap(); // MAINNET_LEDGER_CANISTER_ID
+    let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
+    let balance_args = ic_ledger_types::AccountBalanceArgs { account };
+    let amount = 100_000_000;
+    match ic_ledger_types::account_balance(ledger_canister_id, balance_args).await {
+        Ok(x) => {
+            if x.e8s() < amount { // 1 ICP
+                return Err(format!("Insufficient balance"))
+            }
+
+            let transfer_args = ic_ledger_types::TransferArgs {
+                memo: Memo(0),
+                amount: Tokens::from_e8s(amount),
+                fee: Tokens::from_e8s(10_000),
+                from_subaccount: Some(principal_to_subaccount(&caller)),
+                to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
+                created_at_time: None,
+            };
+
+            match ic_ledger_types::transfer(ledger_canister_id, transfer_args).await {
+                Ok(_) => {
+                    return Ok(Principal::from_text("jkies-sibbb-ap6").unwrap());
+                },
+                Err((code, msg)) => {
+                    return Err(format!("Transfer balance error: {}: {}", code as u8, msg))
+                }
+            };
+            
+        },
+        Err((code, msg)) => {
+            return Err(format!("Account balance error: {}: {}", code as u8, msg))
+        }
+    }
+}

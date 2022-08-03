@@ -29,10 +29,6 @@
       "type": "custom",
       "candid": "src/_meta/minting/cmc.did",
       "wasm": "src/_meta/minting/cmc.wasm"
-    },
-    "utils": {
-      "main": "src/_parent/utils/main.mo",
-      "type": "motoko"
     }
   },
   "defaults": {

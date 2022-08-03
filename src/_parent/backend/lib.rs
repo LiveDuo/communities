@@ -3,6 +3,7 @@ use ic_cdk::export::candid::{export_service};
 use candid::{Principal};
 
 mod canister;
+mod helpers;
 
 export_service!();
 
