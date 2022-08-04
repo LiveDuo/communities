@@ -1,5 +1,5 @@
 
-const { checkDfxRunning, setupTests, getParentActor, getAgent } = require('./utils')
+const { checkDfxRunning, setupTests, getParentActor, getAgent, getRandomIdentity, transferIcpToAccount } = require('./utils')
 
 setupTests()
 
@@ -10,7 +10,8 @@ describe.only('Testing with done', () => {
 	beforeAll(async () => {
 		await checkDfxRunning()
 
-		const agent = await getAgent()
+		const identity = await getRandomIdentity()
+		const agent = await getAgent(identity)
 		actorParent = await getParentActor(agent)
 	})
 
@@ -18,6 +19,13 @@ describe.only('Testing with done', () => {
 		// create child actor
 		const childPrincipalid = await actorParent.create_child_canister().then(p => p.Ok.toString())
 		expect(childPrincipalid).toBeDefined()
+		
+		const callerAccountId = await actorParent.caller_account_id()
+		await transferIcpToAccount(callerAccountId)
+		
+		const childPrincipalid2 = await actorParent.create_canister().then(p => p.Ok.toString())
+		expect(childPrincipalid2).toBeDefined()
+		
 	})
 
 })

@@ -1,5 +1,5 @@
 const { setupTests, checkDfxRunning, getAgent, getParentActor, getChildActor, 
-	getRandomIdentity, getSignatureAndMessage } = require('./utils')
+	getEthereumIdentity, getSignatureAndMessage } = require('./utils')
 
 setupTests()
 
@@ -13,7 +13,7 @@ describe('Testing with done', () => {
 		await checkDfxRunning()
 
 		// get random identity
-		const {identity, signerRandom} = await getRandomIdentity()
+		const {identity, signerRandom} = await getEthereumIdentity()
 		signer = signerRandom
 		
 		// get parent actor

@@ -1,7 +1,14 @@
 const { Ed25519KeyIdentity } = require('@dfinity/identity')
 const { ethers } = require('ethers')
 
-const getIdentity = (signature) => {
+const getRandomIdentity = () => {
+	const uint8Array = Uint8Array.from(Array.from({length: 32}, () => 0))
+	const identity = Ed25519KeyIdentity.generate(uint8Array)
+	return identity
+}
+exports.getRandomIdentity = getRandomIdentity
+
+const getIdentityFromSignature = (signature) => {
 	const hash = ethers.utils.keccak256(signature)
 	if (hash === null) {
 		throw new Error(
@@ -25,7 +32,7 @@ const getIdentity = (signature) => {
 
 	return identity
 }
-exports.getIdentity = getIdentity
+exports.getIdentityFromSignature = getIdentityFromSignature
 
 const getLoginMessage = (account, secret) => {
 	return (

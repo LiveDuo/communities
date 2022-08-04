@@ -6,7 +6,7 @@ const util = require('util')
 const path = require('path')
 const { ethers } = require('ethers')
 
-const {getIdentity, getSignatureAndMessage} = require('./identity')
+const {getIdentityFromSignature, getSignatureAndMessage, getRandomIdentity} = require('./identity')
 
 const execP = util.promisify(exec)
 
@@ -16,6 +16,14 @@ const checkDfxRunning = async () => {
         throw new Error('DFX is not started')
 }
 exports.checkDfxRunning = checkDfxRunning
+
+const transferIcpToAccount = async (accountId) => {
+	const command = `dfx ledger transfer --ledger-canister-id $(dfx canister id ledger) --amount 1 --memo 1347768404 ${accountId}`
+    const { stdout } = await execP(command).catch((e) => { if (e.killed) throw e; return e })
+	if (!stdout.startsWith('Transfer sent at'))
+        throw new Error('Transfer failed')
+}
+exports.transferIcpToAccount = transferIcpToAccount
 
 const getCanisterIds = async () => {
     let canisterIds = {}
@@ -108,12 +116,14 @@ const getChildActor = async (agent, childPrincipalid) => {
 }
 exports.getChildActor = getChildActor
 
-const getRandomIdentity = async () => {
+const getEthereumIdentity = async () => {
     const signerRandom = ethers.Wallet.createRandom()
 	const {signature} = await getSignatureAndMessage(signerRandom)
-	const identity = getIdentity(signature)
+	const identity = getIdentityFromSignature(signature)
     return {identity, signerRandom}
 }
+exports.getEthereumIdentity = getEthereumIdentity
+
 exports.getRandomIdentity = getRandomIdentity
 
 exports.getSignatureAndMessage = getSignatureAndMessage
