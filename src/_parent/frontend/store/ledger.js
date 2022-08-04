@@ -15,16 +15,7 @@ const LedgerProvider = ({ children }) => {
 
 	const toast = useToast()
 	const [loading, setLoading] = useState()
-	// const { parentActor } = useContext(IdentityContext)
-
-	const requestTransfer = async (transferParams) => {
-		await window.ic?.plug.requestTransfer(transferParams)
-	}
-	
-	const requestBalance = async () => {
-		const balance = await window.ic?.plug.requestBalance()
-		return balance
-	}
+	// const { ledgerActor } = useContext(IdentityContext)
 	
 	const createLedgerActor = async () => {
 		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
@@ -35,7 +26,7 @@ const LedgerProvider = ({ children }) => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
 		const transferParams = { to: accountId, amount: transferAmount * 1e8 }
 		try {
-			await requestTransfer(transferParams)
+			await window.ic?.plug.requestTransfer(transferParams)
 			toast({ description: `Transfer success` })
 		} catch (error) {
 			toast({ description: 'Transfer failed', status: "error" })
@@ -44,7 +35,7 @@ const LedgerProvider = ({ children }) => {
 
 	const requestBalanceICP = async () => {
 		try {
-			const requestBalanceResponse = await requestBalance()
+			const requestBalanceResponse = await window.ic?.plug.requestBalance()
 			const balance = requestBalanceResponse.find(c => c.symbol === 'ICP').amount
 			toast({ description: `Balance: ${balance} ICP` })
 		} catch (error) {
