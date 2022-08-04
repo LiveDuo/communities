@@ -29,7 +29,7 @@ const Example = () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
 		const transferParams = { to: accountId, amount: transferAmount * 1e8 }
 		try {
-			await window.ic?.plug?.requestTransfer(transferParams)
+			await window.ic?.plug.requestTransfer(transferParams)
 			toast({ description: `Transfer success` })
 		} catch (error) {
 			toast({ description: 'Transfer failed', status: "error" })
@@ -38,7 +38,7 @@ const Example = () => {
 
 	const requestBalanceICP = async () => {
 		try {
-			const requestBalanceResponse = await window.ic?.plug?.requestBalance()
+			const requestBalanceResponse = await window.ic?.plug.requestBalance()
 			const balance = requestBalanceResponse.find(c => c.symbol === 'ICP').amount
 			toast({ description: `Balance: ${balance} ICP` })
 		} catch (error) {
@@ -48,7 +48,7 @@ const Example = () => {
 
 	const ledgerTransferICP = async () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		const actor = await window.ic.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
 		const sendParams = {
 			to: accountId, fee: { e8s: 0n },
 			amount: { e8s: transferAmount * 1e8 }, memo: 0, from_subaccount: [], created_at_time: []
@@ -63,7 +63,7 @@ const Example = () => {
 
 	const ledgerBalanceICP = async () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		const actor = await window.ic.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
 		try {
 			const response = await actor.account_balance_dfx({ account: accountId })
 			toast({ description: `Balance: ${Number(response.e8s) / 1e8} ICP` })
@@ -74,9 +74,9 @@ const Example = () => {
 	}
 
 	const callCreateCanister = async () => {
-		const nssActor = await window.ic?.plug?.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
+		const actor = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
 		try {
-			const response = await nssActor.create_canister()
+			const response = await actor.create_canister()
 			if (response.Ok) {
 				toast({ description: `Response: ${response.Ok}` })
 			} else {
@@ -90,7 +90,7 @@ const Example = () => {
 
 	const callAdminBalance = async () => {
 		const accountId = getAccountId(parentCanisterId)
-		const actor = await window.ic.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
 		try {
 			const response = await actor.account_balance_dfx({ account: accountId })
 			toast({ description: `Balance: ${Number(response.e8s) / 1e8} ICP` })
