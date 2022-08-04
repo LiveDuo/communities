@@ -1,41 +1,22 @@
 import { useContext } from 'react'
 import { Box, Button, Link, Text, useToast } from '@chakra-ui/react'
 import { ParentContext } from '../store/parent'
+import { LedgerContext } from '../store/ledger'
 import { IdentityContext } from '../store/identity'
 
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 import { getAccountId } from '../utils/account'
 import { getPrincipalUrl } from '../utils/principal'
-import { ledgerCanisterId, idlLedgerFactory } from '../agents/ledger'
-import { parentCanisterId, idlParentFactory } from '../agents/parent'
 
 const transferAmount = 0.5
-
-const requestTransfer = async (transferParams) => {
-	await window.ic?.plug.requestTransfer(transferParams)
-}
-
-const requestBalance = async () => {
-	const balance = await window.ic?.plug.requestBalance()
-	return balance
-}
-
-const createLedgerActor = async () => {
-	const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
-	return actor
-}
-
-const createParentActor = async () => {
-	const actor = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
-	return actor
-}
 
 const Example = () => {
 
 	const toast = useToast()
 	const { walletConnected, userPrincipal } = useContext(IdentityContext)
-	const { createChild, childPrincipal, loading } = useContext(ParentContext)
+	const { createChild, childPrincipal, parentCanisterId, createParentActor, loading } = useContext(ParentContext)
+	const { requestBalance, requestTransfer, createLedgerActor } = useContext(LedgerContext)
 
 	const requestTransferICP = async () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)

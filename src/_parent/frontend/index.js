@@ -7,6 +7,7 @@ import { getDefaultProvider } from 'ethers'
 
 import { IdentityProvider } from './store/identity'
 import { ParentProvider } from './store/parent'
+import { LedgerProvider } from './store/ledger'
 
 import Layout from './components/layout'
 
@@ -22,13 +23,15 @@ const App = () => (
     <ChakraProvider>
       <DAppProvider config={config}>
         <IdentityProvider>
-          <ParentProvider>
-            <BrowserRouter>
-                <Routes>
-                  <Route exact path="/" element={<Layout><Home /></Layout>}/>
-                </Routes>
-            </BrowserRouter>
-          </ParentProvider>
+          <LedgerProvider>
+            <ParentProvider>
+              <BrowserRouter>
+                  <Routes>
+                    <Route exact path="/" element={<Layout><Home /></Layout>}/>
+                  </Routes>
+              </BrowserRouter>
+            </ParentProvider>
+          </LedgerProvider>
         </IdentityProvider>
       </DAppProvider>
     </ChakraProvider>
