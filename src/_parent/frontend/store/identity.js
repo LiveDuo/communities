@@ -3,8 +3,6 @@ import { useEthers } from '@usedapp/core'
 
 import { createParentActor } from '../agents/parent'
 
-import { loadIdentity, clearIdentity } from '../utils/identity'
-
 import { useToast } from '@chakra-ui/react'
 
 import { ledgerCanisterId } from '../agents/ledger'
@@ -44,7 +42,7 @@ const IdentityProvider = ({children}) => {
 		load()
 	}, [load])
 
-	const onConnect = async (hostType) => {
+	const connect = async (hostType) => {
 		const host = hostType === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
 		const whitelist = [ledgerCanisterId, parentCanisterId]
 		try {
@@ -59,7 +57,7 @@ const IdentityProvider = ({children}) => {
 		}
 	}
 
-	const onDisconnect = async () => {
+	const disconnect = async () => {
 		const p1 = new Promise((r) => setTimeout(() => r(), 1000))
 		const p2 = window.ic.plug.disconnect() // not resolving
 		await Promise.race([p1, p2]) // hacky fix
@@ -72,16 +70,12 @@ const IdentityProvider = ({children}) => {
 	}
 
   useEffect(() => {
-    const identity = loadIdentity(account)
-    const _parentActor = createParentActor(identity)
+    const _parentActor = createParentActor(null)
     setParentActor(_parentActor)
   }, [account])
 
-  const logout = () => clearIdentity(account)
-  const value = { parentActor, logout, walletConnected, userPrincipal, host, onConnect, onDisconnect }
+  const value = { parentActor, walletConnected, userPrincipal, host, connect, disconnect }
   
-  // walletConnected, userPrincipal, host
-
   return (
     <IdentityContext.Provider value={value}>
       {children}
