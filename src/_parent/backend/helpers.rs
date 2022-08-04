@@ -15,10 +15,21 @@ pub fn principal_to_subaccount(principal_id: &Principal) -> Subaccount {
 
 #[ic_cdk_macros::query]
 #[candid_method(query)]
-async fn principal_account_id(principal: Principal) -> (Principal, Principal, String) {
+async fn principal_account_id(principal: Principal) -> String {
     let canister_id = ic_cdk::api::id();
     let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&principal));
-    return (principal, canister_id, account.to_string());
+    return account.to_string();
 }
 
-// dfx ledger transfer --ledger-canister-id rrkah-fqaaa-aaaaa-aaaaq-cai --amount 1 --memo 1347768404 b82e34dc2414c91ac7b4db4ea07f936c2e35a1793f3da9c752fb9f9b3ee4629a
+#[ic_cdk_macros::query]
+#[candid_method(query)]
+async fn caller_account_id() -> String {
+    let canister_id = ic_cdk::api::id();
+    let caller = ic_cdk::caller();
+    let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
+    return account.to_string();
+}
+
+// CANISTER_USER_ACCOUNT = dfx canister call parent caller_account_id
+// dfx ledger transfer --ledger-canister-id $(dfx canister id ledger) --amount 1 --memo 1347768404 CANISTER_USER_ACCOUNT
+// fx ledger balance --ledger-canister-id $(dfx canister id ledger) CANISTER_USER_ACCOUNT
