@@ -1,11 +1,13 @@
 use ic_cdk::export::candid::{candid_method};
-use ic_ledger_types::{AccountIdentifier, DEFAULT_SUBACCOUNT, Memo, Tokens};
+use ic_ledger_types::{AccountIdentifier, DEFAULT_SUBACCOUNT, Memo, Tokens, MAINNET_LEDGER_CANISTER_ID};
 use ic_cdk::api::{call, caller, id};
 use ic_cdk_macros::*;
 
 use candid::{CandidType, Principal};
 
 use serde::{Deserialize};
+
+use std::cell::RefCell;
 
 use crate::helpers::principal_to_subaccount;
 
@@ -49,8 +51,18 @@ struct CreateCanisterArgs { settings: CreateCanisterSettings, }
 #[derive(CandidType, Deserialize)]
 struct CreateCanisterResult { canister_id: Principal, }
 
+#[derive(Default)]
+pub struct State { ledger: Option<Principal> }
+
+thread_local! {
+    static STATE: RefCell<State> = RefCell::new(State::default());
+}
+
 #[init]
-fn init() {
+fn init(ledger: Option<Principal>) {
+
+	STATE.with(|s| { s.borrow_mut().ledger = ledger; });
+
     ic_certified_assets::init();
 }
 
@@ -191,7 +203,7 @@ fn post_upgrade() {
 async fn create_canister() -> Result<Principal, String> {
     let caller = ic_cdk::caller();
     let canister_id = ic_cdk::api::id();
-    let ledger_canister_id = Principal::from_text("rrkah-fqaaa-aaaaa-aaaaq-cai").unwrap(); // MAINNET_LEDGER_CANISTER_ID
+	let ledger_canister_id = STATE.with(|s| s.borrow().ledger).unwrap_or(MAINNET_LEDGER_CANISTER_ID);
     let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
     let balance_args = ic_ledger_types::AccountBalanceArgs { account };
     let amount = 100_000_000;
