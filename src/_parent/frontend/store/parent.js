@@ -2,7 +2,7 @@ import { useState, useContext, createContext } from 'react'
 
 import { IdentityContext } from './identity'
 
-import { parentCanisterId, idlParentFactory } from '../agents/parent'
+import { parentCanisterId } from '../agents/parent'
 
 import { useToast } from '@chakra-ui/react'
 
@@ -13,7 +13,7 @@ const ParentProvider = ({ children }) => {
 	const toast = useToast()
 	const [loading, setLoading] = useState()
 	const [childPrincipal, setChildPrincipal] = useState()
-	const { parentActor } = useContext(IdentityContext)
+	const { parentActor, parentActorPlug } = useContext(IdentityContext)
 
 	const createChild = async () => {
 		setLoading(true)
@@ -23,15 +23,9 @@ const ParentProvider = ({ children }) => {
 		return childPrincipal
 	}
 
-	const createParentActor = async () => {
-		const actor = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
-		return actor
-	}
-
 	const callCreateCanister = async () => {
-		const actor = await createParentActor()
 		try {
-			const response = await actor.create_canister()
+			const response = await parentActorPlug.create_canister()
 			if (response.Ok) {
 				toast({ description: `Response: ${response.Ok}` })
 			} else {
@@ -43,7 +37,7 @@ const ParentProvider = ({ children }) => {
 		}
 	}
 
-	const value = { createChild, childPrincipal, parentCanisterId, createParentActor, callCreateCanister, loading, setLoading }
+	const value = { createChild, childPrincipal, parentCanisterId, callCreateCanister, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }

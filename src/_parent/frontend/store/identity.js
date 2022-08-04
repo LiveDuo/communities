@@ -1,22 +1,21 @@
 import { createContext, useState, useEffect, useCallback } from 'react'
-import { useEthers } from '@usedapp/core'
 
 import { createParentActor } from '../agents/parent'
 
 import { useToast } from '@chakra-ui/react'
 
-import { ledgerCanisterId } from '../agents/ledger'
-import { parentCanisterId } from '../agents/parent'
+import { ledgerCanisterId, idlLedgerFactory } from '../agents/ledger'
+import { parentCanisterId, idlParentFactory } from '../agents/parent'
 
 const IdentityContext = createContext()
 
-const IdentityProvider = ({children}) => {
+const IdentityProvider = ({ children }) => {
 
-  const { account } = useEthers()
+	const [parentActor, setParentActor] = useState()
+	const [parentActorPlug, setParentActorPlug] = useState()
+	const [ledgerActorPlug, setLedgerActorPlug] = useState()
 
-  const [parentActor, setParentActor] = useState()
-
-  const [walletConnected, setWalletConnected] = useState(false)
+	const [walletConnected, setWalletConnected] = useState(false)
 	const [userPrincipal, setUserPrincipal] = useState('')
 	const [host, setHost] = useState('')
 	const toast = useToast()
@@ -69,17 +68,37 @@ const IdentityProvider = ({children}) => {
 		toast({ description: 'Disconnected' })
 	}
 
-  useEffect(() => {
-    const _parentActor = createParentActor(null)
-    setParentActor(_parentActor)
-  }, [account])
+	const createParentActorPlug = async () => {
+		const actor = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
+		return actor
+	}
 
-  const value = { parentActor, walletConnected, userPrincipal, host, connect, disconnect }
-  
-  return (
-    <IdentityContext.Provider value={value}>
-      {children}
-    </IdentityContext.Provider>
-  )
+	const createLedgerActorPlug = async () => {
+		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		return actor
+	}
+
+	const loadActors = useCallback(async () => {
+		const _parentActor = createParentActor(null)
+		setParentActor(_parentActor)
+
+		const _parentActorPlug = await createParentActorPlug()
+		setParentActorPlug(_parentActorPlug)
+
+		const _ledgerActorPlug = await createLedgerActorPlug()
+		setLedgerActorPlug(_ledgerActorPlug)
+	}, [])
+	
+	useEffect(() => {
+		loadActors()
+	}, [loadActors])
+
+	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect }
+
+	return (
+		<IdentityContext.Provider value={value}>
+			{children}
+		</IdentityContext.Provider>
+	)
 }
 export { IdentityContext, IdentityProvider }
