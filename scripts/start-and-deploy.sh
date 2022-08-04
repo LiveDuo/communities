@@ -22,7 +22,7 @@ READY_STRING="Listening on http://127.0.0.1:8000/"
         if [ $? -ne 0 ]; then echo "$PREFIX_ERR Deploy CMC failed"; exit 1; fi
 
         echo "$PREFIX Deploying parent..."
-        dfx deploy parent
+        dfx deploy parent --argument "(principal \"$(dfx canister id ledger)\")"
         if [ $? -ne 0 ]; then echo "$PREFIX_ERR Deploy parent failed"; exit 1; fi
 
         echo "$PREFIX Preparing assets..."
