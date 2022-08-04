@@ -6,6 +6,7 @@ import { IdentityContext } from '../store/identity'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 import { getAccountId } from '../utils/account'
+import { icHost } from '../agents'
 import { ledgerCanisterId, idlLedgerFactory } from '../agents/ledger'
 import { parentCanisterId, idlParentFactory } from '../agents/parent'
 
@@ -13,9 +14,9 @@ const transferAmount = 0.5
 
 const getPrincipalUrl = (childPrincipal) => {
 	if (process.env.REACT_APP_ICP_ENV !== 'production')
-		return `http://localhost:8000/?canisterId=${childPrincipal}`
+		return `http://${icHost}/?canisterId=${childPrincipal}`
 	else
-		return `https://${childPrincipal}.ic0.app/`
+		return `https://${childPrincipal}.${icHost}/`
 }
 
 const Example = () => {

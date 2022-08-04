@@ -1,5 +1,5 @@
 import { Actor } from '@dfinity/agent'
-import { icHost, getAgent } from '.'
+import { icUrl, getAgent } from '.'
 
 const idlParentFactory = ({ IDL }) => {
   return IDL.Service({
@@ -13,7 +13,7 @@ export { idlParentFactory }
 export const createParentActor = (identity) => Actor.createActor(idlParentFactory, {
   agent: getAgent(identity),
   canisterId: process.env.REACT_APP_PARENT_CANISTER_ID,
-  host: icHost,
+  host: icUrl,
   identity
 })
 
