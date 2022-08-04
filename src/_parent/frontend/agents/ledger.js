@@ -18,3 +18,9 @@ const idlLedgerFactory = ({ IDL }) => {
 export { idlLedgerFactory }
 
 export const ledgerCanisterId = process.env.REACT_APP_LEDGER_CANISTER_ID
+
+const createLedgerActorPlug = async () => {
+	const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+	return actor
+}
+export { createLedgerActorPlug }

@@ -4,8 +4,8 @@ import { createParentActor } from '../agents/parent'
 
 import { useToast } from '@chakra-ui/react'
 
-import { ledgerCanisterId, idlLedgerFactory } from '../agents/ledger'
-import { parentCanisterId, idlParentFactory } from '../agents/parent'
+import { ledgerCanisterId, createLedgerActorPlug } from '../agents/ledger'
+import { parentCanisterId, createParentActorPlug } from '../agents/parent'
 
 const IdentityContext = createContext()
 
@@ -20,7 +20,7 @@ const IdentityProvider = ({ children }) => {
 	const [host, setHost] = useState('')
 	const toast = useToast()
 
-	const load = useCallback(async () => {
+	const loadPlug = useCallback(async () => {
 		// setIsLocalhost(window.location.host.startsWith('localhost'))
 
 		if (!window.ic?.plug) {
@@ -38,8 +38,8 @@ const IdentityProvider = ({ children }) => {
 	}, [toast])
 
 	useEffect(() => {
-		load()
-	}, [load])
+		loadPlug()
+	}, [loadPlug])
 
 	const connect = async (hostType) => {
 		const host = hostType === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
@@ -66,16 +66,6 @@ const IdentityProvider = ({ children }) => {
 		setHost('')
 
 		toast({ description: 'Disconnected' })
-	}
-
-	const createParentActorPlug = async () => {
-		const actor = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
-		return actor
-	}
-
-	const createLedgerActorPlug = async () => {
-		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
-		return actor
 	}
 
 	const loadActors = useCallback(async () => {

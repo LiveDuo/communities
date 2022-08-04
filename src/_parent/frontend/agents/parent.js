@@ -18,3 +18,9 @@ export const createParentActor = (identity) => Actor.createActor(idlParentFactor
 })
 
 export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
+
+const createParentActorPlug = async () => {
+	const actor = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
+	return actor
+}
+export { createParentActorPlug }
