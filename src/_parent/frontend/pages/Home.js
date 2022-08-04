@@ -6,17 +6,29 @@ import { IdentityContext } from '../store/identity'
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 import { getAccountId } from '../utils/account'
-import { icHost } from '../agents'
+import { getPrincipalUrl } from '../utils/principal'
 import { ledgerCanisterId, idlLedgerFactory } from '../agents/ledger'
 import { parentCanisterId, idlParentFactory } from '../agents/parent'
 
 const transferAmount = 0.5
 
-const getPrincipalUrl = (childPrincipal) => {
-	if (process.env.REACT_APP_ICP_ENV !== 'production')
-		return `http://${icHost}/?canisterId=${childPrincipal}`
-	else
-		return `https://${childPrincipal}.${icHost}/`
+const requestTransfer = async (transferParams) => {
+	await window.ic?.plug.requestTransfer(transferParams)
+}
+
+const requestBalance = async () => {
+	const balance = await window.ic?.plug.requestBalance()
+	return balance
+}
+
+const createLedgerActor = async () => {
+	const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+	return actor
+}
+
+const createParentActor = async () => {
+	const actor = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
+	return actor
 }
 
 const Example = () => {
@@ -29,7 +41,7 @@ const Example = () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
 		const transferParams = { to: accountId, amount: transferAmount * 1e8 }
 		try {
-			await window.ic?.plug.requestTransfer(transferParams)
+			await requestTransfer(transferParams)
 			toast({ description: `Transfer success` })
 		} catch (error) {
 			toast({ description: 'Transfer failed', status: "error" })
@@ -38,7 +50,7 @@ const Example = () => {
 
 	const requestBalanceICP = async () => {
 		try {
-			const requestBalanceResponse = await window.ic?.plug.requestBalance()
+			const requestBalanceResponse = await requestBalance()
 			const balance = requestBalanceResponse.find(c => c.symbol === 'ICP').amount
 			toast({ description: `Balance: ${balance} ICP` })
 		} catch (error) {
@@ -48,7 +60,7 @@ const Example = () => {
 
 	const ledgerTransferICP = async () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		const actor = await createLedgerActor()
 		const sendParams = {
 			to: accountId, fee: { e8s: 0n },
 			amount: { e8s: transferAmount * 1e8 }, memo: 0, from_subaccount: [], created_at_time: []
@@ -63,7 +75,7 @@ const Example = () => {
 
 	const ledgerBalanceICP = async () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		const actor = await createLedgerActor()
 		try {
 			const response = await actor.account_balance_dfx({ account: accountId })
 			toast({ description: `Balance: ${Number(response.e8s) / 1e8} ICP` })
@@ -74,7 +86,7 @@ const Example = () => {
 	}
 
 	const callCreateCanister = async () => {
-		const actor = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
+		const actor = await createParentActor()
 		try {
 			const response = await actor.create_canister()
 			if (response.Ok) {
@@ -90,7 +102,7 @@ const Example = () => {
 
 	const callAdminBalance = async () => {
 		const accountId = getAccountId(parentCanisterId)
-		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		const actor = await createLedgerActor()
 		try {
 			const response = await actor.account_balance_dfx({ account: accountId })
 			toast({ description: `Balance: ${Number(response.e8s) / 1e8} ICP` })
