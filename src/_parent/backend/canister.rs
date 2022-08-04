@@ -189,14 +189,8 @@ fn post_upgrade() {
     ic_certified_assets::post_upgrade(stable_state);
 }
 
-// #[export_name = "canister_query http_request"]
-// fn http_request() {
-
-// 	let req = call::arg_data::<(ic_certified_assets::types::HttpRequest,)>().0;
-// 	ic_cdk::println!("{} {}", req.method, req.url);
-
-// 	ic_certified_assets::http_request_edit(req);
-// }
+pub const PAYMENT_AMOUNT: u64 = 100_000_000;
+pub const TRANSFER_FEE: u64 = 10_000;
 
 #[ic_cdk_macros::update]
 #[candid_method(update)]
@@ -206,34 +200,27 @@ async fn create_canister() -> Result<Principal, String> {
 	let ledger_canister_id = STATE.with(|s| s.borrow().ledger).unwrap_or(MAINNET_LEDGER_CANISTER_ID);
     let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
     let balance_args = ic_ledger_types::AccountBalanceArgs { account };
-    let amount = 100_000_000;
-    match ic_ledger_types::account_balance(ledger_canister_id, balance_args).await {
-        Ok(x) => {
-            if x.e8s() < amount { // 1 ICP
-                return Err(format!("Insufficient balance"))
-            }
+    
+	let tokens: Tokens = match ic_ledger_types::account_balance(ledger_canister_id, balance_args).await {
+        Ok(x) => x,
+        Err((code, msg)) => return Err(format!("Account balance error: {}: {}", code as u8, msg))
+    };
 
-            let transfer_args = ic_ledger_types::TransferArgs {
-                memo: Memo(0),
-                amount: Tokens::from_e8s(amount),
-                fee: Tokens::from_e8s(10_000),
-                from_subaccount: Some(principal_to_subaccount(&caller)),
-                to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
-                created_at_time: None,
-            };
+	if tokens.e8s() < PAYMENT_AMOUNT { // 1 ICP
+		return Err(format!("Insufficient balance"))
+	}
 
-            match ic_ledger_types::transfer(ledger_canister_id, transfer_args).await {
-                Ok(_) => {
-                    return Ok(Principal::from_text("jkies-sibbb-ap6").unwrap());
-                },
-                Err((code, msg)) => {
-                    return Err(format!("Transfer balance error: {}: {}", code as u8, msg))
-                }
-            };
-            
-        },
-        Err((code, msg)) => {
-            return Err(format!("Account balance error: {}: {}", code as u8, msg))
-        }
-    }
+	let transfer_args = ic_ledger_types::TransferArgs {
+		memo: Memo(0),
+		amount: Tokens::from_e8s(PAYMENT_AMOUNT),
+		fee: Tokens::from_e8s(TRANSFER_FEE),
+		from_subaccount: Some(principal_to_subaccount(&caller)),
+		to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
+		created_at_time: None,
+	};
+
+	match ic_ledger_types::transfer(ledger_canister_id, transfer_args).await {
+		Ok(_) => return Ok(Principal::from_text("jkies-sibbb-ap6").unwrap()),
+		Err((code, msg)) => return Err(format!("Transfer balance error: {}: {}", code as u8, msg))
+	};
 }
