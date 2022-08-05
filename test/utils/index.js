@@ -48,7 +48,6 @@ exports.setupTests = setupTests
 const idlParentFactory = ({ IDL }) => {
 	return IDL.Service({
 		'caller_account_id': IDL.Func([], [IDL.Text], ['query']),
-		'create_canister': IDL.Func([], [IDL.Variant({Ok: IDL.Principal, Err: IDL.Text})], []),
     	'create_child_canister' : IDL.Func([], [IDL.Variant({ 'Ok' : IDL.Principal, 'Err' : IDL.Text })], []),
 	})
 }

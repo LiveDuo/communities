@@ -1,7 +1,7 @@
 use ic_cdk::export::candid::{candid_method};
 use ic_ledger_types::{AccountIdentifier, DEFAULT_SUBACCOUNT, Memo, Tokens, MAINNET_LEDGER_CANISTER_ID};
-use ic_cdk::api::{call, caller, id};
-use ic_cdk_macros::*;
+use ic_cdk::{api};
+use ic_cdk_macros::{init, query, update};
 
 use candid::{CandidType, Principal};
 
@@ -58,6 +58,9 @@ thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
 }
 
+pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
+pub const TRANSFER_FEE: u64 = 10_000;
+
 #[init]
 fn init(ledger: Option<Principal>) {
 
@@ -66,14 +69,14 @@ fn init(ledger: Option<Principal>) {
     ic_certified_assets::init();
 }
 
-#[ic_cdk_macros::query(name = "g")]
+#[query(name = "g")]
 #[candid_method(query, rename = "g")]
 fn g(key: String) -> Vec<u8> {
 	let asset = ic_certified_assets::get_asset_b(&key).as_ref().to_vec();
 	return asset;
 }
 
-#[ic_cdk_macros::query(name = "l")]
+#[query(name = "l")]
 #[candid_method(query, rename = "l")]
 fn l() -> candid::Nat {
 	let asset = &ic_certified_assets::list()[0];
@@ -85,7 +88,7 @@ fn l() -> candid::Nat {
 	// if (current_length >= total_length) break
 }
 
-#[ic_cdk_macros::query(name = "get_asset")]
+#[query(name = "get_asset")]
 #[candid_method(query, rename = "get_asset")]
 fn get_asset(key: String) -> Vec<u8> {
 	let asset = ic_certified_assets::get_asset(&key);
@@ -108,20 +111,47 @@ fn _get_content_type(name: &str) -> String {
 	else { return "application/octet-stream".to_string() }
 }
 
-#[ic_cdk_macros::update]
+#[update]
 #[candid_method(update)]
 pub async fn create_child_canister() -> Result<Principal, String> {
 
+	let canister_id = ic_cdk::api::id();
+	let caller = ic_cdk::caller();
+	let ledger_canister_id = STATE.with(|s| s.borrow().ledger).unwrap_or(MAINNET_LEDGER_CANISTER_ID);
+    let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
+    let balance_args = ic_ledger_types::AccountBalanceArgs { account };
+    
+	let tokens: Tokens = match ic_ledger_types::account_balance(ledger_canister_id, balance_args).await {
+        Ok(x) => x,
+        Err((code, msg)) => return Err(format!("Account balance error: {}: {}", code as u8, msg))
+    };
+
+	if tokens.e8s() < PAYMENT_AMOUNT { return Err(format!("Insufficient balance")) }
+
+	let transfer_args = ic_ledger_types::TransferArgs {
+		memo: Memo(0),
+		amount: Tokens::from_e8s(PAYMENT_AMOUNT),
+		fee: Tokens::from_e8s(TRANSFER_FEE),
+		from_subaccount: Some(principal_to_subaccount(&caller)),
+		to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
+		created_at_time: None,
+	};
+
+	match ic_ledger_types::transfer(ledger_canister_id, transfer_args).await {
+		Ok(_) => {},
+		Err((code, msg)) => return Err(format!("Transfer balance error: {}: {}", code as u8, msg))
+	};
+
 	let create_args = CreateCanisterArgs {
 		settings: CreateCanisterSettings {
-			controllers: Some(vec![id(), caller()]),
+			controllers: Some(vec![canister_id, caller]),
 			compute_allocation: None,
 			memory_allocation: None,
 			freezing_threshold: None
 		}
 	};
 
-	let (create_result,): (CreateCanisterResult,) = match call::call_with_payment(
+	let (create_result,): (CreateCanisterResult,) = match api::call::call_with_payment(
 		Principal::management_canister(), "create_canister", (create_args,), 200_000_000_000)
 	.await {
 		Ok(x) => x,
@@ -140,7 +170,7 @@ pub async fn create_child_canister() -> Result<Principal, String> {
 		arg: b" ".to_vec(),
 	};
 	
-	match call::call(Principal::management_canister(), "install_code", (install_args,),).await {
+	match api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
 		Ok(x) => x,
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
 	}
@@ -167,7 +197,7 @@ pub async fn create_child_canister() -> Result<Principal, String> {
 			content: content,
 		};
 
-		match call::call(create_result.canister_id, "store", (store_args,),).await {
+		match api::call::call(create_result.canister_id, "store", (store_args,),).await {
 			Ok(x) => x,
 			Err((_code, _msg)) => {}
 		}
@@ -187,40 +217,4 @@ fn post_upgrade() {
 	let (stable_state,): (ic_certified_assets::StableState,) =
         ic_cdk::storage::stable_restore().expect("failed to restore stable state");
     ic_certified_assets::post_upgrade(stable_state);
-}
-
-pub const PAYMENT_AMOUNT: u64 = 100_000_000;
-pub const TRANSFER_FEE: u64 = 10_000;
-
-#[ic_cdk_macros::update]
-#[candid_method(update)]
-async fn create_canister() -> Result<Principal, String> {
-    let caller = ic_cdk::caller();
-    let canister_id = ic_cdk::api::id();
-	let ledger_canister_id = STATE.with(|s| s.borrow().ledger).unwrap_or(MAINNET_LEDGER_CANISTER_ID);
-    let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
-    let balance_args = ic_ledger_types::AccountBalanceArgs { account };
-    
-	let tokens: Tokens = match ic_ledger_types::account_balance(ledger_canister_id, balance_args).await {
-        Ok(x) => x,
-        Err((code, msg)) => return Err(format!("Account balance error: {}: {}", code as u8, msg))
-    };
-
-	if tokens.e8s() < PAYMENT_AMOUNT { // 1 ICP
-		return Err(format!("Insufficient balance"))
-	}
-
-	let transfer_args = ic_ledger_types::TransferArgs {
-		memo: Memo(0),
-		amount: Tokens::from_e8s(PAYMENT_AMOUNT),
-		fee: Tokens::from_e8s(TRANSFER_FEE),
-		from_subaccount: Some(principal_to_subaccount(&caller)),
-		to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
-		created_at_time: None,
-	};
-
-	match ic_ledger_types::transfer(ledger_canister_id, transfer_args).await {
-		Ok(_) => return Ok(Principal::from_text("jkies-sibbb-ap6").unwrap()),
-		Err((code, msg)) => return Err(format!("Transfer balance error: {}: {}", code as u8, msg))
-	};
 }

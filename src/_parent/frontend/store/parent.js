@@ -25,7 +25,7 @@ const ParentProvider = ({ children }) => {
 
 	const callCreateCanister = async () => {
 		try {
-			const response = await parentActorPlug.create_canister()
+			const response = await parentActorPlug.create_child_canister()
 			if (response.Ok) {
 				toast({ description: `Response: ${response.Ok}` })
 			} else {

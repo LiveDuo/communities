@@ -1,5 +1,5 @@
 const { setupTests, checkDfxRunning, getAgent, getParentActor, getChildActor, 
-	getEthereumIdentity, getSignatureAndMessage } = require('./utils')
+	getEthereumIdentity, getSignatureAndMessage, transferIcpToAccount } = require('./utils')
 
 setupTests()
 
@@ -20,6 +20,10 @@ describe('Testing with done', () => {
 		const agent = await getAgent(identity)
 		const actorParent = await getParentActor(agent)
 		
+		// transfer icp to canister
+		const callerAccountId = await actorParent.caller_account_id()
+		await transferIcpToAccount(callerAccountId)
+
 		// create child actor
 		const childPrincipalid = await actorParent.create_child_canister().then(p => p.Ok.toString())
 		actorBackend = await getChildActor(agent, childPrincipalid)
