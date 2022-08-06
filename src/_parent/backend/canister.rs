@@ -1,6 +1,5 @@
-use ic_cdk::export::candid::{candid_method};
+use ic_cdk::{export::candid::candid_method, api};
 use ic_ledger_types::{AccountIdentifier, DEFAULT_SUBACCOUNT, Memo, Tokens, MAINNET_LEDGER_CANISTER_ID};
-use ic_cdk::{api};
 use ic_cdk_macros::{init, query, update};
 
 use candid::{CandidType, Principal};
@@ -69,37 +68,12 @@ fn init(ledger: Option<Principal>) {
     ic_certified_assets::init();
 }
 
-#[query(name = "g")]
-#[candid_method(query, rename = "g")]
-fn g(key: String) -> Vec<u8> {
-	let asset = ic_certified_assets::get_asset_b(&key).as_ref().to_vec();
-	return asset;
-}
-
-#[query(name = "l")]
-#[candid_method(query, rename = "l")]
-fn l() -> candid::Nat {
-	let asset = &ic_certified_assets::list()[0];
-	return asset.clone().encodings.get(0).expect("Encoding has no elements").clone().length;
-
-	// get total_length
-	// get chunk i
-	// current_length += chunk[0].length
-	// if (current_length >= total_length) break
-}
-
-#[query(name = "get_asset")]
-#[candid_method(query, rename = "get_asset")]
-fn get_asset(key: String) -> Vec<u8> {
-	let asset = ic_certified_assets::get_asset(&key);
-	let encodings = asset.encodings.get("identity").expect("There is no identity encoding").clone();
-	let mut chunks_vec: Vec<u8> = vec![];
-	for chunk in encodings.content_chunks.iter() {
-		let chunk = chunk.clone();
-		let chunk_vec = chunk.as_ref().to_vec();
-		chunks_vec.extend(chunk_vec.iter().cloned());
-	}
-	return chunks_vec;
+#[query(name = "get_asset_test")]
+#[candid_method(query, rename = "get_asset_test")]
+fn get_asset_test() {
+	let asset_name = "/child/child.wasm".to_owned();
+	let asset = ic_certified_assets::get_asset(asset_name);
+	ic_cdk::println!("Chunks: {}", asset.len());
 }
 
 fn _get_content_type(name: &str) -> String {
@@ -158,7 +132,7 @@ pub async fn create_child_canister() -> Result<Principal, String> {
 		Err((code, msg)) => { return Err(format!("Create canister error: {}: {}", code as u8, msg)) }
 	};
 
-	let wasm_bytes: Vec<u8> = get_asset("/child/child.wasm".to_string());
+	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/child.wasm".to_string());
 	if wasm_bytes.is_empty() {
 		return Err(format!("WASM is not yet uploaded"))
 	}
@@ -175,19 +149,19 @@ pub async fn create_child_canister() -> Result<Principal, String> {
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
 	}
 
-	let bundle_bytes: Vec<u8> = get_asset("/child/static/js/bundle.js".to_string());
+	let bundle_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/static/js/bundle.js".to_string());
 
 	let canister_str = &create_result.canister_id.to_string();
 	let bundle_str = String::from_utf8(bundle_bytes).expect("Invalid JS bundle");
 	let bundle_with_env = bundle_str.replace("REACT_APP_BACKEND_CANISTER_ID", canister_str);
 	
-	let assets_bytes: Vec<u8> = get_asset("/child/frontend.assets".to_string());
+	let assets_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/frontend.assets".to_string());
 	let assets_str = String::from_utf8(assets_bytes.clone()).expect("Invalid frontend.assets");
 	let assets: Vec<serde_json::Value> = serde_json::from_str(&assets_str).expect("Invalid JSON");
 	for asset in &assets {
 		
 		let asset_str = &asset.as_str().unwrap();
-		let asset_bytes: Vec<u8> = get_asset(["/child", asset_str].join(""));
+		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(["/child", asset_str].join(""));
 		let content = if asset_str == &"/static/js/bundle.js" { bundle_with_env.as_bytes().to_vec() } else { asset_bytes };
 
 		let store_args = StoreAssetArgs {
