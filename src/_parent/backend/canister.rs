@@ -193,7 +193,8 @@ fn post_upgrade() {
     ic_certified_assets::post_upgrade(stable_state);
 }
 
-#[export_name = "canister_query http_request"]
+#[query]
+#[candid_method(query)]
 fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_assets::types::HttpResponse {
 	return ic_certified_assets::http_request_handle(req);
 }

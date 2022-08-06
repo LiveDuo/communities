@@ -11,8 +11,6 @@ use libsecp256k1::recover;
 use std::{collections::BTreeMap, convert::TryInto};
 use std::cell::RefCell;
 
-use std::{collections::HashMap};
-
 const PAGESIZE: usize = 25;
 
 type ProfileStore = BTreeMap<Principal, Profile>;
@@ -299,34 +297,10 @@ fn pre_upgrade() {}
 #[post_upgrade]
 fn post_upgrade() {}
 
-#[export_name = "canister_query http_request"]
-fn http_request() {
-	// return ic_certified_assets::http_request_handle(req);
-
-    #[derive(CandidType, Deserialize)]
-    struct HttpRequest {
-        method: String,
-        url: String,
-        headers: HashMap<String, String>,
-        body: Vec<u8>,
-    }
-    
-    #[derive(CandidType)]
-    struct HttpResponse {
-        status_code: u16,
-        headers: HashMap<String, String>,
-        body: Vec<u8>,
-    }
-
-    let req = api::call::arg_data::<(HttpRequest,)>().0;
-
-    let req_fallback = ic_certified_assets::types::HttpRequest {
-        method: req.method,
-        url: req.url,
-        headers: req.headers.into_iter().collect(),
-        body: serde_bytes::ByteBuf::from(req.body)
-    };
-    ic_certified_assets::http_request_handle(req_fallback);
+#[query]
+#[candid_method(query)]
+fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_assets::types::HttpResponse {
+    return ic_certified_assets::http_request_handle(req);
 }
 
 export_service!();
