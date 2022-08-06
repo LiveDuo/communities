@@ -13,8 +13,6 @@ use std::cell::RefCell;
 
 const PAGESIZE: usize = 25;
 
-type ProfileStore = BTreeMap<Principal, Profile>;
-
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Profile {
     pub address: String,
@@ -33,7 +31,7 @@ impl Default for Profile {
 }
 
 #[derive(Default)]
-pub struct State { profiles: ProfileStore, wall_posts: Wall, latest_post_id: LatestPostId }
+pub struct State { profiles: BTreeMap<Principal, Profile>, wall_posts: Vec<Post>, latest_post_id: i128 }
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
@@ -90,12 +88,16 @@ fn get_by_name(name: String) -> Option<Profile> {
 #[candid_method(query, rename = "getOwnProfile")]
 fn get_own_profile() -> Profile {
     let principal_id = ic_cdk::caller();
-    let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
-
-    profile_store
-        .get(&principal_id)
-        .cloned()
-        .unwrap_or_else(|| Profile::default())
+    return STATE.with(|s| {
+        let profile_store = &s.borrow().profiles;
+        
+        println!("Principal id (): {:?}", principal_id.to_string());
+        
+        profile_store
+            .get(&principal_id)
+            .cloned()
+            .unwrap_or_else(|| Profile::default())
+    });
 }
 
 
@@ -148,20 +150,21 @@ fn profiles() -> Vec<Profile> {
     return profiles;
 }
 
-fn _save_profile(profile: Profile) -> () {
-    let principal_id = ic_cdk::caller();
-
-    let mut profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
-
-    profile_store.insert(principal_id, profile.clone());
-}
-
 #[update(name = "setName")]
 #[candid_method(update, rename = "setName")]
 pub fn set_name(handle: String) -> Profile {
+    let principal_id = ic_cdk::caller();
+
     let mut profile = get_own_profile();
     profile.name = handle;
-    _save_profile(profile.clone());
+
+    println!("Profile (set): {:?}", profile);
+
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        state.profiles.insert(principal_id, profile.clone());
+    });
+
     return profile;
 }
 
@@ -170,7 +173,10 @@ pub fn set_name(handle: String) -> Profile {
 pub fn set_description(description: String) -> Profile {
     let mut profile = get_own_profile();
     profile.description = description;
-    _save_profile(profile.clone());
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        state.profiles.insert(principal_id, profile.clone());
+    });
     return profile;
 }
 
@@ -197,7 +203,10 @@ pub fn link_address(message: String, signature: String) -> Profile {
 
     let mut profile = get_own_profile();
     profile.address = address.to_lowercase().clone();
-    _save_profile(profile.clone());
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        state.profiles.insert(principal_id, profile.clone());
+    });
 
     return profile;
 }
@@ -217,9 +226,6 @@ pub struct Post {
     pub user_name: String,
     pub text: String,
 }
-type Wall = Vec<Post>;
-
-type LatestPostId = i128;
 
 fn paginate(posts: Vec<Post>, page: usize) -> Vec<Post> {
     let start_index = posts.len() - ((page - 1) * PAGESIZE) - 1;
