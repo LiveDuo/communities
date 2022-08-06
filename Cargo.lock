@@ -13,9 +13,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.59"
+version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c91f1f46651137be86f3a2b9a8359f9ab421d04d941c62b5982e1ca21113adf9"
+checksum = "c794e162a5eff65c72ef524dfe393eb923c354e350bb78b9c7383df13f3bc142"
 
 [[package]]
 name = "arrayref"
@@ -54,28 +54,6 @@ name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
-
-[[package]]
-name = "backend"
-version = "0.1.0"
-dependencies = [
- "candid",
- "easy-hasher",
- "hex",
- "ic-cdk 0.4.0",
- "ic-cdk-macros 0.4.0",
- "ic-certified-assets 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "ic-types 0.4.1",
- "lazy_static",
- "libsecp256k1",
- "serde",
-]
-
-[[package]]
-name = "base32"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23ce669cd6c8588f79e15cf450314f9638f967fc5770ff1c7c1deb0925ea7cfa"
 
 [[package]]
 name = "base64"
@@ -208,7 +186,7 @@ dependencies = [
  "candid_derive",
  "codespan-reporting",
  "hex",
- "ic-types 0.4.1",
+ "ic-types",
  "lalrpop",
  "lalrpop-util",
  "leb128",
@@ -240,6 +218,23 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "child"
+version = "0.1.0"
+dependencies = [
+ "candid",
+ "easy-hasher",
+ "hex",
+ "ic-cdk",
+ "ic-cdk-macros",
+ "ic-certified-assets",
+ "ic-types",
+ "lazy_static",
+ "libsecp256k1",
+ "serde",
+ "serde_bytes",
+]
 
 [[package]]
 name = "codespan-reporting"
@@ -518,30 +513,8 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e511d1a019e620d5a3dc43bead7d3c46912bf4f4bfb1d602059046c7a22bb1e"
-dependencies = [
- "candid",
- "cfg-if",
- "serde",
-]
-
-[[package]]
-name = "ic-cdk"
 version = "0.5.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "141341c2cb26c4e5f196d5b64305c677b1abebe093eefbe2c622b4a2e6de8a9f"
-dependencies = [
- "candid",
- "cfg-if",
- "serde",
-]
-
-[[package]]
-name = "ic-cdk"
-version = "0.5.5"
-source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
+source = "git+https://github.com/LiveDuo/cdk-rs#c1e644c1147af54dd92e11116d1e9f70b6f254e6"
 dependencies = [
  "candid",
  "cfg-if",
@@ -550,41 +523,11 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk-macros"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a59a186745fd7d96ba2e057f3b3e3038578ae1e82dcb548bd96f48e9e4a39129"
-dependencies = [
- "candid",
- "ic-cdk 0.4.0",
- "proc-macro2",
- "quote",
- "serde",
- "serde_tokenstream",
- "syn",
-]
-
-[[package]]
-name = "ic-cdk-macros"
 version = "0.5.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5196f57df320b206129d4aae96a0cea72ea2759a5c82651bbb60d721f834998"
+source = "git+https://github.com/LiveDuo/cdk-rs#c1e644c1147af54dd92e11116d1e9f70b6f254e6"
 dependencies = [
  "candid",
- "ic-cdk 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "proc-macro2",
- "quote",
- "serde",
- "serde_tokenstream",
- "syn",
-]
-
-[[package]]
-name = "ic-cdk-macros"
-version = "0.5.5"
-source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
-dependencies = [
- "candid",
- "ic-cdk 0.5.5 (git+https://github.com/LiveDuo/cdk-rs)",
+ "ic-cdk",
  "proc-macro2",
  "quote",
  "serde",
@@ -595,34 +538,14 @@ dependencies = [
 [[package]]
 name = "ic-certified-assets"
 version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cbbcec3266dca08992ea8e8448906a7f3e8e5f3e97e60f5779ab4768561bd72"
+source = "git+https://github.com/LiveDuo/cdk-rs#c1e644c1147af54dd92e11116d1e9f70b6f254e6"
 dependencies = [
  "base64 0.13.0",
  "candid",
  "hex",
- "ic-cdk 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "ic-cdk-macros 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "ic-certified-map 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ic-types 0.3.0",
- "num-traits",
- "serde",
- "serde_bytes",
- "serde_cbor",
- "sha2 0.9.9",
-]
-
-[[package]]
-name = "ic-certified-assets"
-version = "0.2.4"
-source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
-dependencies = [
- "base64 0.13.0",
- "candid",
- "hex",
- "ic-cdk 0.5.5 (git+https://github.com/LiveDuo/cdk-rs)",
- "ic-cdk-macros 0.5.5 (git+https://github.com/LiveDuo/cdk-rs)",
- "ic-certified-map 0.3.0 (git+https://github.com/LiveDuo/cdk-rs)",
+ "ic-cdk",
+ "ic-cdk-macros",
+ "ic-certified-map",
  "num-traits",
  "serde",
  "serde_bytes",
@@ -633,18 +556,7 @@ dependencies = [
 [[package]]
 name = "ic-certified-map"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76c7889064a08b87d6ccf3241e7a5b4dfded4863ec724d24441dfc16df2b3023"
-dependencies = [
- "serde",
- "serde_bytes",
- "sha2 0.9.9",
-]
-
-[[package]]
-name = "ic-certified-map"
-version = "0.3.0"
-source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
+source = "git+https://github.com/LiveDuo/cdk-rs#c1e644c1147af54dd92e11116d1e9f70b6f254e6"
 dependencies = [
  "serde",
  "serde_bytes",
@@ -654,30 +566,15 @@ dependencies = [
 [[package]]
 name = "ic-ledger-types"
 version = "0.1.2"
-source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
+source = "git+https://github.com/LiveDuo/cdk-rs#c1e644c1147af54dd92e11116d1e9f70b6f254e6"
 dependencies = [
  "candid",
  "crc32fast",
  "hex",
- "ic-cdk 0.5.5 (git+https://github.com/LiveDuo/cdk-rs)",
+ "ic-cdk",
  "serde",
  "serde_bytes",
  "sha2 0.9.9",
-]
-
-[[package]]
-name = "ic-types"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e78ec6f58886cdc252d6f912dc794211bd6bbc39ddc9dcda434b2dc16c335b3"
-dependencies = [
- "base32",
- "crc32fast",
- "hex",
- "serde",
- "serde_bytes",
- "sha2 0.9.9",
- "thiserror",
 ]
 
 [[package]]
@@ -981,9 +878,9 @@ name = "parent"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.5.5 (git+https://github.com/LiveDuo/cdk-rs)",
- "ic-cdk-macros 0.5.5 (git+https://github.com/LiveDuo/cdk-rs)",
- "ic-certified-assets 0.2.4 (git+https://github.com/LiveDuo/cdk-rs)",
+ "ic-cdk",
+ "ic-cdk-macros",
+ "ic-certified-assets",
  "ic-ledger-types",
  "serde",
  "serde_bytes",

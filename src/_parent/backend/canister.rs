@@ -192,3 +192,8 @@ fn post_upgrade() {
         ic_cdk::storage::stable_restore().expect("failed to restore stable state");
     ic_certified_assets::post_upgrade(stable_state);
 }
+
+#[export_name = "canister_query http_request"]
+fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_assets::types::HttpResponse {
+	return ic_certified_assets::http_request_handle(req);
+}
