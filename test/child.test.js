@@ -50,7 +50,7 @@ describe('Testing with done', () => {
 		const [profile4] = await actorBackend.getProfileByName('name')
 		expect(profile4.address).toBe(signerAddress.toLowerCase())
 		await actorBackend.setName('')
-				
+
 		// check other profiles
 		const [principal] = await actorBackend.getPrincipalByEth(signerAddress.toLowerCase())
 		const [profile5] = await actorBackend.getProfileByPrincipal(principal)
@@ -70,7 +70,6 @@ describe('Testing with done', () => {
 		const principal = await actorBackend.getOwnPrincipal()
 		const posts = await actorBackend.wall('', 0)
 		const lastPost = posts[posts.length - 1]
-		expect(lastPost.id).toBe(BigInt(posts.length))
 		expect(lastPost.text).toBe('hello')
 		expect(lastPost.principal_id).toBe(principal.toString())
 		
