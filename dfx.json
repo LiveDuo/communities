@@ -29,6 +29,17 @@
       "type": "custom",
       "candid": "src/_meta/minting/cmc.did",
       "wasm": "src/_meta/minting/cmc.wasm"
+    },
+    "deployer": {
+      "package": "deployer",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --package  deployer --release",
+        "ic-cdk-optimizer target/wasm32-unknown-unknown/release/deployer.wasm -o target/wasm32-unknown-unknown/release/deployer_opt.wasm"
+      ],
+      "candid": "src/_meta/deployer/deployer.did",
+      "wasm": "target/wasm32-unknown-unknown/release/deployer_opt.wasm",
+      "type": "custom",
+      "dependencies": []
     }
   },
   "defaults": {
