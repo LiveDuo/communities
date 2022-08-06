@@ -1,15 +1,15 @@
-use easy_hasher::easy_hasher::raw_keccak256;
 use ic_cdk::export::{
-    candid::{CandidType, Deserialize},
+    candid::{CandidType, Deserialize, candid_method, export_service},
     Principal,
 };
-use ic_cdk::export::candid::{candid_method, export_service};
-use ic_cdk::println;
-use ic_cdk_macros::*;
 use ic_cdk::{api};
-use libsecp256k1::recover;
+use ic_cdk_macros::{init, query, update, pre_upgrade, post_upgrade};
+
 use std::{collections::BTreeMap, convert::TryInto};
 use std::cell::RefCell;
+
+use libsecp256k1::recover;
+use easy_hasher::easy_hasher;
 
 const PAGESIZE: usize = 25;
 
@@ -89,10 +89,7 @@ fn get_by_name(name: String) -> Option<Profile> {
 fn get_own_profile() -> Profile {
     let principal_id = ic_cdk::caller();
     return STATE.with(|s| {
-        let profile_store = &s.borrow().profiles;
-        
-        println!("Principal id (): {:?}", principal_id.to_string());
-        
+        let profile_store = &s.borrow().profiles;        
         profile_store
             .get(&principal_id)
             .cloned()
@@ -153,16 +150,13 @@ fn profiles() -> Vec<Profile> {
 #[update(name = "setName")]
 #[candid_method(update, rename = "setName")]
 pub fn set_name(handle: String) -> Profile {
-    let principal_id = ic_cdk::caller();
-
+    let principal = ic_cdk::caller();
     let mut profile = get_own_profile();
     profile.name = handle;
 
-    println!("Profile (set): {:?}", profile);
-
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        state.profiles.insert(principal_id, profile.clone());
+        state.profiles.insert(principal, profile.clone());
     });
 
     return profile;
@@ -171,11 +165,12 @@ pub fn set_name(handle: String) -> Profile {
 #[update(name = "setDescription")]
 #[candid_method(update, rename = "setDescription")]
 pub fn set_description(description: String) -> Profile {
+    let principal = ic_cdk::caller();
     let mut profile = get_own_profile();
     profile.description = description;
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        state.profiles.insert(principal_id, profile.clone());
+        state.profiles.insert(principal, profile.clone());
     });
     return profile;
 }
@@ -183,6 +178,7 @@ pub fn set_description(description: String) -> Profile {
 #[update(name = "linkAddress")]
 #[candid_method(update, rename = "linkAddress")]
 pub fn link_address(message: String, signature: String) -> Profile {
+    let principal = ic_cdk::caller();
     let mut signature_bytes = hex::decode(signature.trim_start_matches("0x")).unwrap();
     let recovery_byte = signature_bytes.pop().expect("No recovery byte");
     let recovery_id = libsecp256k1::RecoveryId::parse_rpc(recovery_byte).unwrap();
@@ -194,18 +190,18 @@ pub fn link_address(message: String, signature: String) -> Profile {
     let message = libsecp256k1::Message::parse(&message_bytes);
     let key = recover(&message, &signature, &recovery_id).unwrap();
     let key_bytes = key.serialize();
-    let keccak256 = raw_keccak256(key_bytes[1..].to_vec());
+    let keccak256 = easy_hasher::raw_keccak256(key_bytes[1..].to_vec());
     let keccak256_hex = keccak256.to_hex_string();
     let mut address: String = "0x".to_owned();
     address.push_str(&keccak256_hex[24..]);
 
-    println!("Linked eth address {:?}", address);
+    ic_cdk::println!("Linked eth address {:?}", address);
 
     let mut profile = get_own_profile();
     profile.address = address.to_lowercase().clone();
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        state.profiles.insert(principal_id, profile.clone());
+        state.profiles.insert(principal, profile.clone());
     });
 
     return profile;
@@ -273,8 +269,6 @@ pub fn wall(filter_principal_id: String, filter_page: i128) -> Vec<Post> {
 #[candid_method(update, rename = "write")]
 pub fn write(text: String)  {
     let principal = ic_cdk::caller();
-    let principal_id = principal.to_string();
-
     let latest_post_id = STATE.with(|s| s.borrow().latest_post_id);
     STATE.with(|s| { s.borrow_mut().latest_post_id = latest_post_id + 1; });
 
@@ -287,14 +281,16 @@ pub fn write(text: String)  {
     let post = Post {
         id: latest_post_id,
         timestamp: api::time() as i128,
-        principal_id,
+        principal_id: principal.to_string(),
         user_address: profile.address,
         user_name: profile.name,
         text,
     };
 
-    let mut wall = STATE.with(|s| s.borrow_mut().wall_posts.clone());
-    wall.push(post);
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        state.wall_posts.push(post);
+    });
 }
 
 #[pre_upgrade]
