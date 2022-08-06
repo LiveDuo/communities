@@ -541,7 +541,7 @@ dependencies = [
 [[package]]
 name = "ic-cdk"
 version = "0.5.5"
-source = "git+https://github.com/LiveDuo/cdk-rs#113aa2a22561abaf0ef8c267262aa1311a5c5734"
+source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
 dependencies = [
  "candid",
  "cfg-if",
@@ -581,7 +581,7 @@ dependencies = [
 [[package]]
 name = "ic-cdk-macros"
 version = "0.5.5"
-source = "git+https://github.com/LiveDuo/cdk-rs#113aa2a22561abaf0ef8c267262aa1311a5c5734"
+source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
 dependencies = [
  "candid",
  "ic-cdk 0.5.5 (git+https://github.com/LiveDuo/cdk-rs)",
@@ -615,7 +615,7 @@ dependencies = [
 [[package]]
 name = "ic-certified-assets"
 version = "0.2.4"
-source = "git+https://github.com/LiveDuo/cdk-rs#113aa2a22561abaf0ef8c267262aa1311a5c5734"
+source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
 dependencies = [
  "base64 0.13.0",
  "candid",
@@ -644,7 +644,7 @@ dependencies = [
 [[package]]
 name = "ic-certified-map"
 version = "0.3.0"
-source = "git+https://github.com/LiveDuo/cdk-rs#113aa2a22561abaf0ef8c267262aa1311a5c5734"
+source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
 dependencies = [
  "serde",
  "serde_bytes",
@@ -654,7 +654,7 @@ dependencies = [
 [[package]]
 name = "ic-ledger-types"
 version = "0.1.2"
-source = "git+https://github.com/LiveDuo/cdk-rs#113aa2a22561abaf0ef8c267262aa1311a5c5734"
+source = "git+https://github.com/LiveDuo/cdk-rs#8dbaa1f3a349026083c978339f032ab087374d65"
 dependencies = [
  "candid",
  "crc32fast",
