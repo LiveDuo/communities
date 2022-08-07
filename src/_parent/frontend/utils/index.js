@@ -4,7 +4,11 @@ const isLocalhost = (h) => {
 export { isLocalhost }
 
 const getHostFromUrl = (hostUrl) => {
-    const url = new URL(hostUrl)
-    return url.host
+    try {
+        const url = new URL(hostUrl)
+        return url.host
+    } catch (error) {
+        return ''
+    }
 }
 export { getHostFromUrl }

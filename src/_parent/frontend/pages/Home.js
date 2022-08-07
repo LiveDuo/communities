@@ -1,4 +1,4 @@
-import { useContext, useEffect, useCallback, useState } from 'react'
+import { useContext } from 'react'
 import { Box, Button, Link, Text, useToast } from '@chakra-ui/react'
 import { ParentContext } from '../store/parent'
 import { LedgerContext } from '../store/ledger'
@@ -14,10 +14,9 @@ const CREATE_CHILD_COST = 1 * 1e8
 
 const Example = () => {
 
-	const { walletConnected, userPrincipal, ledgerActorPlug } = useContext(IdentityContext)
+	const { walletConnected, userPrincipal } = useContext(IdentityContext)
 	const { childPrincipal, parentCanisterId, loading, getCreateChildTx } = useContext(ParentContext)
-	const { ledgerBalanceICP, getTransferIcpTx } = useContext(LedgerContext)
-	const [balance, setBalance] = useState(null)
+	const { balance, getTransferIcpTx } = useContext(LedgerContext)
 	const toast = useToast()
 	
 	const createChildBatch = async () => {
@@ -30,17 +29,6 @@ const Example = () => {
 			toast({ description, status: 'error' })
 		}
 	}
-
-	const getAdminBalance = useCallback(async () => {
-		const _balance = await ledgerBalanceICP(parentCanisterId, userPrincipal)
-		setBalance(_balance)
-	}, [ledgerBalanceICP, parentCanisterId, userPrincipal])
-
-	useEffect(() => {
-		if (ledgerActorPlug) {
-			getAdminBalance()
-		}
-	}, [getAdminBalance, ledgerActorPlug])
 
 	if (!walletConnected) return <Text>Wallet not connected</Text>
 	return (
