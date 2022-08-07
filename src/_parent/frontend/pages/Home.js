@@ -39,9 +39,6 @@ const Example = () => {
 	if (!walletConnected) return <Text>Wallet not connected</Text>
 	return (
 		<Box m="20px">
-			<Box mb="20px">
-				{balance > 0 && <Text>User Balance: {balance / 1e8} ICP</Text>}
-			</Box>
 			<Box>
 				<Button mb="8px" isLoading={loading} disabled={!balance} onClick={() => createChildBatch()}>Create Child</Button>
 			</Box>
