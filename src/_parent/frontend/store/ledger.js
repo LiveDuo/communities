@@ -33,7 +33,7 @@ const LedgerProvider = ({ children }) => {
 		methodName: 'send_dfx',
 		args: [{
 			to: params.accountId,
-			fee: { e8s: isLocalhost() ? 0n : 10000n },
+			fee: { e8s: isLocalhost(window.location.host) ? 0n : 10000n },
 			amount: { e8s: params.amount },
 			memo: 32n, // TODO: put random memo?
 			from_subaccount: [],
