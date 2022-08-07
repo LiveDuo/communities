@@ -3,14 +3,15 @@ import { Button, Flex, Box, Heading } from '@chakra-ui/react'
 
 import { IdentityContext } from '../../store/identity'
 
+import { isLocalhost } from '../../utils'
+
 const Header = () => {
   const {walletConnected, connect, disconnect, host, userPrincipal} = useContext(IdentityContext)
 
   const userPrincipalShorten = userPrincipal.slice(0, 5) + '...' + userPrincipal.slice(-3)
 
   const onConnect = () => {
-    const h = window.location.host
-    if (h.startsWith('localhost') || h.startsWith('127.0.0.1')) {
+    if (isLocalhost()) {
       connect('localhost')
     } else {
       connect('mainnet')

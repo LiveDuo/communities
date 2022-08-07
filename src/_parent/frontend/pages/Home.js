@@ -10,6 +10,8 @@ import { getPrincipalUrl } from '../utils/principal'
 
 import { getAccountId } from '../utils/account'
 
+const CREATE_CHILD_COST = 1 * 1e8
+
 const Example = () => {
 
 	const { walletConnected, userPrincipal, ledgerActorPlug } = useContext(IdentityContext)
@@ -20,7 +22,7 @@ const Example = () => {
 	
 	const createChildBatch = async () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		const transferTx = balance > 0 ? [getTransferIcpTx({accountId, amount: 100000000n})] : []
+		const transferTx = balance < CREATE_CHILD_COST ? [getTransferIcpTx({accountId, amount: 100000000n})] : []
 		try {
 			await window.ic.plug.batchTransactions([...transferTx, getCreateChildTx()])
 		} catch (error) {
@@ -47,7 +49,7 @@ const Example = () => {
 				{balance > 0 && <Text>User Balance: {balance / 1e8} ICP</Text>}
 			</Box>
 			<Box>
-				<Button mb="8px" isLoading={loading} onClick={() => createChildBatch()}>Create Child</Button>
+				<Button mb="8px" isLoading={loading} disabled={!balance} onClick={() => createChildBatch()}>Create Child</Button>
 			</Box>
 			<Box>
 				<Box>{childPrincipal &&
