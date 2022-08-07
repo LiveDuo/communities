@@ -29,7 +29,7 @@ const LedgerProvider = ({ children }) => {
 		}
 	}, [ledgerActorPlug, toast])
 
-	const getTransferIcpTx = (params) => ({
+	const getTransferIcpTx = (params, callback = () => {}) => ({
 		idl: idlLedgerFactory,
 		canisterId: ledgerCanisterId,
 		methodName: 'send_dfx',
@@ -41,8 +41,8 @@ const LedgerProvider = ({ children }) => {
 			from_subaccount: [],
 			created_at_time: [],
 		}],
-		onSuccess: (res) => console.log('Success', res),
-		onFail: (res) => console.log('Error', res)
+		onSuccess: callback,
+		onFail: (_res) => toast({ description: 'Something went wrong', status: 'error' })
 	})
 
 	const getUserBalance = useCallback(async () => {

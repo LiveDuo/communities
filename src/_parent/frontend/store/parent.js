@@ -12,13 +12,11 @@ const ParentProvider = ({ children }) => {
 
 	const toast = useToast()
 	const [loading, setLoading] = useState()
-	const [childPrincipal, setChildPrincipal] = useState()
 	const { parentActor, parentActorPlug } = useContext(IdentityContext)
 
 	const createChild = async () => {
 		setLoading(true)
 		const {Ok: childPrincipal} = await parentActor.create_child_canister()
-		setChildPrincipal(childPrincipal.toString())
 		setLoading(false)
 		return childPrincipal
 	}
@@ -37,16 +35,16 @@ const ParentProvider = ({ children }) => {
 		}
 	}
 
-	const getCreateChildTx = (_params) => ({
+	const getCreateChildTx = (_params, callback = () => {}) => ({
 		idl: idlParentFactory,
 		canisterId: parentCanisterId,
 		methodName: 'create_child_canister',
 		args: [],
-		onSuccess: (res) => console.log('Success', res),
-		onFail: (res) => console.log('Error', res)
+		onSuccess: callback,
+		onFail: (_res) => toast({ description: 'Something went wrong', status: 'error' })
 	})
 
-	const value = { getCreateChildTx, createChild, childPrincipal, parentCanisterId, callCreateCanister, loading, setLoading }
+	const value = { getCreateChildTx, createChild, parentCanisterId, callCreateCanister, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }

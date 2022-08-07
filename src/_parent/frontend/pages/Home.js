@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import { Box, Button, Link, Text, useToast } from '@chakra-ui/react'
 import { ParentContext } from '../store/parent'
 import { LedgerContext } from '../store/ledger'
@@ -12,18 +12,24 @@ import { getAccountId } from '../utils/account'
 
 const CREATE_CHILD_COST = 1 * 1e8
 
+/* global BigInt */
+
 const Example = () => {
 
 	const { walletConnected, userPrincipal } = useContext(IdentityContext)
-	const { childPrincipal, parentCanisterId, loading, getCreateChildTx } = useContext(ParentContext)
+	const { parentCanisterId, loading, getCreateChildTx } = useContext(ParentContext)
 	const { balance, getTransferIcpTx } = useContext(LedgerContext)
+	const [childPrincipal, setChildPrincipal] = useState()
 	const toast = useToast()
 	
 	const createChildBatch = async () => {
+		const onTransfer = () => toast({ description: `Transfer success` })
+		const onCreate = (r) => setChildPrincipal(r.Ok.toString())
+
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		const transferTx = balance < CREATE_CHILD_COST ? [getTransferIcpTx({accountId, amount: 100000000n})] : []
+		const transferTx = balance < CREATE_CHILD_COST ? [getTransferIcpTx({accountId, amount: BigInt(CREATE_CHILD_COST)}, onTransfer)] : []
 		try {
-			await window.ic.plug.batchTransactions([...transferTx, getCreateChildTx()])
+			await window.ic.plug.batchTransactions([...transferTx, getCreateChildTx(null, onCreate)])
 		} catch (error) {
 			const description = error.message ?? 'Transaction failed'
 			toast({ description, status: 'error' })
