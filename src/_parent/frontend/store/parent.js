@@ -2,7 +2,7 @@ import { useState, useContext, createContext } from 'react'
 
 import { IdentityContext } from './identity'
 
-import { parentCanisterId } from '../agents/parent'
+import { idlParentFactory, parentCanisterId } from '../agents/parent'
 
 import { useToast } from '@chakra-ui/react'
 
@@ -37,7 +37,16 @@ const ParentProvider = ({ children }) => {
 		}
 	}
 
-	const value = { createChild, childPrincipal, parentCanisterId, callCreateCanister, loading, setLoading }
+	const getCreateChildTx = (_params) => ({
+		idl: idlParentFactory,
+		canisterId: parentCanisterId,
+		methodName: 'create_child_canister',
+		args: [],
+		onSuccess: (res) => console.log('Success', res),
+		onFail: (res) => console.log('Error', res)
+	})
+
+	const value = { getCreateChildTx, createChild, childPrincipal, parentCanisterId, callCreateCanister, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }

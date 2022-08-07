@@ -5,6 +5,8 @@ import { IdentityContext } from './identity'
 
 import { getAccountId } from '../utils/account'
 
+import { idlLedgerFactory, ledgerCanisterId } from '../agents/ledger'
+
 const LedgerContext = createContext()
 
 const transferAmount = 0.5
@@ -72,7 +74,23 @@ const LedgerProvider = ({ children }) => {
 		}
 	}
 
-	const value = { requestTransferICP, requestBalanceICP, ledgerTransferICP, ledgerBalanceICP, callAdminBalance, loading, setLoading }
+	const getTransferIcpTx = (params) => ({
+		idl: idlLedgerFactory,
+		canisterId: ledgerCanisterId,
+		methodName: 'send_dfx',
+		args: [{
+			to: params.accountId,
+			fee: { e8s: 10000n }, // TODO: 0n for localhost
+			amount: { e8s: params.amount },
+			memo: 32n, // TODO: put random memo?
+			from_subaccount: [],
+			created_at_time: [],
+		}],
+		onSuccess: (res) => console.log('Success', res),
+		onFail: (res) => console.log('Error', res)
+	})
+
+	const value = { getTransferIcpTx, requestTransferICP, requestBalanceICP, ledgerTransferICP, ledgerBalanceICP, callAdminBalance, loading, setLoading }
 
 	return <LedgerContext.Provider value={value}>{children}</LedgerContext.Provider>
 }

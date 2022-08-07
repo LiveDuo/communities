@@ -8,11 +8,18 @@ import { ExternalLinkIcon } from '@chakra-ui/icons'
 
 import { getPrincipalUrl } from '../utils/principal'
 
+import { getAccountId } from '../utils/account'
+
 const Example = () => {
 
 	const { walletConnected, userPrincipal } = useContext(IdentityContext)
-	const { createChild, childPrincipal, parentCanisterId, callCreateCanister, loading } = useContext(ParentContext)
-	const { callAdminBalance, requestTransferICP, requestBalanceICP, ledgerTransferICP, ledgerBalanceICP } = useContext(LedgerContext)
+	const { createChild, childPrincipal, parentCanisterId, callCreateCanister, loading, getCreateChildTx } = useContext(ParentContext)
+	const { callAdminBalance, requestTransferICP, requestBalanceICP, ledgerTransferICP, ledgerBalanceICP, getTransferIcpTx } = useContext(LedgerContext)
+
+	const createChildBatch = async () => {
+		const accountId = getAccountId(parentCanisterId, userPrincipal)
+		await window.ic.plug.batchTransactions([getTransferIcpTx({accountId, amount: 100000000n}), getCreateChildTx()])
+	}
 
 	return (
 		<Box m="20px">
@@ -29,10 +36,11 @@ const Example = () => {
 			<Box mb="20px">
 				<Button onClick={callCreateCanister} disabled={!walletConnected}>Call Create Canister</Button>
 				<Button ml="8px" onClick={() => callAdminBalance(parentCanisterId)} disabled={!walletConnected}>Call Admin Balance</Button>
+				<Button ml="8px" onClick={() => createChildBatch()}>Create Child (batch)</Button>
 			</Box>
 
 			<Box mt="140px">
-				<Button isLoading={loading} loadingText='Creating...' mb="20px" onClick={createChild}>Create Child</Button>
+				<Button isLoading={loading} loadingText='Creating...' onClick={createChild}>Create Child</Button>
 				<Box>{childPrincipal &&
 					<Link href={getPrincipalUrl(childPrincipal)} isExternal>
 						{childPrincipal} <ExternalLinkIcon mx='2px' />
