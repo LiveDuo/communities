@@ -1,0 +1,3 @@
+service : (opt principal) -> {
+    "greet": (text) -> (text) query;
+}
