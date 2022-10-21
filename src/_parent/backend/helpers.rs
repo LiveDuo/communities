@@ -32,4 +32,4 @@ async fn caller_account_id() -> String {
 
 // CANISTER_USER_ACCOUNT = dfx canister call parent caller_account_id
 // dfx ledger transfer --ledger-canister-id $(dfx canister id ledger) --amount 1 --memo 1347768404 CANISTER_USER_ACCOUNT
-// fx ledger balance --ledger-canister-id $(dfx canister id ledger) CANISTER_USER_ACCOUNT
+// dfx ledger balance --ledger-canister-id $(dfx canister id ledger) CANISTER_USER_ACCOUNT
