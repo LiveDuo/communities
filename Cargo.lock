@@ -229,11 +229,8 @@ dependencies = [
  "ic-cdk",
  "ic-cdk-macros",
  "ic-certified-assets",
- "ic-types",
- "lazy_static",
  "libsecp256k1",
  "serde",
- "serde_bytes",
 ]
 
 [[package]]
