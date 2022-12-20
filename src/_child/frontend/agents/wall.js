@@ -18,7 +18,7 @@ const idlWallFactory = ({ IDL }) => {
 
 export const createWallActor = (identity) => Actor.createActor(idlWallFactory, {
   agent: getAgent(identity),
-  canisterId: 'REACT_APP_BACKEND_CANISTER_ID',
+  canisterId: 'REACT_APP_PARENT_CANISTER_ID',
   host: icHost,
   identity
 })

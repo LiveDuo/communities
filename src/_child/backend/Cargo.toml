@@ -13,6 +13,6 @@ ic-cdk-macros = { git = "https://github.com/LiveDuo/cdk-rs" }
 ic-certified-assets = { git = "https://github.com/LiveDuo/cdk-rs" }
 serde = "1.0.140"
 hex = "0.4.3"
-libsecp256k1 = "0.6.0"
+libsecp256k1 = { version = "0.6.0", default-features = false, features = ["lazy-static-context"] }
 easy-hasher = "2.2.1"
 candid = "0.7.15"

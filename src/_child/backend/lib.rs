@@ -1,15 +1,10 @@
-use ic_cdk::export::{
-    candid::{CandidType, Deserialize, candid_method, export_service},
-    Principal,
-};
+use candid::{CandidType, Deserialize, candid_method, export_service, Principal};
 use ic_cdk::{api};
 use ic_cdk_macros::{init, query, update, pre_upgrade, post_upgrade};
 
-use std::{collections::BTreeMap, convert::TryInto};
+use std::collections::BTreeMap;
+use std::convert::TryInto;
 use std::cell::RefCell;
-
-use libsecp256k1::recover;
-use easy_hasher::easy_hasher;
 
 const PAGESIZE: usize = 25;
 
@@ -188,9 +183,9 @@ pub fn link_address(message: String, signature: String) -> Profile {
     let message_bytes = hex::decode(message.trim_start_matches("0x")).unwrap();
     let message_bytes: [u8; 32] = message_bytes.try_into().unwrap();
     let message = libsecp256k1::Message::parse(&message_bytes);
-    let key = recover(&message, &signature, &recovery_id).unwrap();
-    let key_bytes = key.serialize();
-    let keccak256 = easy_hasher::raw_keccak256(key_bytes[1..].to_vec());
+    let public_key = libsecp256k1::recover(&message, &signature, &recovery_id).unwrap();
+    let public_key_bytes = public_key.serialize();
+    let keccak256 = easy_hasher::easy_hasher::raw_keccak256(public_key_bytes[1..].to_vec());
     let keccak256_hex = keccak256.to_hex_string();
     let mut address: String = "0x".to_owned();
     address.push_str(&keccak256_hex[24..]);

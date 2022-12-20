@@ -153,7 +153,7 @@ pub async fn create_child_canister() -> Result<Principal, String> {
 
 	let canister_str = &create_result.canister_id.to_string();
 	let bundle_str = String::from_utf8(bundle_bytes).expect("Invalid JS bundle");
-	let bundle_with_env = bundle_str.replace("REACT_APP_BACKEND_CANISTER_ID", canister_str);
+	let bundle_with_env = bundle_str.replace("REACT_APP_PARENT_CANISTER_ID", canister_str);
 	
 	let assets_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/frontend.assets".to_string());
 	let assets_str = String::from_utf8(assets_bytes.clone()).expect("Invalid frontend.assets");
