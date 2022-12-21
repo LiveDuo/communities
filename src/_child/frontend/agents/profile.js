@@ -23,7 +23,6 @@ const idlProfileFactory = ({ IDL }) => {
       ['query'],
     ),
     'link_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
-    'list': IDL.Func([], [IDL.Vec(Profile)], ['query']),
     'set_description': IDL.Func([IDL.Text], [Profile], []),
     'set_name': IDL.Func([IDL.Text], [Profile], []),
   })
