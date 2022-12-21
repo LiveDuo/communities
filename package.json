@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "test:child": "jest -i test/child.test.js",
+    "test:parent": "jest -i test/parent.test.js",
     "start": "npm run start:parent",
     "dev": "npm run dev:parent",
     "build": "npm run dev:parent",
