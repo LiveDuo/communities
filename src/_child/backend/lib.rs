@@ -17,7 +17,6 @@ pub struct Post {
     pub timestamp: i128,
     pub principal_id: String,
     pub user_address: String,
-    pub user_name: String,
     pub text: String,
 }
 
@@ -35,11 +34,11 @@ fn init() {
 }
 
 #[ic_cdk_macros::query]
-fn get_profile_by_address(eth_address: String) -> Option<Profile> {
+fn get_profile_by_address(address: String) -> Option<Profile> {
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
 
     for (_, profile) in profile_store.iter() {
-        if profile.address.eq(&eth_address) {
+        if profile.address.eq(&address) {
             return Some(profile.clone());
         }
     }
@@ -50,26 +49,27 @@ fn get_profile_by_address(eth_address: String) -> Option<Profile> {
 #[ic_cdk_macros::query]
 fn get_profile() -> Profile {
     let principal_id = ic_cdk::caller();
-    return STATE.with(|s| {
+    let profile = STATE.with(|s| {
         let profile_store = &s.borrow().profiles;        
-        profile_store
-            .get(&principal_id)
-            .cloned()
-            .unwrap_or_else(|| Profile::default())
+        profile_store.get(&principal_id).cloned().unwrap_or_else(|| Profile::default())
     });
+
+    return profile;
 }
 
 #[ic_cdk_macros::update]
 pub fn update_profile(name_opt: Option<String>, description_opt: Option<String>) -> Profile {
     let principal = ic_cdk::caller();
-    let mut profile = get_profile();
 
-    if let Some(name) = name_opt { profile.name = name; }
-    if let Some(description) = description_opt { profile.description = description; }
-
-    STATE.with(|s| {
+    let profile = STATE.with(|s| {
         let mut state = s.borrow_mut();
-        state.profiles.insert(principal, profile.clone());
+
+        let profile = state.profiles.get_mut(&principal).unwrap();
+
+        if let Some(name) = name_opt { profile.name = name; }
+        if let Some(description) = description_opt { profile.description = description; }
+
+        return profile.clone();
     });
 
     return profile;
@@ -121,14 +121,13 @@ pub fn create_post(text: String)  {
     let profile = profile_store
         .get(&principal)
         .cloned()
-        .unwrap_or_else(|| Profile::default());
+        .unwrap_or(Profile::default());
     
     let post = Post {
         id: posts_len as i128,
         timestamp: ic_cdk::api::time() as i128,
         principal_id: principal.to_string(),
         user_address: profile.address,
-        user_name: profile.name,
         text,
     };
 

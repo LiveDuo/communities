@@ -1,7 +1,7 @@
 import { useContext, useEffect } from 'react'
 import { useEthers, shortenAddress } from '@usedapp/core'
 import { Button, Box, Flex, Link } from '@chakra-ui/react'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
 import { Jazzicon } from '@ukstv/jazzicon-react'
 
 import { useENSName } from '../../utils/hooks'
@@ -11,6 +11,7 @@ import { ProfileContext } from '../../store/profile'
 const Header = () => {
 
   const navigate = useNavigate()
+  const location = useLocation()
 
   const { account, activateBrowserWallet } = useEthers()
   const { principal, login, logout } = useContext(IdentityContext)
@@ -31,9 +32,9 @@ const Header = () => {
 
   return (
     <Flex m="20px" alignItems="center">
-      <Box ml="20px">
+      {location.pathname !== '/' && <Box ml="20px">
         <Button onClick={() => navigate('/')}>Home</Button>
-      </Box>
+      </Box>}
       <Box display="inline-block" ml="auto">
         {profile?.name.length > 0 && 
           <Box>Hello&nbsp;{profile?.name}!</Box>}

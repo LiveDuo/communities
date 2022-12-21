@@ -7,14 +7,13 @@ import { Link as RouterLink } from 'react-router-dom'
 
 import { useENSName } from '../../utils/hooks'
 import { PostsContext } from '../../store/posts'
-import { ProfileContext } from '../../store/profile'
 import { IdentityContext } from '../../store/identity'
 
 const Post = memo(({ data }) => {
 
-  const { profile } = useContext(ProfileContext)
+  // console.log(data)
 
-  const { ENSName } = useENSName(profile?.address)
+  const { ENSName } = useENSName(data.user_address)
 
   const timestamp = parseInt(data.timestamp.toString().substr(0, 13))
   const fromNow = formatDistance(timestamp, Date.now())
@@ -30,8 +29,6 @@ const Post = memo(({ data }) => {
             </Box>
             {ENSName || (data.user_address && shortenAddress(data.user_address))}
           </Link>
-          &nbsp;
-          {data.user_name && <Link as={RouterLink} to={`/user/${data.user_address.toLowerCase()}`}>{`(${data.user_name})`}</Link>}
         </Box>
       </Box>
     </Box>

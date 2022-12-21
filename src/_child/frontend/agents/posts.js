@@ -7,7 +7,6 @@ const idlPostsFactory = ({ IDL }) => {
     'text': IDL.Text,
     'principal_id': IDL.Text,
     'user_address': IDL.Text,
-    'user_name': IDL.Text,
     'timestamp': IDL.Int,
   })
   return IDL.Service({
