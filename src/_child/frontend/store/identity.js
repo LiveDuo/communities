@@ -29,7 +29,7 @@ const IdentityProvider = ({children}) => {
     setWallActor(_wallActor)
 
     if (account) {
-      setPrincipal(identity.getPrincipal())
+      setPrincipal(identity?.getPrincipal())
     }
   }, [account])
 
@@ -42,7 +42,7 @@ const IdentityProvider = ({children}) => {
 
       // save identity
       saveIdentity(account, identity) // to local storage
-      setPrincipal(identity.getPrincipal())
+      setPrincipal(identity?.getPrincipal())
 
       // set actors
       const _profileActor = createProfileActor(identity)

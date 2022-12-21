@@ -56,7 +56,7 @@ const WallPosts = ({principalId}) => {
           <Box mt="10px" key={'-1'}>{loading && <Spinner />}</Box>
       </SimpleGrid> 
       : <Box mt="20px">
-        The wall is empty!
+        No posts!
       </Box>
     )
 }
