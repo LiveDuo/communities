@@ -10,11 +10,6 @@
       "candid": "src/_parent/backend/parent.did",
       "type": "rust"
     },
-    "deployer": {
-      "package": "deployer",
-      "candid": "src/_meta/deployer/deployer.did",
-      "type": "rust"
-    },
     "ledger": {
       "type": "custom",
       "candid": "src/_meta/ledger/ledger.public.did",

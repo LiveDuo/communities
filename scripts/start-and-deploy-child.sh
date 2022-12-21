@@ -17,17 +17,10 @@ READY_STRING="Listening on http://127.0.0.1:8000/"
         ./scripts/prepare-wasm.sh
         if [ $? -ne 0 ]; then echo "$PREFIX_ERR Prepare wasm failed"; exit 1; fi
 
-        echo "$PREFIX Deploying deployer..."
-        dfx deploy deployer
-        if [ $? -ne 0 ]; then echo "$PREFIX_ERR Deploy deployer failed"; exit 1; fi
-
-        echo "$PREFIX Preparing assets..."
-        icx-asset --pem ~/.config/dfx/identity/default/identity.pem upload $(dfx canister id deployer) /child/child.wasm=./canisters/child.wasm
-        if [ $? -ne 0 ]; then echo "$PREFIX_ERR Prepare assets failed"; exit 1; fi
-        
         echo "$PREFIX Deploying child..."
-        dfx canister call deployer create_child_canister
+        dfx deploy child
         if [ $? -ne 0 ]; then echo "$PREFIX_ERR Deploy child failed"; exit 1; fi
+
     fi
 
 done
