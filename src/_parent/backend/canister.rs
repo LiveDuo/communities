@@ -1,10 +1,6 @@
-use ic_cdk::{export::candid::candid_method, api};
 use ic_ledger_types::{AccountIdentifier, DEFAULT_SUBACCOUNT, Memo, Tokens, MAINNET_LEDGER_CANISTER_ID};
-use ic_cdk_macros::{init, query, update};
 
-use candid::{CandidType, Principal};
-
-use serde::{Deserialize};
+use candid::{CandidType, Principal, Deserialize};
 
 use std::cell::RefCell;
 
@@ -60,7 +56,7 @@ thread_local! {
 pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
 pub const TRANSFER_FEE: u64 = 10_000;
 
-#[init]
+#[ic_cdk_macros::init]
 fn init(ledger: Option<Principal>) {
 
 	STATE.with(|s| { s.borrow_mut().ledger = ledger; });
@@ -68,8 +64,7 @@ fn init(ledger: Option<Principal>) {
     ic_certified_assets::init();
 }
 
-#[query(name = "get_asset_test")]
-#[candid_method(query, rename = "get_asset_test")]
+#[ic_cdk_macros::query]
 fn get_asset_test() {
 	let asset_name = "/child/child.wasm".to_owned();
 	let asset = ic_certified_assets::get_asset(asset_name);
@@ -108,7 +103,7 @@ async fn store_assets(canister_id: Principal) -> Result<(), String> {
 			content: content,
 		};
 
-		match api::call::call(canister_id, "store", (store_args,),).await {
+		match ic_cdk::api::call::call(canister_id, "store", (store_args,),).await {
 			Ok(x) => x,
 			Err((_code, _msg)) => {}
 		}
@@ -130,7 +125,7 @@ async fn install_code(_caller: Principal, canister_id: Principal) -> Result<(), 
 		arg: b" ".to_vec(),
 	};
 	
-	match api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
+	match ic_cdk::api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
 		Ok(x) => Ok(x),
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
 	}
@@ -146,7 +141,7 @@ async fn create_canister(caller: Principal, canister_id: Principal) -> Result<Pr
 		}
 	};
 
-	let (create_result,): (CreateCanisterResult,) = match api::call::call_with_payment(
+	let (create_result,): (CreateCanisterResult,) = match ic_cdk::api::call::call_with_payment(
 		Principal::management_canister(), "create_canister", (create_args,), 200_000_000_000)
 	.await {
 		Ok(x) => x,
@@ -183,8 +178,7 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
 	Ok(())
 }
 
-#[update]
-#[candid_method(update)]
+#[ic_cdk_macros::update]
 pub async fn create_child_canister() -> Result<Principal, String> {
 
 	let canister_id = ic_cdk::api::id();
@@ -201,21 +195,20 @@ pub async fn create_child_canister() -> Result<Principal, String> {
 	Ok(created_id)
 }
 
-#[export_name = "pre_upgrade"]
+#[ic_cdk_macros::pre_upgrade]
 fn pre_upgrade() {
 	ic_cdk::storage::stable_save((ic_certified_assets::pre_upgrade(),))
         .expect("failed to save stable state");
 }
 
-#[export_name = "post_upgrade"]
+#[ic_cdk_macros::post_upgrade]
 fn post_upgrade() {
 	let (stable_state,): (ic_certified_assets::StableState,) =
         ic_cdk::storage::stable_restore().expect("failed to restore stable state");
     ic_certified_assets::post_upgrade(stable_state);
 }
 
-#[query]
-#[candid_method(query)]
+#[ic_cdk_macros::query]
 fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_assets::types::HttpResponse {
 	return ic_certified_assets::http_request_handle(req);
 }
