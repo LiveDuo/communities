@@ -7,7 +7,9 @@ type Profile = record {
 type Post = record {
     "id": int;
     "timestamp": int;
-    "user_id": text;
+    "principal_id": text;
+    "user_address": text;
+    "user_name": text;
     "text": text;
 };
 
