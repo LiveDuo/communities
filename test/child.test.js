@@ -5,7 +5,7 @@ setupTests()
 
 describe('Testing with done', () => {
 
-	let actorBackend, signer
+	let actorBackend, signer, identity
 
 	beforeAll(async () => {
 
@@ -13,8 +13,9 @@ describe('Testing with done', () => {
 		await checkDfxRunning()
 
 		// get random identity
-		const {identity, signerRandom} = await getEthereumIdentity()
+		const {identity: identityEthers, signerRandom} = await getEthereumIdentity()
 		signer = signerRandom
+		identity = identityEthers
 		
 		// get parent actor
 		const agent = await getAgent(identity)
@@ -39,22 +40,18 @@ describe('Testing with done', () => {
 		expect(profile.address).toBe(signerAddress.toLowerCase())
 		
 		// check profile and principal
-		const profile2 = await actorBackend.get_own_profile()
+		const profile2 = await actorBackend.get_profile()
 		expect(profile2.address).toBe(signerAddress.toLowerCase())
-		const principal2 = await actorBackend.get_own_principal()
-		const [profile3] = await actorBackend.get_profile_by_principal(principal2)
-		expect(profile3.address).toBe(signerAddress.toLowerCase())
 
 		// set username
 		await actorBackend.setName('name')
-		const profile4 = await actorBackend.get_own_profile()
+		const profile4 = await actorBackend.get_profile()
 		expect(profile4.address).toBe(signerAddress.toLowerCase())
 		await actorBackend.setName('')
 
 		// check other profiles
 		const [principal] = await actorBackend.get_principal_by_eth(signerAddress.toLowerCase())
-		const [profile5] = await actorBackend.get_profile_by_principal(principal)
-		expect(profile5.address).toBe(signerAddress.toLowerCase())
+		expect(principal.toString()).toBe(identity.getPrincipal().toString())
 
 		const [profile6] = await actorBackend.get_profile_by_eth(signerAddress.toLowerCase())
 		expect(profile6.address).toBe(signerAddress.toLowerCase())
@@ -67,7 +64,7 @@ describe('Testing with done', () => {
 		await actorBackend.create_post('hello')
 		
 		// check general wall
-		const principal = await actorBackend.get_own_principal()
+		const principal = identity.getPrincipal()
 		const posts = await actorBackend.get_posts('', 0)
 		const lastPost = posts[posts.length - 1]
 		expect(lastPost.text).toBe('hello')

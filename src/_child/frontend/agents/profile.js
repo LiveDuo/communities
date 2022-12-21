@@ -8,8 +8,7 @@ const idlProfileFactory = ({ IDL }) => {
     'address': IDL.Text,
   })
   return IDL.Service({
-    'get_own_principal': IDL.Func([], [IDL.Principal], ['query']),
-    'get_own_profile': IDL.Func([], [Profile], ['query']),
+    'get_profile': IDL.Func([], [Profile], ['query']),
     'get_principal_by_eth': IDL.Func(
       [IDL.Text],
       [IDL.Opt(IDL.Principal)],

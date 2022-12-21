@@ -85,19 +85,9 @@ const idlBackendFactory = ({ IDL }) => {
 		'timestamp' : IDL.Int,
 	  })
 	return IDL.Service({
-		'get_own_principal': IDL.Func([], [IDL.Principal], ['query']),
-		'get_own_profile': IDL.Func([], [Profile], ['query']),
-		'get_principal_by_eth': IDL.Func(
-			[IDL.Text],
-			[IDL.Opt(IDL.Principal)],
-			['query'],
-		),
+		'get_profile': IDL.Func([], [Profile], ['query']),
+		'get_principal_by_eth': IDL.Func([IDL.Text], [IDL.Opt(IDL.Principal)], ['query']),
 		'get_profile_by_eth': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-		'get_profile_by_principal': IDL.Func(
-			[IDL.Principal],
-			[IDL.Opt(Profile)],
-			['query'],
-		),
 		'link_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
 		'set_description': IDL.Func([IDL.Text], [Profile], []),
 		'set_name': IDL.Func([IDL.Text], [Profile], []),

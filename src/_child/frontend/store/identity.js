@@ -21,14 +21,6 @@ const IdentityProvider = ({children}) => {
 
   const toast = useToast()
 
-  const getOwnPrincipal = useCallback(async (_profileActor) => {
-    
-    const principal = await _profileActor.get_own_principal()
-    if (!principal?.isAnonymous()) {
-      setPrincipal(principal)
-    }
-  }, [])
-
   useEffect(() => {
     const identity = loadIdentity(account)
     const _profileActor = createProfileActor(identity)
@@ -37,9 +29,9 @@ const IdentityProvider = ({children}) => {
     setWallActor(_wallActor)
 
     if (account) {
-      getOwnPrincipal(_profileActor)
+      setPrincipal(identity.getPrincipal())
     }
-  }, [account, getOwnPrincipal])
+  }, [account])
 
   const loginWithMetamask = async () => {
     try {

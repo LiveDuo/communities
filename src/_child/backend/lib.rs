@@ -61,7 +61,7 @@ fn get_by_eth(eth_address: String) -> Option<Profile> {
 }
 
 #[ic_cdk_macros::query]
-fn get_own_profile() -> Profile {
+fn get_profile() -> Profile {
     let principal_id = ic_cdk::caller();
     return STATE.with(|s| {
         let profile_store = &s.borrow().profiles;        
@@ -70,12 +70,6 @@ fn get_own_profile() -> Profile {
             .cloned()
             .unwrap_or_else(|| Profile::default())
     });
-}
-
-
-#[ic_cdk_macros::query]
-fn get_own_principal() -> Principal {
-    ic_cdk::caller()
 }
 
 #[ic_cdk_macros::query]
@@ -94,7 +88,7 @@ fn get_principal_by_eth(eth_address: String) -> Option<Principal> {
 #[ic_cdk_macros::update]
 pub fn set_name(handle: String) -> Profile {
     let principal = ic_cdk::caller();
-    let mut profile = get_own_profile();
+    let mut profile = get_profile();
     profile.name = handle;
 
     STATE.with(|s| {
@@ -108,7 +102,7 @@ pub fn set_name(handle: String) -> Profile {
 #[ic_cdk_macros::update]
 pub fn set_description(description: String) -> Profile {
     let principal = ic_cdk::caller();
-    let mut profile = get_own_profile();
+    let mut profile = get_profile();
     profile.description = description;
     STATE.with(|s| {
         let mut state = s.borrow_mut();
@@ -138,7 +132,7 @@ pub fn link_address(message: String, signature: String) -> Profile {
 
     ic_cdk::println!("Linked eth address {:?}", address);
 
-    let mut profile = get_own_profile();
+    let mut profile = get_profile();
     profile.address = address.to_lowercase().clone();
     STATE.with(|s| {
         let mut state = s.borrow_mut();
