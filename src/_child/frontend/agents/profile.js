@@ -32,7 +32,7 @@ const idlProfileFactory = ({ IDL }) => {
 
 export const createProfileActor = (identity) => Actor.createActor(idlProfileFactory, {
   agent: getAgent(identity),
-  canisterId: 'REACT_APP_PARENT_CANISTER_ID',
+  canisterId: process.env.REACT_APP_CHILD_CANISTER_ID ?? 'REACT_APP_CHILD_CANISTER_ID',
   host: icHost,
   identity
 })
