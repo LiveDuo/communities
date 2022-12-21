@@ -4,7 +4,7 @@ import { useToast } from '@chakra-ui/react'
 import { utils } from 'ethers'
 
 import { createProfileActor } from '../agents/profile'
-import { createWallActor } from '../agents/wall'
+import { createPostsActor } from '../agents/posts'
 
 import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
 import { saveIdentity, loadIdentity, clearIdentity } from '../utils/identity'
@@ -25,7 +25,7 @@ const IdentityProvider = ({children}) => {
     const identity = loadIdentity(account)
     const _profileActor = createProfileActor(identity)
     setProfileActor(_profileActor)
-    const _wallActor = createWallActor(identity)
+    const _wallActor = createPostsActor(identity)
     setWallActor(_wallActor)
 
     if (account) {
@@ -47,7 +47,7 @@ const IdentityProvider = ({children}) => {
       // set actors
       const _profileActor = createProfileActor(identity)
       setProfileActor(_profileActor)
-      const _wallActor = createWallActor(identity)
+      const _wallActor = createPostsActor(identity)
       setWallActor(_wallActor)
 
       // link address

@@ -1,7 +1,7 @@
 import { Actor } from '@dfinity/agent'
 import { icHost, getAgent } from '.'
 
-const idlWallFactory = ({ IDL }) => {
+const idlPostsFactory = ({ IDL }) => {
   const Post = IDL.Record({
     'id': IDL.Int,
     'text': IDL.Text,
@@ -16,7 +16,7 @@ const idlWallFactory = ({ IDL }) => {
   })
 }
 
-export const createWallActor = (identity) => Actor.createActor(idlWallFactory, {
+export const createPostsActor = (identity) => Actor.createActor(idlPostsFactory, {
   agent: getAgent(identity),
   canisterId: process.env.REACT_APP_CHILD_CANISTER_ID ?? 'REACT_APP_CHILD_CANISTER_ID',
   host: icHost,

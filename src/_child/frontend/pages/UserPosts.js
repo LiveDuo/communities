@@ -11,7 +11,7 @@ import WritePost from '../components/posts/WritePost'
 import { ProfileContext } from '../store/profile'
 import { IdentityContext } from '../store/identity'
 
-const Wall = () => {
+const Posts = () => {
   const { account } = useEthers()
   const { address } = useParams()
 
@@ -41,4 +41,4 @@ const Wall = () => {
     </Box>
   )
 }
-export default Wall
+export default Posts
