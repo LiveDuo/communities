@@ -85,12 +85,77 @@ fn _get_content_type(name: &str) -> String {
 	else { return "application/octet-stream".to_string() }
 }
 
-#[update]
-#[candid_method(update)]
-pub async fn create_child_canister() -> Result<Principal, String> {
+async fn store_assets(canister_id: Principal) -> Result<(), String> {
+	let bundle_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/static/js/bundle.js".to_string());
 
-	let canister_id = ic_cdk::api::id();
-	let caller = ic_cdk::caller();
+	let canister_str = &canister_id.to_string();
+	let bundle_str = String::from_utf8(bundle_bytes).expect("Invalid JS bundle");
+	let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", canister_str);
+	
+	let assets_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/frontend.assets".to_string());
+	let assets_str = String::from_utf8(assets_bytes.clone()).expect("Invalid frontend.assets");
+	let assets: Vec<serde_json::Value> = serde_json::from_str(&assets_str).expect("Invalid JSON");
+	for asset in &assets {
+		
+		let asset_str = &asset.as_str().unwrap();
+		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(["/child", asset_str].join(""));
+		let content = if asset_str == &"/static/js/bundle.js" { bundle_with_env.as_bytes().to_vec() } else { asset_bytes };
+
+		let store_args = StoreAssetArgs {
+			key: asset_str.to_string(), // remove "/child" prefix
+			content_type: _get_content_type(asset_str),
+			content_encoding: "identity".to_owned(),
+			content: content,
+		};
+
+		match api::call::call(canister_id, "store", (store_args,),).await {
+			Ok(x) => x,
+			Err((_code, _msg)) => {}
+		}
+    }
+
+	Ok(())
+}
+
+async fn install_code(_caller: Principal, canister_id: Principal) -> Result<(), String> {
+	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/child.wasm".to_string());
+	if wasm_bytes.is_empty() {
+		return Err(format!("WASM is not yet uploaded"))
+	}
+
+	let install_args = InstallCanisterArgs {
+		mode: InstallMode::Install,
+		canister_id: canister_id,
+		wasm_module: wasm_bytes,
+		arg: b" ".to_vec(),
+	};
+	
+	match api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
+		Ok(x) => Ok(x),
+		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
+	}
+}
+
+async fn create_canister(caller: Principal, canister_id: Principal) -> Result<Principal, String> {
+	let create_args = CreateCanisterArgs {
+		settings: CreateCanisterSettings {
+			controllers: Some(vec![canister_id, caller]),
+			compute_allocation: None,
+			memory_allocation: None,
+			freezing_threshold: None
+		}
+	};
+
+	let (create_result,): (CreateCanisterResult,) = match api::call::call_with_payment(
+		Principal::management_canister(), "create_canister", (create_args,), 200_000_000_000)
+	.await {
+		Ok(x) => x,
+		Err((code, msg)) => { return Err(format!("Create canister error: {}: {}", code as u8, msg)) }
+	};
+	Ok(create_result.canister_id)
+}
+
+async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), String> {
 	let ledger_canister_id = STATE.with(|s| s.borrow().ledger).unwrap_or(MAINNET_LEDGER_CANISTER_ID);
     let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
     let balance_args = ic_ledger_types::AccountBalanceArgs { account };
@@ -115,69 +180,25 @@ pub async fn create_child_canister() -> Result<Principal, String> {
 		Ok(_) => {},
 		Err((code, msg)) => return Err(format!("Transfer balance error: {}: {}", code as u8, msg))
 	};
+	Ok(())
+}
 
-	let create_args = CreateCanisterArgs {
-		settings: CreateCanisterSettings {
-			controllers: Some(vec![canister_id, caller]),
-			compute_allocation: None,
-			memory_allocation: None,
-			freezing_threshold: None
-		}
-	};
+#[update]
+#[candid_method(update)]
+pub async fn create_child_canister() -> Result<Principal, String> {
 
-	let (create_result,): (CreateCanisterResult,) = match api::call::call_with_payment(
-		Principal::management_canister(), "create_canister", (create_args,), 200_000_000_000)
-	.await {
-		Ok(x) => x,
-		Err((code, msg)) => { return Err(format!("Create canister error: {}: {}", code as u8, msg)) }
-	};
-
-	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/child.wasm".to_string());
-	if wasm_bytes.is_empty() {
-		return Err(format!("WASM is not yet uploaded"))
-	}
-
-	let install_args = InstallCanisterArgs {
-		mode: InstallMode::Install,
-		canister_id: create_result.canister_id,
-		wasm_module: wasm_bytes,
-		arg: b" ".to_vec(),
-	};
+	let canister_id = ic_cdk::api::id();
+	let caller = ic_cdk::caller();
 	
-	match api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
-		Ok(x) => x,
-		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
-	}
+	mint_cycles(caller, canister_id).await.unwrap();
 
-	let bundle_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/static/js/bundle.js".to_string());
+	let created_id = create_canister(caller, canister_id).await.unwrap();
 
-	let canister_str = &create_result.canister_id.to_string();
-	let bundle_str = String::from_utf8(bundle_bytes).expect("Invalid JS bundle");
-	let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", canister_str);
-	
-	let assets_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/frontend.assets".to_string());
-	let assets_str = String::from_utf8(assets_bytes.clone()).expect("Invalid frontend.assets");
-	let assets: Vec<serde_json::Value> = serde_json::from_str(&assets_str).expect("Invalid JSON");
-	for asset in &assets {
-		
-		let asset_str = &asset.as_str().unwrap();
-		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(["/child", asset_str].join(""));
-		let content = if asset_str == &"/static/js/bundle.js" { bundle_with_env.as_bytes().to_vec() } else { asset_bytes };
+	install_code(caller, created_id).await.unwrap();
 
-		let store_args = StoreAssetArgs {
-			key: asset_str.to_string(), // remove "/child" prefix
-			content_type: _get_content_type(asset_str),
-			content_encoding: "identity".to_owned(),
-			content: content,
-		};
+	store_assets(created_id).await.unwrap();
 
-		match api::call::call(create_result.canister_id, "store", (store_args,),).await {
-			Ok(x) => x,
-			Err((_code, _msg)) => {}
-		}
-    }
-
-	Ok(create_result.canister_id)
+	Ok(created_id)
 }
 
 #[export_name = "pre_upgrade"]
