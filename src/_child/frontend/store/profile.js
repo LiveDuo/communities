@@ -11,7 +11,7 @@ const ProfileProvider = ({ children }) => {
 	const { profileActor } = useContext(IdentityContext)
 
 	const setUsername = async (name) => {
-		const profile = await profileActor.set_name(name)
+		const profile = await profileActor.update_profile([name], [])
 		return profile
 	}
 

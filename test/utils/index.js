@@ -87,9 +87,8 @@ const idlBackendFactory = ({ IDL }) => {
 	return IDL.Service({
 		'get_profile': IDL.Func([], [Profile], ['query']),
 		'get_profile_by_address': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-		'link_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
-		'set_description': IDL.Func([IDL.Text], [Profile], []),
-		'set_name': IDL.Func([IDL.Text], [Profile], []),
+		'update_profile_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
+		'update_profile': IDL.Func([IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)], [Profile], []),
 		'get_posts' : IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
     	'create_post' : IDL.Func([IDL.Text], [], []),
 	})

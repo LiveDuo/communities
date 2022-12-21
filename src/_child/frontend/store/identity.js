@@ -51,7 +51,7 @@ const IdentityProvider = ({children}) => {
       setWallActor(_wallActor)
 
       // link address
-      const profile = await _profileActor.link_address(utils.hashMessage(loginMessage), signature)
+      const profile = await _profileActor.update_profile_address(utils.hashMessage(loginMessage), signature)
 
       toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
       return profile

@@ -11,9 +11,8 @@ const idlProfileFactory = ({ IDL }) => {
     'get_profile': IDL.Func([], [Profile], ['query']),
     'get_profile_by_address': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
     'get_profile_by_principal': IDL.Func([IDL.Principal], [IDL.Opt(Profile)], ['query']),
-    'link_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
-    'set_description': IDL.Func([IDL.Text], [Profile], []),
-    'set_name': IDL.Func([IDL.Text], [Profile], []),
+    'update_profile_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
+    'update_profile': IDL.Func([IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)], [Profile], []),
   })
 }
 

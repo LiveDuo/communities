@@ -36,7 +36,7 @@ describe('Testing with done', () => {
 		// link address
 		const signerAddress = await signer.getAddress()
 		const {signature, loginMessageHash} = await getSignatureAndMessage(signer)
-		const profile = await actorBackend.link_address(loginMessageHash, signature)
+		const profile = await actorBackend.update_profile_address(loginMessageHash, signature)
 		expect(profile.address).toBe(signerAddress.toLowerCase())
 		
 		// check profile and principal
@@ -44,10 +44,10 @@ describe('Testing with done', () => {
 		expect(profile2.address).toBe(signerAddress.toLowerCase())
 
 		// set username
-		await actorBackend.setName('name')
+		await actorBackend.update_profile(['name'], [])
 		const profile4 = await actorBackend.get_profile()
 		expect(profile4.address).toBe(signerAddress.toLowerCase())
-		await actorBackend.setName('')
+		await actorBackend.update_profile([], [])
 
 		// check other profiles
 		const [profile6] = await actorBackend.get_profile_by_address(signerAddress.toLowerCase())

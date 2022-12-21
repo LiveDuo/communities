@@ -73,10 +73,12 @@ fn get_profile() -> Profile {
 }
 
 #[ic_cdk_macros::update]
-pub fn set_name(handle: String) -> Profile {
+pub fn update_profile(name_opt: Option<String>, description_opt: Option<String>) -> Profile {
     let principal = ic_cdk::caller();
     let mut profile = get_profile();
-    profile.name = handle;
+
+    if let Some(name) = name_opt { profile.name = name; }
+    if let Some(description) = description_opt { profile.description = description; }
 
     STATE.with(|s| {
         let mut state = s.borrow_mut();
@@ -87,19 +89,7 @@ pub fn set_name(handle: String) -> Profile {
 }
 
 #[ic_cdk_macros::update]
-pub fn set_description(description: String) -> Profile {
-    let principal = ic_cdk::caller();
-    let mut profile = get_profile();
-    profile.description = description;
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
-        state.profiles.insert(principal, profile.clone());
-    });
-    return profile;
-}
-
-#[ic_cdk_macros::update]
-pub fn link_address(message: String, signature: String) -> Profile {
+pub fn update_profile_address(message: String, signature: String) -> Profile {
     let principal = ic_cdk::caller();
     let mut signature_bytes = hex::decode(signature.trim_start_matches("0x")).unwrap();
     let recovery_byte = signature_bytes.pop().expect("No recovery byte");
