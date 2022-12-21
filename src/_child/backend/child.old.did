@@ -16,13 +16,14 @@ type Post = record {
 service : {
   "get_profile_by_principal": (id: principal) -> (opt Profile) query;
   "get_profile_by_eth": (eth_address: text) -> (opt Profile) query;
-  "get_profile_by_name": (name: text) -> (opt Profile) query;
   "get_own_profile": () -> (Profile) query;
   "get_own_principal": () -> (principal) query;
   "get_principal_by_eth": (eth_address: text) -> (opt principal) query;
+  "search": (q: text) -> (opt Profile) query;
+  "list": () -> (vec Profile) query;
   "set_name": (name: text) -> (Profile);
   "set_description": (description: text) -> (Profile);
   "link_address": (message: text, signature: text) -> (Profile);
   "get_posts": (filter_user_id: text, filter_page: int) -> (vec Post) query;
-  "create_post": (post: text) -> ();
+  "write": (post: text) -> ();
 }

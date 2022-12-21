@@ -16,7 +16,6 @@ const idlProfileFactory = ({ IDL }) => {
       ['query'],
     ),
     'get_profile_by_eth': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-    'get_profile_by_name': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
     'get_profile_by_principal': IDL.Func(
       [IDL.Principal],
       [IDL.Opt(Profile)],

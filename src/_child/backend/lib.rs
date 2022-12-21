@@ -4,8 +4,6 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::cell::RefCell;
 
-const PAGESIZE: usize = 25;
-
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct Profile {
     pub address: String,
@@ -25,7 +23,7 @@ pub struct Post {
 
 
 #[derive(Default)]
-pub struct State { profiles: HashMap<Principal, Profile>, posts: Vec<Post>, latest_post_id: i128 }
+pub struct State { profiles: HashMap<Principal, Profile>, posts: Vec<Post> }
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
@@ -63,19 +61,6 @@ fn get_by_eth(eth_address: String) -> Option<Profile> {
 }
 
 #[ic_cdk_macros::query]
-fn get_by_name(name: String) -> Option<Profile> {
-    let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
-
-    for (_, profile) in profile_store.iter() {
-        if profile.name.eq(&name) {
-            return Some(profile.clone());
-        }
-    }
-
-    None
-}
-
-#[ic_cdk_macros::query]
 fn get_own_profile() -> Profile {
     let principal_id = ic_cdk::caller();
     return STATE.with(|s| {
@@ -104,19 +89,6 @@ fn get_principal_by_eth(eth_address: String) -> Option<Principal> {
     }
 
     None
-}
-
-#[ic_cdk_macros::query]
-fn profiles() -> Vec<Profile> {
-    let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
-
-    let mut profiles: Vec<Profile> = Vec::new();
-
-    for (_, profile) in profile_store.iter() {
-        profiles.push(profile.clone());
-    }
-
-    return profiles;
 }
 
 #[ic_cdk_macros::update]
@@ -176,52 +148,16 @@ pub fn link_address(message: String, signature: String) -> Profile {
     return profile;
 }
 
-fn paginate(posts: Vec<Post>, page: usize) -> Vec<Post> {
-    let start_index = posts.len() - ((page - 1) * PAGESIZE) - 1;
-    let mut paginated_posts = Vec::new();
-    let mut n: usize = 0;
-    while n < PAGESIZE && n <= start_index {
-        paginated_posts.push(posts[start_index - n].clone());
-        n += 1;
-    }
-    paginated_posts
-}
-
-
 #[ic_cdk_macros::query]
-pub fn get_posts(filter_principal_id: String, filter_page: i128) -> Vec<Post> {
+pub fn get_posts(_filter_principal_id: String, _filter_page: i128) -> Vec<Post> {
     let posts = STATE.with(|s| s.borrow_mut().posts.clone());
-
-    // PASS 1, filter on principal_id
-    let pass1 = match filter_principal_id != "" {
-        true => {
-            posts
-            .iter()
-            .filter_map(|p| match p.principal_id == filter_principal_id {
-                true => Some(p.clone()),
-                false => None
-            })
-            .collect::<Vec<Post>>()
-        },
-        false => posts.iter().map(|p| p.clone()).collect::<Vec<Post>>()
-    };
-
-    // PASS 2, pagination
-    let pass2 = match filter_page != 0 {
-        true => {
-            let page = filter_page as usize;
-            paginate(pass1, page)
-        },
-        false => pass1
-    };
-    return pass2;
+    return posts;
 }
 
 #[ic_cdk_macros::update]
 pub fn create_post(text: String)  {
     let principal = ic_cdk::caller();
-    let latest_post_id = STATE.with(|s| s.borrow().latest_post_id);
-    STATE.with(|s| { s.borrow_mut().latest_post_id = latest_post_id + 1; });
+    let posts_len = STATE.with(|s| s.borrow().posts.len());
 
     let profile_store = STATE.with(|s| s.borrow().profiles.clone());
     let profile = profile_store
@@ -230,7 +166,7 @@ pub fn create_post(text: String)  {
         .unwrap_or_else(|| Profile::default());
     
     let post = Post {
-        id: latest_post_id,
+        id: posts_len as i128,
         timestamp: ic_cdk::api::time() as i128,
         principal_id: principal.to_string(),
         user_address: profile.address,

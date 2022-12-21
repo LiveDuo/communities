@@ -47,7 +47,7 @@ describe('Testing with done', () => {
 
 		// set username
 		await actorBackend.setName('name')
-		const [profile4] = await actorBackend.get_profile_by_name('name')
+		const profile4 = await actorBackend.get_own_profile()
 		expect(profile4.address).toBe(signerAddress.toLowerCase())
 		await actorBackend.setName('')
 
