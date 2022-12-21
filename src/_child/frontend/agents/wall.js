@@ -11,8 +11,8 @@ const idlWallFactory = ({ IDL }) => {
     'timestamp': IDL.Int,
   })
   return IDL.Service({
-    'wall': IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
-    'write': IDL.Func([IDL.Text], [], []),
+    'get_posts': IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
+    'create_post': IDL.Func([IDL.Text], [], []),
   })
 }
 

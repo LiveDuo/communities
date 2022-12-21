@@ -64,17 +64,17 @@ describe('Testing with done', () => {
 	test('Should write on the wall', async () => {
 		
 		// write to wall
-		await actorBackend.write('hello')
+		await actorBackend.create_post('hello')
 		
 		// check general wall
 		const principal = await actorBackend.get_own_principal()
-		const posts = await actorBackend.wall('', 0)
+		const posts = await actorBackend.get_posts('', 0)
 		const lastPost = posts[posts.length - 1]
 		expect(lastPost.text).toBe('hello')
 		expect(lastPost.principal_id).toBe(principal.toString())
 		
 		// check user wall
-		const userPosts = await actorBackend.wall(principal.toString(), 0)
+		const userPosts = await actorBackend.get_posts(principal.toString(), 0)
 		const userLastPost = userPosts[userPosts.length - 1]
 		expect(userLastPost.text).toBe('hello')
 		expect(userLastPost.principal_id).toBe(principal.toString())

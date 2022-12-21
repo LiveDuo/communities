@@ -24,7 +24,6 @@ const idlProfileFactory = ({ IDL }) => {
     ),
     'link_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
     'list': IDL.Func([], [IDL.Vec(Profile)], ['query']),
-    'search': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
     'set_description': IDL.Func([IDL.Text], [Profile], []),
     'set_name': IDL.Func([IDL.Text], [Profile], []),
   })

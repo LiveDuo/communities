@@ -11,12 +11,12 @@ const WallProvider = ({ children }) => {
 	const { principal, wallActor } = useContext(IdentityContext)
 
 	const getWallData = useCallback(async (principalId, pageIndex) => {
-		const response = await wallActor.wall(principalId ?? '', pageIndex)
+		const response = await wallActor.get_posts(principalId ?? '', pageIndex)
 		setWallData(response)
 	}, [wallActor])
 
 	const writeData = async (text) => {
-		await wallActor.write(text)
+		await wallActor.create_post(text)
 		
 		const principalId = principal?.toString() ?? ''
 		await getWallData(principalId, 0) // reload data

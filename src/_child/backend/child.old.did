@@ -25,6 +25,6 @@ service : {
   "set_name": (name: text) -> (Profile);
   "set_description": (description: text) -> (Profile);
   "link_address": (message: text, signature: text) -> (Profile);
-  "wall": (filter_user_id: text, filter_page: int) -> (vec Post) query;
+  "get_posts": (filter_user_id: text, filter_page: int) -> (vec Post) query;
   "write": (post: text) -> ();
 }

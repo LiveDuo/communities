@@ -1,30 +1,31 @@
 use candid::{CandidType, Deserialize, export_service, Principal};
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::cell::RefCell;
 
 const PAGESIZE: usize = 25;
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct Profile {
     pub address: String,
     pub name: String,
     pub description: String,
 }
 
-impl Default for Profile {
-    fn default() -> Self {
-        Profile {
-            address: String::from(""),
-            name: String::from(""),
-            description: String::from(""),
-        }
-    }
+#[derive(Clone, Debug, CandidType, Deserialize)]
+pub struct Post {
+    pub id: i128,
+    pub timestamp: i128,
+    pub principal_id: String,
+    pub user_address: String,
+    pub user_name: String,
+    pub text: String,
 }
 
+
 #[derive(Default)]
-pub struct State { profiles: BTreeMap<Principal, Profile>, wall_posts: Vec<Post>, latest_post_id: i128 }
+pub struct State { profiles: HashMap<Principal, Profile>, posts: Vec<Post>, latest_post_id: i128 }
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
@@ -106,20 +107,6 @@ fn get_principal_by_eth(eth_address: String) -> Option<Principal> {
 }
 
 #[ic_cdk_macros::query]
-fn search(text: String) -> Option<Profile> {
-    let text = text.to_lowercase();
-    let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
-
-    for (_, profile) in profile_store.iter() {
-        if profile.name.to_lowercase().contains(&text) || profile.description.to_lowercase().contains(&text) {
-            return Some(profile.clone());
-        }
-    }
-
-    None
-}
-
-#[ic_cdk_macros::query]
 fn profiles() -> Vec<Profile> {
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
 
@@ -189,22 +176,6 @@ pub fn link_address(message: String, signature: String) -> Profile {
     return profile;
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
-struct PostPreUpgrade {
-    pub user: Principal,
-    pub text: String,
-}
-
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub struct Post {
-    pub id: i128,
-    pub timestamp: i128,
-    pub principal_id: String,
-    pub user_address: String,
-    pub user_name: String,
-    pub text: String,
-}
-
 fn paginate(posts: Vec<Post>, page: usize) -> Vec<Post> {
     let start_index = posts.len() - ((page - 1) * PAGESIZE) - 1;
     let mut paginated_posts = Vec::new();
@@ -218,13 +189,13 @@ fn paginate(posts: Vec<Post>, page: usize) -> Vec<Post> {
 
 
 #[ic_cdk_macros::query]
-pub fn wall(filter_principal_id: String, filter_page: i128) -> Vec<Post> {
-    let wall_posts = STATE.with(|s| s.borrow_mut().wall_posts.clone());
+pub fn get_posts(filter_principal_id: String, filter_page: i128) -> Vec<Post> {
+    let posts = STATE.with(|s| s.borrow_mut().posts.clone());
 
     // PASS 1, filter on principal_id
     let pass1 = match filter_principal_id != "" {
         true => {
-            wall_posts
+            posts
             .iter()
             .filter_map(|p| match p.principal_id == filter_principal_id {
                 true => Some(p.clone()),
@@ -232,7 +203,7 @@ pub fn wall(filter_principal_id: String, filter_page: i128) -> Vec<Post> {
             })
             .collect::<Vec<Post>>()
         },
-        false => wall_posts.iter().map(|p| p.clone()).collect::<Vec<Post>>()
+        false => posts.iter().map(|p| p.clone()).collect::<Vec<Post>>()
     };
 
     // PASS 2, pagination
@@ -247,7 +218,7 @@ pub fn wall(filter_principal_id: String, filter_page: i128) -> Vec<Post> {
 }
 
 #[ic_cdk_macros::update]
-pub fn write(text: String)  {
+pub fn create_post(text: String)  {
     let principal = ic_cdk::caller();
     let latest_post_id = STATE.with(|s| s.borrow().latest_post_id);
     STATE.with(|s| { s.borrow_mut().latest_post_id = latest_post_id + 1; });
@@ -269,7 +240,7 @@ pub fn write(text: String)  {
 
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        state.wall_posts.push(post);
+        state.posts.push(post);
     });
 }
 

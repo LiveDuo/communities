@@ -101,11 +101,10 @@ const idlBackendFactory = ({ IDL }) => {
 		),
 		'link_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
 		'profiles': IDL.Func([], [IDL.Vec(Profile)], ['query']),
-		'search': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
 		'set_description': IDL.Func([IDL.Text], [Profile], []),
 		'set_name': IDL.Func([IDL.Text], [Profile], []),
-		'wall' : IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
-    	'write' : IDL.Func([IDL.Text], [], []),
+		'get_posts' : IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
+    	'create_post' : IDL.Func([IDL.Text], [], []),
 	})
 }
 
