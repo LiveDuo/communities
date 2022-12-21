@@ -17,12 +17,12 @@ const Header = () => {
 
   const { ENSName } = useENSName(account)
 
-  const { profile, setProfile, getProfileByPrincipal } = useContext(ProfileContext)
+  const { profile, setProfile, getProfileByAddress } = useContext(ProfileContext)
 
   useEffect(() => {
-    if (principal)
-      getProfileByPrincipal(principal)
-  }, [principal, getProfileByPrincipal])
+    if (account)
+    getProfileByAddress(account)
+  }, [account, getProfileByAddress])
 
   const loginAndSet = async () => {
     const profile = await login()

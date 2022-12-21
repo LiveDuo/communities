@@ -15,17 +15,12 @@ const ProfileProvider = ({ children }) => {
 		return profile
 	}
 
-	const getProfileByPrincipal = useCallback(async (principal) => {
-		const response = await profileActor.get_profile_by_principal(principal)
+	const getProfileByAddress = useCallback(async (address) => {
+		const response = await profileActor.get_profile_by_address(address)
 		setProfile(response[0])
 	}, [profileActor])
 
-	const getProfileByEth = useCallback(async (address) => {
-		const response = await profileActor.getProfileByEth(address)
-		setProfile(response[0])
-	}, [profileActor])
-
-	const value = { profile, setProfile, setUsername, getProfileByPrincipal, getProfileByEth, loading, setLoading }
+	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading }
 
 	return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
 }

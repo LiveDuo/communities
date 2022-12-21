@@ -31,10 +31,10 @@ const WritePost = () => {
   return (
     <Box mb="20px">
       <Box>
-        <Input w="200px" type="text" autoComplete="off" placeholder="Write on the wall" 
+        <Input w="200px" type="text" autoComplete="off" placeholder="Enter text" 
           disabled={loading} onChange={handlePostChange} value={post}/>
         <Button ml="8px" type="submit" disabled={loading} onClick={handleSubmit}>
-          {loading ? <Spinner /> : "Post"}
+          {loading ? <Spinner /> : "New Post"}
         </Button>
       </Box>
     </Box>

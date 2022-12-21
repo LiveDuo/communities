@@ -9,14 +9,14 @@ import { IdentityContext } from '../store/identity'
 
 const Wall = () => {
 
-  const { getProfileByPrincipal } = useContext(ProfileContext)
+  const { getProfileByAddress } = useContext(ProfileContext)
 
-  const { principal } = useContext(IdentityContext)
+  const { account } = useContext(IdentityContext)
 
   useEffect(() => {
-    if (principal)
-      getProfileByPrincipal(principal)
-  }, [getProfileByPrincipal, principal])
+    if (account)
+      getProfileByAddress(account)
+  }, [getProfileByAddress, account])
 
   return (
     <Box>

@@ -35,20 +35,7 @@ fn init() {
 }
 
 #[ic_cdk_macros::query]
-fn get_profile_by_principal(principal: Principal) -> Option<Profile> {
-    let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
-
-    for (p, profile) in profile_store.iter() {
-        if p.eq(&principal) {
-            return Some(profile.clone());
-        }
-    }
-
-    None
-}
-
-#[ic_cdk_macros::query]
-fn get_by_eth(eth_address: String) -> Option<Profile> {
+fn get_profile_by_address(eth_address: String) -> Option<Profile> {
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
 
     for (_, profile) in profile_store.iter() {

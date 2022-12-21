@@ -62,7 +62,7 @@ const IdentityProvider = ({children}) => {
 
   const logout = () => clearIdentity(account)
   const login = () => loginWithMetamask()
-  const value = { principal, profileActor, wallActor, login, logout }
+  const value = { account, principal, profileActor, wallActor, login, logout }
   
   return (
     <IdentityContext.Provider value={value}>

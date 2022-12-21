@@ -15,16 +15,16 @@ const Wall = () => {
   const { account } = useEthers()
   const { address } = useParams()
 
-  const { profile, getProfileByPrincipal } = useContext(ProfileContext)
+  const { profile, getProfileByAddress } = useContext(ProfileContext)
   const { principal } = useContext(IdentityContext)
 
   const isOwner = account?.toLowerCase() === address.toLowerCase()
 
   useEffect(() => {
-    if (principal) {
-      getProfileByPrincipal(principal)
+    if (address) {
+      getProfileByAddress(address)
     }
-  }, [getProfileByPrincipal, principal])
+  }, [getProfileByAddress, address])
 
   return (
     <Box>
