@@ -78,7 +78,8 @@ const idlBackendFactory = ({ IDL }) => {
 	})
 	const Post = IDL.Record({
 		'id' : IDL.Int,
-		'text' : IDL.Text,
+		'title' : IDL.Text,
+		'description' : IDL.Text,
 		'principal_id' : IDL.Text,
 		'user_address' : IDL.Text,
 		'timestamp' : IDL.Int,
@@ -89,7 +90,7 @@ const idlBackendFactory = ({ IDL }) => {
 		'update_profile_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
 		'update_profile': IDL.Func([IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)], [Profile], []),
 		'get_posts' : IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
-    	'create_post' : IDL.Func([IDL.Text], [], []),
+    	'create_post' : IDL.Func([IDL.Text, IDL.Text], [], []),
 	})
 }
 

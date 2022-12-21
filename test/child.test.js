@@ -58,19 +58,19 @@ describe('Testing with done', () => {
 	test('Should create and get a post', async () => {
 		
 		// create a post
-		await actorBackend.create_post('hello')
+		await actorBackend.create_post('hello', '')
 		
 		// get user posts
 		const principal = identity.getPrincipal()
 		const posts = await actorBackend.get_posts('', 0)
 		const lastPost = posts[posts.length - 1]
-		expect(lastPost.text).toBe('hello')
+		expect(lastPost.title).toBe('hello')
 		expect(lastPost.principal_id).toBe(principal.toString())
 		
 		// get user last post
 		const userPosts = await actorBackend.get_posts(principal.toString(), 0)
 		const userLastPost = userPosts[userPosts.length - 1]
-		expect(userLastPost.text).toBe('hello')
+		expect(userLastPost.title).toBe('hello')
 		expect(userLastPost.principal_id).toBe(principal.toString())
 
 	})

@@ -9,7 +9,6 @@ type Post = record {
     "timestamp": int;
     "principal_id": text;
     "user_address": text;
-    "user_name": text;
     "text": text;
 };
 

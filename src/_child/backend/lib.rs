@@ -6,9 +6,9 @@ use std::cell::RefCell;
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct Profile {
-    pub address: String,
     pub name: String,
     pub description: String,
+    pub address: String,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
@@ -17,7 +17,8 @@ pub struct Post {
     pub timestamp: i128,
     pub principal_id: String,
     pub user_address: String,
-    pub text: String,
+    pub title: String,
+    pub description: String,
 }
 
 
@@ -51,7 +52,7 @@ fn get_profile() -> Profile {
     let principal_id = ic_cdk::caller();
     let profile = STATE.with(|s| {
         let profile_store = &s.borrow().profiles;        
-        profile_store.get(&principal_id).cloned().unwrap_or_else(|| Profile::default())
+        profile_store.get(&principal_id).cloned().unwrap_or(Profile::default())
     });
 
     return profile;
@@ -113,7 +114,7 @@ pub fn get_posts(_filter_principal_id: String, _filter_page: i128) -> Vec<Post> 
 }
 
 #[ic_cdk_macros::update]
-pub fn create_post(text: String)  {
+pub fn create_post(title: String, description: String)  {
     let principal = ic_cdk::caller();
     let posts_len = STATE.with(|s| s.borrow().posts.len());
 
@@ -128,7 +129,8 @@ pub fn create_post(text: String)  {
         timestamp: ic_cdk::api::time() as i128,
         principal_id: principal.to_string(),
         user_address: profile.address,
-        text,
+        title,
+        description
     };
 
     STATE.with(|s| {

@@ -15,8 +15,8 @@ const PostsProvider = ({ children }) => {
 		setWallData(response)
 	}, [wallActor])
 
-	const writeData = async (text) => {
-		await wallActor.create_post(text)
+	const writeData = async (title, description) => {
+		await wallActor.create_post(title, description)
 		
 		const principalId = principal?.toString() ?? ''
 		await getWallData(principalId, 0) // reload data

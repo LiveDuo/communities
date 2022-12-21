@@ -19,7 +19,7 @@ const Post = memo(({ data }) => {
   const fromNow = formatDistance(timestamp, Date.now())
   return (
     <Box w='sm' borderWidth='1px' borderRadius='lg' p="20px" m="auto">
-      <Heading p="8px" size="lg">{data.text}</Heading>
+      <Heading p="8px" size="lg">{data.title}</Heading>
       <Box>
         <Box display="inline-block" mb="20px">{fromNow} ago</Box>
         <Box>

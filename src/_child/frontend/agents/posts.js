@@ -4,14 +4,15 @@ import { icHost, getAgent } from '.'
 const idlPostsFactory = ({ IDL }) => {
   const Post = IDL.Record({
     'id': IDL.Int,
-    'text': IDL.Text,
+    'title' : IDL.Text,
+		'description' : IDL.Text,
     'principal_id': IDL.Text,
     'user_address': IDL.Text,
     'timestamp': IDL.Int,
   })
   return IDL.Service({
     'get_posts': IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
-    'create_post': IDL.Func([IDL.Text], [], []),
+    'create_post': IDL.Func([IDL.Text, IDL.Text], [], []),
   })
 }
 

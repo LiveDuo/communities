@@ -20,7 +20,7 @@ const WritePost = () => {
     
     try {
       setLoading(true)
-      await writeData(post)
+      await writeData(post, '')
     } catch (error) {
       console.error(error)
     }
