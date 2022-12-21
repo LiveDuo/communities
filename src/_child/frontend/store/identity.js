@@ -23,7 +23,7 @@ const IdentityProvider = ({children}) => {
 
   const getOwnPrincipal = useCallback(async (_profileActor) => {
     
-    const principal = await _profileActor.getOwnPrincipal()
+    const principal = await _profileActor.get_own_principal()
     if (!principal?.isAnonymous()) {
       setPrincipal(principal)
     }
@@ -59,7 +59,7 @@ const IdentityProvider = ({children}) => {
       setWallActor(_wallActor)
 
       // link address
-      const profile = await _profileActor.linkAddress(utils.hashMessage(loginMessage), signature)
+      const profile = await _profileActor.link_address(utils.hashMessage(loginMessage), signature)
 
       toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
       return profile

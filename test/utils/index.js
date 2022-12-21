@@ -85,25 +85,25 @@ const idlBackendFactory = ({ IDL }) => {
 		'timestamp' : IDL.Int,
 	  })
 	return IDL.Service({
-		'getOwnPrincipal': IDL.Func([], [IDL.Principal], ['query']),
-		'getOwnProfile': IDL.Func([], [Profile], ['query']),
-		'getPrincipalByEth': IDL.Func(
+		'get_own_principal': IDL.Func([], [IDL.Principal], ['query']),
+		'get_own_profile': IDL.Func([], [Profile], ['query']),
+		'get_principal_by_eth': IDL.Func(
 			[IDL.Text],
 			[IDL.Opt(IDL.Principal)],
 			['query'],
 		),
-		'getProfileByEth': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-		'getProfileByName': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-		'getProfileByPrincipal': IDL.Func(
+		'get_profile_by_eth': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
+		'get_profile_by_name': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
+		'get_profile_by_principal': IDL.Func(
 			[IDL.Principal],
 			[IDL.Opt(Profile)],
 			['query'],
 		),
-		'linkAddress': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
+		'link_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
 		'profiles': IDL.Func([], [IDL.Vec(Profile)], ['query']),
 		'search': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-		'setDescription': IDL.Func([IDL.Text], [Profile], []),
-		'setName': IDL.Func([IDL.Text], [Profile], []),
+		'set_description': IDL.Func([IDL.Text], [Profile], []),
+		'set_name': IDL.Func([IDL.Text], [Profile], []),
 		'wall' : IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
     	'write' : IDL.Func([IDL.Text], [], []),
 	})

@@ -1,6 +1,4 @@
-use candid::{CandidType, Deserialize, candid_method, export_service, Principal};
-use ic_cdk::{api};
-use ic_cdk_macros::{init, query, update, pre_upgrade, post_upgrade};
+use candid::{CandidType, Deserialize, export_service, Principal};
 
 use std::collections::BTreeMap;
 use std::convert::TryInto;
@@ -32,14 +30,13 @@ thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
 }
 
-#[init]
+#[ic_cdk_macros::init]
 fn init() {
     ic_certified_assets::init();
 }
 
-#[query(name = "getProfileByPrincipal")]
-#[candid_method(query, rename = "getProfileByPrincipal")]
-fn get_by_principal(principal: Principal) -> Option<Profile> {
+#[ic_cdk_macros::query]
+fn get_profile_by_principal(principal: Principal) -> Option<Profile> {
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
 
     for (p, profile) in profile_store.iter() {
@@ -51,8 +48,7 @@ fn get_by_principal(principal: Principal) -> Option<Profile> {
     None
 }
 
-#[query(name = "getProfileByEth")]
-#[candid_method(query, rename = "getProfileByEth")]
+#[ic_cdk_macros::query]
 fn get_by_eth(eth_address: String) -> Option<Profile> {
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
 
@@ -65,8 +61,7 @@ fn get_by_eth(eth_address: String) -> Option<Profile> {
     None
 }
 
-#[query(name = "getProfileByName")]
-#[candid_method(query, rename = "getProfileByName")]
+#[ic_cdk_macros::query]
 fn get_by_name(name: String) -> Option<Profile> {
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
 
@@ -79,8 +74,7 @@ fn get_by_name(name: String) -> Option<Profile> {
     None
 }
 
-#[query(name = "getOwnProfile")]
-#[candid_method(query, rename = "getOwnProfile")]
+#[ic_cdk_macros::query]
 fn get_own_profile() -> Profile {
     let principal_id = ic_cdk::caller();
     return STATE.with(|s| {
@@ -93,14 +87,12 @@ fn get_own_profile() -> Profile {
 }
 
 
-#[query(name = "getOwnPrincipal")]
-#[candid_method(query, rename = "getOwnPrincipal")]
-fn get_own_principal_id() -> Principal {
+#[ic_cdk_macros::query]
+fn get_own_principal() -> Principal {
     ic_cdk::caller()
 }
 
-#[query(name = "getPrincipalByEth")]
-#[candid_method(query, rename = "getPrincipalByEth")]
+#[ic_cdk_macros::query]
 fn get_principal_by_eth(eth_address: String) -> Option<Principal> {
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
 
@@ -113,8 +105,7 @@ fn get_principal_by_eth(eth_address: String) -> Option<Principal> {
     None
 }
 
-#[query(name = "search")]
-#[candid_method(query, rename = "search")]
+#[ic_cdk_macros::query]
 fn search(text: String) -> Option<Profile> {
     let text = text.to_lowercase();
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
@@ -128,8 +119,7 @@ fn search(text: String) -> Option<Profile> {
     None
 }
 
-#[query(name = "profiles")]
-#[candid_method(query, rename = "profiles")]
+#[ic_cdk_macros::query]
 fn profiles() -> Vec<Profile> {
     let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
 
@@ -142,8 +132,7 @@ fn profiles() -> Vec<Profile> {
     return profiles;
 }
 
-#[update(name = "setName")]
-#[candid_method(update, rename = "setName")]
+#[ic_cdk_macros::update]
 pub fn set_name(handle: String) -> Profile {
     let principal = ic_cdk::caller();
     let mut profile = get_own_profile();
@@ -157,8 +146,7 @@ pub fn set_name(handle: String) -> Profile {
     return profile;
 }
 
-#[update(name = "setDescription")]
-#[candid_method(update, rename = "setDescription")]
+#[ic_cdk_macros::update]
 pub fn set_description(description: String) -> Profile {
     let principal = ic_cdk::caller();
     let mut profile = get_own_profile();
@@ -170,8 +158,7 @@ pub fn set_description(description: String) -> Profile {
     return profile;
 }
 
-#[update(name = "linkAddress")]
-#[candid_method(update, rename = "linkAddress")]
+#[ic_cdk_macros::update]
 pub fn link_address(message: String, signature: String) -> Profile {
     let principal = ic_cdk::caller();
     let mut signature_bytes = hex::decode(signature.trim_start_matches("0x")).unwrap();
@@ -230,8 +217,7 @@ fn paginate(posts: Vec<Post>, page: usize) -> Vec<Post> {
 }
 
 
-#[query(name = "wall")]
-#[candid_method(query, rename = "wall")]
+#[ic_cdk_macros::query]
 pub fn wall(filter_principal_id: String, filter_page: i128) -> Vec<Post> {
     let wall_posts = STATE.with(|s| s.borrow_mut().wall_posts.clone());
 
@@ -260,8 +246,7 @@ pub fn wall(filter_principal_id: String, filter_page: i128) -> Vec<Post> {
     return pass2;
 }
 
-#[update(name = "write")]
-#[candid_method(update, rename = "write")]
+#[ic_cdk_macros::update]
 pub fn write(text: String)  {
     let principal = ic_cdk::caller();
     let latest_post_id = STATE.with(|s| s.borrow().latest_post_id);
@@ -275,7 +260,7 @@ pub fn write(text: String)  {
     
     let post = Post {
         id: latest_post_id,
-        timestamp: api::time() as i128,
+        timestamp: ic_cdk::api::time() as i128,
         principal_id: principal.to_string(),
         user_address: profile.address,
         user_name: profile.name,
@@ -288,14 +273,13 @@ pub fn write(text: String)  {
     });
 }
 
-#[pre_upgrade]
+#[ic_cdk_macros::pre_upgrade]
 fn pre_upgrade() {}
 
-#[post_upgrade]
+#[ic_cdk_macros::post_upgrade]
 fn post_upgrade() {}
 
-#[query]
-#[candid_method(query)]
+#[ic_cdk_macros::query]
 fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_assets::types::HttpResponse {
     return ic_certified_assets::http_request_handle(req);
 }

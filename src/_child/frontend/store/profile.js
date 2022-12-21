@@ -11,12 +11,12 @@ const ProfileProvider = ({ children }) => {
 	const { profileActor } = useContext(IdentityContext)
 
 	const setUsername = async (name) => {
-		const profile = await profileActor.setName(name)
+		const profile = await profileActor.set_name(name)
 		return profile
 	}
 
 	const getProfileByPrincipal = useCallback(async (principal) => {
-		const response = await profileActor.getProfileByPrincipal(principal)
+		const response = await profileActor.get_profile_by_principal(principal)
 		setProfile(response[0])
 	}, [profileActor])
 
