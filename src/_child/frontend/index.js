@@ -2,8 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ChakraProvider } from '@chakra-ui/react'
-import { Mainnet, DAppProvider } from '@usedapp/core'
-import { getDefaultProvider } from 'ethers'
+import { DAppProvider } from '@usedapp/core'
 
 import { IdentityProvider } from './store/identity'
 import { ProfileProvider } from './store/profile'
@@ -14,10 +13,7 @@ import Layout from './components/layout'
 import UserWall from './pages/UserWall'
 import Wall from './pages/Wall'
 
-const config = {
-  readOnlyChainId: Mainnet.chainId,
-  readOnlyUrls: { [Mainnet.chainId]: getDefaultProvider('mainnet') }
-}
+const config = {}
 
 const App = () => (
   <StrictMode>
