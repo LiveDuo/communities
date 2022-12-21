@@ -55,19 +55,19 @@ describe('Testing with done', () => {
 		
 	})
 	
-	test('Should write on the wall', async () => {
+	test('Should create and get a post', async () => {
 		
-		// write to wall
+		// create a post
 		await actorBackend.create_post('hello')
 		
-		// check general wall
+		// get user posts
 		const principal = identity.getPrincipal()
 		const posts = await actorBackend.get_posts('', 0)
 		const lastPost = posts[posts.length - 1]
 		expect(lastPost.text).toBe('hello')
 		expect(lastPost.principal_id).toBe(principal.toString())
 		
-		// check user wall
+		// get user last post
 		const userPosts = await actorBackend.get_posts(principal.toString(), 0)
 		const userLastPost = userPosts[userPosts.length - 1]
 		expect(userLastPost.text).toBe('hello')

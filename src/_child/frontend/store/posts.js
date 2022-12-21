@@ -2,9 +2,9 @@ import { useState, useContext, createContext, useCallback } from 'react'
 
 import { IdentityContext } from './identity'
 
-const WallContext = createContext()
+const PostsContext = createContext()
 
-const WallProvider = ({ children }) => {
+const PostsProvider = ({ children }) => {
 
 	const [wallData, setWallData] = useState()
 	const [loading, setLoading] = useState()
@@ -23,7 +23,7 @@ const WallProvider = ({ children }) => {
 	}
 
 	const value = { wallData, getWallData, loading, setLoading, writeData }
-	return <WallContext.Provider value={value}>{children}</WallContext.Provider>
+	return <PostsContext.Provider value={value}>{children}</PostsContext.Provider>
 }
 
-export { WallContext, WallProvider }
+export { PostsContext, PostsProvider }

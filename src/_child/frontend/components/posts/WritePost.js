@@ -1,13 +1,13 @@
 import { useContext, useState } from 'react'
 import { Spinner, Input, Button, Box } from '@chakra-ui/react'
 
-import { WallContext } from '../../store/wall'
+import { PostsContext } from '../../store/posts'
 
 const WritePost = () => {
 
   const [post, setPost] = useState('')
 
-  const { loading, setLoading, writeData } = useContext(WallContext)
+  const { loading, setLoading, writeData } = useContext(PostsContext)
   
   const handlePostChange = (event) => {
     if (event.currentTarget.value.length > 255) return

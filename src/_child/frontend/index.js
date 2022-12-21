@@ -6,12 +6,12 @@ import { DAppProvider } from '@usedapp/core'
 
 import { IdentityProvider } from './store/identity'
 import { ProfileProvider } from './store/profile'
-import { WallProvider } from './store/wall'
+import { PostsProvider } from './store/posts'
 
 import Layout from './components/layout'
 
-import UserWall from './pages/UserWall'
-import Wall from './pages/Wall'
+import UserPosts from './pages/UserPosts'
+import Posts from './pages/Posts'
 
 const config = {}
 
@@ -21,14 +21,14 @@ const App = () => (
       <DAppProvider config={config}>
         <IdentityProvider>
           <ProfileProvider>
-            <WallProvider>
+            <PostsProvider>
               <BrowserRouter>
                   <Routes>
-                    <Route exact path="/" element={<Layout><Wall /></Layout>}/>
-                    <Route path="/user/:address" element={<Layout><UserWall /></Layout>}/>
+                    <Route exact path="/" element={<Layout><Posts /></Layout>}/>
+                    <Route path="/user/:address" element={<Layout><UserPosts /></Layout>}/>
                   </Routes>
               </BrowserRouter>
-            </WallProvider>
+            </PostsProvider>
           </ProfileProvider>
         </IdentityProvider>
       </DAppProvider>

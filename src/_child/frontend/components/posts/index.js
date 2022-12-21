@@ -6,7 +6,7 @@ import formatDistance from 'date-fns/formatDistance'
 import { Link as RouterLink } from 'react-router-dom'
 
 import { useENSName } from '../../utils/hooks'
-import { WallContext } from '../../store/wall'
+import { PostsContext } from '../../store/posts'
 import { ProfileContext } from '../../store/profile'
 import { IdentityContext } from '../../store/identity'
 
@@ -40,7 +40,7 @@ const Post = memo(({ data }) => {
 
 const WallPosts = ({principalId}) => {
   const { wallActor } = useContext(IdentityContext)
-  const { wallData, getWallData, loading } = useContext(WallContext)
+  const { wallData, getWallData, loading } = useContext(PostsContext)
   
   useEffect(() => {
     if (wallActor) {

@@ -7,7 +7,7 @@ import WritePost from '../components/posts/WritePost'
 import { ProfileContext } from '../store/profile'
 import { IdentityContext } from '../store/identity'
 
-const Wall = () => {
+const Posts = () => {
 
   const { getProfileByAddress } = useContext(ProfileContext)
 
@@ -28,4 +28,4 @@ const Wall = () => {
     </Box>
   )
 }
-export default Wall
+export default Posts

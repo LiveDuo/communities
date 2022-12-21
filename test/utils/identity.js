@@ -37,7 +37,7 @@ exports.getIdentityFromSignature = getIdentityFromSignature
 const getLoginMessage = (account, secret) => {
 	return (
 		'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
-		`APP NAME:\nic-wall\n\n` +
+		`APP NAME:\nic-communities\n\n` +
 		`ADDRESS:\n${account}\n\n` +
 		`HASH SECRET:\n${ethers.utils.hashMessage(secret)}`
 	)

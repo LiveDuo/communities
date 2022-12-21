@@ -6,7 +6,7 @@ const loginSecret = 'MUCH SECRET!'
 const getLoginMessage = (account) => {
   return (
     'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
-    `APP NAME:\nic-wall\n\n` +
+    `APP NAME:\nic-communities\n\n` +
     `ADDRESS:\n${account}\n\n` +
     `HASH SECRET:\n${utils.hashMessage(loginSecret)}`
   )
