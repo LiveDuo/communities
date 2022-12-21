@@ -45,7 +45,7 @@ const Header = () => {
               <Box h="16px" w="16px" mr="8px">
                 <Jazzicon address={account} />
               </Box>
-              {ENSName || shortenAddress(account)}
+              {ENSName || (account && shortenAddress(account))}
             </Button>
           </Link>
         </Box>}

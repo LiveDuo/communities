@@ -15,7 +15,7 @@ const UserInfo = () => {
   return profile?.name && (
     <Box mb="20px">
       <Box><b>Name:</b> {profile.name}</Box>
-      <Box><b>Ethereum:</b> {ENSName || shortenAddress(profile.address)}</Box>
+      <Box><b>Ethereum:</b> {ENSName || (profile.address && shortenAddress(profile.address))}</Box>
       <Box><b>Internet Computer:</b> {principal.toString().substring(0, 8)}</Box>
     </Box>
   )

@@ -28,7 +28,7 @@ const Post = memo(({ data }) => {
             <Box w="16px" h="16px" display="inline-block" mr="8px">
               <Jazzicon address={data.user_address} />
             </Box>
-            {ENSName || shortenAddress(data.user_address)}
+            {ENSName || (data.user_address && shortenAddress(data.user_address))}
           </Link>
           &nbsp;
           {data.user_name && <Link as={RouterLink} to={`/user/${data.user_address.toLowerCase()}`}>{`(${data.user_name})`}</Link>}
