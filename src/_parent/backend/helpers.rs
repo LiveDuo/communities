@@ -1,4 +1,4 @@
-use ic_ledger_types::{AccountIdentifier, Subaccount};
+use crate::canister::{Subaccount};
 
 use ic_cdk::export::candid::{candid_method};
 use candid::{Principal};
@@ -15,19 +15,19 @@ pub fn principal_to_subaccount(principal_id: &Principal) -> Subaccount {
 
 #[ic_cdk_macros::query]
 #[candid_method(query)]
-async fn principal_account_id(principal: Principal) -> String {
-    let canister_id = ic_cdk::api::id();
-    let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&principal));
-    return account.to_string();
+async fn principal_account_id(_principal: Principal) -> String {
+    // let canister_id = ic_cdk::api::id();
+    // let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&principal));
+    return "".to_string();
 }
 
 #[ic_cdk_macros::query]
 #[candid_method(query)]
 async fn caller_account_id() -> String {
-    let canister_id = ic_cdk::api::id();
-    let caller = ic_cdk::caller();
-    let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
-    return account.to_string();
+    // let canister_id = ic_cdk::api::id();
+    // let caller = ic_cdk::caller();
+    // let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
+    return "".to_string();
 }
 
 // CANISTER_USER_ACCOUNT = dfx canister call parent caller_account_id
