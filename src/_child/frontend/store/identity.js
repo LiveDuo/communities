@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useState, useEffect } from 'react'
 import { useEthers } from '@usedapp/core'
 import { useToast } from '@chakra-ui/react'
 import { utils } from 'ethers'

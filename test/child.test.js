@@ -50,10 +50,7 @@ describe('Testing with done', () => {
 		await actorBackend.setName('')
 
 		// check other profiles
-		const [principal] = await actorBackend.get_principal_by_eth(signerAddress.toLowerCase())
-		expect(principal.toString()).toBe(identity.getPrincipal().toString())
-
-		const [profile6] = await actorBackend.get_profile_by_eth(signerAddress.toLowerCase())
+		const [profile6] = await actorBackend.get_profile_by_address(signerAddress.toLowerCase())
 		expect(profile6.address).toBe(signerAddress.toLowerCase())
 		
 	})

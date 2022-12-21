@@ -72,19 +72,6 @@ fn get_profile() -> Profile {
     });
 }
 
-#[ic_cdk_macros::query]
-fn get_principal_by_eth(eth_address: String) -> Option<Principal> {
-    let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
-
-    for (principal, profile) in profile_store.iter() {
-        if profile.address.to_lowercase().eq(&eth_address.to_lowercase()) {
-            return Some(*principal);
-        }
-    }
-
-    None
-}
-
 #[ic_cdk_macros::update]
 pub fn set_name(handle: String) -> Profile {
     let principal = ic_cdk::caller();
