@@ -2,13 +2,15 @@ import { useState, useContext, createContext, useCallback } from 'react'
 
 import { IdentityContext } from './identity'
 
+import { Principal } from '@dfinity/principal'
+
 const ChildContext = createContext()
 
 const ChildProvider = ({ children }) => {
 
 	const [posts, setPosts] = useState()
 	const [loading, setLoading] = useState()
-	const { childActor } = useContext(IdentityContext)
+	const { childActor, principal } = useContext(IdentityContext)
 	const [profile, setProfile] = useState()
 
 	const getPosts = useCallback(async () => {
@@ -28,6 +30,14 @@ const ChildProvider = ({ children }) => {
 		await getPosts() // reload data
 	}
 
+	const createReply = async (index, text) => {
+
+		await childActor.create_reply(index, text)
+
+		const reply = { text, timestamp: new Date(), caller: principal}
+		return reply
+	}
+
 	const setUsername = async (name) => {
 		const profile = await childActor.update_profile([name], [])
 		return profile
@@ -38,7 +48,7 @@ const ChildProvider = ({ children }) => {
 		setProfile(response[0])
 	}, [childActor])
 
-	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost }
+	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

@@ -106,6 +106,7 @@ const idlBackendFactory = ({ IDL }) => {
 		'get_post': IDL.Func([IDL.Nat64], [Post], ['query']),
 		'get_posts' : IDL.Func([], [IDL.Vec(PostSummary)], ['query']),
     	'create_post' : IDL.Func([IDL.Text, IDL.Text], [], []),
+		'create_reply': IDL.Func([IDL.Nat64, IDL.Text], [], ['update']),
 	})
 }
 

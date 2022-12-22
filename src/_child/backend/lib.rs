@@ -164,6 +164,15 @@ pub fn create_post(title: String, description: String)  {
     });
 }
 
+#[ic_cdk_macros::update]
+fn create_reply(index: usize, text: String) {
+    STATE.with(|s| {
+		let mut state = s.borrow_mut();
+        let reply = Reply { text, timestamp: ic_cdk::api::time(), caller: ic_cdk::caller()};
+		state.posts.get_mut(index).unwrap().replies.push(reply);
+    });
+}
+
 #[ic_cdk_macros::pre_upgrade]
 fn pre_upgrade() {}
 

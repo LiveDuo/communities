@@ -33,6 +33,7 @@ const idlChildFactory = ({ IDL }) => {
     'get_post': IDL.Func([IDL.Nat64], [Post], ['query']),
     'get_posts': IDL.Func([], [IDL.Vec(PostSummary)], ['query']),
     'create_post': IDL.Func([IDL.Text, IDL.Text], [], []),
+    'create_reply': IDL.Func([IDL.Nat64, IDL.Text], [], ['update']),
     'get_profile': IDL.Func([], [Profile], ['query']),
     'get_profile_by_address': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
     'update_profile_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),

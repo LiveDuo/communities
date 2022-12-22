@@ -16,7 +16,7 @@ const principalShort = (a) => `${a.toString().substring(0, 18)}...${a.toString()
 
 const PostContainer = () => {
   const { childActor } = useContext(IdentityContext)
-  const { getPost, replyToPost } = useContext(ChildContext)
+  const { getPost, createReply } = useContext(ChildContext)
   
 	const [replyText, setReplyText] = useState('')
 	const [post, setPost] = useState()
@@ -33,6 +33,15 @@ const PostContainer = () => {
     const _post = await getPost(index)
     setPost({..._post, index})
   }, [getPost, params.index])
+
+  const replyToPost = async (p) => {
+
+		setReplyText('')
+
+		const reply = await createReply(p.index, replyText)
+		
+		setPost(h => ({...h, replies: [...h.replies, reply]}))
+	}
 
   useEffect(() => {
     if (childActor) {
