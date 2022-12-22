@@ -1,13 +1,13 @@
 import { useContext, useState } from 'react'
 import { Spinner, Input, Button, Box } from '@chakra-ui/react'
 
-import { ProfileContext } from '../../store/profile'
+import { ChildContext } from '../../store/child'
 
 const SetUsername = () => {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const { setProfile, setUsername } = useContext(ProfileContext)
+  const { setProfile, setUsername } = useContext(ChildContext)
 
   const handleNameChange = (event) => {
     if (event.currentTarget.value.length > 25) return

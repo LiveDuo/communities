@@ -5,8 +5,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import { DAppProvider } from '@usedapp/core'
 
 import { IdentityProvider } from './store/identity'
-import { ProfileProvider } from './store/profile'
-import { PostsProvider } from './store/posts'
+import { ChildProvider } from './store/child'
 
 import Layout from './components/layout'
 
@@ -20,16 +19,14 @@ const App = () => (
     <ChakraProvider>
       <DAppProvider config={config}>
         <IdentityProvider>
-          <ProfileProvider>
-            <PostsProvider>
-              <BrowserRouter>
-                  <Routes>
-                    <Route exact path="/" element={<Layout><Posts /></Layout>}/>
-                    <Route path="/user/:address" element={<Layout><UserPosts /></Layout>}/>
-                  </Routes>
-              </BrowserRouter>
-            </PostsProvider>
-          </ProfileProvider>
+          <ChildProvider>
+            <BrowserRouter>
+                <Routes>
+                  <Route exact path="/" element={<Layout><Posts /></Layout>}/>
+                  <Route path="/user/:address" element={<Layout><UserPosts /></Layout>}/>
+                </Routes>
+            </BrowserRouter>
+          </ChildProvider>
         </IdentityProvider>
       </DAppProvider>
     </ChakraProvider>

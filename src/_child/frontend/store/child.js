@@ -3,13 +3,14 @@ import { Principal } from '@dfinity/principal'
 
 import { IdentityContext } from './identity'
 
-const PostsContext = createContext()
+const ChildContext = createContext()
 
-const PostsProvider = ({ children }) => {
+const ChildProvider = ({ children }) => {
 
 	const [posts, setPosts] = useState()
 	const [loading, setLoading] = useState()
 	const { principal, childActor } = useContext(IdentityContext)
+	const [profile, setProfile] = useState()
 
 	const getPosts = useCallback(async (principalId, pageIndex) => {
 		const response = await childActor.get_posts(principalId ?? '', pageIndex)
@@ -23,8 +24,18 @@ const PostsProvider = ({ children }) => {
 		await getPosts(principalId, 0) // reload data
 	}
 
-	const value = { posts, getPosts, loading, setLoading, createPost }
-	return <PostsContext.Provider value={value}>{children}</PostsContext.Provider>
+	const setUsername = async (name) => {
+		const profile = await childActor.update_profile([name], [])
+		return profile
+	}
+
+	const getProfileByAddress = useCallback(async (address) => {
+		const response = await childActor.get_profile_by_address(address)
+		setProfile(response[0])
+	}, [childActor])
+
+	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading, posts, getPosts, createPost }
+	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 
-export { PostsContext, PostsProvider }
+export { ChildContext, ChildProvider }

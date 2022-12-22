@@ -8,14 +8,14 @@ import SetUsername from '../components/user/SetUsername'
 import UserInfo from '../components/user/UserInfo'
 // import WritePost from '../components/posts/WritePost'
 
-import { ProfileContext } from '../store/profile'
+import { ChildContext } from '../store/child'
 import { IdentityContext } from '../store/identity'
 
 const Posts = () => {
   const { account } = useEthers()
   const { address } = useParams()
 
-  const { profile, getProfileByAddress } = useContext(ProfileContext)
+  const { profile, getProfileByAddress } = useContext(ChildContext)
   const { principal } = useContext(IdentityContext)
 
   const isOwner = account?.toLowerCase() === address.toLowerCase()

@@ -6,7 +6,7 @@ import Jazzicon from 'react-jazzicon'
 
 import { useENSName } from '../../utils/hooks'
 import { IdentityContext } from '../../store/identity'
-import { ProfileContext } from '../../store/profile'
+import { ChildContext } from '../../store/child'
 
 const Header = () => {
 
@@ -18,7 +18,7 @@ const Header = () => {
 
   const { ENSName } = useENSName(account)
 
-  const { profile, setProfile, getProfileByAddress } = useContext(ProfileContext)
+  const { profile, setProfile, getProfileByAddress } = useContext(ChildContext)
 
   useEffect(() => {
     if (account)

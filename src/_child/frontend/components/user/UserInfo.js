@@ -2,12 +2,12 @@ import { useContext } from 'react'
 import { shortenAddress } from '@usedapp/core'
 import { Box, Spinner } from '@chakra-ui/react'
 
-import { ProfileContext } from '../../store/profile'
+import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
 import { useENSName } from '../../utils/hooks'
 
 const UserInfo = () => {
-  const { profile } = useContext(ProfileContext)
+  const { profile } = useContext(ChildContext)
   const { principal } = useContext(IdentityContext)
   const { ENSName } = useENSName(profile?.address)
 

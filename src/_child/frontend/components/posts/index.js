@@ -8,7 +8,7 @@ import { timeSince, timeSinceShort } from '../../utils/time'
 
 import { EditIcon, ArrowBackIcon } from '@chakra-ui/icons'
 
-import { PostsContext } from '../../store/posts'
+import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
 
 const principalShort = (a) => `${a.toString().substring(0, 18)}...${a.toString().substring(63 - 10, 63)}`
@@ -44,7 +44,7 @@ const getExplorerUrl = (principal) => `https://www.icscan.io/principal/${princip
 
 const PostsContainer = ({principalId}) => {
   const { childActor } = useContext(IdentityContext)
-  const { posts, getPosts, createPost, getPost, replyToPost } = useContext(PostsContext)
+  const { posts, getPosts, createPost, getPost, replyToPost } = useContext(ChildContext)
   
 	const [replyText, setReplyText] = useState('')
 	const [showSubpage, setShowSubpage] = useState(false)

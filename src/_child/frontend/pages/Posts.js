@@ -4,12 +4,12 @@ import { Box } from '@chakra-ui/react'
 import PostsContainer from '../components/posts'
 // import WritePost from '../components/posts/WritePost'
 
-import { ProfileContext } from '../store/profile'
+import { ChildContext } from '../store/child'
 import { IdentityContext } from '../store/identity'
 
 const Posts = () => {
 
-  const { getProfileByAddress } = useContext(ProfileContext)
+  const { getProfileByAddress } = useContext(ChildContext)
 
   const { account } = useContext(IdentityContext)
 
