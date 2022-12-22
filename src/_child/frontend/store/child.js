@@ -2,8 +2,6 @@ import { useState, useContext, createContext, useCallback } from 'react'
 
 import { IdentityContext } from './identity'
 
-import { Principal } from '@dfinity/principal'
-
 const ChildContext = createContext()
 
 const ChildProvider = ({ children }) => {
