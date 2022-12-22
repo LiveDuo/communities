@@ -16,14 +16,14 @@ const ParentProvider = ({ children }) => {
 
 	const createChild = async () => {
 		setLoading(true)
-		const {Ok: childPrincipal} = await parentActor.create_child_canister()
+		const {Ok: childPrincipal} = await parentActor.create_child()
 		setLoading(false)
 		return childPrincipal
 	}
 
 	const callCreateCanister = async () => {
 		try {
-			const response = await parentActorPlug.create_child_canister()
+			const response = await parentActorPlug.create_child()
 			if (response.Ok) {
 				toast({ description: `Response: ${response.Ok}` })
 			} else {
@@ -38,7 +38,7 @@ const ParentProvider = ({ children }) => {
 	const getCreateChildTx = (_params, callback = () => {}) => ({
 		idl: idlParentFactory,
 		canisterId: parentCanisterId,
-		methodName: 'create_child_canister',
+		methodName: 'create_child',
 		args: [],
 		onSuccess: callback,
 		onFail: (_res) => toast({ description: 'Something went wrong', status: 'error' })

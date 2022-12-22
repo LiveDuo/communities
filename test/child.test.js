@@ -26,7 +26,7 @@ describe('Testing with done', () => {
 		await transferIcpToAccount(callerAccountId)
 
 		// create child actor
-		const childPrincipalid = await actorParent.create_child_canister().then(p => p.Ok.toString())
+		const childPrincipalid = await actorParent.create_child().then(p => p.Ok.toString())
 		actorBackend = await getChildActor(agent, childPrincipalid)
 
 	})

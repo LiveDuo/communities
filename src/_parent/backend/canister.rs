@@ -112,8 +112,20 @@ pub enum TransferError {
 pub type BlockIndex = u64;
 pub type TransferResult = Result<BlockIndex, TransferError>;
 
+#[derive(CandidType, Deserialize, Debug, Copy, Clone, PartialEq, Default)]
+pub enum Environment {
+    #[default] Development,
+    Staging,
+    Production,
+}
+
+#[derive(CandidType, Deserialize, Debug, Copy, Clone, Default)]
+pub struct Config {
+    pub env: Environment,
+}
+
 #[derive(Default)]
-pub struct State { ledger: Option<Principal> }
+pub struct State { config: Config }
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
@@ -126,9 +138,11 @@ pub const MAINNET_LEDGER_CANISTER_ID: Principal =
     Principal::from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x01]);
 
 #[ic_cdk_macros::init]
-fn init(ledger: Option<Principal>) {
+fn init(env_opt: Option<Environment>) {
 
-	STATE.with(|s| { s.borrow_mut().ledger = ledger; });
+	if let Some(env) = env_opt {
+        STATE.with(|s| { s.borrow_mut().config = Config { env }; });
+    }
 
     ic_certified_assets::init();
 }
@@ -220,14 +234,12 @@ async fn create_canister(caller: Principal, canister_id: Principal) -> Result<Pr
 }
 
 async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), String> {
-
-	let ledger_canister_id = STATE.with(|s| s.borrow().ledger).unwrap_or(MAINNET_LEDGER_CANISTER_ID);
     
 	let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
     
     let account_balance_args = AccountBalanceArgs { account: account };
 
-	let balance_result: Result<(Tokens,), _> = ic_cdk::call(ledger_canister_id, "account_balance", (account_balance_args,),)
+	let balance_result: Result<(Tokens,), _> = ic_cdk::call(MAINNET_LEDGER_CANISTER_ID, "account_balance", (account_balance_args,),)
 		.await;
 
 	let tokens: Tokens = match balance_result {
@@ -249,7 +261,7 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
     };
 
 	let _transfer_result: (TransferResult,) =
-        ic_cdk::call(ledger_canister_id, "transfer", (transfer_args,))
+        ic_cdk::call(MAINNET_LEDGER_CANISTER_ID, "transfer", (transfer_args,))
             .await
             .map_err(|(code, msg)| format!("Transfer error: {}: {}", code as u8, msg))
             .unwrap();
@@ -258,12 +270,16 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
 }
 
 #[ic_cdk_macros::update]
-pub async fn create_child_canister() -> Result<Principal, String> {
+pub async fn create_child() -> Result<Principal, String> {
 
 	let canister_id = ic_cdk::api::id();
 	let caller = ic_cdk::caller();
 	
-	mint_cycles(caller, canister_id).await.unwrap();
+	let config = STATE.with(|s| { s.borrow().config });
+
+	if config.env == Environment::Production {
+		mint_cycles(caller, canister_id).await.unwrap();
+	};
 
 	let created_id = create_canister(caller, canister_id).await.unwrap();
 

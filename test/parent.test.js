@@ -16,12 +16,9 @@ describe.only('Testing with done', () => {
 	})
 
 	test('Should create a new ...', async () => {
-		// transfer icp to canister
-		const callerAccountId = await actorParent.caller_account_id()
-		await transferIcpToAccount(callerAccountId)
 
 		// create child actor
-		const childPrincipalid = await actorParent.create_child_canister().then(p => p.Ok.toString())
+		const childPrincipalid = await actorParent.create_child().then(p => p.Ok.toString())
 		expect(childPrincipalid).toBeDefined()
 		
 	})
