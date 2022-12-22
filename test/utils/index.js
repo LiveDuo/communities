@@ -74,13 +74,12 @@ const idlBackendFactory = ({ IDL }) => {
 	const Reply = IDL.Record({
 		'text': IDL.Text,
 		'timestamp': IDL.Nat64,
-		'caller': IDL.Principal
+		'address': IDL.Principal
 	  })
 	  const Post = IDL.Record({
 		'title' : IDL.Text,
 		'description' : IDL.Text,
-		'caller': IDL.Principal,
-		'user_address': IDL.Text,
+		'address': IDL.Text,
 		'timestamp': IDL.Nat64,
 		'replies': IDL.Vec(Reply),
 	  })
@@ -92,8 +91,7 @@ const idlBackendFactory = ({ IDL }) => {
 	const PostSummary = IDL.Record({
 		'title' : IDL.Text,
 		'description' : IDL.Text,
-		'caller': IDL.Principal,
-		'user_address': IDL.Text,
+		'address': IDL.Text,
 		'timestamp': IDL.Nat64,
 		'replies_count': IDL.Nat64,
 		'last_activity': IDL.Nat64,

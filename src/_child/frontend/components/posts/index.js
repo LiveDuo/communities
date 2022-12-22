@@ -13,8 +13,8 @@ import { IdentityContext } from '../../store/identity'
 
 import { useNavigate } from 'react-router-dom'
 
-const principalShort = (a) => `${a.toString().substring(0, 18)}...${a.toString().substring(63 - 10, 63)}`
-const getExplorerUrl = (principal) => `https://www.icscan.io/principal/${principal}`
+const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
+const getExplorerUrl = (principal) => `https://etherscan.io/address/${principal}`
 
 const PostsContainer = () => {
   const { childActor } = useContext(IdentityContext)
@@ -56,10 +56,10 @@ const PostsContainer = () => {
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>
                 </Box>
-                <Tooltip label={principalShort(p.caller)}>
-                  <Link href={getExplorerUrl(p.caller)} isExternal>
+                <Tooltip label={addressShort(p?.address ?? '')}>
+                  <Link href={getExplorerUrl(p.address)} isExternal>
                     <Box width="40px" height="20px" textAlign="center" _hover={{cursor: 'pointer', opacity: 0.7}}>
-                      <Jazzicon diameter={20} seed={p.caller.toString()} />
+                      <Jazzicon diameter={20} seed={p.address} />
                     </Box>
                   </Link>
                 </Tooltip>

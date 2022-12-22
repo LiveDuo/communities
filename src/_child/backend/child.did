@@ -13,7 +13,7 @@ type Reply = record {
 type Post = record {
     "timestamp": int;
     "caller": text;
-    "user_address": text;
+    "address": text;
     "title": text;
     "description": text;
     "replies": vec Reply;
@@ -22,7 +22,7 @@ type Post = record {
 type PostSummary = record {
     "timestamp": int;
     "caller": text;
-    "user_address": text;
+    "address": text;
     "title": text;
     "description": text;
     "replies_count": int;

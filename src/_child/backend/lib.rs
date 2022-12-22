@@ -15,13 +15,12 @@ pub struct Profile {
 pub struct Reply {
   pub text: String,
   pub timestamp: u64,
-  pub caller: Principal,
+  pub address: String,
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Post {
-    pub caller: Principal,
-    pub user_address: String,
+    pub address: String,
     pub title: String,
     pub description: String,
     pub timestamp: u64,
@@ -33,13 +32,12 @@ pub struct PostSummary {
   pub title: String,
   pub description: String,
   pub timestamp: u64,
-  pub user_address: String,
-  pub caller: Principal,
+  pub address: String,
   pub replies_count: u64,
   pub last_activity: u64,
 }
 
-#[derive(Default)]
+#[derive(Default, CandidType, Deserialize, Clone)]
 pub struct State { profiles: HashMap<Principal, Profile>, posts: Vec<Post> }
 
 thread_local! {
@@ -95,7 +93,7 @@ pub fn update_profile(name_opt: Option<String>, description_opt: Option<String>)
 
 #[ic_cdk_macros::update]
 pub fn update_profile_address(message: String, signature: String) -> Profile {
-    let principal = ic_cdk::caller();
+
     let mut signature_bytes = hex::decode(signature.trim_start_matches("0x")).unwrap();
     let recovery_byte = signature_bytes.pop().expect("No recovery byte");
     let recovery_id = libsecp256k1::RecoveryId::parse_rpc(recovery_byte).unwrap();
@@ -109,16 +107,20 @@ pub fn update_profile_address(message: String, signature: String) -> Profile {
     let public_key_bytes = public_key.serialize();
     let keccak256 = easy_hasher::easy_hasher::raw_keccak256(public_key_bytes[1..].to_vec());
     let keccak256_hex = keccak256.to_hex_string();
-    let mut address: String = "0x".to_owned();
-    address.push_str(&keccak256_hex[24..]);
+    let address: String = "0x".to_owned() + &keccak256_hex[24..];
 
     ic_cdk::println!("Linked eth address {:?}", address);
 
-    let mut profile = get_profile();
-    profile.address = address.to_lowercase().clone();
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
-        state.profiles.insert(principal, profile.clone());
+    let caller = ic_cdk::caller();
+    let profile = STATE.with(|s| {
+        
+        let profiles = &mut s.borrow_mut().profiles;
+        let mut profile = profiles.get(&caller).cloned().unwrap_or(Profile::default());
+        profile.address = address.to_lowercase().clone();
+
+        profiles.insert(caller, profile.clone());
+        return profile;
+
     });
 
     return profile;
@@ -126,12 +128,15 @@ pub fn update_profile_address(message: String, signature: String) -> Profile {
 
 #[ic_cdk_macros::query]
 pub fn get_posts() -> Vec<PostSummary> {
-    STATE.with(|s| 
-        s.borrow_mut().posts.iter().map(|x| {
-            let last_activity = if !x.replies.is_empty() { x.replies.last().unwrap().timestamp } else { 0 };
-            PostSummary { title: x.title.clone(), description: x.description.clone(), caller: x.caller.clone(), timestamp: x.timestamp, replies_count: x.replies.len() as u64, last_activity, user_address: "".to_string() }
+    STATE.with(|s| {
+
+        let state = &mut s.borrow_mut();
+        
+        state.posts.iter().map(|p| {
+            let last_activity = if !p.replies.is_empty() { p.replies.last().unwrap().timestamp } else { 0 };
+            PostSummary { title: p.title.clone(), description: p.description.clone(), address: p.address.clone(), timestamp: p.timestamp, replies_count: p.replies.len() as u64, last_activity }
         }).collect::<Vec<PostSummary>>()
-    )
+    })
 }
 
 #[ic_cdk_macros::query]
@@ -140,19 +145,18 @@ fn get_post(index: usize) -> Post {
 }
 
 #[ic_cdk_macros::update]
-pub fn create_post(title: String, description: String)  {
+pub fn create_post(title: String, description: String) -> Result<(), String>  {
     let caller = ic_cdk::caller();
 
+    if !is_authorized() { return Err(format!("User not authenticated")) }
+
     let profile_store = STATE.with(|s| s.borrow().profiles.clone());
-    let profile = profile_store
-        .get(&caller)
-        .cloned()
-        .unwrap_or(Profile::default());
+
+    let profile = profile_store.get(&caller).cloned().unwrap();
     
     let post = Post {
         timestamp: ic_cdk::api::time(),
-        caller,
-        user_address: profile.address,
+        address: profile.address,
         title,
         description,
         replies: vec![]
@@ -162,22 +166,66 @@ pub fn create_post(title: String, description: String)  {
         let mut state = s.borrow_mut();
         state.posts.push(post);
     });
+
+    Ok(())
+}
+
+fn is_authorized() -> bool {
+    let caller = ic_cdk::caller();
+    let profile_store = STATE.with(|s| s.borrow().profiles.clone());
+    if let None = profile_store.get(&caller) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 #[ic_cdk_macros::update]
-fn create_reply(index: usize, text: String) {
+fn create_reply(index: usize, text: String) -> Result<(), String> {
+    
+    if !is_authorized() { return Err(format!("User not authenticated")) }
+
     STATE.with(|s| {
+        let caller = ic_cdk::caller();
 		let mut state = s.borrow_mut();
-        let reply = Reply { text, timestamp: ic_cdk::api::time(), caller: ic_cdk::caller()};
+        let profile = state.profiles.get(&caller).unwrap();
+        let reply = Reply { text, timestamp: ic_cdk::api::time(), address: profile.address.clone() };
 		state.posts.get_mut(index).unwrap().replies.push(reply);
     });
+
+    Ok(())
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct StableState {
+  pub state: State,
+  pub storage: ic_certified_assets::StableState,
 }
 
 #[ic_cdk_macros::pre_upgrade]
-fn pre_upgrade() {}
+fn pre_upgrade() {
+
+    let state_pre_upgrade = STATE.with(|s| s.borrow().clone());
+
+    let state = StableState {
+        state: state_pre_upgrade,
+        storage: ic_certified_assets::pre_upgrade()
+    };
+
+    ic_cdk::storage::stable_save((state,)).unwrap();
+}
 
 #[ic_cdk_macros::post_upgrade]
-fn post_upgrade() {}
+fn post_upgrade() {
+
+    let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
+
+    STATE.with(|s|{
+        *s.borrow_mut() = s_prev.state;
+    });
+    
+    ic_certified_assets::post_upgrade(s_prev.storage);
+}
 
 #[ic_cdk_macros::query]
 fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_assets::types::HttpResponse {

@@ -8,7 +8,7 @@ const ChildProvider = ({ children }) => {
 
 	const [posts, setPosts] = useState()
 	const [loading, setLoading] = useState()
-	const { childActor, principal } = useContext(IdentityContext)
+	const { childActor, principal, account } = useContext(IdentityContext)
 	const [profile, setProfile] = useState()
 
 	const getPosts = useCallback(async () => {
@@ -32,7 +32,7 @@ const ChildProvider = ({ children }) => {
 
 		await childActor.create_reply(index, text)
 
-		const reply = { text, timestamp: new Date(), caller: principal}
+		const reply = { text, timestamp: new Date(), address: account}
 		return reply
 	}
 

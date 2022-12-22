@@ -12,7 +12,7 @@ import { IdentityContext } from '../../store/identity'
 
 import { useNavigate, useParams } from 'react-router-dom'
 
-const principalShort = (a) => `${a.toString().substring(0, 18)}...${a.toString().substring(63 - 10, 63)}`
+const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
 
 const PostContainer = () => {
   const { childActor } = useContext(IdentityContext)
@@ -54,10 +54,14 @@ const PostContainer = () => {
   return <Box>
       {post ? 
         <Box mt="20px" padding="40px">
-          <Flex mt="40px" mb="40px" justifyContent="center" alignItems="center">
+          <Flex mt="40px" mb="20px" justifyContent="center" alignItems="center">
             <IconButton icon={<ArrowBackIcon />} onClick={() =>goToPosts()}/>
             <Heading ml="40px" mr="auto" display="inline-block">{post.title}</Heading>
             <Text>{timeSince(post.timestamp)}</Text>
+          </Flex>
+          <Flex mb="20px" padding="20px 60px" alignItems="center">
+            <Jazzicon diameter={20} seed={post.address} />
+            <Text ml="20px">{post.address}</Text>
           </Flex>
           <Box mb="40px" padding="20px 60px">
             <Text textAlign="start">{post.description}</Text>
@@ -67,11 +71,11 @@ const PostContainer = () => {
             {post.replies.length > 0 ? post.replies.map((r, i) => 
               <Flex key={i} alignItems="center" borderBottom="1px solid #00000010" padding="20px">
                 <Box w="100px">
-                  <Jazzicon diameter={40} seed={r.caller.toString()} />
+                  <Jazzicon diameter={40} seed={r.address} />
                 </Box>
                 <Box>
 
-                <Text fontWeight="bold">{principalShort(r.caller)}</Text>
+                <Text fontWeight="bold">{addressShort(r?.address ?? '')}</Text>
                 <Text textAlign="start">{r.text}</Text>
                 </Box>
                 <Text ml="auto">{timeSince(r?.timestamp)}</Text>
