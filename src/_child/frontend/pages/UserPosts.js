@@ -6,7 +6,7 @@ import { Box } from '@chakra-ui/react'
 import PostsContainer from '../components/posts'
 import SetUsername from '../components/user/SetUsername'
 import UserInfo from '../components/user/UserInfo'
-import WritePost from '../components/posts/WritePost'
+// import WritePost from '../components/posts/WritePost'
 
 import { ProfileContext } from '../store/profile'
 import { IdentityContext } from '../store/identity'
@@ -33,7 +33,7 @@ const Posts = () => {
         {(isOwner && profile?.name.length === 0) && <SetUsername />}
         {profile && <UserInfo />}
 
-        {(isOwner && profile?.name.length > 0) && <WritePost />}
+        {/* {(isOwner && profile?.name.length > 0) && <WritePost />} */}
       </Box>
 
       <PostsContainer principalId={principal?.toString()} />

@@ -2,7 +2,7 @@ import { useEffect, useContext } from 'react'
 import { Box } from '@chakra-ui/react'
 
 import PostsContainer from '../components/posts'
-import WritePost from '../components/posts/WritePost'
+// import WritePost from '../components/posts/WritePost'
 
 import { ProfileContext } from '../store/profile'
 import { IdentityContext } from '../store/identity'
@@ -20,9 +20,9 @@ const Posts = () => {
 
   return (
     <Box>
-      <Box mb="40px">
+      {/* <Box mb="40px">
         <WritePost />
-      </Box>
+      </Box> */}
 
       <PostsContainer principalId={null} />
     </Box>

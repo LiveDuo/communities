@@ -29,7 +29,6 @@
     "@dfinity/principal": "^0.11.3",
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
-    "@ukstv/jazzicon-react": "^1.0.0",
     "@usedapp/core": "^1.1.2",
     "buffer": "^6.0.3",
     "buffer-crc32": "^0.2.13",
@@ -39,6 +38,7 @@
     "framer-motion": "^6.5.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-jazzicon": "^1.0.4",
     "react-router-dom": "^6.3.0"
   },
   "devDependencies": {

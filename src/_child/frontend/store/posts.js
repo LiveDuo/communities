@@ -1,4 +1,5 @@
 import { useState, useContext, createContext, useCallback } from 'react'
+import { Principal } from '@dfinity/principal'
 
 import { IdentityContext } from './identity'
 
@@ -6,23 +7,23 @@ const PostsContext = createContext()
 
 const PostsProvider = ({ children }) => {
 
-	const [postsData, setPostsData] = useState()
+	const [posts, setPosts] = useState()
 	const [loading, setLoading] = useState()
 	const { principal, childActor } = useContext(IdentityContext)
 
-	const getPostsData = useCallback(async (principalId, pageIndex) => {
+	const getPosts = useCallback(async (principalId, pageIndex) => {
 		const response = await childActor.get_posts(principalId ?? '', pageIndex)
-		setPostsData(response)
+		setPosts(response.map(p => ({...p, timestamp: new Date(), caller: Principal.anonymous(), replies_count: 0})))
 	}, [childActor])
 
-	const writeData = async (title, description) => {
+	const createPost = async (title, description) => {
 		await childActor.create_post(title, description)
 		
 		const principalId = principal?.toString() ?? ''
-		await getPostsData(principalId, 0) // reload data
+		await getPosts(principalId, 0) // reload data
 	}
 
-	const value = { postsData, getPostsData, loading, setLoading, writeData }
+	const value = { posts, getPosts, loading, setLoading, createPost }
 	return <PostsContext.Provider value={value}>{children}</PostsContext.Provider>
 }
 

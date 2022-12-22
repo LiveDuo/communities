@@ -7,7 +7,7 @@ const WritePost = () => {
 
   const [post, setPost] = useState('')
 
-  const { loading, setLoading, writeData } = useContext(PostsContext)
+  const { loading, setLoading, createPost } = useContext(PostsContext)
   
   const handlePostChange = (event) => {
     if (event.currentTarget.value.length > 255) return
@@ -20,7 +20,7 @@ const WritePost = () => {
     
     try {
       setLoading(true)
-      await writeData(post, '')
+      await createPost(post, '')
     } catch (error) {
       console.error(error)
     }
