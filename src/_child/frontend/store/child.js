@@ -8,7 +8,7 @@ const ChildProvider = ({ children }) => {
 
 	const [posts, setPosts] = useState()
 	const [loading, setLoading] = useState()
-	const { childActor, principal, account } = useContext(IdentityContext)
+	const { childActor, account } = useContext(IdentityContext)
 	const [profile, setProfile] = useState()
 
 	const getPosts = useCallback(async () => {
