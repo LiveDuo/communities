@@ -71,6 +71,19 @@ const getParentActor = async (agent) => {
 exports.getParentActor = getParentActor
 
 const idlBackendFactory = ({ IDL }) => {
+	const Reply = IDL.Record({
+		'text': IDL.Text,
+		'timestamp': IDL.Nat64,
+		'caller': IDL.Principal
+	  })
+	  const Post = IDL.Record({
+		'title' : IDL.Text,
+		'description' : IDL.Text,
+		'caller': IDL.Principal,
+		'user_address': IDL.Text,
+		'timestamp': IDL.Nat64,
+		'replies': IDL.Vec(Reply),
+	  })
 	const Profile = IDL.Record({
 		'name': IDL.Text,
 		'description': IDL.Text,
@@ -90,6 +103,7 @@ const idlBackendFactory = ({ IDL }) => {
 		'get_profile_by_address': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
 		'update_profile_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
 		'update_profile': IDL.Func([IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)], [Profile], []),
+		'get_post': IDL.Func([IDL.Nat64], [Post], ['query']),
 		'get_posts' : IDL.Func([], [IDL.Vec(PostSummary)], ['query']),
     	'create_post' : IDL.Func([IDL.Text, IDL.Text], [], []),
 	})

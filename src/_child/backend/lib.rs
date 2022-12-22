@@ -134,6 +134,11 @@ pub fn get_posts() -> Vec<PostSummary> {
     )
 }
 
+#[ic_cdk_macros::query]
+fn get_post(index: usize) -> Post {
+	STATE.with(|s| s.borrow().posts.get(index).unwrap().to_owned())
+}
+
 #[ic_cdk_macros::update]
 pub fn create_post(title: String, description: String)  {
     let caller = ic_cdk::caller();

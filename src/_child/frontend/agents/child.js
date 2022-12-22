@@ -2,6 +2,19 @@ import { Actor } from '@dfinity/agent'
 import { icHost, getAgent } from '.'
 
 const idlChildFactory = ({ IDL }) => {
+  const Reply = IDL.Record({
+    'text': IDL.Text,
+    'timestamp': IDL.Nat64,
+    'caller': IDL.Principal
+  })
+  const Post = IDL.Record({
+    'title' : IDL.Text,
+		'description' : IDL.Text,
+    'caller': IDL.Principal,
+    'user_address': IDL.Text,
+    'timestamp': IDL.Nat64,
+    'replies': IDL.Vec(Reply),
+  })
   const PostSummary = IDL.Record({
     'title' : IDL.Text,
 		'description' : IDL.Text,
@@ -17,6 +30,7 @@ const idlChildFactory = ({ IDL }) => {
     'address': IDL.Text,
   })
   return IDL.Service({
+    'get_post': IDL.Func([IDL.Nat64], [Post], ['query']),
     'get_posts': IDL.Func([], [IDL.Vec(PostSummary)], ['query']),
     'create_post': IDL.Func([IDL.Text, IDL.Text], [], []),
     'get_profile': IDL.Func([], [Profile], ['query']),

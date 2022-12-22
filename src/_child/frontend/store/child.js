@@ -16,6 +16,12 @@ const ChildProvider = ({ children }) => {
 		setPosts(response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: 0})))
 	}, [childActor])
 
+	const getPost = async (index) => {
+		const response = await childActor.get_post(index)
+		const _post = {...response, timestamp: new Date(Number(response.timestamp / 1000n / 1000n)), replies: response.replies.map(r => ({...r, timestamp: new Date(Number(r.timestamp / 1000n / 1000n))}))}
+		return _post
+	}
+
 	const createPost = async (title, description) => {
 		await childActor.create_post(title, description)
 		
@@ -32,7 +38,7 @@ const ChildProvider = ({ children }) => {
 		setProfile(response[0])
 	}, [childActor])
 
-	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading, posts, getPosts, createPost }
+	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

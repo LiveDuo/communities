@@ -10,6 +10,7 @@ import { ChildProvider } from './store/child'
 import Layout from './components/layout'
 
 import UserPosts from './pages/UserPosts'
+import Post from './pages/Post'
 import Posts from './pages/Posts'
 
 const config = {}
@@ -24,6 +25,7 @@ const App = () => (
                 <Routes>
                   <Route exact path="/" element={<Layout><Posts /></Layout>}/>
                   <Route path="/user/:address" element={<Layout><UserPosts /></Layout>}/>
+                  <Route path="/post/:index" element={<Layout><Post /></Layout>}/>
                 </Routes>
             </BrowserRouter>
           </ChildProvider>
