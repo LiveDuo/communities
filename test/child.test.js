@@ -62,13 +62,13 @@ describe('Testing with done', () => {
 		
 		// get user posts
 		const principal = identity.getPrincipal()
-		const posts = await actorBackend.get_posts('', 0)
+		const posts = await actorBackend.get_posts()
 		const lastPost = posts[posts.length - 1]
 		expect(lastPost.title).toBe('hello')
 		expect(lastPost.principal_id).toBe(principal.toString())
 		
 		// get user last post
-		const userPosts = await actorBackend.get_posts(principal.toString(), 0)
+		const userPosts = await actorBackend.get_posts()
 		const userLastPost = userPosts[userPosts.length - 1]
 		expect(userLastPost.title).toBe('hello')
 		expect(userLastPost.principal_id).toBe(principal.toString())

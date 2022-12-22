@@ -11,16 +11,33 @@ pub struct Profile {
     pub address: String,
 }
 
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct Reply {
+  pub text: String,
+  pub timestamp: u64,
+  pub caller: Principal,
+}
+
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Post {
-    pub id: i128,
-    pub timestamp: i128,
-    pub principal_id: String,
+    pub caller: Principal,
     pub user_address: String,
     pub title: String,
     pub description: String,
+    pub timestamp: u64,
+    pub replies: Vec<Reply>,
 }
 
+#[derive(CandidType, Deserialize, Clone)]
+pub struct PostSummary {
+  pub title: String,
+  pub description: String,
+  pub timestamp: u64,
+  pub user_address: String,
+  pub caller: Principal,
+  pub replies_count: u64,
+  pub last_activity: u64,
+}
 
 #[derive(Default)]
 pub struct State { profiles: HashMap<Principal, Profile>, posts: Vec<Post> }
@@ -49,10 +66,10 @@ fn get_profile_by_address(address: String) -> Option<Profile> {
 
 #[ic_cdk_macros::query]
 fn get_profile() -> Profile {
-    let principal_id = ic_cdk::caller();
+    let caller = ic_cdk::caller();
     let profile = STATE.with(|s| {
         let profile_store = &s.borrow().profiles;        
-        profile_store.get(&principal_id).cloned().unwrap_or(Profile::default())
+        profile_store.get(&caller).cloned().unwrap_or(Profile::default())
     });
 
     return profile;
@@ -108,29 +125,32 @@ pub fn update_profile_address(message: String, signature: String) -> Profile {
 }
 
 #[ic_cdk_macros::query]
-pub fn get_posts(_filter_principal_id: String, _filter_page: i128) -> Vec<Post> {
-    let posts = STATE.with(|s| s.borrow_mut().posts.clone());
-    return posts;
+pub fn get_posts() -> Vec<PostSummary> {
+    STATE.with(|s| 
+        s.borrow_mut().posts.iter().map(|x| {
+            let last_activity = if !x.replies.is_empty() { x.replies.last().unwrap().timestamp } else { 0 };
+            PostSummary { title: x.title.clone(), description: x.description.clone(), caller: x.caller.clone(), timestamp: x.timestamp, replies_count: x.replies.len() as u64, last_activity, user_address: "".to_string() }
+        }).collect::<Vec<PostSummary>>()
+    )
 }
 
 #[ic_cdk_macros::update]
 pub fn create_post(title: String, description: String)  {
-    let principal = ic_cdk::caller();
-    let posts_len = STATE.with(|s| s.borrow().posts.len());
+    let caller = ic_cdk::caller();
 
     let profile_store = STATE.with(|s| s.borrow().profiles.clone());
     let profile = profile_store
-        .get(&principal)
+        .get(&caller)
         .cloned()
         .unwrap_or(Profile::default());
     
     let post = Post {
-        id: posts_len as i128,
-        timestamp: ic_cdk::api::time() as i128,
-        principal_id: principal.to_string(),
+        timestamp: ic_cdk::api::time(),
+        caller,
         user_address: profile.address,
         title,
-        description
+        description,
+        replies: vec![]
     };
 
     STATE.with(|s| {

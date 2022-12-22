@@ -11,36 +11,10 @@ import { EditIcon, ArrowBackIcon } from '@chakra-ui/icons'
 import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
 
+import { useNavigate } from 'react-router-dom'
+
 const principalShort = (a) => `${a.toString().substring(0, 18)}...${a.toString().substring(63 - 10, 63)}`
 const getExplorerUrl = (principal) => `https://www.icscan.io/principal/${principal}`
-
-// import { timeSince, timeSinceShort } from '../../utils'
-
-// const Post = memo(({ data }) => {
-
-//   // console.log(data)
-
-//   const { ENSName } = useENSName(data.user_address)
-
-//   const timestamp = parseInt(data.timestamp.toString().substr(0, 13))
-//   const fromNow = formatDistance(timestamp, Date.now())
-//   return (
-//     <Box w='sm' borderWidth='1px' borderRadius='lg' p="20px" m="auto">
-//       <Heading p="8px" size="lg">{data.title}</Heading>
-//       <Box>
-//         <Box display="inline-block" mb="20px">{fromNow} ago</Box>
-//         <Box>
-//           <Link as={RouterLink} to={`/user/${data.user_address.toLowerCase()}`}>
-//             <Box w="16px" h="16px" display="inline-block" mr="8px">
-//               <Jazzicon seed={data.user_address} />
-//             </Box>
-//             {ENSName || (data.user_address && shortenAddress(data.user_address))}
-//           </Link>
-//         </Box>
-//       </Box>
-//     </Box>
-//   )
-// })
 
 const PostsContainer = ({principalId}) => {
   const { childActor } = useContext(IdentityContext)
@@ -49,11 +23,14 @@ const PostsContainer = ({principalId}) => {
 	const [replyText, setReplyText] = useState('')
 	const [showSubpage, setShowSubpage] = useState(false)
 	const [post, setPost] = useState()
+
   const { isOpen: isPostOpen, onOpen: onPostOpen, onClose: onPostClose } = useDisclosure()
+  const navigate = useNavigate()
 
   const goToPosts = async () => {
 		setShowSubpage(false)
-		// history.pushState('', '', `/`)
+		
+    navigate(`/`)
 
 		setPost(null)
 	}
@@ -62,7 +39,7 @@ const PostsContainer = ({principalId}) => {
 
 		setShowSubpage(true)
 
-		// history.pushState('', '', `/post/${i}`)
+    navigate(`/post/${i}`)
 
 		const _post = await getPost(i)
 		setPost({..._post, index: i})
@@ -70,29 +47,18 @@ const PostsContainer = ({principalId}) => {
 
   useEffect(() => {
     if (childActor) {
-			getPosts(principalId, 0)
+			getPosts()
     }
 	}, [getPosts, childActor, principalId])
 
   if (!posts) return <Spinner/>
-  // return (
-  //   posts.length > 0
-  //     ? <SimpleGrid flexDir="column" alignItems="center" columns={1} spacing={"10px"}>
-  //         {posts.map((post) => <Post key={post.id.toString()} data={post} />)}
-  //         <Box mt="10px" key={'-1'}>{loading && <Spinner />}</Box>
-  //     </SimpleGrid> 
-  //     : <Box mt="20px">
-  //       No posts!
-  //     </Box>
-  //   )
 
   return !showSubpage ? 
     <Box mt="32px" textAlign="center" m="auto">
       
       <Button mt="28px" leftIcon={<EditIcon />} mb="28px" w="200px" onClick={onPostOpen}>New Post</Button>
-      <PostModal isOpen={isPostOpen} onClose={onPostClose} onDone={createPost}/>
+      <PostModal isOpen={isPostOpen} onClose={onPostClose} createPost={createPost}/>
       
-
       {posts?.length > 0 ?
         <Box>
           <Flex mb="12px">
@@ -116,7 +82,7 @@ const PostsContainer = ({principalId}) => {
                     </Box>
                   </Link>
                 </Tooltip>
-                <Text width="120px" textAlign="center">{timeSinceShort((+p.last_activity > 0) ? p.last_activity : p.timestamp)}</Text>
+                <Text width="120px" textAlign="center">{timeSinceShort(p.last_activity ?? p.timestamp)}</Text>
                 <Text width="80px" textAlign="center">{p.replies_count.toString()}</Text>
               </Flex>
             </Box>)}

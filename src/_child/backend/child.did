@@ -4,13 +4,29 @@ type Profile = record {
     "description": text;
 };
 
-type Post = record {
-    "id": int;
+type Reply = record {
+    "text": text;
     "timestamp": int;
-    "principal_id": text;
+    "caller": principal;
+};
+
+type Post = record {
+    "timestamp": int;
+    "caller": text;
     "user_address": text;
     "title": text;
     "description": text;
+    "replies": vec Reply;
+};
+
+type PostSummary = record {
+    "timestamp": int;
+    "caller": text;
+    "user_address": text;
+    "title": text;
+    "description": text;
+    "replies_count": int;
+    "last_activity": int;
 };
 
 service : {
@@ -18,6 +34,6 @@ service : {
   "get_profile_by_address": (address: text) -> (opt Profile) query;
   "update_profile": (name: opt text, description: opt text) -> (Profile);
   "update_profile_address": (message: text, signature: text) -> (Profile);
-  "get_posts": (filter_user_id: text, filter_page: int) -> (vec Post) query;
+  "get_posts": () -> (vec PostSummary) query;
   "create_post": (title: text, description: text) -> ();
 }

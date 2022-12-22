@@ -2,7 +2,7 @@ import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody,
 import { Button, Textarea, Input } from '@chakra-ui/react'
 import { useState } from 'react'
 
-const PostModal = ({isOpen, onClose, onDone}) => {
+const PostModal = ({isOpen, onClose, createPost}) => {
 	const [title, setTitle] = useState()
 	const [description, setDescription] = useState()
 	return (
@@ -18,7 +18,7 @@ const PostModal = ({isOpen, onClose, onDone}) => {
 
 				<ModalFooter>
 					<Button variant='ghost' mr="12px" onClick={onClose}>Close</Button>
-					<Button variant="solid" onClick={() => {onDone(title, description); onClose()}}>Create</Button>
+					<Button variant="solid" onClick={() => {createPost(title, description); onClose()}}>Create</Button>
 				</ModalFooter>
 			</ModalContent>
 		</Modal>

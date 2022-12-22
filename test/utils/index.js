@@ -76,20 +76,21 @@ const idlBackendFactory = ({ IDL }) => {
 		'description': IDL.Text,
 		'address': IDL.Text,
 	})
-	const Post = IDL.Record({
-		'id' : IDL.Int,
+	const PostSummary = IDL.Record({
 		'title' : IDL.Text,
 		'description' : IDL.Text,
-		'principal_id' : IDL.Text,
-		'user_address' : IDL.Text,
-		'timestamp' : IDL.Int,
+		'caller': IDL.Principal,
+		'user_address': IDL.Text,
+		'timestamp': IDL.Nat64,
+		'replies_count': IDL.Nat64,
+		'last_activity': IDL.Nat64,
 	  })
 	return IDL.Service({
 		'get_profile': IDL.Func([], [Profile], ['query']),
 		'get_profile_by_address': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
 		'update_profile_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
 		'update_profile': IDL.Func([IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)], [Profile], []),
-		'get_posts' : IDL.Func([IDL.Text, IDL.Int], [IDL.Vec(Post)], ['query']),
+		'get_posts' : IDL.Func([], [IDL.Vec(PostSummary)], ['query']),
     	'create_post' : IDL.Func([IDL.Text, IDL.Text], [], []),
 	})
 }
