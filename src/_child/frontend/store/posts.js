@@ -6,23 +6,23 @@ const PostsContext = createContext()
 
 const PostsProvider = ({ children }) => {
 
-	const [wallData, setWallData] = useState()
+	const [postsData, setPostsData] = useState()
 	const [loading, setLoading] = useState()
-	const { principal, wallActor } = useContext(IdentityContext)
+	const { principal, childActor } = useContext(IdentityContext)
 
-	const getWallData = useCallback(async (principalId, pageIndex) => {
-		const response = await wallActor.get_posts(principalId ?? '', pageIndex)
-		setWallData(response)
-	}, [wallActor])
+	const getPostsData = useCallback(async (principalId, pageIndex) => {
+		const response = await childActor.get_posts(principalId ?? '', pageIndex)
+		setPostsData(response)
+	}, [childActor])
 
 	const writeData = async (title, description) => {
-		await wallActor.create_post(title, description)
+		await childActor.create_post(title, description)
 		
 		const principalId = principal?.toString() ?? ''
-		await getWallData(principalId, 0) // reload data
+		await getPostsData(principalId, 0) // reload data
 	}
 
-	const value = { wallData, getWallData, loading, setLoading, writeData }
+	const value = { postsData, getPostsData, loading, setLoading, writeData }
 	return <PostsContext.Provider value={value}>{children}</PostsContext.Provider>
 }
 

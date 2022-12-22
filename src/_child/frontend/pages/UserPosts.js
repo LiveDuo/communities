@@ -3,7 +3,7 @@ import { useEthers } from '@usedapp/core'
 import { useParams } from 'react-router-dom'
 import { Box } from '@chakra-ui/react'
 
-import WallPosts from '../components/posts'
+import PostsContainer from '../components/posts'
 import SetUsername from '../components/user/SetUsername'
 import UserInfo from '../components/user/UserInfo'
 import WritePost from '../components/posts/WritePost'
@@ -36,7 +36,7 @@ const Posts = () => {
         {(isOwner && profile?.name.length > 0) && <WritePost />}
       </Box>
 
-      <WallPosts principalId={principal?.toString()} />
+      <PostsContainer principalId={principal?.toString()} />
 
     </Box>
   )

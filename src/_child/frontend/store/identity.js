@@ -3,8 +3,7 @@ import { useEthers } from '@usedapp/core'
 import { useToast } from '@chakra-ui/react'
 import { utils } from 'ethers'
 
-import { createProfileActor } from '../agents/profile'
-import { createPostsActor } from '../agents/posts'
+import { createChildActor } from '../agents/child'
 
 import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
 import { saveIdentity, loadIdentity, clearIdentity } from '../utils/identity'
@@ -16,17 +15,14 @@ const IdentityProvider = ({children}) => {
   const { account, library } = useEthers()
   const [principal, setPrincipal] = useState()
 
-  const [profileActor, setProfileActor] = useState()
-  const [wallActor, setWallActor] = useState()
+  const [childActor, setChildActor] = useState()
 
   const toast = useToast()
 
   useEffect(() => {
     const identity = loadIdentity(account)
-    const _profileActor = createProfileActor(identity)
-    setProfileActor(_profileActor)
-    const _wallActor = createPostsActor(identity)
-    setWallActor(_wallActor)
+    const _childActor = createChildActor(identity)
+    setChildActor(_childActor)
 
     if (account) {
       setPrincipal(identity?.getPrincipal())
@@ -45,13 +41,11 @@ const IdentityProvider = ({children}) => {
       setPrincipal(identity?.getPrincipal())
 
       // set actors
-      const _profileActor = createProfileActor(identity)
-      setProfileActor(_profileActor)
-      const _wallActor = createPostsActor(identity)
-      setWallActor(_wallActor)
+      const _childActor = createChildActor(identity)
+      setChildActor(_childActor)
 
       // link address
-      const profile = await _profileActor.update_profile_address(utils.hashMessage(loginMessage), signature)
+      const profile = await _childActor.update_profile_address(utils.hashMessage(loginMessage), signature)
 
       toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
       return profile
@@ -62,7 +56,7 @@ const IdentityProvider = ({children}) => {
 
   const logout = () => clearIdentity(account)
   const login = () => loginWithMetamask()
-  const value = { account, principal, profileActor, wallActor, login, logout }
+  const value = { account, principal, childActor, login, logout }
   
   return (
     <IdentityContext.Provider value={value}>

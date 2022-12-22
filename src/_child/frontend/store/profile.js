@@ -8,17 +8,17 @@ const ProfileProvider = ({ children }) => {
 
 	const [profile, setProfile] = useState()
 	const [loading, setLoading] = useState()
-	const { profileActor } = useContext(IdentityContext)
+	const { childActor } = useContext(IdentityContext)
 
 	const setUsername = async (name) => {
-		const profile = await profileActor.update_profile([name], [])
+		const profile = await childActor.update_profile([name], [])
 		return profile
 	}
 
 	const getProfileByAddress = useCallback(async (address) => {
-		const response = await profileActor.get_profile_by_address(address)
+		const response = await childActor.get_profile_by_address(address)
 		setProfile(response[0])
-	}, [profileActor])
+	}, [childActor])
 
 	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading }
 

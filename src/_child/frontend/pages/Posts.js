@@ -1,7 +1,7 @@
 import { useEffect, useContext } from 'react'
 import { Box } from '@chakra-ui/react'
 
-import WallPosts from '../components/posts'
+import PostsContainer from '../components/posts'
 import WritePost from '../components/posts/WritePost'
 
 import { ProfileContext } from '../store/profile'
@@ -24,7 +24,7 @@ const Posts = () => {
         <WritePost />
       </Box>
 
-      <WallPosts principalId={null} />
+      <PostsContainer principalId={null} />
     </Box>
   )
 }

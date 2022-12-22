@@ -35,21 +35,21 @@ const Post = memo(({ data }) => {
   )
 })
 
-const WallPosts = ({principalId}) => {
-  const { wallActor } = useContext(IdentityContext)
-  const { wallData, getWallData, loading } = useContext(PostsContext)
+const PostsContainer = ({principalId}) => {
+  const { childActor } = useContext(IdentityContext)
+  const { postsData, getPostsData, loading } = useContext(PostsContext)
   
   useEffect(() => {
-    if (wallActor) {
-			getWallData(principalId, 0)
+    if (childActor) {
+			getPostsData(principalId, 0)
     }
-	}, [getWallData, wallActor, principalId])
+	}, [getPostsData, childActor, principalId])
 
-  if (!wallData) return <Spinner/>
+  if (!postsData) return <Spinner/>
   return (
-    wallData.length > 0
+    postsData.length > 0
       ? <SimpleGrid flexDir="column" alignItems="center" columns={1} spacing={"10px"}>
-          {wallData.map((post) => <Post key={post.id.toString()} data={post} />)}
+          {postsData.map((post) => <Post key={post.id.toString()} data={post} />)}
           <Box mt="10px" key={'-1'}>{loading && <Spinner />}</Box>
       </SimpleGrid> 
       : <Box mt="20px">
@@ -57,4 +57,4 @@ const WallPosts = ({principalId}) => {
       </Box>
     )
 }
-export default WallPosts
+export default PostsContainer
