@@ -3,7 +3,6 @@ import { icUrl, getAgent } from '.'
 
 const idlParentFactory = ({ IDL }) => {
   return IDL.Service({
-    'caller_account_id': IDL.Func([], [IDL.Text], ['query']),
     'create_child': IDL.Func([], [IDL.Variant({Ok: IDL.Principal, Err: IDL.Text})], []), // Result<Principal, String>
   })
 }
