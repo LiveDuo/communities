@@ -177,8 +177,6 @@ async fn store_assets(canister_id: Principal) -> Result<(), String> {
 		if asset.key == "/child/static/js/bundle.js" {
 			let bundle_str = String::from_utf8(asset_bytes).expect("Invalid JS bundle");
 			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
-
-			ic_cdk::println!("{:?}", bundle_with_env);
 			content = bundle_with_env.as_bytes().to_vec();
 		} else {
 			content = asset_bytes;
