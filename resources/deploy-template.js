@@ -82,7 +82,7 @@ const uploadFile = async (actor, key, assetBuffer) => {
 
 	const actor = Actor.createActor(idlFactory, { agent, canisterId })
 
-	const wasm = await fs.readFile('./canisters/child.wasm')
+	const wasm = await fs.readFile('./build/canister/child.wasm')
 	await uploadFile(actor, 'wasm', wasm)
 	
 	const buildPath = path.join(__dirname, '..', 'build')

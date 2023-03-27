@@ -24,6 +24,6 @@ if [[ $icx_output == "Starting batch." ]]; then exit 1; else echo "/child/fronte
 rm -rf $tmp_file
 
 # upload child wasm file
-icx_output=$(icx-asset --pem $pem_file upload $canister_id /child/child.wasm=./canisters/child.wasm)
+icx_output=$(icx-asset --pem $pem_file upload $canister_id /child/child.wasm=./build/canister/child.wasm)
 if [[ $icx_output == "Starting batch." ]]; then exit 1; else echo "/child/child.wasm"; fi
 
