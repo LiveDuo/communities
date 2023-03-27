@@ -92,8 +92,6 @@ const uploadFile = async (actor, key, assetBuffer) => {
 		await uploadFile(actor, asset, assetBuf)
 	}
 
-	const assetsList = Buffer.from(JSON.stringify(assets), 'utf8')
-	await uploadFile(actor, 'frontend.assets', assetsList)
 })()
 
 // dfx canister call parent create_child '()' 

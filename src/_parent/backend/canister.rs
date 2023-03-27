@@ -154,7 +154,7 @@ fn get_asset_test() {
 	ic_cdk::println!("Chunks: {}", asset.len());
 }
 
-fn _get_content_type(name: &str) -> String {
+fn get_content_type(name: &str) -> String {
 	if name.ends_with(".html") { return "text/html".to_string() }
 	else if name.ends_with(".js") { return "text/javascript".to_string() }
 	else if name.ends_with(".css") { return "text/css".to_string() } 
@@ -164,31 +164,35 @@ fn _get_content_type(name: &str) -> String {
 }
 
 async fn store_assets(canister_id: Principal) -> Result<(), String> {
-	let bundle_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/static/js/bundle.js".to_string());
 
-	let canister_str = &canister_id.to_string();
-	let bundle_str = String::from_utf8(bundle_bytes).expect("Invalid JS bundle");
-	let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", canister_str);
-	
-	let assets_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/frontend.assets".to_string());
-	let assets_str = String::from_utf8(assets_bytes.clone()).expect("Invalid frontend.assets");
-	let assets: Vec<serde_json::Value> = serde_json::from_str(&assets_str).expect("Invalid JSON");
+	let assets = ic_certified_assets::list_assets();
 	for asset in &assets {
-		
-		let asset_str = &asset.as_str().unwrap();
-		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(["/child", asset_str].join(""));
-		let content = if asset_str == &"/static/js/bundle.js" { bundle_with_env.as_bytes().to_vec() } else { asset_bytes };
+	
+		// skip unnecessary files
+		if !asset.key.starts_with("/child") || asset.key == "/child/child.wasm" { continue; }
 
-		let store_args = StoreAssetArgs {
-			key: asset_str.to_string(), // remove "/child" prefix
-			content_type: _get_content_type(asset_str),
-			content_encoding: "identity".to_owned(),
-			content: content,
-		};
+		// get asset content
+		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_string());
+		let content;
+		if asset.key == "/child/static/js/bundle.js" {
+			let bundle_str = String::from_utf8(asset_bytes).expect("Invalid JS bundle");
+			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
 
-		match ic_cdk::api::call::call(canister_id, "store", (store_args,),).await {
-			Ok(x) => x,
-			Err((_code, _msg)) => {}
+			ic_cdk::println!("{:?}", bundle_with_env);
+			content = bundle_with_env.as_bytes().to_vec();
+		} else {
+			content = asset_bytes;
+		}
+
+		// upload asset
+		let key = asset.key.replace("/child", "");
+		let content_type = get_content_type(&key);
+		let content_encoding = "identity".to_owned();
+		let store_args = StoreAssetArgs { key: key.to_string(), content_type, content_encoding, content, };
+		let result: Result<((),), _> = ic_cdk::api::call::call(canister_id, "store", (store_args,),).await;
+		match result {
+			Ok(_) => {},
+			Err((code, msg)) => return Err(format!("Upload asset error: {}: {}", code as u8, msg))
 		}
     }
 
