@@ -15,7 +15,7 @@
     "build": "npm run dev:parent",
     "start:child": "serve -s build/child",
     "dev:child": "CRA_PROJECT=child react-app-rewired start",
-    "build:child": "CRA_PROJECT=child react-app-rewired build",
+    "build:child": "DEPLOY_MODE=standalone CRA_PROJECT=child react-app-rewired build",
     "start:parent": "serve -s build/parent",
     "dev:parent": "CRA_PROJECT=parent react-app-rewired start",
     "build:parent": "CRA_PROJECT=parent react-app-rewired build"
