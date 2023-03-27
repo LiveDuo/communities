@@ -10,13 +10,13 @@ module.exports = {
 
         // clears canister id env var so it's replaced after a new canister is created
         // NOTE: plugin indexes change between development and production
-        if (process.env.NODE_ENV === 'production' && process.env.DEPLOY_MODE !== 'standalone') {
+        if (process.env.NODE_ENV === 'production' && process.env.DEPLOY_MODE === 'standalone') {
             // child canister
             config.plugins[2].replacements.REACT_APP_CHILD_CANISTER_ID = 'REACT_APP_CHILD_CANISTER_ID'
             config.plugins[4].definitions['process.env'].REACT_APP_CHILD_CANISTER_ID = '"REACT_APP_CHILD_CANISTER_ID"'
 
             // parent canister
-            const canisterData = fs.readFileSync('./canister_ids.json', 'utf8')
+            const canisterData = fs.readFileSync('.dfx/local/canister_ids.json', 'utf8')
             const canisterIds = JSON.parse(canisterData)
             config.plugins[2].replacements.REACT_APP_PARENT_CANISTER_ID = canisterIds.parent.ic
             config.plugins[4].definitions['process.env'].REACT_APP_PARENT_CANISTER_ID = `"${canisterIds.parent.ic}"`
