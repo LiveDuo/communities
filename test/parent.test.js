@@ -21,6 +21,8 @@ describe.only('Testing with done', () => {
 		const childPrincipalid = await actorParent.create_child().then(p => p.Ok.toString())
 		expect(childPrincipalid).toBeDefined()
 		
+		// print child canister
+		console.log('Child Principal id:', childPrincipalid)
 	})
 
 })
