@@ -1,5 +1,5 @@
-const { setupTests, checkDfxRunning, getAgent, getParentActor, getChildActor, 
-	getEthereumIdentity, getSignatureAndMessage, transferIcpToAccount } = require('./utils')
+const { setupTests, checkDfxRunning, getAgent, getChildActor,getEthereumIdentity, getSignatureAndMessage , getCanisters} = require('./utils')
+
 
 setupTests()
 
@@ -19,15 +19,10 @@ describe('Testing with done', () => {
 		
 		// get parent actor
 		const agent = await getAgent(identity)
-		const actorParent = await getParentActor(agent)
-		
-		// transfer icp to canister
-		const callerAccountId = await actorParent.caller_account_id()
-		await transferIcpToAccount(callerAccountId)
 
 		// create child actor
-		const childPrincipalid = await actorParent.create_child().then(p => p.Ok.toString())
-		actorBackend = await getChildActor(agent, childPrincipalid)
+		const canisters = await getCanisters()
+		actorBackend = await getChildActor(agent, canisters['child'].local)
 
 	})
 
@@ -61,17 +56,17 @@ describe('Testing with done', () => {
 		await actorBackend.create_post('hello', '')
 		
 		// get user posts
-		const principal = identity.getPrincipal()
+		const addressSigner =await signer.getAddress()
 		const posts = await actorBackend.get_posts()
 		const lastPost = posts[posts.length - 1]
 		expect(lastPost.title).toBe('hello')
-		expect(lastPost.principal_id).toBe(principal.toString())
+		expect(lastPost.address).toBe(addressSigner.toLowerCase())
 		
 		// get user last post
 		const userPosts = await actorBackend.get_posts()
 		const userLastPost = userPosts[userPosts.length - 1]
 		expect(userLastPost.title).toBe('hello')
-		expect(userLastPost.principal_id).toBe(principal.toString())
+		expect(userLastPost.address).toBe(addressSigner.toLowerCase())
 
 	})
 

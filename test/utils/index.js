@@ -25,17 +25,14 @@ const transferIcpToAccount = async (accountId) => {
 }
 exports.transferIcpToAccount = transferIcpToAccount
 
-const getCanisterIds = async () => {
-    let canisterIds = {}
+const getCanisters = async () => {
     try {
-        const canisters = require(path.resolve('.dfx', 'local', 'canister_ids.json'))
-        canisterIds.parent = Principal.fromText(canisters['parent'].local)
+				return require(path.resolve('.dfx', 'local', 'canister_ids.json'))
     } catch (error) {
         throw new Error('Canister not found') // should deploy first
     }
-    return canisterIds
 }
-exports.getCanisterIds = getCanisterIds
+exports.getCanisters = getCanisters
 
 const setupTests = () => {
     global.fetch = require('node-fetch')
@@ -62,10 +59,12 @@ exports.getAgent = getAgent
 const getParentActor = async (agent) => {
 
     // get canister ids
-    const canisterIds = await getCanisterIds()
+    const canisters = await getCanisters()
+
+		const parentCanisterID = Principal.fromText(canisters['parent'].local)
 
     // create parent actor
-    const actorParent = Actor.createActor(idlParentFactory, { agent, canisterId: canisterIds['parent'] })
+    const actorParent = Actor.createActor(idlParentFactory, { agent, canisterId: parentCanisterID })
     return actorParent
 }
 exports.getParentActor = getParentActor
