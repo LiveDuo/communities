@@ -11,7 +11,7 @@ const {getIdentityFromSignature, getSignatureAndMessage, getRandomIdentity} = re
 const execP = util.promisify(exec)
 
 const checkDfxRunning = async () => {
-    const { stdout } = await execP(`lsof -i:8000`).catch((e) => { if (e.killed) throw e; return e })
+    const { stdout } = await execP(`lsof -i:8080`).catch((e) => { if (e.killed) throw e; return e })
     if (stdout.split('\n') < 3)
         throw new Error('DFX is not started')
 }
@@ -49,7 +49,7 @@ const idlParentFactory = ({ IDL }) => {
 }
 
 const getAgent = async (identity) => {
-    const agent = new HttpAgent({ host: 'http://localhost:8000', identity })
+    const agent = new HttpAgent({ host: 'http://localhost:8080', identity })
     agent.fetchRootKey()
     return agent
 }

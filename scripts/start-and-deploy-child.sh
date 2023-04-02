@@ -2,7 +2,7 @@ COLOR_RED='\033[0;31m'
 COLOR_GREEN='\033[0;32m'
 COLOR_RESET='\033[0m'
 
-READY_STRING="Listening on http://127.0.0.1:8000/"
+READY_STRING="Listening on http://127.0.0.1:8080/"
 
 (dfx start --clean 2>&1 &) | while read output; do
 

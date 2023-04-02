@@ -42,7 +42,7 @@ const IdentityProvider = ({ children }) => {
 	}, [loadPlug])
 
 	const connect = async (hostType) => {
-		const host = hostType === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
+		const host = hostType === 'localhost' ? 'http://127.0.0.1:8080/' : 'https://mainnet.dfinity.network'
 		const whitelist = [ledgerCanisterId, parentCanisterId]
 		try {
 			const hasAllowed = await window.ic?.plug?.requestConnect({ host, whitelist })
