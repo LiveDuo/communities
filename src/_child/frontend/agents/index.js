@@ -1,7 +1,7 @@
 import { HttpAgent } from '@dfinity/agent'
 
 const isDev = process.env.REACT_APP_ICP_ENV === 'development'
-const icHost = isDev ? 'http://127.0.0.1:8080/' : 'https://ic0.app'
+const icHost = isDev ? 'http://127.0.0.1:8000/' : 'https://ic0.app'
 export { icHost }
 
 const getAgent = (identity) => {

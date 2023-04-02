@@ -10,7 +10,7 @@ const execP = util.promisify(exec)
 
 global.fetch = require('node-fetch')
 
-const agent = new HttpAgent({ host: 'http://localhost:8080' })
+const agent = new HttpAgent({ host: 'http://localhost:8000' })
 
 if (process.env.REACT_APP_ICP_ENV !== 'production') {
 	agent.fetchRootKey().catch(err => {
