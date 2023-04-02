@@ -33,11 +33,11 @@ module.exports = {
 
         // set ledger
         const ledgerCanisterId = process.env.CRA_MODE === 'development' ? canisterIds.ledger?.local : LEDGER_CANISTER_ID
-        updateEnvVar(config, 'REACT_APP_LEDGER_CANISTER_ID', ledgerCanisterId)
+        if (ledgerCanisterId) updateEnvVar(config, 'REACT_APP_LEDGER_CANISTER_ID', ledgerCanisterId)
 
         // set cmc
         const cmcCanisterId = process.env.CRA_MODE === 'development' ? canisterIds.cmc?.local : CMC_CANISTER_ID
-        updateEnvVar(config, 'REACT_APP_CMC_CANISTER_ID', cmcCanisterId)
+        if (cmcCanisterId) updateEnvVar(config, 'REACT_APP_CMC_CANISTER_ID', cmcCanisterId)
 
         return config
     },
