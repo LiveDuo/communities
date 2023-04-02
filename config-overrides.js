@@ -1,5 +1,5 @@
-const path = require('path')
 const fs = require('fs')
+const path = require('path')
 
 const canisterData = fs.readFileSync('.dfx/local/canister_ids.json', 'utf8')
 const canisterIds = JSON.parse(canisterData)
@@ -9,11 +9,11 @@ const LEDGER_CANISTER_ID = 'ryjl3-tyaaa-aaaaa-aaaba-cai'
 const CMC_CANISTER_ID = 'rkp4c-7iaaa-aaaaa-aaaca-cai'
 
 const updateEnvVar = (config, key, value) => {
-    const InterpolateIndex = config.plugins.findIndex(e => e.constructor.name === 'InterpolateHtmlPlugin')
-    config.plugins[InterpolateIndex].replacements[key] = value
+    const interpolateIndex = config.plugins.findIndex(e => e.constructor.name === 'InterpolateHtmlPlugin')
+    config.plugins[interpolateIndex].replacements[key] = value
 
-    const DefineIndex = config.plugins.findIndex(e => e.constructor.name === 'DefinePlugin')
-    config.plugins[DefineIndex].definitions['process.env'][key] = `"${value}"`
+    const defineIndex = config.plugins.findIndex(e => e.constructor.name === 'DefinePlugin')
+    config.plugins[defineIndex].definitions['process.env'][key] = `"${value}"`
 }
 
 module.exports = {
@@ -31,10 +31,12 @@ module.exports = {
             updateEnvVar(config, 'REACT_APP_PARENT_CANISTER_ID', canisterIds.parent.local)
         }
 
-        // set ledger and cmc
+        // set ledger
         const ledgerCanisterId = process.env.CRA_MODE === 'development' ? canisterIds.ledger?.local : LEDGER_CANISTER_ID
-        const cmcCanisterId = process.env.CRA_MODE === 'development' ? canisterIds.cmc?.local : CMC_CANISTER_ID
         updateEnvVar(config, 'REACT_APP_LEDGER_CANISTER_ID', ledgerCanisterId)
+
+        // set cmc
+        const cmcCanisterId = process.env.CRA_MODE === 'development' ? canisterIds.cmc?.local : CMC_CANISTER_ID
         updateEnvVar(config, 'REACT_APP_CMC_CANISTER_ID', cmcCanisterId)
 
         return config
