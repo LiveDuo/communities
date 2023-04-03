@@ -22,8 +22,8 @@ module.exports = {
 
         // set child
         if (process.env.CRA_PROJECT === 'child') {
-            if (!canisterIds.child) { console.log('Child canister not deployed\n'); process.exit(0) }
-            const canisterId = process.env.CRA_MODE === 'production' ? 'REACT_APP_CHILD_CANISTER_ID' : canisterIds.child.local
+            const canisterId = process.env.CRA_MODE === 'production' ? 'REACT_APP_CHILD_CANISTER_ID' : canisterIds.child?.local
+            if (!canisterId) { console.log('Child canister not deployed\n'); process.exit(0) }
             updateEnvVar(config, 'REACT_APP_CHILD_CANISTER_ID', canisterId)
         }
 
