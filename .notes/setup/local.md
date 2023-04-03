@@ -1,0 +1,16 @@
+
+### Setup dfx netowrk
+
+```json
+{
+  "local": {
+    "bind": "127.0.0.1:8000",
+    "type": "ephemeral",
+    "replica": {
+      "subnet_type": "system"
+    }
+  }
+}
+```
+**Location:** ~/.config/dfx/networks.json
+
