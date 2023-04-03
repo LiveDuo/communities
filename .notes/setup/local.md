@@ -1,5 +1,5 @@
 
-### Setup dfx netowrk
+### Setup dfx network
 
 ```json
 {
@@ -12,5 +12,5 @@
   }
 }
 ```
-**Location:** ~/.config/dfx/networks.json
+**Location:** `~/.config/dfx/networks.json`
 
