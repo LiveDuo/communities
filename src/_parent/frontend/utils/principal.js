@@ -1,8 +1,10 @@
 import { icHost } from '../agents'
 
+import { isLocalhost } from './index'
+
 const getPrincipalUrl = (childPrincipal) => {
-	if (process.env.REACT_APP_ICP_ENV !== 'production')
-		return `http://${icHost}/?canisterId=${childPrincipal}`
+	if (isLocalhost(icHost))
+		return `http://${childPrincipal}.${icHost.replace('127.0.0.1', 'localhost')}/`
 	else
 		return `https://${childPrincipal}.${icHost}/`
 }

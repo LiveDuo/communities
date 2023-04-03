@@ -40,7 +40,7 @@ const Example = () => {
 	if (!walletConnected) return <Text>Wallet not connected</Text>
 	return (
 		<Box m="20px">
-			<Box>
+			<Box mb="40px">
 				<Button mb="8px" isLoading={loading} disabled={!balance && ledgerCanisterId} onClick={() => createChildBatch()}>Create Child</Button>
 			</Box>
 			<Box>
