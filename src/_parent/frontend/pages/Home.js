@@ -18,7 +18,7 @@ const Example = () => {
 
 	const { walletConnected, userPrincipal } = useContext(IdentityContext)
 	const { parentCanisterId, loading, getCreateChildTx } = useContext(ParentContext)
-	const { balance, getTransferIcpTx } = useContext(LedgerContext)
+	const { balance, getTransferIcpTx, ledgerCanisterId } = useContext(LedgerContext)
 	const [childPrincipal, setChildPrincipal] = useState()
 	const toast = useToast()
 	
@@ -29,7 +29,8 @@ const Example = () => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
 		const transferTx = balance < CREATE_CHILD_COST ? [getTransferIcpTx({accountId, amount: BigInt(CREATE_CHILD_COST)}, onTransfer)] : []
 		try {
-			await window.ic.plug.batchTransactions([...transferTx, getCreateChildTx(null, onCreate)])
+			const txs = ledgerCanisterId ? [...transferTx, getCreateChildTx(null, onCreate)] : [getCreateChildTx(null, onCreate)]
+			await window.ic.plug.batchTransactions(txs)
 		} catch (error) {
 			const description = error.message ?? 'Transaction failed'
 			toast({ description, status: 'error' })
@@ -40,7 +41,7 @@ const Example = () => {
 	return (
 		<Box m="20px">
 			<Box>
-				<Button mb="8px" isLoading={loading} disabled={!balance} onClick={() => createChildBatch()}>Create Child</Button>
+				<Button mb="8px" isLoading={loading} disabled={!balance && ledgerCanisterId} onClick={() => createChildBatch()}>Create Child</Button>
 			</Box>
 			<Box>
 				<Box>{childPrincipal &&
