@@ -2,11 +2,11 @@ use candid::{CandidType, Principal, Deserialize};
 
 use serde::Serialize;
 
-use std::cell::RefCell;
-
 use sha2::Digest;
 
+use std::cell::RefCell;
 use std::convert::TryInto;
+use std::collections::HashMap;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 struct Asset { data: Vec<u8>, temp: Vec<u8> }
@@ -136,8 +136,25 @@ pub struct Config {
     pub env: Environment,
 }
 
+#[derive(CandidType, Deserialize, Default, Clone, PartialEq, Debug)]
+pub enum CanisterState { #[default] Preparing, Creating, Installing, Uploading, Ready }
+
+#[derive(Default, CandidType, Deserialize, Clone)]
+pub struct CanisterData {
+    pub id: Option<String>,
+    pub timestamp: u64,
+    pub state: CanisterState,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize)]
+pub struct CallbackData {
+    pub canister_index: usize,
+    pub user: Principal,
+    pub state: CanisterState
+}
+
 #[derive(Default)]
-pub struct State { pub config: Config }
+pub struct State { pub config: Config, pub canister_data: HashMap<String, Vec<CanisterData>> }
 
 thread_local! {
     pub static STATE: RefCell<State> = RefCell::new(State::default());
