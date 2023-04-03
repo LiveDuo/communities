@@ -76,9 +76,11 @@ const IdentityProvider = ({ children }) => {
 		if (connected) {
 			const _parentActorPlug = await createParentActorPlug()
 			setParentActorPlug(_parentActorPlug)
-	
-			const _ledgerActorPlug = await createLedgerActorPlug()
-			setLedgerActorPlug(_ledgerActorPlug)
+			
+			if (ledgerCanisterId) {
+				const _ledgerActorPlug = await createLedgerActorPlug()
+				setLedgerActorPlug(_ledgerActorPlug)
+			}
 		}
 	}, [])
 	
