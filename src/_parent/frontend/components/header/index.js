@@ -4,7 +4,7 @@ import { Button, Flex, Box, Tag, Text } from '@chakra-ui/react'
 import { IdentityContext } from '../../store/identity'
 import { LedgerContext } from '../../store/ledger'
 
-import { isLocalhost, getHostFromUrl } from '../../utils'
+import { isLocal } from '../../agents'
 
 const Header = () => {
   const {walletConnected, connect, disconnect, host, userPrincipal} = useContext(IdentityContext)
@@ -13,14 +13,13 @@ const Header = () => {
   const userPrincipalShorten = userPrincipal.slice(0, 5) + '...' + userPrincipal.slice(-3)
 
   const onConnect = () => {
-    if (isLocalhost(window.location.host)) {
+    if (isLocal) {
       connect('localhost')
     } else {
       connect('mainnet')
     }
   }
 
-  const isLocal = isLocalhost(getHostFromUrl(host))
   return (
     <Flex justifyContent="center" alignItems="center" m="20px">
       {host && <Box>

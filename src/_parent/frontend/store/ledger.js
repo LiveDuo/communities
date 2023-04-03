@@ -3,7 +3,7 @@ import { useToast } from '@chakra-ui/react'
 
 import { IdentityContext } from './identity'
 
-import { isLocalhost } from '../utils'
+import { isLocal } from '../agents/index'
 import { getAccountId } from '../utils/account'
 
 import { idlLedgerFactory, ledgerCanisterId } from '../agents/ledger'
@@ -35,7 +35,7 @@ const LedgerProvider = ({ children }) => {
 		methodName: 'send_dfx',
 		args: [{
 			to: params.accountId,
-			fee: { e8s: isLocalhost(window.location.host) ? 0n : 10000n },
+			fee: { e8s: isLocal ? 0n : 10000n },
 			amount: { e8s: params.amount },
 			memo: 32n, // TODO: put random memo?
 			from_subaccount: [],

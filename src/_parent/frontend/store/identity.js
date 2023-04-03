@@ -21,7 +21,7 @@ const IdentityProvider = ({ children }) => {
 	const toast = useToast()
 
 	const loadPlug = useCallback(async () => {
-		// setIsLocalhost(window.location.host.startsWith('localhost'))
+		// setIsLocalhost(window.location.hostname.endsWith('localhost'))
 
 		if (!window.ic?.plug) {
 			toast({ description: 'Plug wallet not installed', status: 'error' })

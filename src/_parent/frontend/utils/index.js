@@ -3,7 +3,7 @@ const isLocalhost = (h) => {
 }
 export { isLocalhost }
 
-const getHostFromUrl = (hostUrl) => {
+const getHostnameFromUrl = (hostUrl) => {
     try {
         const url = new URL(hostUrl)
         return url.host
@@ -11,4 +11,4 @@ const getHostFromUrl = (hostUrl) => {
         return ''
     }
 }
-export { getHostFromUrl }
+export { getHostnameFromUrl }
