@@ -140,8 +140,8 @@ pub fn get_posts() -> Vec<PostSummary> {
 }
 
 #[ic_cdk_macros::query]
-fn get_post(index: usize) -> Post {
-	STATE.with(|s| s.borrow().posts.get(index).unwrap().to_owned())
+fn get_post(index: u64) -> Post {
+	STATE.with(|s| s.borrow().posts.get(index as usize).unwrap().to_owned())
 }
 
 #[ic_cdk_macros::update]
@@ -181,7 +181,7 @@ fn is_authorized() -> bool {
 }
 
 #[ic_cdk_macros::update]
-fn create_reply(index: usize, text: String) -> Result<(), String> {
+fn create_reply(index: u64, text: String) -> Result<(), String> {
     
     if !is_authorized() { return Err(format!("User not authenticated")) }
 
@@ -190,7 +190,7 @@ fn create_reply(index: usize, text: String) -> Result<(), String> {
 		let mut state = s.borrow_mut();
         let profile = state.profiles.get(&caller).unwrap();
         let reply = Reply { text, timestamp: ic_cdk::api::time(), address: profile.address.clone() };
-		state.posts.get_mut(index).unwrap().replies.push(reply);
+		state.posts.get_mut(index as usize).unwrap().replies.push(reply);
     });
 
     Ok(())
