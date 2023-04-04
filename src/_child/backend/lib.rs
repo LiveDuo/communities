@@ -38,7 +38,7 @@ pub struct PostSummary {
 }
 
 #[derive(Default, CandidType, Deserialize, Clone)]
-pub struct State { profiles: HashMap<Principal, Profile>, posts: Vec<Post> }
+pub struct State { profiles: HashMap<Principal, Profile>, address_to_principal: HashMap<String, Principal>, posts: Vec<Post> }
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
@@ -112,18 +112,15 @@ pub fn update_profile_address(message: String, signature: String) -> Profile {
     ic_cdk::println!("Linked eth address {:?}", address);
 
     let caller = ic_cdk::caller();
-    let profile = STATE.with(|s| {
-        
-        let profiles = &mut s.borrow_mut().profiles;
-        let mut profile = profiles.get(&caller).cloned().unwrap_or(Profile::default());
-        profile.address = address.to_lowercase().clone();
+    STATE.with(|s| {
+        let mut state =  s.borrow_mut();
+        let mut profile = state.profiles.get(&caller).cloned().unwrap_or(Profile::default());
+        profile.address = address.to_lowercase();
 
-        profiles.insert(caller, profile.clone());
+        state.address_to_principal.insert(address.to_lowercase(), caller);
+        state.profiles.insert(caller, profile.clone());
         return profile;
-
-    });
-
-    return profile;
+    })
 }
 
 #[ic_cdk_macros::query]
