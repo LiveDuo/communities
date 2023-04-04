@@ -51,15 +51,11 @@ fn init() {
 
 #[ic_cdk_macros::query]
 fn get_profile_by_address(address: String) -> Option<Profile> {
-    let profile_store = STATE.with(|s| s.borrow_mut().profiles.clone());
-
-    for (_, profile) in profile_store.iter() {
-        if profile.address.eq(&address) {
-            return Some(profile.clone());
-        }
-    }
-
-    None
+    STATE.with(|s| {
+        let state = s.borrow();
+        let principal = state.address_to_principal.get(&address.to_lowercase()).unwrap();
+        state.profiles.get(&principal).cloned()
+    })
 }
 
 #[ic_cdk_macros::query]
