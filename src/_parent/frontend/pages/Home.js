@@ -70,7 +70,7 @@ const Home = () => {
 				<Button mb="8px" isLoading={loading} disabled={!balance && ledgerCanisterId} onClick={() => createChildBatch()}>Create Child</Button>
 			</Box>
 			<Box>
-				<Heading size={'lg'} mb="20px">DAOs</Heading>
+				<Heading size={'lg'} mb="20px">Communities</Heading>
 				{childPrincipals ? 
 					childPrincipals?.length > 0 ? <TableContainer>
 						<Table variant='simple'>
