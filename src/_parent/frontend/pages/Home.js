@@ -78,7 +78,7 @@ const Home = () => {
 						<Box flex={1}>
 							<img src={require('../public/launch.jpg')} alt="get started communities" width={400}/>
 						</Box>
-						<Flex flex={1} flexDir="column" justifyContent="center" alignItems="center">
+						<Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
 							<Heading size="sm" mb="8px">Join & Grow</Heading>
 							<Heading size="lg" mb="16px">Launch a community</Heading>
 							<Text mb="8px" >✓ Running completely on the Internet Computer</Text>
@@ -89,7 +89,7 @@ const Home = () => {
 					</Flex>
 				</TabPanel>
 				<TabPanel>
-					<Box>
+					<Box p="40px 0px">
 						{/* <Heading size={'lg'} mb="20px">Communities</Heading> */}
 						{childPrincipals ? 
 							childPrincipals?.length > 0 ? <TableContainer>
