@@ -129,7 +129,7 @@ pub fn get_posts() -> Vec<PostSummary> {
         
         state.posts.iter().map(|p| {
             let last_activity = if !p.replies.is_empty() { p.replies.last().unwrap().timestamp } else { 0 };
-            PostSummary { title: p.title.clone(), description: p.description.clone(), address: p.address.clone(), timestamp: p.timestamp, replies_count: p.replies.len() as u64, last_activity }
+            PostSummary { title: p.title.to_owned(), description: p.description.to_owned(), address: p.address.to_owned(), timestamp: p.timestamp, replies_count: p.replies.len() as u64, last_activity }
         }).collect::<Vec<PostSummary>>()
     })
 }
@@ -157,8 +157,6 @@ pub fn create_post(title: String, description: String) -> Result<(), String>  {
             replies: vec![]
         };
 
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
         state.posts.push(post);
     });
 
