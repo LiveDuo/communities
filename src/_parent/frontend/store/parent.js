@@ -21,6 +21,16 @@ const ParentProvider = ({ children }) => {
 		return childPrincipal
 	}
 
+	const getUserCanisters = async () => {
+		try {
+			const response = await parentActorPlug.get_user_canisters()
+			return response.map(c => ({id: c.id, timestamp: new Date(Number(c.timestamp / 1000n / 1000n)), state: Object.keys(c.state)[0]}))
+		} catch (error) {
+			const description = error.result?.reject_message ?? 'Response failed'
+			toast({ description, status: 'error' })
+		}
+	}
+
 	const callCreateCanister = async () => {
 		try {
 			const response = await parentActorPlug.create_child()
@@ -44,7 +54,7 @@ const ParentProvider = ({ children }) => {
 		onFail: (_res) => toast({ description: 'Something went wrong', status: 'error' })
 	})
 
-	const value = { getCreateChildTx, createChild, parentCanisterId, callCreateCanister, loading, setLoading }
+	const value = { getCreateChildTx, createChild, parentCanisterId, callCreateCanister, getUserCanisters, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }
