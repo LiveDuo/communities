@@ -19,3 +19,7 @@ done
 icx_output=$(icx-asset --pem $pem_file upload $canister_id /child/child.wasm=./build/canister/child.wasm)
 if [[ $icx_output == "Starting batch." ]]; then exit 1; else echo "/child/child.wasm"; fi
 
+# upload child domains file
+icx_output=$(icx-asset --pem $pem_file upload $canister_id /.well-known/ic-domains=./build/domains/index.txt)
+if [[ $icx_output == "Starting batch." ]]; then exit 1; else echo "/.well-known/ic-domains"; fi
+
