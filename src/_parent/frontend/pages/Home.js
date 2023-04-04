@@ -14,7 +14,7 @@ const CREATE_CHILD_COST = 1 * 1e8
 
 /* global BigInt */
 
-const Example = () => {
+const Home = () => {
 
 	const { walletConnected, userPrincipal } = useContext(IdentityContext)
 	const { parentCanisterId, loading, getCreateChildTx } = useContext(ParentContext)
@@ -54,4 +54,4 @@ const Example = () => {
 	)
 }
 
-export default Example
+export default Home
