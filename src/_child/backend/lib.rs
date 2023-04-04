@@ -16,10 +16,12 @@ pub struct Reply {
   pub text: String,
   pub timestamp: u64,
   pub address: String,
+  pub principal: Principal
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Post {
+    pub principal: Principal,
     pub address: String,
     pub title: String,
     pub description: String,
@@ -143,17 +145,17 @@ pub fn create_post(title: String, description: String) -> Result<(), String>  {
 
     if !is_authorized() { return Err(format!("User not authenticated")) }
 
-    let profile_store = STATE.with(|s| s.borrow().profiles.clone());
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
 
-    let profile = profile_store.get(&caller).cloned().unwrap();
-    
-    let post = Post {
-        timestamp: ic_cdk::api::time(),
-        address: profile.address,
-        title,
-        description,
-        replies: vec![]
-    };
+        let post = Post {
+            timestamp: ic_cdk::api::time(),
+            address: state.profiles.get(&caller).cloned().unwrap().address,
+            principal: caller,
+            title,
+            description,
+            replies: vec![]
+        };
 
     STATE.with(|s| {
         let mut state = s.borrow_mut();
@@ -182,7 +184,7 @@ fn create_reply(index: u64, text: String) -> Result<(), String> {
         let caller = ic_cdk::caller();
 		let mut state = s.borrow_mut();
         let profile = state.profiles.get(&caller).unwrap();
-        let reply = Reply { text, timestamp: ic_cdk::api::time(), address: profile.address.clone() };
+        let reply = Reply { text, timestamp: ic_cdk::api::time(), address: profile.address.to_owned(), principal: caller };
 		state.posts.get_mut(index as usize).unwrap().replies.push(reply);
     });
 
