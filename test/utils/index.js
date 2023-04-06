@@ -80,11 +80,20 @@ const idlBackendFactory = ({ IDL }) => {
     timestamp: IDL.Nat64,
     replies: IDL.Vec(Reply),
   });
+
+  const authentication = IDL.Variant({
+    Ic: IDL.Record({ principal: IDL.Principal }),
+    Evm: IDL.Record({ address: IDL.Text }),
+    Svm: IDL.Record({ address: IDL.Text }),
+  });
+
+  
   const Profile = IDL.Record({
     name: IDL.Text,
     description: IDL.Text,
-    address: IDL.Text,
+    authentication: authentication,
   });
+  
   const PostSummary = IDL.Record({
     title: IDL.Text,
     description: IDL.Text,
@@ -94,20 +103,21 @@ const idlBackendFactory = ({ IDL }) => {
     last_activity: IDL.Nat64,
   });
 
-  const authentication = IDL.Variant({
-    Ic: IDL.Record({ principal: IDL.Principal }),
-    Evm: IDL.Record({ address: IDL.Text }),
-    Svm: IDL.Record({ address: IDL.Text }),
+  
+  const authenticationWith = IDL.Variant({
+    Evm: IDL.Record({ message: IDL.Text, signature:  IDL.Text,}),
+    Svm: IDL.Record({ public_key: IDL.Text, signature: IDL.Text, message: IDL.Text }),
+    Ic: IDL.Null,
   });
 
   return IDL.Service({
-    create_profile: IDL.Func([authentication],[IDL.Variant({ ok: Profile, err: IDL.Text })],["update"]),
-    create_post: IDL.Func([IDL.Text, IDL.Text],[IDL.Variant({ ok: Post, err: IDL.Text })],["update"]),
-    create_reply: IDL.Func([IDL.Nat64, IDL.Text],[IDL.Variant({ ok: Reply, err: IDL.Text })],["update"]),
+    create_profile: IDL.Func([authenticationWith],[IDL.Variant({ Ok: Profile, Err: IDL.Text })],["update"]),
+    create_post: IDL.Func([IDL.Text, IDL.Text],[IDL.Variant({ Ok: Post, Err: IDL.Text })],["update"]),
+    create_reply: IDL.Func([IDL.Nat64, IDL.Text],[IDL.Variant({ Ok: Reply, Err: IDL.Text })],["update"]),
     get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-    get_profile: IDL.Func([],[IDL.Variant({ ok: Profile, err: IDL.Text })],["query"]),
-    get_post: IDL.Func([IDL.Nat64],[IDL.Variant({ ok: Post, err: IDL.Text })],["query"]),
-    get_posts_by_user: IDL.Func([IDL.Text, IDL.Text], [Profile], ["query"]),
+    get_profile: IDL.Func([],[IDL.Variant({ Ok: Profile, Err: IDL.Text })],["query"]),
+    get_post: IDL.Func([IDL.Nat64],[IDL.Variant({ Ok: Post, Err: IDL.Text })],["query"]),
+    get_posts_by_user: IDL.Func([authentication], [Profile], ["query"]),
   });
 };
 
