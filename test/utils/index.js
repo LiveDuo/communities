@@ -69,42 +69,48 @@ const getParentActor = async (agent) => {
 exports.getParentActor = getParentActor
 
 const idlBackendFactory = ({ IDL }) => {
-	const Reply = IDL.Record({
-		'text': IDL.Text,
-		'timestamp': IDL.Nat64,
-		'address': IDL.Principal
-	  })
-	  const Post = IDL.Record({
-		'title' : IDL.Text,
-		'description' : IDL.Text,
-		'address': IDL.Text,
-		'timestamp': IDL.Nat64,
-		'replies': IDL.Vec(Reply),
-	  })
-	const Profile = IDL.Record({
-		'name': IDL.Text,
-		'description': IDL.Text,
-		'address': IDL.Text,
-	})
-	const PostSummary = IDL.Record({
-		'title' : IDL.Text,
-		'description' : IDL.Text,
-		'address': IDL.Text,
-		'timestamp': IDL.Nat64,
-		'replies_count': IDL.Nat64,
-		'last_activity': IDL.Nat64,
-	  })
-	return IDL.Service({
-		'get_profile': IDL.Func([], [Profile], ['query']),
-		'get_profile_by_address': IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-		'update_profile_address': IDL.Func([IDL.Text, IDL.Text], [Profile], []),
-		'update_profile': IDL.Func([IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)], [Profile], []),
-		'get_post': IDL.Func([IDL.Nat64], [Post], ['query']),
-		'get_posts' : IDL.Func([], [IDL.Vec(PostSummary)], ['query']),
-    	'create_post' : IDL.Func([IDL.Text, IDL.Text], [], []),
-		'create_reply': IDL.Func([IDL.Nat64, IDL.Text], [], ['update']),
-	})
-}
+  const Reply = IDL.Record({
+    text: IDL.Text,
+    timestamp: IDL.Nat64,
+    address: IDL.Principal,
+  });
+  const Post = IDL.Record({
+    title: IDL.Text,
+    description: IDL.Text,
+    timestamp: IDL.Nat64,
+    replies: IDL.Vec(Reply),
+  });
+  const Profile = IDL.Record({
+    name: IDL.Text,
+    description: IDL.Text,
+    address: IDL.Text,
+  });
+  const PostSummary = IDL.Record({
+    title: IDL.Text,
+    description: IDL.Text,
+    address: IDL.Text,
+    timestamp: IDL.Nat64,
+    replies_count: IDL.Nat64,
+    last_activity: IDL.Nat64,
+  });
+
+  const authentication = IDL.Variant({
+    Ic: IDL.Record({ principal: IDL.Principal }),
+    Evm: IDL.Record({ address: IDL.Text }),
+    Svm: IDL.Record({ address: IDL.Text }),
+  });
+
+  return IDL.Service({
+    create_profile: IDL.Func([authentication],[IDL.Variant({ ok: Profile, err: IDL.Text })],["update"]),
+    create_post: IDL.Func([IDL.Text, IDL.Text],[IDL.Variant({ ok: Post, err: IDL.Text })],["update"]),
+    create_reply: IDL.Func([IDL.Nat64, IDL.Text],[IDL.Variant({ ok: Reply, err: IDL.Text })],["update"]),
+    get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
+    get_profile: IDL.Func([],[IDL.Variant({ ok: Profile, err: IDL.Text })],["query"]),
+    get_post: IDL.Func([IDL.Nat64],[IDL.Variant({ ok: Post, err: IDL.Text })],["query"]),
+    get_posts_by_user: IDL.Func([IDL.Text, IDL.Text], [Profile], ["query"]),
+  });
+};
+
 
 const getChildActor = async (agent, childPrincipalid) => {
     const actorChild = Actor.createActor(idlBackendFactory, { agent, canisterId: childPrincipalid })
