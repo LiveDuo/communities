@@ -13,7 +13,7 @@
     "upload:child": "CRA_MODE=production npm run build:child && ./scripts/upload-child.sh",
     "upload:parent": "npm run build:parent && ./scripts/upload-parent.sh",
     "build": "npm run dev:parent",
-    "build:wasm": "./scripts/build-wasm.sh",
+    "build:wasm": "./build/build-child.sh",
     "build:child": "CRA_PROJECT=child react-app-rewired build",
     "build:parent": "CRA_PROJECT=parent react-app-rewired build",
     "start": "npm run start:parent",
