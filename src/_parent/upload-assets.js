@@ -1,15 +1,10 @@
 const fs = require('fs/promises')
-
-const { exec } = require('child_process')
-const util = require('util')
 const path = require('path')
 const os = require('os')
 
 const { Ed25519KeyIdentity } = require('@dfinity/identity')
 const { Actor, HttpAgent } = require('@dfinity/agent')
 const pem = require('pem-file')
-
-const execP = util.promisify(exec)
 
 global.fetch = require('node-fetch')
 
@@ -20,8 +15,8 @@ const getDefaultIdentity = async () => {
 	return Ed25519KeyIdentity.fromSecretKey(secretKey)
 }
 
-const getAgent = (identity) => {
-	const agent = new HttpAgent({ host: 'http://localhost:8000', identity })
+const getAgent = (host, identity) => {
+	const agent = new HttpAgent({ host, identity })
 	agent.fetchRootKey().catch(err => {
 		console.warn('Unable to fetch root key. Check to ensure that your local replica is running')
 		console.error(err)
@@ -30,6 +25,14 @@ const getAgent = (identity) => {
 }
 
 const SIZE_CHUNK = 1024000 // one megabyte
+
+const getCanisters = async () => {
+	try {
+			return require(path.resolve('.dfx', 'local', 'canister_ids.json'))
+	} catch (error) {
+			throw new Error('Canister not found') // should deploy first
+	}
+}
 
 const idlFactory = ({ IDL }) => {
 	const StoreArgs = IDL.Record({'key': IDL.Text, 'content_type': IDL.Text, 'content_encoding': IDL.Text, 'content': IDL.Vec(IDL.Nat8)})
@@ -105,14 +108,14 @@ const uploadFile = async (actor, key, assetBuffer) => {
 	console.log(key)
 }
 
+// TODO move functions to `src/_meta/shared`
+// TODO support different networks and pem files (+encrypted)
 ; (async () => {
 
-	const { stdout } = await execP(`dfx canister id parent`).catch((e) => { if (e.killed) throw e; return e })
-	const canisterId = stdout.trim()
-
+	const canisters = await getCanisters()
 	const identity = getDefaultIdentity()
-	const agent = getAgent(identity)
-	const actor = Actor.createActor(idlFactory, { agent, canisterId })
+	const agent = getAgent('http://localhost:8000', identity)
+	const actor = Actor.createActor(idlFactory, { agent, canisterId: canisters.parent.local })
 
 	// upload wasm
 	const wasm = await fs.readFile('./build/canister/child.wasm')
