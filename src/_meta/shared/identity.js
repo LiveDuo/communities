@@ -1,11 +1,44 @@
 const { Ed25519KeyIdentity } = require('@dfinity/identity')
+const readlineSync = require('readline-sync')
 const { ethers } = require('ethers')
+const argon2 = require('argon2')
 const pem = require('pem-file')
-const os = require('os')
+
 const fs = require('fs/promises')
+const crypto = require('crypto')
+const os = require('os')
+
+const aesDecrypt = (encrypted, iv, key, tag) => {
+	const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv)
+	decipher.setAuthTag(tag)
+	return Buffer.concat([decipher.update(encrypted, 'base64'), decipher.final()])
+}
+
+const decryptPemFile = async (wallet, password) => {
+	// read pem and config
+	const pemFile = await fs.readFile(`${os.homedir()}/.config/dfx/identity/${wallet}/identity.pem.encrypted`)
+	const configStr = await fs.readFile(`${os.homedir()}/.config/dfx/identity/${wallet}/identity.json`, 'utf8')
+	const config = JSON.parse(configStr)
+
+	// calculate hash
+	const salt = Buffer.from(config.encryption.pw_salt, 'base64')
+	const options = { type: 2, version: 0x13, timeCost: 3, memoryCost: 64000, parallelism: 1, hashLength: 32, salt, saltLength: 64 }
+	const keyFull = await argon2.hash(password, options)
+	const keySplit = keyFull.split('$')
+	const key = Buffer.from(keySplit[5], 'base64')
+
+	// decrypt pem file
+	const nonce = Buffer.from(config.encryption.file_nonce)
+	const tag = pemFile.subarray(pemFile.byteLength - 16, pemFile.byteLength)
+	const msg = pemFile.subarray(0, pemFile.byteLength - 16)
+	const decrypted = aesDecrypt(msg, nonce, key, tag)
+	const decryptedFirst = decrypted.toString().replaceAt(27, '\n')
+	const decryptedAfter = decryptedFirst.replaceAt(decryptedFirst.length - 27, '\n')
+	return decryptedAfter
+}
 
 const getRandomIdentity = () => {
-	const uint8Array = Uint8Array.from(Array.from({length: 32}, () => 0))
+	const uint8Array = Uint8Array.from(Array.from({ length: 32 }, () => 0))
 	const identity = Ed25519KeyIdentity.generate(uint8Array)
 	return identity
 }
@@ -52,19 +85,34 @@ const getSignatureAndMessage = async (signer) => {
 	const loginMessage = getLoginMessage(signerAddress, 'MUCH SECRET!')
 	const signature = await signer.signMessage(loginMessage)
 	const loginMessageHash = ethers.utils.hashMessage(loginMessage)
-	return {signature, loginMessageHash}
+	return { signature, loginMessageHash }
 }
 exports.getSignatureAndMessage = getSignatureAndMessage
 
 const getEthereumIdentity = async (signer) => {
-	const {signature} = await getSignatureAndMessage(signer)
-    return getIdentityFromSignature(signature)
+	const { signature } = await getSignatureAndMessage(signer)
+	return getIdentityFromSignature(signature)
 }
 exports.getEthereumIdentity = getEthereumIdentity
 
-// TODO support encrypted pem files
+const exists = (s) => fs.access(s).then(() => true).catch(() => false)
+
+String.prototype.replaceAt = function (index, replacement) {
+	return this.substring(0, index) + replacement + this.substring(index + replacement.length)
+}
+
 const getIdentity = async (name) => {
-	const pemFile = await fs.readFile(`${os.homedir()}/.config/dfx/identity/${name}/identity.pem`)
+
+	const path = `${os.homedir()}/.config/dfx/identity/${name}`
+
+	let pemFile
+	if (await exists(`${path}/identity.pem`)) {
+		pemFile = await fs.readFile(`${path}/identity.pem`)
+	} else {
+		const password = readlineSync.question('Enter password: ', { hideEchoBack: true, mask: '' })
+		pemFile = await decryptPemFile(name, password)
+	}
+
 	const buffer = pem.decode(pemFile)
 	const secretKey = Buffer.concat([buffer.subarray(16, 48), buffer.subarray(53, 85)])
 	return Ed25519KeyIdentity.fromSecretKey(secretKey)

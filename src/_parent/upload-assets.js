@@ -11,7 +11,7 @@ const argv = minimist(process.argv.slice(2))
 const host = argv.network ?? 'http://localhost:8000'
 const id = argv.identity ?? 'default'
 
-// node src/_parent/upload-assets.js --network https://ic0.app 
+// node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
 ; (async () => {
 
 	const canisters = await getCanisters()
