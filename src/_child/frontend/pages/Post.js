@@ -20,7 +20,6 @@ const Posts = () => {
 
   return (
     <Box>
-
       <PostContainer principalId={null} />
     </Box>
   )

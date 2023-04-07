@@ -3,7 +3,7 @@ use ic_cdk::export::candid::{export_service};
 
 mod state;
 
-use candid::{Principal};
+use candid::{CandidType, Deserialize, Principal};
 
 use crate::state::principal_to_subaccount;
 
@@ -23,13 +23,6 @@ fn init(env_opt: Option<Environment>) {
     }
 
     ic_certified_assets::init();
-}
-
-#[ic_cdk_macros::query]
-fn get_asset_test() {
-	let asset_name = "/child/child.wasm".to_owned();
-	let asset = ic_certified_assets::get_asset(asset_name);
-	ic_cdk::println!("Chunks: {}", asset.len());
 }
 
 fn get_content_type(name: &str) -> String {
@@ -248,17 +241,30 @@ fn get_user_canisters() -> Vec<CanisterData> {
 	return data.get(&caller.to_string()).unwrap_or(&Vec::new() as &Vec<CanisterData>).to_vec();
 }
 
+#[derive(CandidType, Deserialize)]
+pub struct UpgradeState {
+  pub lib: State,
+  pub assets: ic_certified_assets::StableState,
+}
+
 #[ic_cdk_macros::pre_upgrade]
 fn pre_upgrade() {
-	ic_cdk::storage::stable_save((ic_certified_assets::pre_upgrade(),))
-        .expect("failed to save stable state");
+	
+	let lib = STATE.with(|s|{ s.clone().into_inner() });
+    let assets = ic_certified_assets::pre_upgrade();
+
+    let state = UpgradeState { lib, assets };
+	ic_cdk::storage::stable_save((state,)).unwrap();
 }
 
 #[ic_cdk_macros::post_upgrade]
 fn post_upgrade() {
-	let (stable_state,): (ic_certified_assets::StableState,) =
-        ic_cdk::storage::stable_restore().expect("failed to restore stable state");
-    ic_certified_assets::post_upgrade(stable_state);
+	
+	let (s_prev,): (UpgradeState,) = ic_cdk::storage::stable_restore().unwrap();
+
+    STATE.with(|s|{ *s.borrow_mut() = s_prev.lib.to_owned(); });
+    ic_certified_assets::post_upgrade(s_prev.assets);
+	
 }
 
 #[ic_cdk_macros::query]
