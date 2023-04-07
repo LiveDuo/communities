@@ -48,12 +48,12 @@ const IdentityProvider = ({children}) => {
       let profile = await _childActor.create_profile({Evm: { message: utils.hashMessage(loginMessage), signature} })
 
       if(profile.Ok) {
+        profile = profile.Ok
         toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
       } else {
         profile = await _childActor.get_profile().then(res => res.Ok)
       }
 
-      console.log(profile)
 
       return profile
     } catch (error) {

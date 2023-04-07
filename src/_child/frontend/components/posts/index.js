@@ -35,8 +35,6 @@ const PostsContainer = () => {
 
   if (!posts) return <Spinner/>
 
-  console.log(posts.map(p=> p.post_id))
-
   return  <Box mt="32px" textAlign="center" m="auto">
 
       <Button mt="28px" leftIcon={<EditIcon />} mb="28px" w="200px" onClick={onPostOpen}>New Post</Button>
