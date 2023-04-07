@@ -1,5 +1,8 @@
 const { Ed25519KeyIdentity } = require('@dfinity/identity')
 const { ethers } = require('ethers')
+const pem = require('pem-file')
+const os = require('os')
+const fs = require('fs/promises')
 
 const getRandomIdentity = () => {
 	const uint8Array = Uint8Array.from(Array.from({length: 32}, () => 0))
@@ -52,3 +55,18 @@ const getSignatureAndMessage = async (signer) => {
 	return {signature, loginMessageHash}
 }
 exports.getSignatureAndMessage = getSignatureAndMessage
+
+const getEthereumIdentity = async (signer) => {
+	const {signature} = await getSignatureAndMessage(signer)
+    return getIdentityFromSignature(signature)
+}
+exports.getEthereumIdentity = getEthereumIdentity
+
+// TODO support encrypted pem files
+const getIdentity = async (name) => {
+	const pemFile = await fs.readFile(`${os.homedir()}/.config/dfx/identity/${name}/identity.pem`)
+	const buffer = pem.decode(pemFile)
+	const secretKey = Buffer.concat([buffer.subarray(16, 48), buffer.subarray(53, 85)])
+	return Ed25519KeyIdentity.fromSecretKey(secretKey)
+}
+exports.getIdentity = getIdentity

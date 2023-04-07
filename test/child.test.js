@@ -1,5 +1,9 @@
-const { setupTests, checkDfxRunning, getAgent, getChildActor,getEthereumIdentity, getSignatureAndMessage , getCanisters} = require('./utils')
+const { Actor } = require('@dfinity/agent')
+const { ethers } = require('ethers')
 
+const { setupTests, checkDfxRunning, getAgent, getCanisters } = require('../src/_meta/shared/utils')
+const { getEthereumIdentity, getSignatureAndMessage } = require('../src/_meta/shared/identity')
+const { childFactory } = require('../src/_meta/shared/idl')
 
 setupTests()
 
@@ -13,16 +17,13 @@ describe('Testing with done', () => {
 		await checkDfxRunning()
 
 		// get random identity
-		const {identity: identityEthers, signerRandom} = await getEthereumIdentity()
-		signer = signerRandom
-		identity = identityEthers
+		signer = ethers.Wallet.createRandom()
+		identity = await getEthereumIdentity(signer)
 		
-		// get parent actor
-		const agent = await getAgent(identity)
-
 		// create child actor
 		const canisters = await getCanisters()
-		actorBackend = await getChildActor(agent, canisters['child'].local)
+		const agent = getAgent('http://localhost:8000', identity)
+		actorBackend = Actor.createActor(childFactory, { agent, canisterId: canisters.child.local })
 
 	})
 

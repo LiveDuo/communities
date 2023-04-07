@@ -1,52 +1,9 @@
 const fs = require('fs/promises')
 const path = require('path')
-const os = require('os')
-
-const { Ed25519KeyIdentity } = require('@dfinity/identity')
-const { HttpAgent } = require('@dfinity/agent')
-const pem = require('pem-file')
 
 global.fetch = require('node-fetch')
 
-// TODO support encrypted pem files
-const getIdentity = async (name) => {
-	const pemFile = await fs.readFile(`${os.homedir()}/.config/dfx/identity/${name}/identity.pem`)
-	const buffer = pem.decode(pemFile)
-	const secretKey = Buffer.concat([buffer.subarray(16, 48), buffer.subarray(53, 85)])
-	return Ed25519KeyIdentity.fromSecretKey(secretKey)
-}
-exports.getIdentity = getIdentity
-
-const getAgent = (host, identity) => {
-	const agent = new HttpAgent({ host, identity })
-	agent.fetchRootKey().catch(err => {
-		console.warn('Unable to fetch root key. Check to ensure that your local replica is running')
-		console.error(err)
-	})
-	return agent
-}
-exports.getAgent = getAgent
-
-const getCanisters = async () => {
-	try {
-			return require(path.resolve('.dfx', 'local', 'canister_ids.json'))
-	} catch (error) {
-			throw new Error('Canister not found') // should deploy first
-	}
-}
-exports.getCanisters = getCanisters
-
-const assetFactory = ({ IDL }) => {
-	const StoreArgs = IDL.Record({'key': IDL.Text, 'content_type': IDL.Text, 'content_encoding': IDL.Text, 'content': IDL.Vec(IDL.Nat8)})
-	return IDL.Service({
-		'create_batch': IDL.Func([IDL.Text], [], []),
-		'append_chunk': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
-		'commit_batch': IDL.Func([IDL.Text], [], []),
-		'store_batch': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
-		'store': IDL.Func([StoreArgs], [], []),
-	})
-}
-exports.assetFactory = assetFactory
+const SIZE_CHUNK = 1024000 // one megabyte
 
 const getContentType = (k) => {
 	if (k.endsWith('.html')) return 'text/html'
@@ -74,8 +31,6 @@ const getFiles = async (dir, initial) => {
 	return fileList.filter(f => !f.endsWith('.DS_Store'))
 }
 exports.getFiles = getFiles
-
-const SIZE_CHUNK = 1024000 // one megabyte
 
 // https://github.com/ORIGYN-SA/large_canister_deployer_internal/blob/master/chunker_appender/index.js
 const uploadFileBatch = async (actor, key, assetBuffer) => {
