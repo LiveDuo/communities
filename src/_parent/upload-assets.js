@@ -1,15 +1,14 @@
 const fs = require('fs/promises')
 const { Actor } = require('@dfinity/agent')
 
-const { getCanisters, getIdentity, getFiles, getAgent, uploadFile, parentFactory } = require('./shared')
+const { getCanisters, getIdentity, getFiles, getAgent, uploadFile, assetFactory } = require('../_meta/shared')
 
-// TODO support encrypted pem files
 ; (async () => {
 
 	const canisters = await getCanisters()
 	const identity = getIdentity('default')
 	const agent = getAgent('http://localhost:8000', identity)
-	const actor = Actor.createActor(parentFactory, { agent, canisterId: canisters.parent.local })
+	const actor = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent.local })
 
 	// upload wasm
 	const wasm = await fs.readFile('./build/canister/child.wasm')

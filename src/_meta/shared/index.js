@@ -8,6 +8,7 @@ const pem = require('pem-file')
 
 global.fetch = require('node-fetch')
 
+// TODO support encrypted pem files
 const getIdentity = async (name) => {
 	const pemFile = await fs.readFile(`${os.homedir()}/.config/dfx/identity/${name}/identity.pem`)
 	const buffer = pem.decode(pemFile)
@@ -35,7 +36,7 @@ const getCanisters = async () => {
 }
 exports.getCanisters = getCanisters
 
-const parentFactory = ({ IDL }) => {
+const assetFactory = ({ IDL }) => {
 	const StoreArgs = IDL.Record({'key': IDL.Text, 'content_type': IDL.Text, 'content_encoding': IDL.Text, 'content': IDL.Vec(IDL.Nat8)})
 	return IDL.Service({
 		'create_batch': IDL.Func([IDL.Text], [], []),
@@ -45,7 +46,7 @@ const parentFactory = ({ IDL }) => {
 		'store': IDL.Func([StoreArgs], [], []),
 	})
 }
-exports.parentFactory = parentFactory
+exports.assetFactory = assetFactory
 
 const getContentType = (k) => {
 	if (k.endsWith('.html')) return 'text/html'
