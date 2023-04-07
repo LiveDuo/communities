@@ -420,8 +420,9 @@ fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
     let sig = Signature::from_bytes(&signature).unwrap();
     public_key.verify(&msg, &sig).unwrap();
 
+    let address = bs58::encode(public_key).into_string();
     SvmParams {
-        address: args.public_key,
+        address: address,
     }
 }
 
