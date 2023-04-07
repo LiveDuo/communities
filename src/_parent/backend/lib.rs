@@ -25,13 +25,6 @@ fn init(env_opt: Option<Environment>) {
     ic_certified_assets::init();
 }
 
-#[ic_cdk_macros::query]
-fn get_asset_test() {
-	let asset_name = "/child/child.wasm".to_owned();
-	let asset = ic_certified_assets::get_asset(asset_name);
-	ic_cdk::println!("Chunks: {}", asset.len());
-}
-
 fn get_content_type(name: &str) -> String {
 	if name.ends_with(".html") { return "text/html".to_string() }
 	else if name.ends_with(".js") { return "text/javascript".to_string() }
