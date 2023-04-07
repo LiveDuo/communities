@@ -153,7 +153,7 @@ pub struct CallbackData {
     pub state: CanisterState
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, CandidType, Deserialize)]
 pub struct State { pub config: Config, pub canister_data: HashMap<String, Vec<CanisterData>> }
 
 thread_local! {
