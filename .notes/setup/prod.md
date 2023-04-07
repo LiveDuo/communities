@@ -11,7 +11,7 @@ node src/_parent/upload-assets.js --network https://ic0.app --identity with-wall
 
 ### Domain
 ```sh
-curl -sLv -X POST -H 'Content-Type: application/json' https://icp0.io/registrations -d "{ \"name\": \"communities.ooo\" }"
+curl -sLv -X POST -H 'Content-Type: application/json' https://icp0.io/registrations -d "{ \"name\": \"www.communities.ooo\" }"
 ```
 
-Verify: `curl -sLv -X GET https://icp0.io/registrations/1811bd1d1c3755910f3f15ab1ef33115f16c1e54d20d0e304f940858f4670ce1`
+Verify: `curl -sLv -X GET https://icp0.io/registrations/e96a86912e30019fb63fa9abb96d07efa79856879513762184dff0f3cedcead3`
