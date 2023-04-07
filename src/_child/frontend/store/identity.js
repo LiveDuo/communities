@@ -45,9 +45,16 @@ const IdentityProvider = ({children}) => {
       setChildActor(_childActor)
 
       // link address
-      const profile = await _childActor.update_profile_address(utils.hashMessage(loginMessage), signature)
+      let profile = await _childActor.create_profile({Evm: { message: utils.hashMessage(loginMessage), signature} })
 
-      toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
+      if(profile.Ok) {
+        toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
+      } else {
+        profile = await _childActor.get_profile().then(res => res.Ok)
+      }
+
+      console.log(profile)
+
       return profile
     } catch (error) {
       toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })

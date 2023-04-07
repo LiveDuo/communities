@@ -12,6 +12,8 @@ import { IdentityContext } from '../../store/identity'
 
 import { useNavigate, useParams } from 'react-router-dom'
 
+
+
 const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
 
 const PostContainer = () => {
@@ -29,16 +31,15 @@ const PostContainer = () => {
 	}
 
   const getData = useCallback(async () => {
-    const index = Number(params.index)
-    const _post = await getPost(index)
-    setPost({..._post, index})
+    const post_id = params.index
+    const _post = await getPost(post_id)
+    setPost({..._post, post_id})
   }, [getPost, params.index])
 
   const replyToPost = async (p) => {
-
 		setReplyText('')
 
-		const reply = await createReply(p.index, replyText)
+		const reply = await createReply(p.post_id, replyText)
 		
 		setPost(h => ({...h, replies: [...h.replies, reply]}))
 	}
@@ -50,7 +51,7 @@ const PostContainer = () => {
 	}, [getData, childActor])
 
   if (!post) return <Spinner/>
-
+  
   return <Box>
       {post ? 
         <Box mt="20px" padding="40px">

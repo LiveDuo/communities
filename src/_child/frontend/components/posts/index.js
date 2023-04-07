@@ -35,6 +35,8 @@ const PostsContainer = () => {
 
   if (!posts) return <Spinner/>
 
+  console.log(posts.map(p=> p.post_id))
+
   return  <Box mt="32px" textAlign="center" m="auto">
 
       <Button mt="28px" leftIcon={<EditIcon />} mb="28px" w="200px" onClick={onPostOpen}>New Post</Button>
@@ -51,7 +53,7 @@ const PostsContainer = () => {
             <Box key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
               <Flex alignItems="center">
                 <Box mr="auto" _hover={{cursor: 'pointer', opacity: 0.7}} >
-                  <Link href={`/post/${i}`} onClick={(e) => {e.preventDefault(); goToPost(i)}} _hover={{textDecor: 'none'}}>
+                  <Link href={`/post/${p.post_id.toString()}`} onClick={(e) => {e.preventDefault(); goToPost(p.post_id.toString())}} _hover={{textDecor: 'none'}}>
                     <Heading noOfLines={1} size="sm">{p.title}</Heading>
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>

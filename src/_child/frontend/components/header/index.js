@@ -29,7 +29,6 @@ const Header = () => {
     const profile = await login()
     setProfile(profile)
   }
-
   return (
     <Flex m="20px" alignItems="center">
       {location.pathname !== '/' && <Box ml="20px">

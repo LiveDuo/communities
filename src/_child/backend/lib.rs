@@ -63,10 +63,19 @@ pub struct Post {
     pub description: String,
     pub timestamp: u64,
 }
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct Reply {
+    pub text: String,
+    pub timestamp: u64,
+    pub address: String,
+}
+
 #[derive(Clone, CandidType, Deserialize, Debug)]
-pub struct PostResult {
+pub struct PostResponse {
     pub title: String,
     pub description: String,
+    pub address: String,
     pub timestamp: u64,
     pub replies: Vec<Reply>,
 }
@@ -82,12 +91,7 @@ pub struct PostSummary {
     pub last_activity: u64,
 }
 
-#[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct Reply {
-    pub text: String,
-    pub timestamp: u64,
-    pub address: String,
-}
+
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relation<X: Ord, Y: Ord> {
@@ -188,6 +192,8 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
             .indexes
             .profile
             .insert(authentication.to_owned(), caller.clone());
+
+        ic_cdk::println!("Linked with address {:?}", authentication.to_owned());
 
         let profile = Profile {
             authentication: authentication,
@@ -335,7 +341,7 @@ fn get_profile() -> Result<Profile, String> {
 }
 
 #[query]
-fn get_post(post_id: u64) -> Result<PostResult, String> {
+fn get_post(post_id: u64) -> Result<PostResponse, String> {
     STATE.with(|s| {
         let state = s.borrow();
         let post_otp = state.posts.get(&post_id);
@@ -343,25 +349,30 @@ fn get_post(post_id: u64) -> Result<PostResult, String> {
             return Err("This post does not exists".to_owned());
         }
 
-        let replies = state
-            .relations
-            .reply_id_to_post_id
-            .backward
-            .get(&post_id)
-            .unwrap()
-            .iter()
-            .map(|v| state.replay.get(v.0).unwrap().to_owned())
-            .collect::<Vec<_>>();
+        let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
+
+        let replies = if replies_opt == None { vec![] } else { replies_opt.unwrap().iter().map(|v| state.replay.get(v.0).unwrap().to_owned()).collect::<Vec<_>>()};
 
         let post = post_otp.unwrap();
 
-        let post_result = PostResult {
+        let principal = state
+                    .relations
+                    .principal_to_post_id
+                    .backward
+                    .get(&post_id)
+                    .unwrap()
+                    .keys()
+                    .collect::<Vec<_>>()[0];
+
+    let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
+
+        let post_result = PostResponse {
             replies,
             title: post.title.to_owned(),
             timestamp: post.timestamp,
             description: post.description.to_owned(),
+            address
         };
-
         Ok(post_result)
     })
 }
