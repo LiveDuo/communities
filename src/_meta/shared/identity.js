@@ -109,7 +109,7 @@ const getIdentity = async (name) => {
 	if (await exists(`${path}/identity.pem`)) {
 		pemFile = await fs.readFile(`${path}/identity.pem`)
 	} else {
-		const password = readlineSync.question('Enter password: ', { hideEchoBack: true, mask: '' })
+		const password = readlineSync.question('Enter identity passphrase: ', { hideEchoBack: true, mask: '' })
 		pemFile = await decryptPemFile(name, password)
 	}
 

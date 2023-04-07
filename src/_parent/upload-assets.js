@@ -2,7 +2,7 @@ const fs = require('fs/promises')
 const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')
 
-const { getCanisters, getAgent } = require('../_meta/shared/utils')
+const { getCanisters, getAgent, hostType } = require('../_meta/shared/utils')
 const { getFiles, uploadFile } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { assetFactory } = require('../_meta/shared/idl')
@@ -14,10 +14,10 @@ const id = argv.identity ?? 'default'
 // node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
 ; (async () => {
 
-	const canisters = await getCanisters()
+	const canisters = await getCanisters(host)
 	const identity = await getIdentity(id)
 	const agent = getAgent(host, identity)
-	const actor = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent.local })
+	const actor = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 
 	// upload wasm
 	const wasm = await fs.readFile('./build/canister/child.wasm')
