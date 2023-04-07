@@ -91,8 +91,6 @@ pub struct PostSummary {
     pub last_activity: u64,
 }
 
-
-
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relation<X: Ord, Y: Ord> {
     forward: BTreeMap<X, BTreeMap<Y, ()>>,
@@ -158,6 +156,12 @@ pub struct State {
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
+}
+
+
+#[ic_cdk_macros::init]
+fn init() {
+    ic_certified_assets::init();
 }
 
 #[update]
