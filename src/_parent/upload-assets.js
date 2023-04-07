@@ -64,7 +64,7 @@ const getFiles = async (dir, initial) => {
 			fileList.push(path.relative(rootFolder, currentPath))
 		}
 	}
-	return fileList
+	return fileList.filter(f => !f.endsWith('.DS_Store'))
 }
 
 // https://github.com/ORIGYN-SA/large_canister_deployer_internal/blob/master/chunker_appender/index.js
@@ -117,13 +117,23 @@ const uploadFile = async (actor, key, assetBuffer) => {
 	// upload wasm
 	const wasm = await fs.readFile('./build/canister/child.wasm')
 	await uploadFile(actor, '/child/child.wasm', wasm)
+	
+	// upload domain file
+	const domains = await fs.readFile('./build/domains/index.txt')
+	await uploadFile(actor, '/.well-known/ic-domains', domains)
 
-	// // upload parent assets
-	// const assets = await getFiles('./build/parent').then(r => r.filter(f => !f.endsWith('.DS_Store')))
-	// for (let asset of assets) {
-	// 	console.log(asset)
-	// 	// const assetBuf = await fs.readFile(path.join(buildPath, asset))
-	// 	// await uploadFile(actor, asset, assetBuf)
-	// }
+	// upload parent assets
+	const assetsParent = await getFiles('./build/parent')
+	for (let asset of assetsParent) {
+		const assetBuf = await fs.readFile(`build/parent/${asset}`)
+		await uploadFile(actor, `/${asset}`, assetBuf)
+	}
+
+	// upload child assets
+	const assetsChild = await getFiles('./build/child')
+	for (let asset of assetsChild) {
+		const assetBuf = await fs.readFile(`build/child/${asset}`)
+		await uploadFile(actor, `/child/${asset}`, assetBuf)
+	}
 
 })()
