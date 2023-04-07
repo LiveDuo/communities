@@ -1,5 +1,8 @@
 
 
+### Child Backend
+
+```rs
 struct Profile { name: String, description: String, address: String }
 struct Reply { text: String, timestamp: u64, address: String }
 struct Post { address: String, title: String, description: String, timestamp: u64, replies: Vec<Reply> }
@@ -15,3 +18,5 @@ struct State { profiles: HashMap<Principal, Profile>, posts: Vec<Post> }
 #[update] fn update_profile_address(message: String, signature: String) -> Profile {}
 #[update] fn create_post(title: String, description: String) -> Result<(), String>  {}
 #[update] fn create_reply(index: usize, text: String) -> Result<(), String> {}
+```
+

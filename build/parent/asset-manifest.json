@@ -1,6 +1,7 @@
 {
   "files": {
     "main.js": "/static/js/bundle.js",
+    "static/media/launch.jpg": "/static/media/launch.d5947798dd34e601cdfb.jpg",
     "index.html": "/index.html"
   },
   "entrypoints": [
