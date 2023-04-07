@@ -201,7 +201,7 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
 }
 
 #[update]
-fn create_post(title: String, description: String) -> Result<PostResult, String> {
+fn create_post(title: String, description: String) -> Result<Post, String> {
     let caller = ic_cdk::caller();
 
     STATE.with(|s| {
@@ -222,14 +222,7 @@ fn create_post(title: String, description: String) -> Result<PostResult, String>
         state.posts.insert(post_id, post.clone());
 
         state.relations.principal_to_post_id.insert(caller, post_id);
-
-        let post_result = PostResult {
-            title: post.title,
-            description: post.description,
-            replies: vec![],
-            timestamp: post.timestamp.to_owned(),
-        };
-        Ok(post_result)
+        Ok(post)
     })
 }
 
@@ -374,7 +367,7 @@ fn get_post(post_id: u64) -> Result<PostResult, String> {
 }
 
 #[query]
-fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostResult>, String> {
+fn get_posts_by_user(authentication: Authentication) -> Result<Vec<Post>, String> {
     STATE.with(|s| {
         let state = s.borrow();
 
@@ -395,25 +388,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostResult>, 
         let user_post = post_ids_opt
             .unwrap()
             .iter()
-            .map(|k| {
-                let post = state.posts.get(&k.0.to_owned()).unwrap();
-                let replies = state
-                    .relations
-                    .reply_id_to_post_id
-                    .backward
-                    .get(&k.0.to_owned())
-                    .unwrap()
-                    .iter()
-                    .map(|v| state.replay.get(v.0).unwrap().to_owned())
-                    .collect::<Vec<_>>();
-
-                PostResult {
-                    title: post.title.to_owned(),
-                    description: post.description.to_owned(),
-                    timestamp: post.timestamp,
-                    replies,
-                }
-            })
+            .map(|k| state.posts.get(&k.0.to_owned()).unwrap().to_owned())
             .collect::<Vec<_>>();
         Ok(user_post)
     })
@@ -451,7 +426,6 @@ fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
 }
 
 fn verify_emv(args: EvmAuthenticationWithParams) -> EvmParams {
-    ic_cdk::println!("{:?}", args);
     let mut signature_bytes = hex::decode(&args.signature.trim_start_matches("0x")).unwrap();
     let recovery_byte = signature_bytes.pop().expect("No recovery byte");
     let recovery_id = libsecp256k1::RecoveryId::parse_rpc(recovery_byte).unwrap();

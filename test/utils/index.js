@@ -77,6 +77,11 @@ const idlBackendFactory = ({ IDL }) => {
   const Post = IDL.Record({
     title: IDL.Text,
     description: IDL.Text,
+    timestamp: IDL.Nat64
+  });
+  const PostResult = IDL.Record({
+    title: IDL.Text,
+    description: IDL.Text,
     timestamp: IDL.Nat64,
     replies: IDL.Vec(Reply),
   });
@@ -93,7 +98,7 @@ const idlBackendFactory = ({ IDL }) => {
     description: IDL.Text,
     authentication: authentication,
   });
-  
+
   const PostSummary = IDL.Record({
     title: IDL.Text,
     description: IDL.Text,
@@ -114,10 +119,10 @@ const idlBackendFactory = ({ IDL }) => {
     create_profile: IDL.Func([authenticationWith],[IDL.Variant({ Ok: Profile, Err: IDL.Text })],["update"]),
     create_post: IDL.Func([IDL.Text, IDL.Text],[IDL.Variant({ Ok: Post, Err: IDL.Text })],["update"]),
     create_reply: IDL.Func([IDL.Nat64, IDL.Text],[IDL.Variant({ Ok: Reply, Err: IDL.Text })],["update"]),
-    get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
     get_profile: IDL.Func([],[IDL.Variant({ Ok: Profile, Err: IDL.Text })],["query"]),
-    get_post: IDL.Func([IDL.Nat64],[IDL.Variant({ Ok: Post, Err: IDL.Text })],["query"]),
-    get_posts_by_user: IDL.Func([authentication], [Profile], ["query"]),
+    get_post: IDL.Func([IDL.Nat64],[IDL.Variant({ Ok: PostResult, Err: IDL.Text })],["query"]),
+    get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
+    get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(Post), Err: IDL.Text })], ["query"]),
   });
 };
 

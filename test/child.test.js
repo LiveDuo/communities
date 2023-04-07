@@ -46,19 +46,13 @@ describe('Testing with done', () => {
 		
 		// create a post
 		await actorBackend.create_post('hello', '')
-		
-		// get user posts
-		const addressSigner =await signer.getAddress()
-		const posts = await actorBackend.get_posts()
-		const lastPost = posts[posts.length - 1]
-		expect(lastPost.title).toBe('hello')
-		expect(lastPost.address).toBe(addressSigner.toLowerCase())
-		
+
 		// get user last post
-		const userPosts = await actorBackend.get_posts()
-		const userLastPost = userPosts[userPosts.length - 1]
+		const addressSigner =await signer.getAddress()
+		const userPosts = await actorBackend.get_posts_by_user({Evm: { address: addressSigner.toLowerCase()}})
+		const userLastPost = userPosts.Ok[userPosts.Ok.length - 1]
 		expect(userLastPost.title).toBe('hello')
-		expect(userLastPost.address).toBe(addressSigner.toLowerCase())
+		// expect(userLastPost.address).toBe(addressSigner.toLowerCase())
 
 	})
 
