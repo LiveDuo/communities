@@ -1,6 +1,7 @@
-const { Ed25519KeyIdentity } = require('@dfinity/identity')
+const { Ed25519KeyIdentity, Ed25519PublicKey } = require('@dfinity/identity')
 const readlineSync = require('readline-sync')
 const { ethers } = require('ethers')
+const tweetnacl = require('tweetnacl')
 const argon2 = require('argon2')
 const pem = require('pem-file')
 
@@ -89,11 +90,33 @@ const getSignatureAndMessage = async (signer) => {
 }
 exports.getSignatureAndMessage = getSignatureAndMessage
 
+const getLoginMessageSvm = () => {
+	return (
+		'Sign to authenticate.'
+	)
+}
+exports.getLoginMessageSvm = getLoginMessageSvm
+
+const getSignatureAndMessageSvm = (account)=> {
+	const loginMessage = getLoginMessageSvm()
+	const encodeMsg = new TextEncoder().encode(loginMessage);
+	const signature = tweetnacl.sign.detached(encodeMsg, account.secretKey)
+
+	return { signature: Buffer.from(signature).toString('hex'), loginMessageHash:  Buffer.from(encodeMsg.buffer).toString("hex") }
+}
+exports.getSignatureAndMessageSvm = getSignatureAndMessageSvm
+
 const getEthereumIdentity = async (signer) => {
 	const { signature } = await getSignatureAndMessage(signer)
 	return getIdentityFromSignature(signature)
 }
 exports.getEthereumIdentity = getEthereumIdentity
+
+const getSolanaIdentity = (signer) => {
+	const { signature } = getSignatureAndMessageSvm(signer)
+	return getIdentityFromSignature(Buffer.from(signature))
+}
+exports.getSolanaIdentity = getSolanaIdentity
 
 const exists = (s) => fs.access(s).then(() => true).catch(() => false)
 
