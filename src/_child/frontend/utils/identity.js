@@ -3,13 +3,21 @@ import { Ed25519KeyIdentity } from '@dfinity/identity'
 
 const loginSecret = 'MUCH SECRET!'
 
-const getLoginMessage = (account) => {
-  return (
-    'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
-    `APP NAME:\nic-communities\n\n` +
-    `ADDRESS:\n${account}\n\n` +
-    `HASH SECRET:\n${utils.hashMessage(loginSecret)}`
-  )
+const getLoginMessage = (account, type) => {
+  if (type === 'evm') {
+    return (
+      'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
+      `APP NAME:\nic-communities\n\n` +
+      `ADDRESS:\n${account}\n\n` +
+      `HASH SECRET:\n${utils.hashMessage(loginSecret)}`
+    )
+  } else if (type === 'svm') {
+    return (
+      'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
+      `APP NAME:\nic-communities\n\n` +
+      `ADDRESS:\n${account}\n\n`
+    )
+  }
 }
 export { getLoginMessage }
 
@@ -33,9 +41,9 @@ const getIdentityFromSignature = (signature) => {
 }
 export { getIdentityFromSignature }
 
-const loadIdentity = (account) => {
+const loadIdentity = () => {
   try {
-    const keyString = localStorage.getItem(`account_${account}`)
+    const keyString = localStorage.getItem(`account`)
     return Ed25519KeyIdentity.fromJSON(keyString)
   } catch (err) {
     return null
@@ -43,13 +51,15 @@ const loadIdentity = (account) => {
 }
 export { loadIdentity }
 
-const saveIdentity = (account, identity) => {
-  localStorage.setItem(`account_${account}`, JSON.stringify(identity.toJSON()))
+const saveIdentity = (identity, type) => {
+  localStorage.setItem('account', JSON.stringify(identity.toJSON()))
+  localStorage.setItem('account_type',type)
 }
 export { saveIdentity }
 
 const clearIdentity = async (account) => {
-  localStorage.removeItem(`account_${account}`)
+  localStorage.removeItem('account')
+  localStorage.removeItem('account_type')
   window.location = '/'
 }
 export { clearIdentity }

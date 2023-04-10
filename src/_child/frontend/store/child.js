@@ -1,6 +1,7 @@
 import { useState, useContext, createContext, useCallback } from 'react'
 
 import { IdentityContext } from './identity'
+import { getAddress } from '../utils'
 /* global BigInt */
 
 const ChildContext = createContext()
@@ -9,7 +10,7 @@ const ChildProvider = ({ children }) => {
 
 	const [posts, setPosts] = useState()
 	const [loading, setLoading] = useState()
-	const { childActor, account } = useContext(IdentityContext)
+	const { childActor, account, setAccount } = useContext(IdentityContext)
 	const [profile, setProfile] = useState()
 
 	const getPosts = useCallback(async () => {
@@ -43,8 +44,9 @@ const ChildProvider = ({ children }) => {
 
 	const getProfileByAddress = useCallback(async () => {
 		const response = await childActor.get_profile()
-		setProfile(response[0])
-	}, [childActor])
+		setAccount(getAddress(response.Ok.authentication))
+		setProfile(response.Ok)
+	}, [childActor, setAccount])
 
 	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
