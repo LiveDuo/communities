@@ -28,3 +28,7 @@ const getAddress = (authentication) => {
 }
 
 export { getAddress }
+
+const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
+
+export { addressShort }

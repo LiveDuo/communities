@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useState, useEffect } from 'react'
 import { useToast } from '@chakra-ui/react'
 import { utils , ethers} from 'ethers'
 import bs58 from 'bs58'
@@ -6,7 +6,7 @@ import bs58 from 'bs58'
 import { createChildActor } from '../agents/child'
 
 import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
-import { saveIdentity, loadIdentity, clearIdentity } from '../utils/identity'
+import { saveIdentity, loadIdentity, clearIdentity, saveAccount, loadAccount, clearAccount } from '../utils/identity'
 
 const IdentityContext = createContext()
 
@@ -17,32 +17,16 @@ const IdentityProvider = ({children}) => {
   const [childActor, setChildActor] = useState()
 
   const toast = useToast()
-
-  const getAccountForEvm = useCallback(async () => {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner()
-      const address = await signer.getAddress()
-      setAccount(address)
-  }, [])
-
-  const getAccountForSvm = useCallback(async () => {
-    const phantom = window.solana
-    await phantom.connect()
-    const address = phantom.publicKey.toString()
-    setAccount(address)
-  }, [])
-  
   
   useEffect(() => {
-    const identity = loadIdentity(account)
+    const identity = loadIdentity()
     const _childActor = createChildActor(identity)
     setChildActor(_childActor)
 
-    if (account) {
-      setPrincipal(identity?.getPrincipal())
-    }
-  }, [account])
+    const account = loadAccount()
+    setAccount(account)
+    setPrincipal(identity?.getPrincipal())
+  }, [])
 
   const loginWithEvm = async () => {
     try {
@@ -56,8 +40,14 @@ const IdentityProvider = ({children}) => {
       const identity = getIdentityFromSignature(signature) // generate Ed25519 identity
       
       // save identity
-      saveIdentity(identity, 'evm') // to local storage
+      saveIdentity(identity) // to local storage
       setPrincipal(identity?.getPrincipal())
+
+      // save account
+      const account = {address, type: 'Evm'}
+      saveAccount(account)
+      setAccount(account)
+
 
       // set actors
       const _childActor = createChildActor(identity)
@@ -72,7 +62,6 @@ const IdentityProvider = ({children}) => {
         profile = await _childActor.get_profile().then(res => res.Ok)
       }
 
-      setAccount(address)
       
       toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
 
@@ -101,8 +90,14 @@ const IdentityProvider = ({children}) => {
       setChildActor(_childActor)
 
       // save identity
-      saveIdentity(identity, 'svm') // to local storage
+      saveIdentity(identity) // to local storage
       setPrincipal(identity?.getPrincipal())
+
+      // save Account
+      const account = {address, type: 'Svm'}
+      saveAccount(account)
+      setAccount(account)
+
 
       // link address
       let profile = await _childActor.create_profile({Svm: { public_key: Buffer.from(publicKeyBytes).toString('hex'), signature: Buffer.from(signatureBytes).toString('hex'), message: Buffer.from(encodedMessage).toString('hex') }});
@@ -113,7 +108,6 @@ const IdentityProvider = ({children}) => {
         profile = await _childActor.get_profile().then(res => res.Ok)
       }
 
-      setAccount(address)
       
       toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
 
@@ -123,7 +117,10 @@ const IdentityProvider = ({children}) => {
     }
 	}
 
-  const logout = () => clearIdentity(account)
+  const logout = () => {
+    clearIdentity()
+    clearAccount()
+  }
 
   const login = async (type) => {
     if(type === 'evm') {

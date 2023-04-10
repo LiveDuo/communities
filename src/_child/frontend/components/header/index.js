@@ -4,6 +4,7 @@ import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
 import Jazzicon from 'react-jazzicon'
 import { IdentityContext } from '../../store/identity'
 import { ChildContext } from '../../store/child'
+import { addressShort } from '../../utils'
 
 const Header = () => {
 
@@ -17,7 +18,7 @@ const Header = () => {
 
   useEffect(() => {
     if (account)
-      getProfileByAddress()
+      getProfileByAddress(account)
   }, [account, getProfileByAddress])
 
   const loginAndSet = async (type) => {
@@ -44,12 +45,12 @@ const Header = () => {
         </Box>)}
         {(account && principal) &&
         <Box  ml="auto">
-          <Link as={RouterLink} to={`/user/${account.toLowerCase()}`}>
+          <Link as={RouterLink} to={`/user/${account?.address?.toLowerCase()}`}>
             <Button>
               <Box h="16px" w="16px" mr="8px">
-                <Jazzicon diameter={20} seed={account} />
+                <Jazzicon diameter={20} seed={account?.address} />
               </Box>
-              {account}
+              {addressShort(account.address)}
             </Button>
           </Link>
         </Box>}

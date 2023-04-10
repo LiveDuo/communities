@@ -4,6 +4,8 @@ import { Text, Flex, Button, Textarea, IconButton, Divider } from '@chakra-ui/re
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
+import { addressShort } from '../../utils'
+
 
 import { ArrowBackIcon } from '@chakra-ui/icons'
 
@@ -12,9 +14,6 @@ import { IdentityContext } from '../../store/identity'
 
 import { useNavigate, useParams } from 'react-router-dom'
 
-
-
-const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
 
 const PostContainer = () => {
   const { childActor } = useContext(IdentityContext)

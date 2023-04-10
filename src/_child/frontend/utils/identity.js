@@ -43,7 +43,7 @@ export { getIdentityFromSignature }
 
 const loadIdentity = () => {
   try {
-    const keyString = localStorage.getItem(`account`)
+    const keyString = localStorage.getItem(`identity`)
     return Ed25519KeyIdentity.fromJSON(keyString)
   } catch (err) {
     return null
@@ -52,14 +52,30 @@ const loadIdentity = () => {
 export { loadIdentity }
 
 const saveIdentity = (identity, type) => {
-  localStorage.setItem('account', JSON.stringify(identity.toJSON()))
-  localStorage.setItem('account_type',type)
+  localStorage.setItem('identity', JSON.stringify(identity.toJSON()))
 }
 export { saveIdentity }
 
 const clearIdentity = async (account) => {
-  localStorage.removeItem('account')
-  localStorage.removeItem('account_type')
+  localStorage.removeItem('identity')
   window.location = '/'
 }
 export { clearIdentity }
+
+const loadAccount = () => {
+  const keyString = localStorage.getItem(`account`)
+  return JSON.parse(keyString)
+}
+export { loadAccount }
+
+const saveAccount = (account) => {
+  localStorage.setItem('account', JSON.stringify(account))
+}
+export { saveAccount }
+
+const clearAccount = async () => {
+  localStorage.removeItem('account')
+  window.location = '/'
+}
+
+export { clearAccount }

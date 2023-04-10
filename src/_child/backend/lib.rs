@@ -449,7 +449,7 @@ fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
 
     let address = bs58::encode(public_key).into_string();
     SvmParams {
-        address: address,
+        address: address.to_lowercase(),
     }
 }
 
