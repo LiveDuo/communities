@@ -38,7 +38,7 @@ const idlChildFactory = ({ IDL }) => {
   const PostSummary = IDL.Record({
     title: IDL.Text,
     description: IDL.Text,
-    address: IDL.Text,
+    address: authentication,
     timestamp: IDL.Nat64,
     replies_count: IDL.Nat64,
     last_activity: IDL.Nat64,
@@ -59,6 +59,7 @@ const idlChildFactory = ({ IDL }) => {
     get_post: IDL.Func([IDL.Nat64],[IDL.Variant({ Ok: PostResult, Err: IDL.Text })],["query"]),
     get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
     get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(Post), Err: IDL.Text })], ["query"]),
+    get_profile_by_address:  IDL.Func([authentication], [IDL.Opt(Profile)], ["query"]),
   })
 }
 

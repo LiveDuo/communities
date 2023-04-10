@@ -86,7 +86,7 @@ pub struct PostSummary {
     pub title: String,
     pub description: String,
     pub timestamp: u64,
-    pub address: String,
+    pub address: Authentication,
     pub replies_count: u64,
     pub last_activity: u64,
 }
@@ -279,6 +279,18 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
 }
 
 #[query]
+fn get_profile_by_address(authentication: Authentication) -> Option<Profile> {
+    STATE.with(|s| {
+        let state = s.borrow();
+        let index_opt = state.indexes.profile.get(&authentication);
+        if index_opt == None {
+            return None; 
+        }
+        state.profiles.get(&index_opt.unwrap()).cloned()
+    })
+}
+
+#[query]
 fn get_posts() -> Vec<PostSummary> {
     STATE.with(|s| {
         let state = &mut s.borrow_mut();
@@ -313,7 +325,7 @@ fn get_posts() -> Vec<PostSummary> {
                     .keys()
                     .collect::<Vec<_>>()[0];
 
-                let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
+                let address = state.profiles.get(&principal).cloned().unwrap().authentication;
 
                 PostSummary {
                     title: p.1.title.to_owned(),
