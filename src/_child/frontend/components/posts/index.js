@@ -5,6 +5,7 @@ import Jazzicon from 'react-jazzicon'
 
 import PostModal from '../../components/modals/PostModal'
 import { timeSinceShort } from '../../utils/time'
+import { getAddress } from '../../utils'
 
 import { EditIcon } from '@chakra-ui/icons'
 
@@ -14,7 +15,12 @@ import { IdentityContext } from '../../store/identity'
 import { useNavigate } from 'react-router-dom'
 
 const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
-const getExplorerUrl = (principal) => `https://etherscan.io/address/${principal}`
+const getExplorerUrl = (address) => {
+  if (address.Evm) 
+    return `https://etherscan.io/address/${address.Evm.address}`
+   else if(address.Svm) 
+    return `https://explorer.solana.com/address/${address.Svm.address}`
+}
 
 const PostsContainer = () => {
   const { childActor } = useContext(IdentityContext)
@@ -56,10 +62,10 @@ const PostsContainer = () => {
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>
                 </Box>
-                <Tooltip label={addressShort(p?.address ?? '')}>
+                <Tooltip label={addressShort(getAddress(p?.address))}>
                   <Link href={getExplorerUrl(p.address)} isExternal>
                     <Box width="40px" height="20px" textAlign="center" _hover={{cursor: 'pointer', opacity: 0.7}}>
-                      <Jazzicon diameter={20} seed={p.address} />
+                      <Jazzicon diameter={20} seed={getAddress(p?.address)} />
                     </Box>
                   </Link>
                 </Tooltip>
