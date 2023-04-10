@@ -1,8 +1,7 @@
 import { useEffect, useContext } from 'react'
 import { Box } from '@chakra-ui/react'
 
-import PostContainer from '../components/posts/post'
-// import WritePost from '../components/posts/WritePost'
+import PostContainer from '../components/containers/post'
 
 import { ChildContext } from '../store/child'
 import { IdentityContext } from '../store/identity'

@@ -2,8 +2,8 @@ import { useEffect, useContext } from 'react'
 import { useParams } from 'react-router-dom'
 import { Box } from '@chakra-ui/react'
 
-import PostsContainer from '../components/posts'
-import UserInfo from '../components/user/UserInfo'
+import PostsContainer from '../components/containers/posts'
+// import UserInfo from '../components/user/UserInfo'
 
 import { ChildContext } from '../store/child'
 import { IdentityContext } from '../store/identity'
@@ -11,7 +11,7 @@ import { IdentityContext } from '../store/identity'
 const Posts = () => {
   const { address } = useParams()
 
-  const { profile, getProfileByAddress } = useContext(ChildContext)
+  const { getProfileByAddress } = useContext(ChildContext)
   const { principal } = useContext(IdentityContext)
 
   useEffect(() => {
@@ -24,9 +24,7 @@ const Posts = () => {
     <Box>
 
       <Box mb="40px">
-        {profile && <UserInfo />}
-
-        {/* {(isOwner && profile?.name.length > 0) && <WritePost />} */}
+        {/* {profile && <UserInfo />} */}
       </Box>
 
       <PostsContainer principalId={principal?.toString()} />

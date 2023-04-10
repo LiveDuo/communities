@@ -9,7 +9,7 @@ const ChildProvider = ({ children }) => {
 
 	const [posts, setPosts] = useState()
 	const [loading, setLoading] = useState()
-	const { childActor, account} = useContext(IdentityContext)
+	const { childActor, account } = useContext(IdentityContext)
 	const [profile, setProfile] = useState()
 
 	const getPosts = useCallback(async () => {
@@ -36,20 +36,14 @@ const ChildProvider = ({ children }) => {
 		return reply
 	}
 
-	const setUsername = async (name) => {
-		const profile = await childActor.update_profile([name], [])
-		return profile
-	}
-
 	const getProfileByAddress = useCallback(async (account) => {
 		let auth = {}
 		auth[account.type] = {address: account.address.toLowerCase()}
 		const response = await childActor.get_profile_by_address(auth)
-		console.log(auth)
 		setProfile(response[0])
 	}, [childActor])
 
-	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
+	const value = { profile, setProfile, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

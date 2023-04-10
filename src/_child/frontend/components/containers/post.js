@@ -4,7 +4,7 @@ import { Text, Flex, Button, Textarea, IconButton, Divider } from '@chakra-ui/re
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
-import { addressShort } from '../../utils'
+import { addressShort } from '../../utils/address'
 
 
 import { ArrowBackIcon } from '@chakra-ui/icons'

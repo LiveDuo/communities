@@ -3,9 +3,9 @@ import { Spinner, Box, Link, Heading } from '@chakra-ui/react'
 import { Text, Flex, Button, useDisclosure, Tooltip } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
-import PostModal from '../../components/modals/PostModal'
+import PostModal from '../modals/PostModal'
 import { timeSinceShort } from '../../utils/time'
-import { getAddress } from '../../utils'
+import { getAddress } from '../../utils/address'
 
 import { EditIcon } from '@chakra-ui/icons'
 
