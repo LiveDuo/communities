@@ -1,4 +1,4 @@
-import { utils, BigNumber } from 'ethers'
+import * as ethers from 'ethers'
 import { Ed25519KeyIdentity } from '@dfinity/identity'
 
 const loginSecret = 'MUCH SECRET!'
@@ -6,38 +6,25 @@ const loginSecret = 'MUCH SECRET!'
 const getLoginMessage = (account, type) => {
   if (type === 'evm') {
     return (
-      'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
-      `APP NAME:\nic-communities\n\n` +
-      `ADDRESS:\n${account}\n\n` +
-      `HASH SECRET:\n${utils.hashMessage(loginSecret)}`
+      'Sign this message to login.\n\n' +
+      `App Name:\nic-communities\n\n` +
+      `Address:\n${account}\n\n` +
+      `Hash Secret:\n${ethers.utils.hashMessage(loginSecret)}`
     )
   } else if (type === 'svm') {
     return (
-      'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
-      `APP NAME:\nic-communities\n\n` +
-      `ADDRESS:\n${account}\n\n`
+      'Sign this message to login.\n\n' +
+      `App Name:\nic-communities\n\n` +
+      `Address:\n${account}\n\n`
     )
   }
 }
 export { getLoginMessage }
 
 const getIdentityFromSignature = (signature) => {
-  // get hash from signature
-  const hash = utils.keccak256(signature)
-  if (hash === null)
-    throw new Error('No Ethereum account is provided.')
-
-  // convert to an array of 32 integers
-  const array = hash
-    .replace('0x', '')
-    .match(/.{2}/g)
-    .map((hexNoPrefix) => BigNumber.from(`0x${hexNoPrefix}`).toNumber())
-  if (array.length !== 32)
-    throw new Error('Invalid signature hash.')
-
-  // generate identity
-  const uint8Array = Uint8Array.from(array)
-  return Ed25519KeyIdentity.generate(uint8Array)
+  const hash = ethers.utils.keccak256(signature)
+  const buffer = Buffer.from(hash.substring(2), 'hex')
+  return Ed25519KeyIdentity.generate(buffer)
 }
 export { getIdentityFromSignature }
 

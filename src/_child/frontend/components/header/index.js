@@ -6,8 +6,8 @@ import { IdentityContext } from '../../store/identity'
 import { ChildContext } from '../../store/child'
 import { addressShort } from '../../utils/address'
 
-import { ReactComponent as EthereumLogo } from '../../assets/logos/ethereum.svg'
-import { ReactComponent as SolanaLogo } from '../../assets/logos/solana.svg'
+import { ReactComponent as EthereumLogo } from '../../logos/ethereum.svg'
+import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
 
 const Header = () => {
 
@@ -15,7 +15,7 @@ const Header = () => {
   const location = useLocation()
 
   const { principal, login, logout, account } = useContext(IdentityContext)
-  const { profile, setProfile, getProfileByAddress } = useContext(ChildContext)
+  const { setProfile, getProfileByAddress } = useContext(ChildContext)
 
   useEffect(() => {
     if (account)
@@ -32,7 +32,7 @@ const Header = () => {
       {location.pathname !== '/' && <Box ml="20px">
         <Button onClick={() => navigate('/')}>Home</Button>
       </Box>}
-      {!profile &&
+      {!(account && principal) &&
         (<Box ml="auto">
           <Menu>
             <MenuButton as={Button}>
