@@ -24,7 +24,7 @@ const ChildProvider = ({ children }) => {
 		return _post
 	}
 
-	const getPostsByUser = useCallback(async ()=>{
+	const getPostsByUser = useCallback(async () => {
 		const response = await childActor.get_posts_by_user(profile.authentication)
 		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: 0})))
 	},[profile, childActor])
@@ -46,6 +46,7 @@ const ChildProvider = ({ children }) => {
 		let auth = {}
 		auth[account.type] = {address: account.address.toLowerCase()}
 		const response = await childActor.get_profile_by_auth(auth)
+		console.log(response)
 		setProfile(response[0])
 	}, [childActor])
 

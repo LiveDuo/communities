@@ -24,7 +24,7 @@ const App = () => (
             <BrowserRouter>
                 <Routes>
                   <Route exact path="/" element={<Layout><Posts /></Layout>}/>
-                  <Route path="/user/:address" element={<Layout><UserPosts /></Layout>}/>
+                  <Route path="/user/:address/:type" element={<Layout><UserPosts /></Layout>}/>
                   <Route path="/post/:index" element={<Layout><Post /></Layout>}/>
                 </Routes>
             </BrowserRouter>

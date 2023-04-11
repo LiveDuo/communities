@@ -7,15 +7,15 @@ import PostsContainer from '../components/containers/posts'
 import { ChildContext } from '../store/child'
 
 const UserPost = () => {
-  const { address } = useParams()
+  const { address, type } = useParams()
 
   const { getProfileByAddress, getPostsByUser, postsUser } = useContext(ChildContext)
 
   useEffect(() => {
     if (address) {
-      getProfileByAddress(address)
+      getProfileByAddress({address, type})
     }
-  }, [getProfileByAddress, address])
+  }, [getProfileByAddress, address, type])
 
   useEffect(() => {
     getPostsByUser()
