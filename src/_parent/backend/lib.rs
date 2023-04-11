@@ -16,12 +16,7 @@ pub const MAINNET_LEDGER_CANISTER_ID: Principal =
     Principal::from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x01]);
 
 #[ic_cdk_macros::init]
-fn init(env_opt: Option<Environment>) {
-
-	if let Some(env) = env_opt {
-        STATE.with(|s| { s.borrow_mut().config = Config { env }; });
-    }
-
+fn init() {
     ic_certified_assets::init();
 }
 
@@ -153,8 +148,7 @@ pub async fn create_child() -> Result<Principal, String> {
 
 	let id = ic_cdk::api::id();
 	let caller = ic_cdk::caller();
-	
-	let config = STATE.with(|s| { s.borrow().config });
+
 
 	// mint cycles
 	let arg0 = CallbackData { canister_index: 0, user: caller, state: CanisterState::Preparing };
@@ -167,8 +161,6 @@ pub async fn create_child() -> Result<Principal, String> {
 	if ledger_opt != None {
 		mint_cycles(caller, id).await.unwrap();
 	}
-
-	if config.env == Environment::Production { mint_cycles(caller, id).await.unwrap(); };
 
 	// create canister
 	let canister_id = create_canister(caller, id).await.unwrap();
