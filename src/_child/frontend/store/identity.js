@@ -12,7 +12,7 @@ const IdentityContext = createContext()
 
 const IdentityProvider = ({children}) => {
   const [account, setAccount] = useState()
-  const [principal, setPrincipal] = useState()
+  const [identity, setIdentity] = useState()
 
   const [childActor, setChildActor] = useState()
 
@@ -23,7 +23,7 @@ const IdentityProvider = ({children}) => {
     const _childActor = createChildActor(data?.identity)
     setChildActor(_childActor)
     setAccount(data?.account)
-    setPrincipal(data?.identity?.getPrincipal())
+    setIdentity(data?.identity)
   }, [])
 
   const loginWithEvm = async () => {
@@ -40,7 +40,7 @@ const IdentityProvider = ({children}) => {
       // save identity
       const account = {address, type: 'Evm'}
       saveIdentity(identity, account)
-      setPrincipal(identity?.getPrincipal())
+      setIdentity(identity)
       setAccount(account)
 
       // set actors
@@ -84,7 +84,7 @@ const IdentityProvider = ({children}) => {
       // save identity
       const account = {address, type: 'Svm'}
       saveIdentity(identity, account)
-      setPrincipal(identity?.getPrincipal())
+      setIdentity(identity)
       setAccount(account)
 
       // link address
@@ -120,7 +120,7 @@ const IdentityProvider = ({children}) => {
     }
   }
 
-  const value = { account, principal, childActor, login, logout, setAccount }
+  const value = { account, identity, childActor, login, logout, setAccount }
   
   return (
     <IdentityContext.Provider value={value}>

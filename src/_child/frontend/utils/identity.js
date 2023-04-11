@@ -20,7 +20,7 @@ const loadIdentity = () => {
   const keyString = localStorage.getItem(`identity`)
   if (keyString) {
     const data = JSON.parse(keyString)
-    return { identity: Ed25519KeyIdentity.fromJSON(data.idenity), account: data.account}
+    return { identity: Ed25519KeyIdentity.fromParsedJson(data.identity), account: data.account}
   } else  {
     return null
   }
@@ -28,7 +28,7 @@ const loadIdentity = () => {
 export { loadIdentity }
 
 const saveIdentity = (identity, account) => {
-  const data = {idenity: identity.toJSON(), account}
+  const data = {identity: identity.toJSON(), account}
   localStorage.setItem('identity', JSON.stringify(data))
 }
 export { saveIdentity }
