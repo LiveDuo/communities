@@ -6,7 +6,7 @@ import bs58 from 'bs58'
 import { createChildActor } from '../agents/child'
 
 import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
-import { saveIdentity, loadIdentity, clearIdentity, saveAccount, loadAccount, clearAccount } from '../utils/identity'
+import { saveIdentity, loadIdentity, clearIdentity } from '../utils/identity'
 
 const IdentityContext = createContext()
 
@@ -19,13 +19,11 @@ const IdentityProvider = ({children}) => {
   const toast = useToast()
   
   useEffect(() => {
-    const identity = loadIdentity()
-    const _childActor = createChildActor(identity)
+    const data = loadIdentity()
+    const _childActor = createChildActor(data?.identity)
     setChildActor(_childActor)
-
-    const account = loadAccount()
-    setAccount(account)
-    setPrincipal(identity?.getPrincipal())
+    setAccount(data?.account)
+    setPrincipal(data?.identity?.getPrincipal())
   }, [])
 
   const loginWithEvm = async () => {
@@ -40,12 +38,9 @@ const IdentityProvider = ({children}) => {
       const identity = getIdentityFromSignature(signature) // generate Ed25519 identity
       
       // save identity
-      saveIdentity(identity)
-      setPrincipal(identity?.getPrincipal())
-
-      // save account
       const account = {address, type: 'Evm'}
-      saveAccount(account)
+      saveIdentity(identity, account)
+      setPrincipal(identity?.getPrincipal())
       setAccount(account)
 
       // set actors
@@ -87,12 +82,9 @@ const IdentityProvider = ({children}) => {
       setChildActor(_childActor)
 
       // save identity
-      saveIdentity(identity)
-      setPrincipal(identity?.getPrincipal())
-
-      // save Account
       const account = {address, type: 'Svm'}
-      saveAccount(account)
+      saveIdentity(identity, account)
+      setPrincipal(identity?.getPrincipal())
       setAccount(account)
 
       // link address
@@ -118,7 +110,6 @@ const IdentityProvider = ({children}) => {
 
   const logout = () => {
     clearIdentity()
-    clearAccount()
   }
 
   const login = async (type) => {
