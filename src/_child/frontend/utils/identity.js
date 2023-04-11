@@ -18,7 +18,11 @@ export { getIdentityFromSignature }
 
 const loadIdentity = () => {
   const keyString = localStorage.getItem(`identity`)
-  return Ed25519KeyIdentity.fromJSON(keyString)
+  if (keyString) {
+    return Ed25519KeyIdentity.fromJSON(keyString)
+  } else  {
+    return null
+  }
 }
 export { loadIdentity }
 

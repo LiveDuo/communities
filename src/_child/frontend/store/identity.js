@@ -98,7 +98,7 @@ const IdentityProvider = ({children}) => {
       // link address
       const publicKey = Buffer.from(bs58.decode(signedMessage.publicKey)).toString('hex')
       const signature = Buffer.from(bs58.decode(signedMessage.signature)).toString('hex')
-      const message = Buffer.from(bs58.decode(encodedMessage)).toString('hex')
+      const message = Buffer.from(encodedMessage).toString('hex')
       let profile = await _childActor.create_profile({Svm: { public_key: publicKey, signature, message }});
 
       if (profile.Ok) {
@@ -111,6 +111,7 @@ const IdentityProvider = ({children}) => {
 
       return profile
     } catch (error) {
+      console.log(error)
       toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
     }
 	}
