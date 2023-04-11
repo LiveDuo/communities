@@ -36,14 +36,13 @@ const ChildProvider = ({ children }) => {
 		return reply
 	}
 
-	const getProfileByAddress = useCallback(async (account) => {
-		let auth = {}
-		auth[account.type] = {address: account.address.toLowerCase()}
+	const getProfileByAuth = useCallback(async (account) => {
+		const auth = { [account.type]: {address: account.address.toLowerCase()} }
 		const response = await childActor.get_profile_by_auth(auth)
 		setProfile(response[0])
 	}, [childActor])
 
-	const value = { profile, setProfile, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
+	const value = { profile, setProfile, getProfileByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

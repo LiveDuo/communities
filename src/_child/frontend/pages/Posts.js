@@ -9,14 +9,14 @@ import { IdentityContext } from '../store/identity'
 
 const Posts = () => {
 
-  const { getProfileByAddress } = useContext(ChildContext)
+  const { getProfileByAuth } = useContext(ChildContext)
 
   const { account } = useContext(IdentityContext)
 
   useEffect(() => {
     if (account)
-      getProfileByAddress(account)
-  }, [getProfileByAddress, account])
+      getProfileByAuth(account)
+  }, [getProfileByAuth, account])
 
   return (
     <Box>

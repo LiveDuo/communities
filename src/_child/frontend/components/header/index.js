@@ -15,12 +15,12 @@ const Header = () => {
   const location = useLocation()
 
   const { principal, login, logout, account } = useContext(IdentityContext)
-  const { setProfile, getProfileByAddress } = useContext(ChildContext)
+  const { setProfile, getProfileByAuth } = useContext(ChildContext)
 
   useEffect(() => {
     if (account)
-      getProfileByAddress(account)
-  }, [account, getProfileByAddress])
+    getProfileByAuth(account)
+  }, [account, getProfileByAuth])
 
   const loginAndSet = async (type) => {
     const profile = await login(type)
