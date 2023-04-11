@@ -35,7 +35,7 @@ const IdentityProvider = ({children}) => {
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner()
       const address = await signer.getAddress()
-      const loginMessage = getLoginMessage(address, 'evm')
+      const loginMessage = getLoginMessage(address)
       const signature = await signer.signMessage(loginMessage)// sign with metamask
       const identity = getIdentityFromSignature(signature) // generate Ed25519 identity
       
@@ -76,7 +76,7 @@ const IdentityProvider = ({children}) => {
       const phantom = window.solana
       await phantom.connect()
       const address = phantom.publicKey.toString()
-      const loginMessage = getLoginMessage(address, 'svm')
+      const loginMessage = getLoginMessage(address)
       
       // get identity
       const encodedMessage = new TextEncoder().encode(loginMessage)

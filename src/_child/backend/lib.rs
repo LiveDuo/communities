@@ -279,7 +279,7 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
 }
 
 #[query]
-fn get_profile_by_address(authentication: Authentication) -> Option<Profile> {
+fn get_profile_by_auth(authentication: Authentication) -> Option<Profile> {
     STATE.with(|s| {
         let state = s.borrow();
         let index_opt = state.indexes.profile.get(&authentication);
@@ -394,7 +394,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 }
 
 #[query]
-fn get_posts_by_user(authentication: Authentication) -> Result<Vec<Post>, String> {
+fn get_posts_by_auth(authentication: Authentication) -> Result<Vec<Post>, String> {
     STATE.with(|s| {
         let state = s.borrow();
 

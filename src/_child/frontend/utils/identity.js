@@ -1,23 +1,12 @@
 import * as ethers from 'ethers'
 import { Ed25519KeyIdentity } from '@dfinity/identity'
 
-const loginSecret = 'MUCH SECRET!'
-
-const getLoginMessage = (account, type) => {
-  if (type === 'evm') {
-    return (
-      'Sign this message to login.\n\n' +
-      `App Name:\nic-communities\n\n` +
-      `Address:\n${account}\n\n` +
-      `Hash Secret:\n${ethers.utils.hashMessage(loginSecret)}`
-    )
-  } else if (type === 'svm') {
-    return (
-      'Sign this message to login.\n\n' +
-      `App Name:\nic-communities\n\n` +
-      `Address:\n${account}\n\n`
-    )
-  }
+const getLoginMessage = (account) => {
+  return (
+    'Sign this message to login.\n\n' +
+    `App Name:\nic-communities\n\n` +
+    `Address:\n${account}\n\n`
+  )
 }
 export { getLoginMessage }
 
