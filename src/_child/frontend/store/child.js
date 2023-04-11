@@ -44,7 +44,7 @@ const ChildProvider = ({ children }) => {
 
 	const getProfileByAuth = useCallback(async (account) => {
 		const auth = { [account.type]: {address: account.address.toLowerCase()} }
-		const response = await childActor.get_profile_by_auth(auth)
+		const response = await childActor.get_profile_by_user(auth)
 		setProfile(response[0])
 	}, [childActor])
 

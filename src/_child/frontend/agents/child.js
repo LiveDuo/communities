@@ -58,7 +58,7 @@ const idlChildFactory = ({ IDL }) => {
     get_post: IDL.Func([IDL.Nat64],[IDL.Variant({ Ok: PostResult, Err: IDL.Text })],["query"]),
     get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
     get_posts_by_user: IDL.Func([Authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
-    get_profile_by_auth:  IDL.Func([Authentication], [IDL.Opt(Profile)], ["query"]),
+    get_profile_by_user:  IDL.Func([Authentication], [IDL.Opt(Profile)], ["query"]),
   })
 }
 

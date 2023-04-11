@@ -158,7 +158,7 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
 }
 
 #[query]
-fn get_profile_by_auth(authentication: Authentication) -> Option<Profile> {
+fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
     STATE.with(|s| {
         let state = s.borrow();
         let index_opt = state.indexes.profile.get(&authentication);
