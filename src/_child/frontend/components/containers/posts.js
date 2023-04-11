@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react'
+import { useContext } from 'react'
 import { Spinner, Box, Link, Heading } from '@chakra-ui/react'
 import { Text, Flex, Button, useDisclosure, Tooltip } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
@@ -10,7 +10,6 @@ import { getAddress, addressShort, getExplorerUrl } from '../../utils/address'
 import { EditIcon } from '@chakra-ui/icons'
 
 import { ChildContext } from '../../store/child'
-import { IdentityContext } from '../../store/identity'
 
 import { useNavigate } from 'react-router-dom'
 
