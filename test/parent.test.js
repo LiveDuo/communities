@@ -31,7 +31,6 @@ describe.only('Testing with done', () => {
 			const accountId = getAccountId(canisterIds.parent.local, principal)
 			// send icp
 			await transferIcpToAccount(accountId)
-			console.log('run')
 		}
 
 
