@@ -5,7 +5,7 @@ import Jazzicon from 'react-jazzicon'
 
 import PostModal from '../modals/PostModal'
 import { timeSinceShort } from '../../utils/time'
-import { getAddress } from '../../utils/address'
+import { getAddress, addressShort, getExplorerUrl } from '../../utils/address'
 
 import { EditIcon } from '@chakra-ui/icons'
 
@@ -13,14 +13,6 @@ import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
 
 import { useNavigate } from 'react-router-dom'
-
-const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
-const getExplorerUrl = (address) => {
-  if (address.Evm) 
-    return `https://etherscan.io/address/${address.Evm.address}`
-   else if(address.Svm) 
-    return `https://explorer.solana.com/address/${address.Svm.address}`
-}
 
 const PostsContainer = ({ posts }) => {
   const {  createPost } = useContext(ChildContext)
