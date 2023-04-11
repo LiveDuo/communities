@@ -1,5 +1,5 @@
 import { HttpAgent } from '@dfinity/agent'
-import { isLocalhost } from '../utils'
+import { isLocalhost } from '../utils/network'
 
 const isLocal = isLocalhost(window.location.hostname)
 export { isLocal }

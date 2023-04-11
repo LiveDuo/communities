@@ -86,7 +86,7 @@ pub struct PostSummary {
     pub title: String,
     pub description: String,
     pub timestamp: u64,
-    pub address: String,
+    pub address: Authentication,
     pub replies_count: u64,
     pub last_activity: u64,
 }
@@ -177,18 +177,18 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
 
         let authentication = match auth {
             AuthenticationWith::Evm(args) => {
-                let parm = verify_emv(args);
-                Authentication::Evm(parm)
+                let param = verify_evm(args);
+                Authentication::Evm(param)
             }
             AuthenticationWith::Svm(args) => {
-                let parm = verify_svm(args);
-                Authentication::Svm(parm)
+                let param = verify_svm(args);
+                Authentication::Svm(param)
             }
             AuthenticationWith::Ic => {
-                let parm = IcParams {
+                let param = IcParams {
                     principal: caller.clone(),
                 };
-                Authentication::Ic(parm)
+                Authentication::Ic(param)
             }
         };
 
@@ -211,7 +211,7 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
 }
 
 #[update]
-fn create_post(title: String, description: String) -> Result<Post, String> {
+fn create_post(title: String, description: String) -> Result<PostSummary, String> {
     let caller = ic_cdk::caller();
 
     STATE.with(|s| {
@@ -221,17 +221,27 @@ fn create_post(title: String, description: String) -> Result<Post, String> {
             return Err("Profile does not exists".to_owned());
         }
 
+        let post_id = uuid(&caller.to_text());
         let post = Post {
             title,
             description,
             timestamp: ic_cdk::api::time(),
         };
 
-        let post_id = uuid(&caller.to_text());
-
         state.posts.insert(post_id, post.clone());
 
         state.relations.principal_to_post_id.insert(caller, post_id);
+
+        let address = state.profiles.get(&caller).unwrap().authentication.clone();
+        let post = PostSummary {
+            title: post.title,
+            post_id,
+            description: post.description,
+            timestamp: post.timestamp,
+            replies_count: 0,
+            last_activity: post.timestamp,
+            address,
+        };
         Ok(post)
     })
 }
@@ -245,11 +255,11 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
         let principal_opt = state.profiles.get(&caller);
 
         if principal_opt == None {
-            return Err("Profile does not exists".to_owned());
+            return Err("Profile does not exist".to_owned());
         }
 
         if !state.posts.contains_key(&post_id) {
-            return Err("This post does not exist".to_owned());
+            return Err("Post does not exist".to_owned());
         }
 
         let address = get_address(&principal_opt.unwrap().authentication);
@@ -275,6 +285,18 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
             .insert(reply_id.clone(), post_id.clone());
 
         Ok(reply)
+    })
+}
+
+#[query]
+fn get_profile_by_auth(authentication: Authentication) -> Option<Profile> {
+    STATE.with(|s| {
+        let state = s.borrow();
+        let index_opt = state.indexes.profile.get(&authentication);
+        if index_opt == None {
+            return None; 
+        }
+        state.profiles.get(&index_opt.unwrap()).cloned()
     })
 }
 
@@ -313,7 +335,7 @@ fn get_posts() -> Vec<PostSummary> {
                     .keys()
                     .collect::<Vec<_>>()[0];
 
-                let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
+                let address = state.profiles.get(&principal).cloned().unwrap().authentication;
 
                 PostSummary {
                     title: p.1.title.to_owned(),
@@ -382,7 +404,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 }
 
 #[query]
-fn get_posts_by_user(authentication: Authentication) -> Result<Vec<Post>, String> {
+fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
     STATE.with(|s| {
         let state = s.borrow();
 
@@ -403,7 +425,47 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<Post>, String
         let user_post = post_ids_opt
             .unwrap()
             .iter()
-            .map(|k| state.posts.get(&k.0.to_owned()).unwrap().to_owned())
+            .map(|k| {
+                let post = state.posts.get(&k.0.to_owned()).unwrap();
+
+                let replies_opt = state.relations.reply_id_to_post_id.backward.get(&k.0);
+
+                let replies_count = if replies_opt == None {
+                    0
+                } else {
+                    replies_opt.borrow().unwrap().len()
+                };
+
+                let last_activity = if replies_opt == None {
+                    0
+                } else {
+                    let reply_id = replies_opt.unwrap().last_key_value().unwrap().0;
+                    state.replay.get(reply_id).unwrap().timestamp
+                };
+
+                // FIX
+                let principal = state
+                    .relations
+                    .principal_to_post_id
+                    .backward
+                    .get(&k.0)
+                    .unwrap()
+                    .keys()
+                    .collect::<Vec<_>>()[0];
+
+                let address = state.profiles.get(&principal).cloned().unwrap().authentication;
+
+
+                PostSummary {
+                    post_id: k.0.to_owned(),
+                    title: post.title.to_owned(),
+                    description: post.description.to_owned(),
+                    timestamp: post.timestamp.to_owned(),
+                    replies_count: replies_count as u64,
+                    last_activity,
+                    address
+                }
+            })
             .collect::<Vec<_>>();
         Ok(user_post)
     })
@@ -437,11 +499,11 @@ fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
 
     let address = bs58::encode(public_key).into_string();
     SvmParams {
-        address: address,
+        address: address.to_lowercase(),
     }
 }
 
-fn verify_emv(args: EvmAuthenticationWithParams) -> EvmParams {
+fn verify_evm(args: EvmAuthenticationWithParams) -> EvmParams {
     let mut signature_bytes = hex::decode(&args.signature.trim_start_matches("0x")).unwrap();
     let recovery_byte = signature_bytes.pop().expect("No recovery byte");
     let recovery_id = libsecp256k1::RecoveryId::parse_rpc(recovery_byte).unwrap();

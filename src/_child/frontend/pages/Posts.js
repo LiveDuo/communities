@@ -1,30 +1,24 @@
 import { useEffect, useContext } from 'react'
 import { Box } from '@chakra-ui/react'
 
-import PostsContainer from '../components/posts'
+import PostsContainer from '../components/containers/posts'
 // import WritePost from '../components/posts/WritePost'
-
 import { ChildContext } from '../store/child'
 import { IdentityContext } from '../store/identity'
 
 const Posts = () => {
 
-  const { getProfileByAddress } = useContext(ChildContext)
+  const { getPosts, posts } = useContext(ChildContext)
+  const { childActor } = useContext(IdentityContext)
 
-  const { account } = useContext(IdentityContext)
-
-  useEffect(() => {
-    if (account)
-      getProfileByAddress(account)
-  }, [getProfileByAddress, account])
+  useEffect(()=>{
+    if (childActor)
+      getPosts()
+  },[getPosts, childActor])
 
   return (
     <Box>
-      {/* <Box mb="40px">
-        <WritePost />
-      </Box> */}
-
-      <PostsContainer principalId={null} />
+      <PostsContainer posts={posts} />
     </Box>
   )
 }

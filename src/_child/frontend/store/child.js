@@ -8,6 +8,7 @@ const ChildContext = createContext()
 const ChildProvider = ({ children }) => {
 
 	const [posts, setPosts] = useState()
+	const [postsUser, setPostsUser] = useState()
 	const [loading, setLoading] = useState()
 	const { childActor, account } = useContext(IdentityContext)
 	const [profile, setProfile] = useState()
@@ -23,10 +24,15 @@ const ChildProvider = ({ children }) => {
 		return _post
 	}
 
+	const getPostsByUser = useCallback(async () => {
+		const response = await childActor.get_posts_by_user(profile.authentication)
+		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: 0})))
+	},[profile, childActor])
+
 	const createPost = async (title, description) => {
-		await childActor.create_post(title, description)
-		
-		await getPosts() // reload data
+		const response = await childActor.create_post(title, description)
+		const _post = {...response.Ok, last_activity: new Date(Number(response.Ok.timestamp / 1000n / 1000n)), timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
+		setPosts([...posts, _post])
 	}
 
 	const createReply = async (_post_id, text) => {
@@ -36,17 +42,13 @@ const ChildProvider = ({ children }) => {
 		return reply
 	}
 
-	const setUsername = async (name) => {
-		const profile = await childActor.update_profile([name], [])
-		return profile
-	}
-
-	const getProfileByAddress = useCallback(async () => {
-		const response = await childActor.get_profile()
+	const getProfileByAuth = useCallback(async (account) => {
+		const auth = { [account.type]: {address: account.address.toLowerCase()} }
+		const response = await childActor.get_profile_by_auth(auth)
 		setProfile(response[0])
 	}, [childActor])
 
-	const value = { profile, setProfile, setUsername, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
+	const value = { profile, setProfile, postsUser , getProfileByAuth, getPostsByUser, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 
