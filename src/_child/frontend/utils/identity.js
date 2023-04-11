@@ -4,7 +4,7 @@ import { Ed25519KeyIdentity } from '@dfinity/identity'
 const getLoginMessage = (account) => {
   return (
     'Sign this message to login.\n\n' +
-    `App Name:\nic-communities\n\n` +
+    `App:\ncommunities.ooo\n\n` +
     `Address:\n${account}\n\n`
   )
 }
