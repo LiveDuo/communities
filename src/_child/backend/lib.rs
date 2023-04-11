@@ -177,18 +177,18 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
 
         let authentication = match auth {
             AuthenticationWith::Evm(args) => {
-                let parm = verify_emv(args);
-                Authentication::Evm(parm)
+                let param = verify_evm(args);
+                Authentication::Evm(param)
             }
             AuthenticationWith::Svm(args) => {
-                let parm = verify_svm(args);
-                Authentication::Svm(parm)
+                let param = verify_svm(args);
+                Authentication::Svm(param)
             }
             AuthenticationWith::Ic => {
-                let parm = IcParams {
+                let param = IcParams {
                     principal: caller.clone(),
                 };
-                Authentication::Ic(parm)
+                Authentication::Ic(param)
             }
         };
 
@@ -211,7 +211,7 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
 }
 
 #[update]
-fn create_post(title: String, description: String) -> Result<Post, String> {
+fn create_post(title: String, description: String) -> Result<PostSummary, String> {
     let caller = ic_cdk::caller();
 
     STATE.with(|s| {
@@ -221,17 +221,27 @@ fn create_post(title: String, description: String) -> Result<Post, String> {
             return Err("Profile does not exists".to_owned());
         }
 
+        let post_id = uuid(&caller.to_text());
         let post = Post {
             title,
             description,
             timestamp: ic_cdk::api::time(),
         };
 
-        let post_id = uuid(&caller.to_text());
-
         state.posts.insert(post_id, post.clone());
 
         state.relations.principal_to_post_id.insert(caller, post_id);
+
+        let address = state.profiles.get(&caller).unwrap().authentication.clone();
+        let post = PostSummary {
+            title: post.title,
+            post_id,
+            description: post.description,
+            timestamp: post.timestamp,
+            replies_count: 0,
+            last_activity: post.timestamp,
+            address,
+        };
         Ok(post)
     })
 }
@@ -245,11 +255,11 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
         let principal_opt = state.profiles.get(&caller);
 
         if principal_opt == None {
-            return Err("Profile does not exists".to_owned());
+            return Err("Profile does not exist".to_owned());
         }
 
         if !state.posts.contains_key(&post_id) {
-            return Err("This post does not exist".to_owned());
+            return Err("Post does not exist".to_owned());
         }
 
         let address = get_address(&principal_opt.unwrap().authentication);
@@ -493,7 +503,7 @@ fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
     }
 }
 
-fn verify_emv(args: EvmAuthenticationWithParams) -> EvmParams {
+fn verify_evm(args: EvmAuthenticationWithParams) -> EvmParams {
     let mut signature_bytes = hex::decode(&args.signature.trim_start_matches("0x")).unwrap();
     let recovery_byte = signature_bytes.pop().expect("No recovery byte");
     let recovery_id = libsecp256k1::RecoveryId::parse_rpc(recovery_byte).unwrap();

@@ -30,9 +30,9 @@ const ChildProvider = ({ children }) => {
 	},[profile, childActor])
 
 	const createPost = async (title, description) => {
-		await childActor.create_post(title, description)
-		
-		await getPosts() // reload data
+		const response = await childActor.create_post(title, description)
+		const _post = {...response.Ok, post_id: 0, timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)), replies_count: 0, address: profile.authentication }
+		setPosts([...posts, _post])
 	}
 
 	const createReply = async (_post_id, text) => {
@@ -45,7 +45,6 @@ const ChildProvider = ({ children }) => {
 	const getProfileByAuth = useCallback(async (account) => {
 		const auth = { [account.type]: {address: account.address.toLowerCase()} }
 		const response = await childActor.get_profile_by_auth(auth)
-		console.log(response)
 		setProfile(response[0])
 	}, [childActor])
 

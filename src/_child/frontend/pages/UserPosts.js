@@ -5,11 +5,13 @@ import { Box } from '@chakra-ui/react'
 import PostsContainer from '../components/containers/posts'
 // import UserInfo from '../components/user/UserInfo'
 import { ChildContext } from '../store/child'
+import { IdentityContext } from '../store/identity'
 
 const UserPost = () => {
   const { address, type } = useParams()
 
   const { getProfileByAuth, getPostsByUser, postsUser } = useContext(ChildContext)
+  const { childActor } = useContext(IdentityContext)
 
   useEffect(() => {
     if (address) {
@@ -18,8 +20,9 @@ const UserPost = () => {
   }, [getProfileByAuth, address, type])
 
   useEffect(() => {
-    getPostsByUser()
-  },[getPostsByUser])
+    if (childActor)
+      getPostsByUser()
+  },[childActor, getPostsByUser])
 
 
   return (

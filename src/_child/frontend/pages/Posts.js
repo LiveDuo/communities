@@ -4,14 +4,17 @@ import { Box } from '@chakra-ui/react'
 import PostsContainer from '../components/containers/posts'
 // import WritePost from '../components/posts/WritePost'
 import { ChildContext } from '../store/child'
+import { IdentityContext } from '../store/identity'
 
 const Posts = () => {
 
   const { getPosts, posts } = useContext(ChildContext)
+  const { childActor } = useContext(IdentityContext)
 
   useEffect(()=>{
-    getPosts()
-  },[getPosts])
+    if (childActor)
+      getPosts()
+  },[getPosts, childActor])
 
   return (
     <Box>
