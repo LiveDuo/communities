@@ -8,11 +8,11 @@ const idlChildFactory = ({ IDL }) => {
     address: IDL.Text,
   })
 
-  const Post = IDL.Record({
-    title: IDL.Text,
-    description: IDL.Text,
-    timestamp: IDL.Nat64
-  })
+  // const Post = IDL.Record({
+  //   title: IDL.Text,
+  //   description: IDL.Text,
+  //   timestamp: IDL.Nat64
+  // })
 
   const PostResult = IDL.Record({
     title: IDL.Text,
@@ -52,7 +52,7 @@ const idlChildFactory = ({ IDL }) => {
 
   return IDL.Service({
     create_profile: IDL.Func([AuthenticationParams],[IDL.Variant({ Ok: Profile, Err: IDL.Text })],["update"]),
-    create_post: IDL.Func([IDL.Text, IDL.Text],[IDL.Variant({ Ok: Post, Err: IDL.Text })],["update"]),
+    create_post: IDL.Func([IDL.Text, IDL.Text],[IDL.Variant({ Ok: PostSummary, Err: IDL.Text })],["update"]),
     create_reply: IDL.Func([IDL.Nat64, IDL.Text],[IDL.Variant({ Ok: Reply, Err: IDL.Text })],["update"]),
     get_profile: IDL.Func([],[IDL.Variant({ Ok: Profile, Err: IDL.Text })],["query"]),
     get_post: IDL.Func([IDL.Nat64],[IDL.Variant({ Ok: PostResult, Err: IDL.Text })],["query"]),

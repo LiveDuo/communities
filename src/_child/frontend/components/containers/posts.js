@@ -53,7 +53,7 @@ const PostsContainer = ({ posts }) => {
                     </Box>
                   </Link>
                 </Tooltip>
-                <Text width="120px" textAlign="center">{timeSinceShort(p.last_activity ?? p.timestamp)}</Text>
+                <Text width="120px" textAlign="center">{timeSinceShort(p.last_activity)}</Text>
                 <Text width="80px" textAlign="center">{p.replies_count.toString()}</Text>
               </Flex>
             </Box>)}

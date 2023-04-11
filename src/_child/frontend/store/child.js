@@ -31,7 +31,7 @@ const ChildProvider = ({ children }) => {
 
 	const createPost = async (title, description) => {
 		const response = await childActor.create_post(title, description)
-		const _post = {...response.Ok, post_id: 0, timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)), replies_count: 0, address: profile.authentication }
+		const _post = {...response.Ok, last_activity: new Date(Number(response.Ok.timestamp / 1000n / 1000n)), timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
 		setPosts([...posts, _post])
 	}
 
