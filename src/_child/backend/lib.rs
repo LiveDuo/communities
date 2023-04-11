@@ -394,7 +394,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 }
 
 #[query]
-fn get_posts_by_user(authentication: Authentication) -> Result<Vec<Post>, String> {
+fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
     STATE.with(|s| {
         let state = s.borrow();
 
@@ -415,7 +415,47 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<Post>, String
         let user_post = post_ids_opt
             .unwrap()
             .iter()
-            .map(|k| state.posts.get(&k.0.to_owned()).unwrap().to_owned())
+            .map(|k| {
+                let post = state.posts.get(&k.0.to_owned()).unwrap();
+
+                let replies_opt = state.relations.reply_id_to_post_id.backward.get(&k.0);
+
+                let replies_count = if replies_opt == None {
+                    0
+                } else {
+                    replies_opt.borrow().unwrap().len()
+                };
+
+                let last_activity = if replies_opt == None {
+                    0
+                } else {
+                    let reply_id = replies_opt.unwrap().last_key_value().unwrap().0;
+                    state.replay.get(reply_id).unwrap().timestamp
+                };
+
+                // FIX
+                let principal = state
+                    .relations
+                    .principal_to_post_id
+                    .backward
+                    .get(&k.0)
+                    .unwrap()
+                    .keys()
+                    .collect::<Vec<_>>()[0];
+
+                let address = state.profiles.get(&principal).cloned().unwrap().authentication;
+
+
+                PostSummary {
+                    post_id: k.0.to_owned(),
+                    title: post.title.to_owned(),
+                    description: post.description.to_owned(),
+                    timestamp: post.timestamp.to_owned(),
+                    replies_count: replies_count as u64,
+                    last_activity,
+                    address
+                }
+            })
             .collect::<Vec<_>>();
         Ok(user_post)
     })

@@ -8,6 +8,7 @@ const ChildContext = createContext()
 const ChildProvider = ({ children }) => {
 
 	const [posts, setPosts] = useState()
+	const [postsUser, setPostsUser] = useState()
 	const [loading, setLoading] = useState()
 	const { childActor, account } = useContext(IdentityContext)
 	const [profile, setProfile] = useState()
@@ -22,6 +23,11 @@ const ChildProvider = ({ children }) => {
 		const _post = {...response, timestamp: new Date(Number(response.timestamp / 1000n / 1000n)), replies: response.replies.map(r => ({...r, timestamp: new Date(Number(r.timestamp / 1000n / 1000n))}))}
 		return _post
 	}
+
+	const getPostsByUser = useCallback(async ()=>{
+		const response = await childActor.get_posts_by_user(profile.authentication)
+		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: 0})))
+	},[profile, childActor])
 
 	const createPost = async (title, description) => {
 		await childActor.create_post(title, description)
@@ -43,7 +49,7 @@ const ChildProvider = ({ children }) => {
 		setProfile(response[0])
 	}, [childActor])
 
-	const value = { profile, setProfile, getProfileByAddress, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
+	const value = { profile, setProfile, postsUser , getProfileByAddress, getPostsByUser, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

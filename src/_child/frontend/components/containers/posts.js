@@ -22,9 +22,8 @@ const getExplorerUrl = (address) => {
     return `https://explorer.solana.com/address/${address.Svm.address}`
 }
 
-const PostsContainer = () => {
-  const { childActor } = useContext(IdentityContext)
-  const { posts, getPosts, createPost } = useContext(ChildContext)
+const PostsContainer = ({ posts }) => {
+  const {  createPost } = useContext(ChildContext)
   
   const { isOpen: isPostOpen, onOpen: onPostOpen, onClose: onPostClose } = useDisclosure()
   const navigate = useNavigate()
@@ -32,12 +31,6 @@ const PostsContainer = () => {
   const goToPost = async (i) => {
     navigate(`/post/${i}`)
 	}
-
-  useEffect(() => {
-    if (childActor) {
-			getPosts()
-    }
-	}, [getPosts, childActor])
 
   if (!posts) return <Spinner/>
 
