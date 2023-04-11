@@ -49,7 +49,7 @@ const ChildProvider = ({ children }) => {
 		setProfile(response[0])
 	}, [childActor])
 
-	const value = { profile, setProfile, postsUser , getProfileByAddress, getPostsByUser, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
+	const value = { profile, setProfile, postsUser , getProfileByAuth, getPostsByUser, loading, setLoading, posts, getPosts, getPost, createPost, createReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

@@ -9,13 +9,13 @@ import { ChildContext } from '../store/child'
 const UserPost = () => {
   const { address, type } = useParams()
 
-  const { getProfileByAddress, getPostsByUser, postsUser } = useContext(ChildContext)
+  const { getProfileByAuth, getPostsByUser, postsUser } = useContext(ChildContext)
 
   useEffect(() => {
     if (address) {
-      getProfileByAddress({address, type})
+      getProfileByAuth({address, type})
     }
-  }, [getProfileByAddress, address, type])
+  }, [getProfileByAuth, address, type])
 
   useEffect(() => {
     getPostsByUser()
