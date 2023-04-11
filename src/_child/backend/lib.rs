@@ -194,14 +194,14 @@ fn get_posts() -> Vec<PostSummary> {
                 };
 
                 // FIX
-                let principal = state
+                let (principal, _) = state
                     .relations
                     .principal_to_post_id
                     .backward
                     .get(&post_id)
                     .unwrap()
-                    .keys()
-                    .collect::<Vec<_>>()[0];
+                    .first_key_value()
+                    .unwrap();
 
                 let address = state.profiles.get(&principal).cloned().unwrap().authentication;
 
@@ -312,14 +312,14 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                 };
 
                 // FIX
-                let principal = state
+                let (principal, _) = state
                     .relations
                     .principal_to_post_id
                     .backward
                     .get(&post_id)
                     .unwrap()
-                    .keys()
-                    .collect::<Vec<_>>()[0];
+                    .first_key_value()
+                    .unwrap();
 
                 let address = state.profiles.get(&principal).cloned().unwrap().authentication;
 
