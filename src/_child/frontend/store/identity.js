@@ -48,13 +48,9 @@ const IdentityProvider = ({children}) => {
       setChildActor(_childActor)
 
       // link address
-      let profile = await _childActor.create_profile({Evm: { message: utils.hashMessage(loginMessage), signature} })
-
-      if (profile.Ok) {
-        profile = profile.Ok
-      } else {
-        profile = await _childActor.get_profile().then(res => res.Ok)
-      }
+      const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
+      const response = await _childActor.create_profile(auth)
+      const profile = response.Ok
 
       toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
 
@@ -91,13 +87,8 @@ const IdentityProvider = ({children}) => {
       const publicKey = Buffer.from(bs58.decode(signedMessage.publicKey)).toString('hex')
       const signature = Buffer.from(bs58.decode(signedMessage.signature)).toString('hex')
       const message = Buffer.from(encodedMessage).toString('hex')
-      let profile = await _childActor.create_profile({Svm: { public_key: publicKey, signature, message }});
-
-      if (profile.Ok) {
-        profile = profile.Ok
-      } else {
-        profile = await _childActor.get_profile().then(res => res.Ok)
-      }
+      const response = await _childActor.create_profile({Svm: { public_key: publicKey, signature, message }});
+      const profile = response.Ok
       
       toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
 

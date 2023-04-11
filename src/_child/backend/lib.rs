@@ -172,7 +172,8 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
         let mut state = s.borrow_mut();
 
         if state.profiles.contains_key(&caller) {
-            return Err("Profile exists".to_owned());
+            let profile_opt = state.profiles.get(&caller);
+            return Ok(profile_opt.unwrap().clone());
         }
 
         let authentication = match auth {
@@ -357,12 +358,12 @@ fn get_profile() -> Result<Profile, String> {
         let state = s.borrow();
 
         let caller = ic_cdk::caller();
-        let profile_otp = state.profiles.get(&caller);
-        if profile_otp == None {
+        let profile_opt = state.profiles.get(&caller);
+        if profile_opt == None {
             return Err("Profile does not exists".to_owned());
         }
 
-        Ok(profile_otp.unwrap().clone())
+        Ok(profile_opt.unwrap().clone())
     })
 }
 
@@ -370,8 +371,8 @@ fn get_profile() -> Result<Profile, String> {
 fn get_post(post_id: u64) -> Result<PostResponse, String> {
     STATE.with(|s| {
         let state = s.borrow();
-        let post_otp = state.posts.get(&post_id);
-        if post_otp == None {
+        let post_opt = state.posts.get(&post_id);
+        if post_opt == None {
             return Err("This post does not exists".to_owned());
         }
 
@@ -379,7 +380,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
         let replies = if replies_opt == None { vec![] } else { replies_opt.unwrap().iter().map(|v| state.replay.get(v.0).unwrap().to_owned()).collect::<Vec<_>>()};
 
-        let post = post_otp.unwrap();
+        let post = post_opt.unwrap();
 
         let principal = state
                     .relations
