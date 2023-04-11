@@ -177,8 +177,7 @@ fn get_posts() -> Vec<PostSummary> {
         state
             .posts
             .iter()
-            .map(|p| {
-                let post_id = p.0;
+            .map(|(post_id, post)| {
                 let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
                 let replies_count = if replies_opt == None {
@@ -190,7 +189,7 @@ fn get_posts() -> Vec<PostSummary> {
                 let last_activity = if replies_opt == None {
                     0
                 } else {
-                    let reply_id = replies_opt.unwrap().last_key_value().unwrap().0;
+                    let (reply_id, _) = replies_opt.unwrap().last_key_value().unwrap();
                     state.replay.get(reply_id).unwrap().timestamp
                 };
 
@@ -207,10 +206,10 @@ fn get_posts() -> Vec<PostSummary> {
                 let address = state.profiles.get(&principal).cloned().unwrap().authentication;
 
                 PostSummary {
-                    title: p.1.title.to_owned(),
+                    title: post.title.to_owned(),
                     post_id: post_id.to_owned(),
-                    description: p.1.description.to_owned(),
-                    timestamp: p.1.timestamp,
+                    description: post.description.to_owned(),
+                    timestamp: post.timestamp,
                     replies_count: replies_count as u64,
                     last_activity,
                     address: address,
@@ -246,7 +245,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
         let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
-        let replies = if replies_opt == None { vec![] } else { replies_opt.unwrap().iter().map(|v| state.replay.get(v.0).unwrap().to_owned()).collect::<Vec<_>>()};
+        let replies = if replies_opt == None { vec![] } else { replies_opt.unwrap().iter().map(|(reply_id, _)| state.replay.get(reply_id).unwrap().to_owned()).collect::<Vec<_>>()};
 
         let post = post_opt.unwrap();
 
@@ -294,10 +293,10 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
         let user_post = post_ids_opt
             .unwrap()
             .iter()
-            .map(|k| {
-                let post = state.posts.get(&k.0.to_owned()).unwrap();
+            .map(|(post_id, _)| {
+                let post = state.posts.get(&post_id.to_owned()).unwrap();
 
-                let replies_opt = state.relations.reply_id_to_post_id.backward.get(&k.0);
+                let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
                 let replies_count = if replies_opt == None {
                     0
@@ -308,7 +307,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                 let last_activity = if replies_opt == None {
                     0
                 } else {
-                    let reply_id = replies_opt.unwrap().last_key_value().unwrap().0;
+                    let (reply_id, _) = replies_opt.unwrap().last_key_value().unwrap();
                     state.replay.get(reply_id).unwrap().timestamp
                 };
 
@@ -317,7 +316,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                     .relations
                     .principal_to_post_id
                     .backward
-                    .get(&k.0)
+                    .get(&post_id)
                     .unwrap()
                     .keys()
                     .collect::<Vec<_>>()[0];
@@ -326,7 +325,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
 
 
                 PostSummary {
-                    post_id: k.0.to_owned(),
+                    post_id: post_id.to_owned(),
                     title: post.title.to_owned(),
                     description: post.description.to_owned(),
                     timestamp: post.timestamp.to_owned(),
