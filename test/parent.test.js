@@ -1,6 +1,7 @@
 const { Actor } = require('@dfinity/agent')
 
-const { checkDfxRunning, setupTests, getAgent, getCanisters } = require('../src/_meta/shared/utils')
+const { checkDfxRunning, setupTests, getAgent, getCanisters, transferIcpToAccount } = require('../src/_meta/shared/utils')
+const { getAccountId }= require('../src/_meta/shared/account')
 const { getRandomIdentity } = require('../src/_meta/shared/identity')
 const { parentFactory } = require('../src/_meta/shared/idl')
 
@@ -8,7 +9,7 @@ setupTests()
 
 describe.only('Testing with done', () => {
 
-	let actorParent
+	let actorParent, principal, canisterIds
 
 	beforeAll(async () => {
 
@@ -16,14 +17,23 @@ describe.only('Testing with done', () => {
 		await checkDfxRunning()
 
     	// create parent actor
-		const canisters = await getCanisters()
+		canisterIds = await getCanisters()
 		const identity = await getRandomIdentity()
+		principal = identity.getPrincipal().toString()
 		const agent = getAgent('http://localhost:8000', identity)
-    	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisters.parent.local })
+    	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
 	})
 
 	test('Should create a new community', async () => {
+		if (canisterIds.ledger) {
+			// create account
+			const accountId = getAccountId(canisterIds.parent.local, principal)
+			// send icp
+			await transferIcpToAccount(accountId)
+			console.log('run')
+		}
+
 
 		// create child actor
 		const childPrincipalid = await actorParent.create_child().then(p => p.Ok.toString())
