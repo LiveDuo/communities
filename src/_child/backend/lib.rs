@@ -1,167 +1,35 @@
-use candid::{export_service, CandidType, Deserialize, Principal};
+mod state;
+mod verify;
+
+use candid::{export_service, CandidType, Deserialize};
 
 use ic_cdk_macros::*;
+
 use std::borrow::Borrow;
 use std::collections::hash_map;
 use std::hash::{Hash, Hasher};
 
-use ed25519_dalek::{PublicKey, Signature, Verifier};
-use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
-
-#[derive(Clone, CandidType, Deserialize, Default, Hash, PartialEq, Eq, Debug)]
-pub struct EvmParams {
-    address: String,
-}
-
-#[derive(Clone, CandidType, Deserialize, Default, Hash, PartialEq, Eq, Debug)]
-pub struct SvmParams {
-    address: String,
-}
-#[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
-pub struct IcParams {
-    principal: Principal,
-}
-
-#[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
-pub enum Authentication {
-    Evm(EvmParams),
-    Svm(SvmParams),
-    Ic(IcParams),
-}
-
-#[derive(Clone, CandidType, Deserialize, Default, Hash, PartialEq, Eq, Debug)]
-pub struct EvmAuthenticationWithParams {
-    message: String,
-    signature: String,
-}
-
-#[derive(Clone, CandidType, Deserialize, Default, Hash, PartialEq, Eq, Debug)]
-pub struct SvmAuthenticationWithParams {
-    public_key: String,
-    signature: String,
-    message: String,
-}
-
-#[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
-pub enum AuthenticationWith {
-    Evm(EvmAuthenticationWithParams),
-    Svm(SvmAuthenticationWithParams),
-    Ic,
-}
-
-#[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
-pub struct Profile {
-    pub name: String,
-    pub description: String,
-    pub authentication: Authentication,
-}
-
-#[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
-pub struct Post {
-    pub title: String,
-    pub description: String,
-    pub timestamp: u64,
-}
-
-#[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct Reply {
-    pub text: String,
-    pub timestamp: u64,
-    pub address: String,
-}
-
-#[derive(Clone, CandidType, Deserialize, Debug)]
-pub struct PostResponse {
-    pub title: String,
-    pub description: String,
-    pub address: String,
-    pub timestamp: u64,
-    pub replies: Vec<Reply>,
-}
-
-#[derive(CandidType, Deserialize, Clone)]
-pub struct PostSummary {
-    pub post_id: u64,
-    pub title: String,
-    pub description: String,
-    pub timestamp: u64,
-    pub address: Authentication,
-    pub replies_count: u64,
-    pub last_activity: u64,
-}
-
-#[derive(Default, CandidType, Clone, Deserialize, Debug)]
-pub struct Relation<X: Ord, Y: Ord> {
-    forward: BTreeMap<X, BTreeMap<Y, ()>>,
-    backward: BTreeMap<Y, BTreeMap<X, ()>>,
-}
-impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
-    fn insert(&mut self, x: X, y: Y) {
-        if self.forward.contains_key(&x) {
-            self.forward.get_mut(&x).unwrap().insert(y.clone(), ());
-        } else {
-            self.forward
-                .insert(x.clone(), BTreeMap::from_iter([(y.clone(), ())]));
-        }
-
-        if self.backward.contains_key(&y) {
-            self.backward.get_mut(&y).unwrap().insert(x, ());
-        } else {
-            self.backward
-                .insert(y, BTreeMap::from_iter([(x.clone(), ())]));
-        }
-    }
-}
-
-#[derive(CandidType, Clone, Deserialize, Debug)]
-pub struct Relations {
-    principal_to_post_id: Relation<Principal, u64>,
-    principal_to_reply_id: Relation<Principal, u64>,
-    reply_id_to_post_id: Relation<u64, u64>,
-}
-
-impl Default for Relations {
-    fn default() -> Self {
-        let relation_u64_to_u64: Relation<u64, u64> = Relation {
-            forward: BTreeMap::default(),
-            backward: BTreeMap::default(),
-        };
-        let relation_principal_to_u64: Relation<Principal, u64> = Relation {
-            forward: BTreeMap::default(),
-            backward: BTreeMap::default(),
-        };
-
-        Relations {
-            reply_id_to_post_id: { relation_u64_to_u64 },
-            principal_to_reply_id: { relation_principal_to_u64.clone() },
-            principal_to_post_id: { relation_principal_to_u64 },
-        }
-    }
-}
-
-#[derive(Default, CandidType, Clone, Deserialize, Debug)]
-pub struct Indexes {
-    profile: HashMap<Authentication, Principal>,
-}
-
-#[derive(Default, CandidType, Deserialize, Clone, Debug)]
-pub struct State {
-    profiles: BTreeMap<Principal, Profile>,
-    posts: BTreeMap<u64, Post>,
-    replay: BTreeMap<u64, Reply>,
-    relations: Relations,
-    indexes: Indexes,
-}
-
-thread_local! {
-    static STATE: RefCell<State> = RefCell::new(State::default());
-}
-
+use crate::state::{*, STATE};
 
 #[ic_cdk_macros::init]
 fn init() {
     ic_certified_assets::init();
+}
+
+fn uuid(seed: &str) -> u64 {
+    let timestamp: u64 = ic_cdk::api::time() * 1000 * 1000;
+    let str = format!("{}-{}", seed, timestamp);
+    let mut s = hash_map::DefaultHasher::new();
+    str.hash(&mut s);
+    s.finish()
+}
+
+fn get_address(arg: &Authentication) -> String {
+    match arg {
+        Authentication::Evm(params) => params.address.to_owned(),
+        Authentication::Svm(params) => params.address.to_owned(),
+        Authentication::Ic(params) => params.principal.to_text(),
+    }
 }
 
 #[update]
@@ -178,11 +46,11 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
 
         let authentication = match auth {
             AuthenticationWith::Evm(args) => {
-                let param = verify_evm(args);
+                let param = crate::verify::verify_evm(args);
                 Authentication::Evm(param)
             }
             AuthenticationWith::Svm(args) => {
-                let param = verify_svm(args);
+                let param = crate::verify::verify_svm(args);
                 Authentication::Svm(param)
             }
             AuthenticationWith::Ic => {
@@ -470,57 +338,6 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
             .collect::<Vec<_>>();
         Ok(user_post)
     })
-}
-
-fn uuid(seed: &str) -> u64 {
-    let timestamp: u64 = ic_cdk::api::time() * 1000 * 1000;
-    let str = format!("{}-{}", seed, timestamp);
-    let mut s = hash_map::DefaultHasher::new();
-    str.hash(&mut s);
-    s.finish()
-}
-
-fn get_address(arg: &Authentication) -> String {
-    match arg {
-        Authentication::Evm(params) => params.address.to_owned(),
-        Authentication::Svm(params) => params.address.to_owned(),
-        Authentication::Ic(params) => params.principal.to_text(),
-    }
-}
-
-fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
-    let public_key = hex::decode(&args.public_key).unwrap();
-
-    let signature = hex::decode(&args.signature).unwrap();
-    let msg = hex::decode(&args.message).unwrap();
-
-    let public_key = PublicKey::from_bytes(&public_key).unwrap();
-    let sig = Signature::from_bytes(&signature).unwrap();
-    public_key.verify(&msg, &sig).unwrap();
-
-    let address = bs58::encode(public_key).into_string();
-    SvmParams {
-        address: address.to_lowercase(),
-    }
-}
-
-fn verify_evm(args: EvmAuthenticationWithParams) -> EvmParams {
-    let mut signature_bytes = hex::decode(&args.signature.trim_start_matches("0x")).unwrap();
-    let recovery_byte = signature_bytes.pop().expect("No recovery byte");
-    let recovery_id = libsecp256k1::RecoveryId::parse_rpc(recovery_byte).unwrap();
-    let signature_slice = signature_bytes.as_slice();
-    let signature_bytes: [u8; 64] = signature_slice.try_into().unwrap();
-    let signature = libsecp256k1::Signature::parse_standard(&signature_bytes).unwrap();
-    let message_bytes = hex::decode(&args.message.trim_start_matches("0x")).unwrap();
-    let message_bytes: [u8; 32] = message_bytes.try_into().unwrap();
-    let message = libsecp256k1::Message::parse(&message_bytes);
-    let public_key = libsecp256k1::recover(&message, &signature, &recovery_id).unwrap();
-    let public_key_bytes = public_key.serialize();
-    let keccak256 = easy_hasher::easy_hasher::raw_keccak256(public_key_bytes[1..].to_vec());
-    let keccak256_hex = keccak256.to_hex_string();
-    let address: String = "0x".to_owned() + &keccak256_hex[24..];
-
-    EvmParams { address }
 }
 
 #[derive(CandidType, Deserialize)]
