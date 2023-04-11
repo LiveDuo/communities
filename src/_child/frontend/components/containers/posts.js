@@ -13,7 +13,7 @@ import { ChildContext } from '../../store/child'
 
 import { useNavigate } from 'react-router-dom'
 
-const PostsContainer = ({ posts }) => {
+const PostsContainer = ({ posts: _posts }) => {
   const {  createPost } = useContext(ChildContext)
   
   const { isOpen: isPostOpen, onOpen: onPostOpen, onClose: onPostClose } = useDisclosure()
@@ -22,6 +22,8 @@ const PostsContainer = ({ posts }) => {
   const goToPost = async (i) => {
     navigate(`/post/${i}`)
 	}
+
+  const posts = _posts.sort((a, b) => b.timestamp - a.timestamp)
 
   if (!posts) return <Spinner/>
 
