@@ -11,19 +11,14 @@ const getLoginMessage = (account) => {
 export { getLoginMessage }
 
 const getIdentityFromSignature = (signature) => {
-  const hash = ethers.utils.keccak256(signature)
-  const buffer = Buffer.from(hash.substring(2), 'hex')
-  return Ed25519KeyIdentity.generate(buffer)
+  const hash = ethers.utils.keccak256(signature).substring(2)
+  return Ed25519KeyIdentity.generate(Buffer.from(hash, 'hex'))
 }
 export { getIdentityFromSignature }
 
 const loadIdentity = () => {
-  try {
-    const keyString = localStorage.getItem(`identity`)
-    return Ed25519KeyIdentity.fromJSON(keyString)
-  } catch (err) {
-    return null
-  }
+  const keyString = localStorage.getItem(`identity`)
+  return Ed25519KeyIdentity.fromJSON(keyString)
 }
 export { loadIdentity }
 
@@ -53,5 +48,4 @@ const clearAccount = async () => {
   localStorage.removeItem('account')
   window.location = '/'
 }
-
 export { clearAccount }
