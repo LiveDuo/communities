@@ -31,7 +31,7 @@ const childFactory = ({ IDL }) => {
 	const PostSummary = IDL.Record({
 		title: IDL.Text,
 		description: IDL.Text,
-		address: IDL.Text,
+		address: authentication,
 		timestamp: IDL.Nat64,
 		replies_count: IDL.Nat64,
 		last_activity: IDL.Nat64,
@@ -50,7 +50,7 @@ const childFactory = ({ IDL }) => {
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResult, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-		get_posts_by_auth: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(Post), Err: IDL.Text })], ["query"]),
+		get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
 	});
 };
 exports.childFactory = childFactory

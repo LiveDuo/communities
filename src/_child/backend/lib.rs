@@ -193,7 +193,6 @@ fn get_posts() -> Vec<PostSummary> {
                     state.replay.get(reply_id).unwrap().timestamp
                 };
 
-                // FIX
                 let (principal, _) = state
                     .relations
                     .principal_to_post_id
@@ -249,14 +248,14 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
         let post = post_opt.unwrap();
 
-        let principal = state
+        let (principal, _) = state
                     .relations
                     .principal_to_post_id
                     .backward
                     .get(&post_id)
                     .unwrap()
-                    .keys()
-                    .collect::<Vec<_>>()[0];
+                    .first_key_value()
+                    .unwrap();
 
     let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
 

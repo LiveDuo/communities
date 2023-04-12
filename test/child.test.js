@@ -60,12 +60,12 @@ describe('Testing with done', () => {
     const profile = await actorBackendSvm.create_profile({Svm: { public_key: pubKey, signature, message: loginMessageHash }});
 
     const address = profile.Ok.authentication.Svm.address;
-    expect(address).toBe(signerSvm.publicKey.toString());
+    expect(address).toBe(signerSvm.publicKey.toString().toLowerCase());
 
     // check profile and principal
     const profile2 = await actorBackendSvm.get_profile()
     const address2 =  profile2.Ok.authentication.Svm.address
-    expect(address2).toBe(signerSvm.publicKey.toString())
+    expect(address2).toBe(signerSvm.publicKey.toString().toLowerCase())
   });
 
 	
@@ -79,7 +79,7 @@ describe('Testing with done', () => {
 		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: addressSigner.toLowerCase()}})
 		const userLastPost = userPosts.Ok[userPosts.Ok.length - 1]
 		expect(userLastPost.title).toBe('hello')
-		// expect(userLastPost.address).toBe(addressSigner.toLowerCase())
+		expect(userLastPost.address.Evm.address).toBe(addressSigner.toLowerCase())
 
 	})
 
