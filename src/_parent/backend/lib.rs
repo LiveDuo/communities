@@ -9,11 +9,13 @@ use crate::state::principal_to_subaccount;
 
 use crate::state::{*, STATE};
 
+use include_macros::{get_canister};
+
 pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
 pub const TRANSFER_FEE: u64 = 10_000;
 
-pub const MAINNET_LEDGER_CANISTER_ID: Principal =
-    Principal::from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x01]);
+static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
+// static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
 
 #[ic_cdk_macros::init]
 fn init() {
@@ -105,15 +107,7 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
 	let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
 
 	let account_balance_args = AccountBalanceArgs { account: account };
-
-
-	let ledger_canister_id = if let Some(ledger) = option_env!("LEDGER_CANISTER_ID") {
-		Principal::from_text(ledger).unwrap()
-	} else {
-		MAINNET_LEDGER_CANISTER_ID
-	};
-
-	let balance_result: Result<(Tokens,), _> = ic_cdk::call(ledger_canister_id, "account_balance", (account_balance_args,),)
+	let balance_result: Result<(Tokens,), _> = ic_cdk::call(LEDGER_CANISTER.unwrap(), "account_balance", (account_balance_args,),)
 		.await;
 
 	let tokens: Tokens = match balance_result {
@@ -135,7 +129,7 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
     };
 
 	let _transfer_result: (TransferResult,) =
-        ic_cdk::call(ledger_canister_id, "transfer", (transfer_args,))
+        ic_cdk::call(LEDGER_CANISTER.unwrap(), "transfer", (transfer_args,))
             .await
             .map_err(|(code, msg)| format!("Transfer error: {}: {}", code as u8, msg))
             .unwrap();
@@ -156,9 +150,7 @@ pub async fn create_child() -> Result<Principal, String> {
 	let canister_index_opt = result.unwrap();
 	let canister_index = canister_index_opt.0.unwrap();
 
-
-	let ledger_opt = option_env!("LEDGER_CANISTER_ID");
-	if ledger_opt != None {
+	if LEDGER_CANISTER != None {
 		mint_cycles(caller, id).await.unwrap();
 	}
 

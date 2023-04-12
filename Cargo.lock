@@ -178,7 +178,7 @@ dependencies = [
  "anyhow",
  "binread",
  "byteorder",
- "candid_derive",
+ "candid_derive 0.4.5",
  "codespan-reporting",
  "hex",
  "ic-types",
@@ -197,10 +197,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "candid"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "244005a1917bb7614cd775ca8a5d59efeb5ac74397bb14ba29a19347ebd78591"
+dependencies = [
+ "anyhow",
+ "binread",
+ "byteorder",
+ "candid_derive 0.5.0",
+ "codespan-reporting",
+ "crc32fast",
+ "data-encoding",
+ "hex",
+ "lalrpop",
+ "lalrpop-util",
+ "leb128",
+ "logos",
+ "num-bigint",
+ "num-traits",
+ "num_enum",
+ "paste",
+ "pretty",
+ "serde",
+ "serde_bytes",
+ "sha2 0.10.6",
+ "thiserror",
+]
+
+[[package]]
 name = "candid_derive"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e02c03c4d547674a3f3f3109538fb49871fbe636216daa019f06a62faca9061"
+dependencies = [
+ "lazy_static",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "candid_derive"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58f1f4db7c7d04b87b70b3a35c5dc5c2c9dd73cef8bdf6760e2f18a0d45350dd"
 dependencies = [
  "lazy_static",
  "proc-macro2",
@@ -225,7 +266,7 @@ name = "child"
 version = "0.1.0"
 dependencies = [
  "bs58",
- "candid",
+ "candid 0.7.18",
  "easy-hasher",
  "ed25519-dalek",
  "hex",
@@ -539,7 +580,7 @@ name = "ic-cdk"
 version = "0.5.5"
 source = "git+https://github.com/LiveDuo/cdk-rs#5186a8184441f91df7ca2d857c9124f4c9cbb46e"
 dependencies = [
- "candid",
+ "candid 0.7.18",
  "cfg-if",
  "serde",
 ]
@@ -549,7 +590,7 @@ name = "ic-cdk-macros"
 version = "0.5.5"
 source = "git+https://github.com/LiveDuo/cdk-rs#5186a8184441f91df7ca2d857c9124f4c9cbb46e"
 dependencies = [
- "candid",
+ "candid 0.7.18",
  "ic-cdk",
  "proc-macro2",
  "quote",
@@ -564,7 +605,7 @@ version = "0.2.4"
 source = "git+https://github.com/LiveDuo/cdk-rs#5186a8184441f91df7ca2d857c9124f4c9cbb46e"
 dependencies = [
  "base64 0.13.1",
- "candid",
+ "candid 0.7.18",
  "hex",
  "ic-cdk",
  "ic-cdk-macros",
@@ -599,6 +640,15 @@ dependencies = [
  "serde_bytes",
  "sha2 0.10.6",
  "thiserror",
+]
+
+[[package]]
+name = "include_macros"
+version = "0.1.0"
+dependencies = [
+ "candid 0.8.4",
+ "quote",
+ "serde_json",
 ]
 
 [[package]]
@@ -918,11 +968,12 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 name = "parent"
 version = "0.1.0"
 dependencies = [
- "candid",
+ "candid 0.7.18",
  "crc32fast",
  "ic-cdk",
  "ic-cdk-macros",
  "ic-certified-assets",
+ "include_macros",
  "serde",
  "serde_bytes",
  "serde_json",
