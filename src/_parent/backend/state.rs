@@ -124,17 +124,6 @@ pub enum TransferError {
 pub type BlockIndex = u64;
 pub type TransferResult = Result<BlockIndex, TransferError>;
 
-#[derive(CandidType, Deserialize, Debug, Copy, Clone, PartialEq, Default)]
-pub enum Environment {
-    #[default] Development,
-    Staging,
-    Production,
-}
-
-#[derive(CandidType, Deserialize, Debug, Copy, Clone, Default)]
-pub struct Config {
-    pub env: Environment,
-}
 
 #[derive(CandidType, Deserialize, Default, Clone, PartialEq, Debug)]
 pub enum CanisterState { #[default] Preparing, Creating, Installing, Uploading, Ready }
@@ -154,7 +143,7 @@ pub struct CallbackData {
 }
 
 #[derive(Default, Clone, CandidType, Deserialize)]
-pub struct State { pub config: Config, pub canister_data: HashMap<String, Vec<CanisterData>> }
+pub struct State { pub canister_data: HashMap<String, Vec<CanisterData>> }
 
 thread_local! {
     pub static STATE: RefCell<State> = RefCell::new(State::default());

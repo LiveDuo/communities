@@ -38,7 +38,7 @@ const ChildProvider = ({ children }) => {
 	const createReply = async (_post_id, text) => {
 		const post_id = BigInt(_post_id)
 		await childActor.create_reply(post_id, text)
-		const reply = { text, timestamp: new Date(), address: account}
+		const reply = { text, timestamp: new Date(), address: account.address}
 		return reply
 	}
 

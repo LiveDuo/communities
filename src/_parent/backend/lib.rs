@@ -16,12 +16,7 @@ pub const MAINNET_LEDGER_CANISTER_ID: Principal =
     Principal::from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x01]);
 
 #[ic_cdk_macros::init]
-fn init(env_opt: Option<Environment>) {
-
-	if let Some(env) = env_opt {
-        STATE.with(|s| { s.borrow_mut().config = Config { env }; });
-    }
-
+fn init() {
     ic_certified_assets::init();
 }
 
@@ -107,12 +102,18 @@ async fn create_canister(caller: Principal, canister_id: Principal) -> Result<Pr
 }
 
 async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), String> {
-    
 	let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
-    
-    let account_balance_args = AccountBalanceArgs { account: account };
 
-	let balance_result: Result<(Tokens,), _> = ic_cdk::call(MAINNET_LEDGER_CANISTER_ID, "account_balance", (account_balance_args,),)
+	let account_balance_args = AccountBalanceArgs { account: account };
+
+
+	let ledger_canister_id = if let Some(ledger) = option_env!("LEDGER_CANISTER_ID") {
+		Principal::from_text(ledger).unwrap()
+	} else {
+		MAINNET_LEDGER_CANISTER_ID
+	};
+
+	let balance_result: Result<(Tokens,), _> = ic_cdk::call(ledger_canister_id, "account_balance", (account_balance_args,),)
 		.await;
 
 	let tokens: Tokens = match balance_result {
@@ -134,7 +135,7 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
     };
 
 	let _transfer_result: (TransferResult,) =
-        ic_cdk::call(MAINNET_LEDGER_CANISTER_ID, "transfer", (transfer_args,))
+        ic_cdk::call(ledger_canister_id, "transfer", (transfer_args,))
             .await
             .map_err(|(code, msg)| format!("Transfer error: {}: {}", code as u8, msg))
             .unwrap();
@@ -147,15 +148,19 @@ pub async fn create_child() -> Result<Principal, String> {
 
 	let id = ic_cdk::api::id();
 	let caller = ic_cdk::caller();
-	
-	let config = STATE.with(|s| { s.borrow().config });
+
 
 	// mint cycles
 	let arg0 = CallbackData { canister_index: 0, user: caller, state: CanisterState::Preparing };
 	let result = ic_cdk::api::call::call(id, "update_state_callback", (arg0, )).await as CallResult<(Option<usize>,)>;
 	let canister_index_opt = result.unwrap();
 	let canister_index = canister_index_opt.0.unwrap();
-	if config.env == Environment::Production { mint_cycles(caller, id).await.unwrap(); };
+
+
+	let ledger_opt = option_env!("LEDGER_CANISTER_ID");
+	if ledger_opt != None {
+		mint_cycles(caller, id).await.unwrap();
+	}
 
 	// create canister
 	let canister_id = create_canister(caller, id).await.unwrap();

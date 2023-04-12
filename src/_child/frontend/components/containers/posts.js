@@ -23,7 +23,7 @@ const PostsContainer = ({ posts: _posts }) => {
     navigate(`/post/${i}`)
 	}
 
-  const posts = _posts.sort((a, b) => b.timestamp - a.timestamp)
+  const posts = _posts?.sort((a, b) => b.timestamp - a.timestamp)
 
   if (!posts) return <Spinner/>
 

@@ -42,6 +42,7 @@ const Home = () => {
 		const onCreate = (result) => {
 			const canister = {id: result.Ok.toString(), timestamp: 'u64', state: 'Ready'}
 			setChildPrincipals(r => (r.some(c => c.id[0] === canister.id)) ? r : [...r, canister])
+			toast({ description: `Created canister` })
 		}
 
 		const interval = setInterval(() => getUserCanisters().then(c => setChildPrincipals(c)), !isLocal ? 5000 : 1000)
@@ -84,7 +85,7 @@ const Home = () => {
 							<Text mb="8px" >✓ Running completely on the Internet Computer</Text>
 							<Text mb="8px"> ✓ Supports Ethereum & Solana authentication </Text>
 							<Text mb="24px"> ✓ One click deploy to user wallet</Text>
-							<Button mb="8px" isLoading={loading} disabled={!balance && ledgerCanisterId} onClick={() => createChildBatch()}>Get Started</Button>
+							<Button mb="8px" isLoading={loading} onClick={() => createChildBatch()}>Get Started</Button>
 						</Flex>
 					</Flex>
 				</TabPanel>

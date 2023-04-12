@@ -75,7 +75,7 @@ const PostContainer = () => {
                 </Box>
                 <Box>
 
-                <Text fontWeight="bold">{addressShort(r?.address ?? '')}</Text>
+                <Text fontWeight="bold">{addressShort(r?.address || '')}</Text>
                 <Text textAlign="start">{r.text}</Text>
                 </Box>
                 <Text ml="auto">{timeSince(r?.timestamp)}</Text>
