@@ -1,0 +1,12 @@
+[package]
+name = "include_macros"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+serde_json = "1.0.93"
+candid = "0.8.2"
