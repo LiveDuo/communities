@@ -1,55 +1,40 @@
-import { utils, BigNumber } from 'ethers'
+import * as ethers from 'ethers'
 import { Ed25519KeyIdentity } from '@dfinity/identity'
-
-const loginSecret = 'MUCH SECRET!'
 
 const getLoginMessage = (account) => {
   return (
-    'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
-    `APP NAME:\nic-communities\n\n` +
-    `ADDRESS:\n${account}\n\n` +
-    `HASH SECRET:\n${utils.hashMessage(loginSecret)}`
+    'Sign this message to login.\n\n' +
+    `App:\ncommunities.ooo\n\n` +
+    `Address:\n${account}\n\n`
   )
 }
 export { getLoginMessage }
 
 const getIdentityFromSignature = (signature) => {
-  // get hash from signature
-  const hash = utils.keccak256(signature)
-  if (hash === null)
-    throw new Error('No Ethereum account is provided.')
-
-  // convert to an array of 32 integers
-  const array = hash
-    .replace('0x', '')
-    .match(/.{2}/g)
-    .map((hexNoPrefix) => BigNumber.from(`0x${hexNoPrefix}`).toNumber())
-  if (array.length !== 32)
-    throw new Error('Invalid signature hash.')
-
-  // generate identity
-  const uint8Array = Uint8Array.from(array)
-  return Ed25519KeyIdentity.generate(uint8Array)
+  const hash = ethers.utils.keccak256(signature).substring(2)
+  return Ed25519KeyIdentity.generate(Buffer.from(hash, 'hex'))
 }
 export { getIdentityFromSignature }
 
-const loadIdentity = (account) => {
-  try {
-    const keyString = localStorage.getItem(`account_${account}`)
-    return Ed25519KeyIdentity.fromJSON(keyString)
-  } catch (err) {
+const loadIdentity = () => {
+  const keyString = localStorage.getItem(`identity`)
+  if (keyString) {
+    const data = JSON.parse(keyString)
+    return { identity: Ed25519KeyIdentity.fromParsedJson(data.identity), account: data.account}
+  } else  {
     return null
   }
 }
 export { loadIdentity }
 
-const saveIdentity = (account, identity) => {
-  localStorage.setItem(`account_${account}`, JSON.stringify(identity.toJSON()))
+const saveIdentity = (identity, account) => {
+  const data = {identity: identity.toJSON(), account}
+  localStorage.setItem('identity', JSON.stringify(data))
 }
 export { saveIdentity }
 
-const clearIdentity = async (account) => {
-  localStorage.removeItem(`account_${account}`)
+const clearIdentity = async () => {
+  localStorage.removeItem('identity')
   window.location = '/'
 }
 export { clearIdentity }

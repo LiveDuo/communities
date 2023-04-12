@@ -1,24 +1,20 @@
-import { useContext, useEffect } from 'react'
+import { useContext } from 'react'
 import { Spinner, Box, Link, Heading } from '@chakra-ui/react'
 import { Text, Flex, Button, useDisclosure, Tooltip } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
-import PostModal from '../../components/modals/PostModal'
+import PostModal from '../modals/PostModal'
 import { timeSinceShort } from '../../utils/time'
+import { getAddress, addressShort, getExplorerUrl } from '../../utils/address'
 
 import { EditIcon } from '@chakra-ui/icons'
 
 import { ChildContext } from '../../store/child'
-import { IdentityContext } from '../../store/identity'
 
 import { useNavigate } from 'react-router-dom'
 
-const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
-const getExplorerUrl = (principal) => `https://etherscan.io/address/${principal}`
-
-const PostsContainer = () => {
-  const { childActor } = useContext(IdentityContext)
-  const { posts, getPosts, createPost } = useContext(ChildContext)
+const PostsContainer = ({ posts: _posts }) => {
+  const {  createPost } = useContext(ChildContext)
   
   const { isOpen: isPostOpen, onOpen: onPostOpen, onClose: onPostClose } = useDisclosure()
   const navigate = useNavigate()
@@ -27,11 +23,7 @@ const PostsContainer = () => {
     navigate(`/post/${i}`)
 	}
 
-  useEffect(() => {
-    if (childActor) {
-			getPosts()
-    }
-	}, [getPosts, childActor])
+  const posts = _posts.sort((a, b) => b.timestamp - a.timestamp)
 
   if (!posts) return <Spinner/>
 
@@ -56,14 +48,14 @@ const PostsContainer = () => {
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>
                 </Box>
-                <Tooltip label={addressShort(p?.address ?? '')}>
+                <Tooltip label={addressShort(getAddress(p?.address))}>
                   <Link href={getExplorerUrl(p.address)} isExternal>
                     <Box width="40px" height="20px" textAlign="center" _hover={{cursor: 'pointer', opacity: 0.7}}>
-                      <Jazzicon diameter={20} seed={p.address} />
+                      <Jazzicon diameter={20} seed={getAddress(p?.address)} />
                     </Box>
                   </Link>
                 </Tooltip>
-                <Text width="120px" textAlign="center">{timeSinceShort(p.last_activity ?? p.timestamp)}</Text>
+                <Text width="120px" textAlign="center">{timeSinceShort(p.last_activity)}</Text>
                 <Text width="80px" textAlign="center">{p.replies_count.toString()}</Text>
               </Flex>
             </Box>)}

@@ -2,36 +2,35 @@ import { useEffect, useContext } from 'react'
 import { useParams } from 'react-router-dom'
 import { Box } from '@chakra-ui/react'
 
-import PostsContainer from '../components/posts'
-import UserInfo from '../components/user/UserInfo'
-
+import PostsContainer from '../components/containers/posts'
+// import UserInfo from '../components/user/UserInfo'
 import { ChildContext } from '../store/child'
 import { IdentityContext } from '../store/identity'
 
-const Posts = () => {
-  const { address } = useParams()
+const UserPost = () => {
+  const { address, type } = useParams()
 
-  const { profile, getProfileByAddress } = useContext(ChildContext)
-  const { principal } = useContext(IdentityContext)
+  const { getProfileByAuth, getPostsByUser, postsUser } = useContext(ChildContext)
+  const { childActor } = useContext(IdentityContext)
 
   useEffect(() => {
     if (address) {
-      getProfileByAddress(address)
+      getProfileByAuth({address, type})
     }
-  }, [getProfileByAddress, address])
+  }, [getProfileByAuth, address, type])
+
+  useEffect(() => {
+    if (childActor)
+      getPostsByUser()
+  },[childActor, getPostsByUser])
+
 
   return (
     <Box>
-
       <Box mb="40px">
-        {profile && <UserInfo />}
-
-        {/* {(isOwner && profile?.name.length > 0) && <WritePost />} */}
       </Box>
-
-      <PostsContainer principalId={principal?.toString()} />
-
+      <PostsContainer posts={postsUser} />
     </Box>
   )
 }
-export default Posts
+export default UserPost
