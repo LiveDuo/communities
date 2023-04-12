@@ -3,6 +3,24 @@ use ed25519_dalek::{PublicKey, Signature, Verifier};
 
 use crate::state::{*};
 
+fn checksum_evm_address (address: String) -> String {
+    let hash =  easy_hasher::easy_hasher::keccak256(&address.trim_start_matches("0x").to_lowercase());
+    let hash_hex = hash.to_hex_string();
+
+    let mut ret :Vec<String> = vec![];
+
+    for (i, c) in address.trim_start_matches("0x").chars().enumerate() {
+        let car = &c.to_string();
+        if hash_hex.chars().nth(i).unwrap().to_digit(16).unwrap() >= 8 {
+            ret.push(car.to_uppercase());
+        } else {
+            ret.push(car.to_owned());
+        }
+    }
+
+    "0x".to_owned() + &ret.join("")
+}
+
 pub fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
     let public_key = hex::decode(&args.public_key).unwrap();
 
@@ -14,9 +32,7 @@ pub fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
     public_key.verify(&msg, &sig).unwrap();
 
     let address = bs58::encode(public_key).into_string();
-    SvmParams {
-        address: address.to_lowercase(),
-    }
+    SvmParams { address: address }
 }
 
 pub fn verify_evm(args: EvmAuthenticationWithParams) -> EvmParams {
@@ -33,7 +49,7 @@ pub fn verify_evm(args: EvmAuthenticationWithParams) -> EvmParams {
     let public_key_bytes = public_key.serialize();
     let keccak256 = easy_hasher::easy_hasher::raw_keccak256(public_key_bytes[1..].to_vec());
     let keccak256_hex = keccak256.to_hex_string();
-    let address: String = "0x".to_owned() + &keccak256_hex[24..];
+    let address: String = checksum_evm_address("0x".to_owned() + &keccak256_hex[24..]);
 
     EvmParams { address }
 }

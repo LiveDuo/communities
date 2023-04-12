@@ -44,12 +44,12 @@ describe('Testing with done', () => {
 		const {signature, loginMessageHash} = await getSignatureAndMessage(signerEvm)
 		const profile = await actorBackendEvm.create_profile({Evm: { signature,  message: loginMessageHash }})
 		const address =  profile.Ok.authentication.Evm.address
-		expect(address).toBe(signerAddress.toLowerCase())
+		expect(address).toBe(signerAddress)
 		
 		// // check profile and principal
 		const profile2 = await actorBackendEvm.get_profile()
 		const address2 =  profile2.Ok.authentication.Evm.address
-		expect(address2).toBe(signerAddress.toLowerCase())
+		expect(address2).toBe(signerAddress)
 		
 	})
 	test("Should sign in with solana", async () => {
@@ -60,12 +60,12 @@ describe('Testing with done', () => {
     const profile = await actorBackendSvm.create_profile({Svm: { public_key: pubKey, signature, message: loginMessageHash }});
 
     const address = profile.Ok.authentication.Svm.address;
-    expect(address).toBe(signerSvm.publicKey.toString().toLowerCase());
+    expect(address).toBe(signerSvm.publicKey.toString());
 
     // check profile and principal
     const profile2 = await actorBackendSvm.get_profile()
     const address2 =  profile2.Ok.authentication.Svm.address
-    expect(address2).toBe(signerSvm.publicKey.toString().toLowerCase())
+    expect(address2).toBe(signerSvm.publicKey.toString())
   });
 
 	
@@ -76,10 +76,10 @@ describe('Testing with done', () => {
 
 		// get user last post
 		const addressSigner =await signerEvm.getAddress()
-		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: addressSigner.toLowerCase()}})
+		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: addressSigner}})
 		const userLastPost = userPosts.Ok[userPosts.Ok.length - 1]
 		expect(userLastPost.title).toBe('hello')
-		expect(userLastPost.address.Evm.address).toBe(addressSigner.toLowerCase())
+		expect(userLastPost.address.Evm.address).toBe(addressSigner)
 
 	})
 
