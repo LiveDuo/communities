@@ -1,6 +1,8 @@
 {
   "files": {
     "main.js": "/static/js/bundle.js",
+    "static/media/solana.svg": "/static/media/solana.b612f1402147c92338bed5af1879b175.svg",
+    "static/media/ethereum.svg": "/static/media/ethereum.aa4f261cc5b464da83e3568e83fb7906.svg",
     "index.html": "/index.html"
   },
   "entrypoints": [

@@ -3,7 +3,6 @@ import { useToast } from '@chakra-ui/react'
 
 import { IdentityContext } from './identity'
 
-import { isLocal } from '../agents/index'
 import { getAccountId } from '../utils/account'
 
 import { idlLedgerFactory, ledgerCanisterId } from '../agents/ledger'
