@@ -42,6 +42,7 @@ const Home = () => {
 		const onCreate = (result) => {
 			const canister = {id: result.Ok.toString(), timestamp: 'u64', state: 'Ready'}
 			setChildPrincipals(r => (r.some(c => c.id[0] === canister.id)) ? r : [...r, canister])
+			toast({ description: `Created canister` })
 		}
 
 		const interval = setInterval(() => getUserCanisters().then(c => setChildPrincipals(c)), !isLocal ? 5000 : 1000)

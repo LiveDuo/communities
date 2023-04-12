@@ -35,7 +35,7 @@ const LedgerProvider = ({ children }) => {
 		methodName: 'send_dfx',
 		args: [{
 			to: params.accountId,
-			fee: { e8s: isLocal ? 0n : 10000n },
+			fee: { e8s: ledgerCanisterId ? 10000n :  0n },
 			amount: { e8s: params.amount },
 			memo: 32n, // TODO: put random memo?
 			from_subaccount: [],
@@ -56,7 +56,7 @@ const LedgerProvider = ({ children }) => {
 		}
 	}, [getUserBalance, ledgerActorPlug])
 
-	const value = { balance, getTransferIcpTx, ledgerBalanceICP, loading, setLoading }
+	const value = { balance, getTransferIcpTx, ledgerBalanceICP, loading, setLoading, ledgerCanisterId }
 
 	return <LedgerContext.Provider value={value}>{children}</LedgerContext.Provider>
 }
