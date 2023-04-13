@@ -51,6 +51,7 @@ pub struct Profile {
     pub name: String,
     pub description: String,
     pub authentication: Authentication,
+    pub active_principal: Principal
 }
 
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
@@ -112,38 +113,35 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
 
 #[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct Relations {
-    pub principal_to_post_id: Relation<Principal, u64>,
-    pub principal_to_reply_id: Relation<Principal, u64>,
+    pub profile_id_to_post_id: Relation<u64, u64>,
+    pub profile_id_to_reply_id: Relation<u64, u64>,
     pub reply_id_to_post_id: Relation<u64, u64>,
 }
 
 impl Default for Relations {
     fn default() -> Self {
-        let relation_u64_to_u64: Relation<u64, u64> = Relation {
-            forward: BTreeMap::default(),
-            backward: BTreeMap::default(),
-        };
-        let relation_principal_to_u64: Relation<Principal, u64> = Relation {
+        let relation_u64_to_u64: Relation<_, _> = Relation {
             forward: BTreeMap::default(),
             backward: BTreeMap::default(),
         };
 
         Relations {
+            profile_id_to_post_id: { relation_u64_to_u64.to_owned() },
+            profile_id_to_reply_id: { relation_u64_to_u64.to_owned() },
             reply_id_to_post_id: { relation_u64_to_u64 },
-            principal_to_reply_id: { relation_principal_to_u64.clone() },
-            principal_to_post_id: { relation_principal_to_u64 },
         }
     }
 }
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Indexes {
-    pub profile: HashMap<Authentication, Principal>,
+    pub profile: HashMap<Authentication, u64>,
+    pub active_principal: HashMap<Principal, u64>
 }
 
 #[derive(Default, CandidType, Deserialize, Clone, Debug)]
 pub struct State {
-    pub profiles: BTreeMap<Principal, Profile>,
+    pub profiles: BTreeMap<u64, Profile>,
     pub posts: BTreeMap<u64, Post>,
     pub replay: BTreeMap<u64, Reply>,
     pub relations: Relations,

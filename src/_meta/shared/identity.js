@@ -71,19 +71,17 @@ const getIdentityFromSignature = (signature) => {
 }
 exports.getIdentityFromSignature = getIdentityFromSignature
 
-const getLoginMessage = (account, secret) => {
+const getLoginMessage = (principal) => {
 	return (
 		'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
 		`APP NAME:\nic-communities\n\n` +
-		`ADDRESS:\n${account}\n\n` +
-		`HASH SECRET:\n${ethers.utils.hashMessage(secret)}`
+		`Principal:\n${principal}`
 	)
 }
 exports.getLoginMessage = getLoginMessage
 
-const getSignatureAndMessage = async (signer) => {
-	const signerAddress = await signer.getAddress()
-	const loginMessage = getLoginMessage(signerAddress, 'MUCH SECRET!')
+const getSignatureAndMessage = async (signer, principal) => {
+	const loginMessage = getLoginMessage(principal.toString())
 	const signature = await signer.signMessage(loginMessage)
 	const loginMessageHash = ethers.utils.hashMessage(loginMessage)
 	return { signature, loginMessageHash }

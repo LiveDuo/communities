@@ -1,4 +1,6 @@
 const { Actor } = require('@dfinity/agent')
+const { Ed25519KeyIdentity } = require('@dfinity/identity')
+const { Principal } = require("@dfinity/principal")
 const { ethers } = require('ethers')
 const web3 = require('@solana/web3.js')
 const bs58 = require('bs58')
@@ -11,7 +13,7 @@ setupTests()
 
 describe('Testing with done', () => {
 
-	let actorBackendEvm, actorBackendSvm, signerEvm, identityEvm, signerSvm, identitySvm
+	let actorBackendEvm, actorBackendSvm, signerEvm, identityEvm, signerSvm, identitySvm, canisters
 
 	beforeAll(async () => {
 
@@ -20,14 +22,14 @@ describe('Testing with done', () => {
 
 		// get random identity for emv
 		signerEvm = ethers.Wallet.createRandom()
-		identityEvm = await getEthereumIdentity(signerEvm)
+		identityEvm = Ed25519KeyIdentity.generate()
 
 		// get random identity for emv
 		signerSvm = web3.Keypair.generate()
-		identitySvm = await getSolanaIdentity(signerSvm)
+		identitySvm =Ed25519KeyIdentity.generate()
 		
 		// create child actor
-		const canisters = await getCanisters()
+		canisters = await getCanisters()
 
 		const agentEvm = getAgent('http://localhost:8000', identityEvm)
 		actorBackendEvm = Actor.createActor(childFactory, { agent: agentEvm, canisterId: canisters.child.local })
@@ -37,19 +39,41 @@ describe('Testing with done', () => {
 
 	})
 
-	test('Should sign in with ethereum', async () => {
+	test.only('Should sign in with ethereum', async () => {
 
 		// link address
 		const signerAddress = await signerEvm.getAddress()
-		const {signature, loginMessageHash} = await getSignatureAndMessage(signerEvm)
+		const {signature, loginMessageHash} = await getSignatureAndMessage(signerEvm, identityEvm.getPrincipal())
 		const profile = await actorBackendEvm.create_profile({Evm: { signature,  message: loginMessageHash }})
 		const address =  profile.Ok.authentication.Evm.address
+		const principal = Principal.fromUint8Array(profile.Ok.active_principal._arr).toString()
 		expect(address).toBe(signerAddress)
-		
-		// // check profile and principal
-		const profile2 = await actorBackendEvm.get_profile()
+		expect(identityEvm.getPrincipal().toString()).toBe(principal)
+		console.log(principal)
+
+		// try with some principal
+		const profile1 = await actorBackendEvm.create_profile({Evm: { signature,  message: loginMessageHash }})
+		expect(profile1.Err).toBe('This principal exist' )
+
+		// logout and login
+		identityEvm = Ed25519KeyIdentity.generate()
+		const agentEvm = getAgent('http://localhost:8000', identityEvm)
+		actorBackendEvm = Actor.createActor(childFactory, { agent: agentEvm, canisterId: canisters.child.local })
+		const {signature: signature1 , loginMessageHash: loginMessageHash1} = await getSignatureAndMessage(signerEvm, identityEvm.getPrincipal())
+		const profile2 = await actorBackendEvm.create_profile({Evm: { signature : signature1,  message: loginMessageHash1 }})
 		const address2 =  profile2.Ok.authentication.Evm.address
+		const principal2 = Principal.fromUint8Array(profile2.Ok.active_principal._arr).toString()
 		expect(address2).toBe(signerAddress)
+		expect(identityEvm.getPrincipal().toString()).toBe(principal2)
+		console.log(principal2)
+
+		// get profile by principal
+		const profile3 = await actorBackendEvm.get_profile()
+		const address3 =  profile3.Ok.authentication.Evm.address
+		const principal3 = Principal.fromUint8Array(profile3.Ok.active_principal._arr).toString()
+		expect(identityEvm.getPrincipal().toString()).toBe(principal3)
+		expect(principal2).toBe(principal3)
+		expect(address3).toBe(signerAddress)
 		
 	})
 	test("Should sign in with solana", async () => {
