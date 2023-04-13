@@ -230,6 +230,12 @@ fn update_user_canister_id(caller: Principal, index: usize, canister_id: String)
 	});
 }
 
+#[ic_cdk_macros::query]
+fn get_upgrade(_version: String) -> Vec<u8> {
+	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/child.wasm".to_string());
+	return wasm_bytes;
+}
+
 // dfx canister call parent get_user_canisters
 #[ic_cdk_macros::query]
 fn get_user_canisters() -> Vec<CanisterData> {

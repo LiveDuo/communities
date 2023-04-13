@@ -14,6 +14,11 @@ use crate::state::{*, STATE};
 #[ic_cdk_macros::init]
 fn init() {
     ic_certified_assets::init();
+
+    STATE.with(|s| {
+		let mut state = s.borrow_mut();
+		state.parent = Some(ic_cdk::caller());
+	});
 }
 
 fn uuid(seed: &str) -> u64 {
@@ -379,4 +384,37 @@ export_service!();
 #[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
 fn export_candid() -> String {
     __export_service()
+}
+
+use std::time::Duration;
+
+use ic_cdk_main::export::candid::{Principal, Encode};
+use ic_cdk_main::api::call::CallResult;
+use ic_cdk_main::api::management_canister::main::*;
+
+async fn upgrade_canister_cb(wasm: Vec<u8>) {
+    ic_cdk_main::println!("Child: Self upgrading...");
+
+    // upgrade code
+    let id = ic_cdk_main::id();
+    let install_args = InstallCodeArgument { mode: CanisterInstallMode::Upgrade, canister_id: id, wasm_module: wasm, arg: Encode!().unwrap(), };
+    let result: CallResult<()> = ic_cdk_main::api::call::call(Principal::management_canister(), "install_code", (install_args,),).await;
+    result.unwrap();
+}
+
+// dfx canister call child upgrade_canister '("1.1")'
+#[ic_cdk_macros::update]
+async fn upgrade_canister(version: String) {
+
+    let parent_opt = STATE.with(|s| { s.borrow().parent });
+    if parent_opt == None { return; }
+    
+    let parent = Principal::from_text(parent_opt.unwrap().to_text()); // FIX
+    let result: CallResult<(Vec<u8>, )> = ic_cdk_main::api::call::call(parent.unwrap(), "get_upgrade", (version,),).await;
+    let wasm = result.unwrap().0;
+    // let wasm = include_bytes!("../../../build/canister/child.wasm").to_vec();
+
+
+
+    let _id = ic_cdk_main::timer::set_timer(Duration::from_millis(0), || ic_cdk_main::spawn(upgrade_canister_cb(wasm)));
 }

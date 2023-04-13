@@ -148,6 +148,7 @@ pub struct State {
     pub replay: BTreeMap<u64, Reply>,
     pub relations: Relations,
     pub indexes: Indexes,
+    pub parent: Option<Principal>,
 }
 
 thread_local! {
