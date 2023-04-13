@@ -35,7 +35,7 @@ const IdentityProvider = ({children}) => {
       const address = await signer.getAddress()
       const loginMessage = getLoginMessage(address)
       const signature = await signer.signMessage(loginMessage)// sign with metamask
-      const identity = getIdentityFromSignature(signature) // generate Ed25519 identity
+      const identity = getIdentityFromSignature() // generate Ed25519 identity
       
       // save identity
       const account = {address, type: 'Evm'}
@@ -71,7 +71,7 @@ const IdentityProvider = ({children}) => {
       // get identity
       const encodedMessage = new TextEncoder().encode(loginMessage)
       const signedMessage = await phantom.request({ method: 'signMessage', params: { message: encodedMessage } })
-      const identity = getIdentityFromSignature(Buffer.from(signedMessage.signature)) // generate Ed25519 identity
+      const identity = getIdentityFromSignature() // generate Ed25519 identity
       
       // set actors
       const _childActor = createChildActor(identity)
