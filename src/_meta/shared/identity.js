@@ -88,15 +88,9 @@ const getSignatureAndMessage = async (signer, principal) => {
 }
 exports.getSignatureAndMessage = getSignatureAndMessage
 
-const getLoginMessageSvm = () => {
-	return (
-		'Sign to authenticate.'
-	)
-}
-exports.getLoginMessageSvm = getLoginMessageSvm
 
-const getSignatureAndMessageSvm = (account)=> {
-	const loginMessage = getLoginMessageSvm()
+const getSignatureAndMessageSvm = (account, principal)=> {
+	const loginMessage = getLoginMessage(principal.toString())
 	const encodeMsg = new TextEncoder().encode(loginMessage);
 	const signature = tweetnacl.sign.detached(encodeMsg, account.secretKey)
 
@@ -104,17 +98,6 @@ const getSignatureAndMessageSvm = (account)=> {
 }
 exports.getSignatureAndMessageSvm = getSignatureAndMessageSvm
 
-const getEthereumIdentity = async (signer) => {
-	const { signature } = await getSignatureAndMessage(signer)
-	return getIdentityFromSignature(signature)
-}
-exports.getEthereumIdentity = getEthereumIdentity
-
-const getSolanaIdentity = (signer) => {
-	const { signature } = getSignatureAndMessageSvm(signer)
-	return getIdentityFromSignature(Buffer.from(signature))
-}
-exports.getSolanaIdentity = getSolanaIdentity
 
 const exists = (s) => fs.access(s).then(() => true).catch(() => false)
 
