@@ -49,11 +49,11 @@ describe('Testing with done', () => {
 		const principal = Principal.fromUint8Array(profile.Ok.active_principal._arr).toString()
 		expect(address).toBe(signerAddress)
 		expect(identityEvm.getPrincipal().toString()).toBe(principal)
-		console.log(principal)
-
-		// try with some principal
-		const profile1 = await actorBackendEvm.create_profile({Evm: { signature,  message: loginMessageHash }})
-		expect(profile1.Err).toBe('This principal exist' )
+		
+		await actorBackendEvm.create_post('hello', '')
+		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		console.log(userPosts)
+		expect(userPosts.Ok.length).toBe(1)
 
 		// logout and login
 		identityEvm = Ed25519KeyIdentity.generate()
@@ -65,15 +65,11 @@ describe('Testing with done', () => {
 		const principal2 = Principal.fromUint8Array(profile2.Ok.active_principal._arr).toString()
 		expect(address2).toBe(signerAddress)
 		expect(identityEvm.getPrincipal().toString()).toBe(principal2)
-		console.log(principal2)
 
-		// get profile by principal
-		const profile3 = await actorBackendEvm.get_profile()
-		const address3 =  profile3.Ok.authentication.Evm.address
-		const principal3 = Principal.fromUint8Array(profile3.Ok.active_principal._arr).toString()
-		expect(identityEvm.getPrincipal().toString()).toBe(principal3)
-		expect(principal2).toBe(principal3)
-		expect(address3).toBe(signerAddress)
+		await actorBackendEvm.create_post('hello', '')
+		const userPosts1 = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		console.log(userPosts1)
+		expect(userPosts1.Ok.length).toBe(2)
 		
 	})
 	test("Should sign in with solana", async () => {

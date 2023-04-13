@@ -53,10 +53,6 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
-        if state.indexes.active_principal.contains_key(&caller) {
-            return  Err("This principal exist".to_owned());
-        }
-
         let authentication = match auth {
             AuthenticationWith::Evm(args) => {
                 let param = crate::verify::verify_evm(args);
@@ -105,41 +101,45 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
     })
 }
 
-// #[update]
-// fn create_post(title: String, description: String) -> Result<PostSummary, String> {
-//     let caller = ic_cdk::caller();
+#[update]
+fn create_post(title: String, description: String) -> Result<PostSummary, String> {
+    let caller = ic_cdk::caller();
 
-//     STATE.with(|s| {
-//         let mut state = s.borrow_mut();
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
 
-//         if !state.profiles.contains_key(&caller) {
-//             return Err("Profile does not exists".to_owned());
-//         }
+        let profile_id_opt = state.indexes.active_principal.get(&caller);
 
-//         let post_id = uuid(&caller.to_text());
-//         let post = Post {
-//             title,
-//             description,
-//             timestamp: ic_cdk::api::time(),
-//         };
+        if profile_id_opt == None {
+            return Err("Profile does not exists".to_owned());
+        }
+        let profile_id = profile_id_opt.cloned().unwrap();
 
-//         state.posts.insert(post_id, post.clone());
+        let post_id = uuid(&caller.to_text());
 
-//         state.relations.principal_to_post_id.insert(caller, post_id);
+        let post = Post {
+            title,
+            description,
+            timestamp: ic_cdk::api::time(),
+        };
 
-//         let address = state.profiles.get(&caller).unwrap().authentication.clone();
-//         let post = PostSummary {
-//             title: post.title,
-//             post_id,
-//             description: post.description,
-//             timestamp: post.timestamp,
-//             replies_count: 0,
-//             last_activity: post.timestamp,
-//             address,
-//         };
-//         Ok(post)
-//     })
-// }
+        state.posts.insert(post_id, post.clone());
+
+        state.relations.profile_id_to_post_id.insert(profile_id, post_id);
+
+        let address = state.profiles.get(&profile_id).unwrap().authentication.clone();
+        let post = PostSummary {
+            title: post.title,
+            post_id,
+            description: post.description,
+            timestamp: post.timestamp,
+            replies_count: 0,
+            last_activity: post.timestamp,
+            address,
+        };
+        Ok(post)
+    })
+}
 
 // #[update]
 // fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
@@ -296,73 +296,74 @@ fn get_profile() -> Result<Profile, String> {
 //     })
 // }
 
-// #[query]
-// fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
-//     STATE.with(|s| {
-//         let state = s.borrow();
+#[query]
+fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
+    STATE.with(|s| {
+        let state = s.borrow();
 
-//         let principal_opt = state.indexes.profile.get(&authentication);
-//         if principal_opt == None {
-//             return Err("Profile does not exists".to_owned());
-//         }
+        let profile_id_opt = state.indexes.profile.get(&authentication);
+        if profile_id_opt == None {
+            return Err("Profile does not exists".to_owned());
+        }
 
-//         let post_ids_opt = state
-//             .relations
-//             .principal_to_post_id
-//             .forward
-//             .get(&principal_opt.unwrap());
-//         if post_ids_opt == None {
-//             return Ok(vec![]);
-//         }
+        let post_ids_opt = state
+            .relations
+            .profile_id_to_post_id
+            .forward
+            .get(&profile_id_opt.unwrap());
 
-//         let user_post = post_ids_opt
-//             .unwrap()
-//             .iter()
-//             .map(|(post_id, _)| {
-//                 let post = state.posts.get(&post_id.to_owned()).unwrap();
+        if post_ids_opt == None {
+            return Ok(vec![]);
+        }
 
-//                 let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
+        let user_post = post_ids_opt
+            .unwrap()
+            .iter()
+            .map(|(post_id, _)| {
+                let post = state.posts.get(&post_id.to_owned()).unwrap();
 
-//                 let replies_count = if replies_opt == None {
-//                     0
-//                 } else {
-//                     replies_opt.borrow().unwrap().len()
-//                 };
+                let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
-//                 let last_activity = if replies_opt == None {
-//                     0
-//                 } else {
-//                     let (reply_id, _) = replies_opt.unwrap().last_key_value().unwrap();
-//                     state.replay.get(reply_id).unwrap().timestamp
-//                 };
+                let replies_count = if replies_opt == None {
+                    0
+                } else {
+                    replies_opt.borrow().unwrap().len()
+                };
 
-//                 // FIX
-//                 let (principal, _) = state
-//                     .relations
-//                     .principal_to_post_id
-//                     .backward
-//                     .get(&post_id)
-//                     .unwrap()
-//                     .first_key_value()
-//                     .unwrap();
+                let last_activity = if replies_opt == None {
+                    0
+                } else {
+                    let (reply_id, _) = replies_opt.unwrap().last_key_value().unwrap();
+                    state.replay.get(reply_id).unwrap().timestamp
+                };
 
-//                 let address = state.profiles.get(&principal).cloned().unwrap().authentication;
+                // FIX
+                let (profile_id, _) = state
+                    .relations
+                    .profile_id_to_post_id
+                    .backward
+                    .get(&post_id)
+                    .unwrap()
+                    .first_key_value()
+                    .unwrap();
+
+                let address = state.profiles.get(&profile_id).cloned().unwrap().authentication;
 
 
-//                 PostSummary {
-//                     post_id: post_id.to_owned(),
-//                     title: post.title.to_owned(),
-//                     description: post.description.to_owned(),
-//                     timestamp: post.timestamp.to_owned(),
-//                     replies_count: replies_count as u64,
-//                     last_activity,
-//                     address
-//                 }
-//             })
-//             .collect::<Vec<_>>();
-//         Ok(user_post)
-//     })
-// }
+                PostSummary {
+                    post_id: post_id.to_owned(),
+                    title: post.title.to_owned(),
+                    description: post.description.to_owned(),
+                    timestamp: post.timestamp.to_owned(),
+                    replies_count: replies_count as u64,
+                    last_activity,
+                    address
+                }
+            })
+            .collect::<Vec<_>>();
+        Ok(user_post)
+    })
+}
 
 #[derive(CandidType, Deserialize)]
 pub struct StableState {
