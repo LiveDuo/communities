@@ -141,108 +141,95 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
     })
 }
 
-// #[update]
-// fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
-//     STATE.with(|s| {
-//         let mut state = s.borrow_mut();
+#[update]
+fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
 
-//         let caller = ic_cdk::caller();
-//         let principal_opt = state.profiles.get(&caller);
+        let caller = ic_cdk::caller();
 
-//         if principal_opt == None {
-//             return Err("Profile does not exist".to_owned());
-//         }
+        if state.indexes.active_principal.contains_key(&caller){
+            return Err("Profile does not exist".to_owned());
+        }
 
-//         if !state.posts.contains_key(&post_id) {
-//             return Err("Post does not exist".to_owned());
-//         }
+        if !state.posts.contains_key(&post_id) {
+            return Err("Post does not exist".to_owned());
+        }
+        let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
+        let profile = state.profiles.get(&profile_id).unwrap();
+        let address = get_address(&profile.authentication);
 
-//         let address = get_address(&principal_opt.unwrap().authentication);
+        let reply = Reply {
+            text: context.to_owned(),
+            timestamp: ic_cdk::api::time(),
+            address,
+        };
 
-//         let reply = Reply {
-//             text: context.to_owned(),
-//             timestamp: ic_cdk::api::time(),
-//             address,
-//         };
+        let reply_id = uuid(&caller.to_text());
 
-//         let reply_id = uuid(&caller.to_text());
+        state.replay.insert(reply_id, reply.clone());
 
-//         state.replay.insert(reply_id, reply.clone());
+        state.relations.profile_id_to_reply_id.insert(profile_id.clone(), reply_id.clone());
 
-//         state
-//             .relations
-//             .principal_to_reply_id
-//             .insert(caller.clone(), reply_id.clone());
+        state.relations.reply_id_to_post_id.insert(reply_id.clone(), post_id.clone());
 
-//         state
-//             .relations
-//             .reply_id_to_post_id
-//             .insert(reply_id.clone(), post_id.clone());
+        Ok(reply)
+    })
+}
 
-//         Ok(reply)
-//     })
-// }
+#[query]
+fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
+    STATE.with(|s| {
+        let state = s.borrow();
+        let index_opt = state.indexes.profile.get(&authentication);
+        if index_opt == None {
+            return None; 
+        }
+        state.profiles.get(&index_opt.unwrap()).cloned()
+    })
+}
 
-// #[query]
-// fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
-//     STATE.with(|s| {
-//         let state = s.borrow();
-//         let index_opt = state.indexes.profile.get(&authentication);
-//         if index_opt == None {
-//             return None; 
-//         }
-//         state.profiles.get(&index_opt.unwrap()).cloned()
-//     })
-// }
+#[query]
+fn get_posts() -> Vec<PostSummary> {
+    STATE.with(|s| {
+        let state = &mut s.borrow_mut();
 
-// #[query]
-// fn get_posts() -> Vec<PostSummary> {
-//     STATE.with(|s| {
-//         let state = &mut s.borrow_mut();
+        state
+            .posts
+            .iter()
+            .map(|(post_id, post)| {
+                let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
-//         state
-//             .posts
-//             .iter()
-//             .map(|(post_id, post)| {
-//                 let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
+                let replies_count = if replies_opt == None {
+                    0
+                } else {
+                    replies_opt.borrow().unwrap().len()
+                };
 
-//                 let replies_count = if replies_opt == None {
-//                     0
-//                 } else {
-//                     replies_opt.borrow().unwrap().len()
-//                 };
+                let last_activity = if replies_opt == None {
+                    0
+                } else {
+                    let (reply_id, _) = replies_opt.unwrap().last_key_value().unwrap();
+                    state.replay.get(reply_id).unwrap().timestamp
+                };
 
-//                 let last_activity = if replies_opt == None {
-//                     0
-//                 } else {
-//                     let (reply_id, _) = replies_opt.unwrap().last_key_value().unwrap();
-//                     state.replay.get(reply_id).unwrap().timestamp
-//                 };
+                let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
-//                 let (principal, _) = state
-//                     .relations
-//                     .principal_to_post_id
-//                     .backward
-//                     .get(&post_id)
-//                     .unwrap()
-//                     .first_key_value()
-//                     .unwrap();
+                let address = state.profiles.get(&profile_id).cloned().unwrap().authentication;
 
-//                 let address = state.profiles.get(&principal).cloned().unwrap().authentication;
-
-//                 PostSummary {
-//                     title: post.title.to_owned(),
-//                     post_id: post_id.to_owned(),
-//                     description: post.description.to_owned(),
-//                     timestamp: post.timestamp,
-//                     replies_count: replies_count as u64,
-//                     last_activity,
-//                     address: address,
-//                 }
-//             })
-//             .collect::<Vec<_>>()
-//     })
-// }
+                PostSummary {
+                    title: post.title.to_owned(),
+                    post_id: post_id.to_owned(),
+                    description: post.description.to_owned(),
+                    timestamp: post.timestamp,
+                    replies_count: replies_count as u64,
+                    last_activity,
+                    address: address,
+                }
+            })
+            .collect::<Vec<_>>()
+    })
+}
 
 #[query]
 fn get_profile() -> Result<Profile, String> {
@@ -259,42 +246,35 @@ fn get_profile() -> Result<Profile, String> {
     })
 }
 
-// #[query]
-// fn get_post(post_id: u64) -> Result<PostResponse, String> {
-//     STATE.with(|s| {
-//         let state = s.borrow();
-//         let post_opt = state.posts.get(&post_id);
-//         if post_opt == None {
-//             return Err("This post does not exists".to_owned());
-//         }
+#[query]
+fn get_post(post_id: u64) -> Result<PostResponse, String> {
+    STATE.with(|s| {
+        let state = s.borrow();
+        let post_opt = state.posts.get(&post_id);
+        if post_opt == None {
+            return Err("This post does not exists".to_owned());
+        }
 
-//         let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
+        let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
-//         let replies = if replies_opt == None { vec![] } else { replies_opt.unwrap().iter().map(|(reply_id, _)| state.replay.get(reply_id).unwrap().to_owned()).collect::<Vec<_>>()};
+        let replies = if replies_opt == None { vec![] } else { replies_opt.unwrap().iter().map(|(reply_id, _)| state.replay.get(reply_id).unwrap().to_owned()).collect::<Vec<_>>()};
 
-//         let post = post_opt.unwrap();
+        let post = post_opt.unwrap();
 
-//         let (principal, _) = state
-//                     .relations
-//                     .principal_to_post_id
-//                     .backward
-//                     .get(&post_id)
-//                     .unwrap()
-//                     .first_key_value()
-//                     .unwrap();
+        let (principal, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
-//     let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
+        let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
 
-//         let post_result = PostResponse {
-//             replies,
-//             title: post.title.to_owned(),
-//             timestamp: post.timestamp,
-//             description: post.description.to_owned(),
-//             address
-//         };
-//         Ok(post_result)
-//     })
-// }
+        let post_result = PostResponse {
+            replies,
+            title: post.title.to_owned(),
+            timestamp: post.timestamp,
+            description: post.description.to_owned(),
+            address
+        };
+        Ok(post_result)
+    })
+}
 
 #[query]
 fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {

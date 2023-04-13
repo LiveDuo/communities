@@ -71,12 +71,12 @@ const getIdentityFromSignature = (signature) => {
 }
 exports.getIdentityFromSignature = getIdentityFromSignature
 
-const getLoginMessage = (principal) => {
-	return (
-		'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
-		`APP NAME:\nic-communities\n\n` +
-		`Principal:\n${principal}`
-	)
+const getLoginMessage = (account) => {
+  return (
+    'Sign this message to login.\n\n' +
+    `App:\ncommunities.ooo\n\n` +
+    `Address:\n${account}\n\n`
+  )
 }
 exports.getLoginMessage = getLoginMessage
 
