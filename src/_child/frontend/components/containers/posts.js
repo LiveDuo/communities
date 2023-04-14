@@ -10,11 +10,13 @@ import { getAddress, addressShort, getExplorerUrl } from '../../utils/address'
 import { EditIcon } from '@chakra-ui/icons'
 
 import { ChildContext } from '../../store/child'
+import { IdentityContext } from '../../store/identity'
 
 import { useNavigate } from 'react-router-dom'
 
 const PostsContainer = ({ posts: _posts }) => {
   const {  createPost } = useContext(ChildContext)
+  const {  account, identity, onModalOpen, setSelectedNetwork} = useContext(IdentityContext)
   
   const { isOpen: isPostOpen, onOpen: onPostOpen, onClose: onPostClose } = useDisclosure()
   const navigate = useNavigate()
@@ -25,11 +27,20 @@ const PostsContainer = ({ posts: _posts }) => {
 
   const posts = _posts?.sort((a, b) => b.timestamp - a.timestamp)
 
+  const onCreatePost = () => {
+    if (!(account && identity?.getPrincipal())) {
+      setSelectedNetwork()
+      onModalOpen()
+      return
+    }
+    onPostOpen()
+  }
+
   if (!posts) return <Spinner/>
 
   return  <Box mt="32px" textAlign="center" m="auto">
 
-      <Button mt="28px" leftIcon={<EditIcon />} mb="28px" w="200px" onClick={onPostOpen}>New Post</Button>
+      <Button mt="28px" leftIcon={<EditIcon />} mb="28px" w="200px" onClick={onCreatePost}>New Post</Button>
       <PostModal isOpen={isPostOpen} onClose={onPostClose} createPost={createPost}/>
       
       {posts?.length > 0 ?

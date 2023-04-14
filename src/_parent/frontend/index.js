@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ChakraProvider } from '@chakra-ui/react'
-import { Mainnet, DAppProvider } from '@usedapp/core'
 import { getDefaultProvider } from 'ethers'
 
 import { IdentityProvider } from './store/identity'
@@ -13,27 +12,20 @@ import Layout from './components/layout'
 
 import Home from './pages/Home'
 
-const config = {
-  readOnlyChainId: Mainnet.chainId,
-  readOnlyUrls: { [Mainnet.chainId]: getDefaultProvider('mainnet') }
-}
-
 const App = () => (
   <StrictMode>
     <ChakraProvider>
-      <DAppProvider config={config}>
-        <IdentityProvider>
-          <LedgerProvider>
-            <ParentProvider>
-              <BrowserRouter>
-                  <Routes>
-                    <Route exact path="/" element={<Layout><Home /></Layout>}/>
-                  </Routes>
-              </BrowserRouter>
-            </ParentProvider>
-          </LedgerProvider>
-        </IdentityProvider>
-      </DAppProvider>
+      <IdentityProvider>
+        <LedgerProvider>
+          <ParentProvider>
+            <BrowserRouter>
+                <Routes>
+                  <Route exact path="/" element={<Layout><Home /></Layout>}/>
+                </Routes>
+            </BrowserRouter>
+          </ParentProvider>
+        </LedgerProvider>
+      </IdentityProvider>
     </ChakraProvider>
   </StrictMode>
 )
