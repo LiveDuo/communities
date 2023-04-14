@@ -33,9 +33,9 @@ const IdentityProvider = ({children}) => {
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner()
       const address = await signer.getAddress()
-      const loginMessage = getLoginMessage(address)
+      const identity = getIdentityFromSignature() // generate Ed25519 identity
+      const loginMessage = getLoginMessage(identity.getPrincipal().toString())
       const signature = await signer.signMessage(loginMessage)// sign with metamask
-      const identity = getIdentityFromSignature(signature) // generate Ed25519 identity
       
       // save identity
       const account = {address, type: 'Evm'}
@@ -66,13 +66,13 @@ const IdentityProvider = ({children}) => {
       const phantom = window.solana
       await phantom.connect()
       const address = phantom.publicKey.toString()
-      const loginMessage = getLoginMessage(address)
+      const identity = getIdentityFromSignature() // generate Ed25519 identity
+      const loginMessage = getLoginMessage(identity.getPrincipal().toString())
       
       // get identity
       const encodedMessage = new TextEncoder().encode(loginMessage)
       const signedMessage = await phantom.request({ method: 'signMessage', params: { message: encodedMessage } })
-      const identity = getIdentityFromSignature(Buffer.from(signedMessage.signature)) // generate Ed25519 identity
-      
+
       // set actors
       const _childActor = createChildActor(identity)
       setChildActor(_childActor)

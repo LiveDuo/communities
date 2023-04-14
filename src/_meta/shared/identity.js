@@ -71,34 +71,26 @@ const getIdentityFromSignature = (signature) => {
 }
 exports.getIdentityFromSignature = getIdentityFromSignature
 
-const getLoginMessage = (account, secret) => {
-	return (
-		'SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\n' +
-		`APP NAME:\nic-communities\n\n` +
-		`ADDRESS:\n${account}\n\n` +
-		`HASH SECRET:\n${ethers.utils.hashMessage(secret)}`
-	)
+const getLoginMessage = (account) => {
+  return (
+    'Sign this message to login.\n\n' +
+    `App:\ncommunities.ooo\n\n` +
+    `Address:\n${account}\n\n`
+  )
 }
 exports.getLoginMessage = getLoginMessage
 
-const getSignatureAndMessage = async (signer) => {
-	const signerAddress = await signer.getAddress()
-	const loginMessage = getLoginMessage(signerAddress, 'MUCH SECRET!')
+const getSignatureAndMessage = async (signer, principal) => {
+	const loginMessage = getLoginMessage(principal.toString())
 	const signature = await signer.signMessage(loginMessage)
 	const loginMessageHash = ethers.utils.hashMessage(loginMessage)
 	return { signature, loginMessageHash }
 }
 exports.getSignatureAndMessage = getSignatureAndMessage
 
-const getLoginMessageSvm = () => {
-	return (
-		'Sign to authenticate.'
-	)
-}
-exports.getLoginMessageSvm = getLoginMessageSvm
 
-const getSignatureAndMessageSvm = (account)=> {
-	const loginMessage = getLoginMessageSvm()
+const getSignatureAndMessageSvm = (account, principal)=> {
+	const loginMessage = getLoginMessage(principal.toString())
 	const encodeMsg = new TextEncoder().encode(loginMessage);
 	const signature = tweetnacl.sign.detached(encodeMsg, account.secretKey)
 
@@ -106,17 +98,6 @@ const getSignatureAndMessageSvm = (account)=> {
 }
 exports.getSignatureAndMessageSvm = getSignatureAndMessageSvm
 
-const getEthereumIdentity = async (signer) => {
-	const { signature } = await getSignatureAndMessage(signer)
-	return getIdentityFromSignature(signature)
-}
-exports.getEthereumIdentity = getEthereumIdentity
-
-const getSolanaIdentity = (signer) => {
-	const { signature } = getSignatureAndMessageSvm(signer)
-	return getIdentityFromSignature(Buffer.from(signature))
-}
-exports.getSolanaIdentity = getSolanaIdentity
 
 const exists = (s) => fs.access(s).then(() => true).catch(() => false)
 
