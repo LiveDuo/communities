@@ -26,7 +26,7 @@ const WalletModal = () =>  {
           {!plugInstalled ? 
             <Box m='8px'>
               <Text mb='20px'>
-                Download Plug Wallet extension for your browser.
+                Get the Plug Wallet extension for your browser.
               </Text>
               <Link href='https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm' isExternal style={{textDecoration: 'none'}}>
                 <Button leftIcon={<ChromeLogo width={20}/>}>Chrome</Button>
