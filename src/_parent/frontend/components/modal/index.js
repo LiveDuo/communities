@@ -24,7 +24,7 @@ const WalletModal = () =>  {
         <ModalCloseButton />
         <ModalBody>
           {!plugInstalled ? 
-            <Box m='8px'>
+            <Box m='8px' mb='20px'>
               <Text mb='20px'>
                 Get the Plug Wallet extension for your browser.
               </Text>
