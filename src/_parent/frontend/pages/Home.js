@@ -69,7 +69,6 @@ const Home = () => {
 			getUserCanisters().then(canisters => setChildPrincipals(canisters))
 	}, [parentActorPlug, getUserCanisters])
 
-	// if (!walletConnected) return <Text>Wallet not connected</Text>
 	return (
 		<Box>
 			<Tabs m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded" colorScheme="gray">
@@ -95,8 +94,9 @@ const Home = () => {
 				</TabPanel>
 				<TabPanel>
 					<Box p="40px 0px">
-						{!walletConnected  &&  <Text>Wallet not connected</Text>}
-						{childPrincipals ? 
+						{!walletConnected ?
+						<Text>Wallet not connected</Text> :
+						childPrincipals ? 
 							childPrincipals?.length > 0 ? <TableContainer>
 								<Table variant='simple'>
 									<TableCaption>Communities corresponding to <b>{userPrincipal.slice(0, 5)}...{userPrincipal.slice(-3)}</b></TableCaption>
