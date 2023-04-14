@@ -22,7 +22,7 @@ const CREATE_CHILD_COST = 1 * 1e8
 
 const Home = () => {
 
-	const { walletConnected, userPrincipal, parentActorPlug } = useContext(IdentityContext)
+	const { walletConnected, userPrincipal, parentActorPlug, onOpen } = useContext(IdentityContext)
 	const { parentCanisterId, loading, getCreateChildTx, getUserCanisters } = useContext(ParentContext)
 	const { balance, getTransferIcpTx, ledgerCanisterId } = useContext(LedgerContext)
 	const [childPrincipals, setChildPrincipals] = useState()
@@ -37,6 +37,10 @@ const Home = () => {
 	}
 
 	const createChildBatch = async () => {
+    if (!window.ic?.plug || !walletConnected) {
+			onOpen()
+			return
+		}
 		const onTransfer = () => toast({ description: `Transfer success` })
 		
 		const onCreate = (result) => {
@@ -65,7 +69,7 @@ const Home = () => {
 			getUserCanisters().then(canisters => setChildPrincipals(canisters))
 	}, [parentActorPlug, getUserCanisters])
 
-	if (!walletConnected) return <Text>Wallet not connected</Text>
+	// if (!walletConnected) return <Text>Wallet not connected</Text>
 	return (
 		<Box>
 			<Tabs m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded" colorScheme="gray">
@@ -91,7 +95,7 @@ const Home = () => {
 				</TabPanel>
 				<TabPanel>
 					<Box p="40px 0px">
-						{/* <Heading size={'lg'} mb="20px">Communities</Heading> */}
+						{!walletConnected  &&  <Text>Wallet not connected</Text>}
 						{childPrincipals ? 
 							childPrincipals?.length > 0 ? <TableContainer>
 								<Table variant='simple'>

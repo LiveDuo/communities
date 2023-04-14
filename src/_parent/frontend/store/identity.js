@@ -2,7 +2,7 @@ import { createContext, useState, useEffect, useCallback } from 'react'
 
 import { createParentActor } from '../agents/parent'
 
-import { useToast } from '@chakra-ui/react'
+import { useToast, useDisclosure } from '@chakra-ui/react'
 
 import { ledgerCanisterId, createLedgerActorPlug } from '../agents/ledger'
 import { parentCanisterId, createParentActorPlug } from '../agents/parent'
@@ -20,14 +20,9 @@ const IdentityProvider = ({ children }) => {
 	const [host, setHost] = useState('')
 	const toast = useToast()
 
+	const { isOpen, onOpen, onClose } = useDisclosure()
 	const loadPlug = useCallback(async () => {
 		// setIsLocalhost(window.location.hostname.endsWith('localhost'))
-
-		if (!window.ic?.plug) {
-			toast({ description: 'Plug wallet not installed', status: 'error' })
-			return
-		}
-
 		const connected = await window.ic.plug.isConnected()
 		if (connected) {
 			const principal = await window.ic?.plug.getPrincipal()
@@ -35,10 +30,12 @@ const IdentityProvider = ({ children }) => {
 			setHost(window.ic?.plug.sessionManager.host)
 			setWalletConnected(true)
 		}
-	}, [toast])
+	}, [])
 
 	useEffect(() => {
-		loadPlug()
+		if (window.ic?.plug) {
+			loadPlug()
+		}
 	}, [loadPlug])
 
 	const connect = async (hostType) => {
@@ -88,7 +85,7 @@ const IdentityProvider = ({ children }) => {
 		loadActors()
 	}, [loadActors])
 
-	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect }
+	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, loadPlug, disconnect, isOpen, onOpen, onClose }
 
 	return (
 		<IdentityContext.Provider value={value}>
