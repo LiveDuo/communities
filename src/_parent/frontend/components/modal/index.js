@@ -29,10 +29,10 @@ const WalletModal = () =>  {
                 Download Plug Wallet extension for your browser.
               </Text>
               <Link href='https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm' isExternal style={{textDecoration: 'none'}}>
-                <Button leftIcon={<FirefoxLogo width={20}/>}>Chrome</Button>
+                <Button leftIcon={<ChromeLogo width={20}/>}>Chrome</Button>
               </Link>
               <Link href='https://addons.mozilla.org/en-US/firefox/addon/plug/' isExternal style={{textDecoration: 'none'}}>
-                <Button leftIcon={<ChromeLogo width={20}/>} ml="12px">Firefox</Button>
+                <Button leftIcon={<FirefoxLogo width={20}/>} ml="12px">Firefox</Button>
               </Link>
               <Link href='https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm' isExternal style={{textDecoration: 'none'}}>
                 <Button leftIcon={<BraveLogo width={20}/>} ml="12px">Brave</Button>
