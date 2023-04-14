@@ -22,7 +22,7 @@ const CREATE_CHILD_COST = 1 * 1e8
 
 const Home = () => {
 
-	const { walletConnected, userPrincipal, parentActorPlug, onOpen } = useContext(IdentityContext)
+	const { walletConnected, userPrincipal, parentActorPlug, modalDisclosure } = useContext(IdentityContext)
 	const { parentCanisterId, loading, getCreateChildTx, getUserCanisters } = useContext(ParentContext)
 	const { balance, getTransferIcpTx, ledgerCanisterId } = useContext(LedgerContext)
 	const [childPrincipals, setChildPrincipals] = useState()
@@ -37,8 +37,8 @@ const Home = () => {
 	}
 
 	const createChildBatch = async () => {
-    if (!window.ic?.plug || !walletConnected) {
-			onOpen()
+    	if (!window.ic?.plug || !walletConnected) {
+			modalDisclosure.onOpen()
 			return
 		}
 		const onTransfer = () => toast({ description: `Transfer success` })

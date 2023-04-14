@@ -20,7 +20,8 @@ const IdentityProvider = ({ children }) => {
 	const [host, setHost] = useState('')
 	const toast = useToast()
 
-	const { isOpen, onOpen, onClose } = useDisclosure()
+	const modalDisclosure = useDisclosure()
+
 	const loadPlug = useCallback(async () => {
 		// setIsLocalhost(window.location.hostname.endsWith('localhost'))
 		const connected = await window.ic.plug.isConnected()
@@ -85,7 +86,7 @@ const IdentityProvider = ({ children }) => {
 		loadActors()
 	}, [loadActors])
 
-	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, loadPlug, disconnect, isOpen, onOpen, onClose }
+	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect, modalDisclosure }
 
 	return (
 		<IdentityContext.Provider value={value}>
