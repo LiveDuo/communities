@@ -31,12 +31,16 @@ fn get_address(arg: &Authentication) -> String {
         Authentication::Ic(params) => params.principal.to_text(),
     }
 }
-fn login_message_hex(principal: Principal) -> Vec<u8> {
+
+fn login_message(principal: &Principal) -> String {
+    format!("Sign this message to login.\n\nApp:\ncommunities.ooo\n\nAddress:\n{}\n\n", principal.to_string())
+}
+fn login_message_hex_evm(principal: &Principal) -> String {
     let message_prefix = format!("\x19Ethereum Signed Message:\n");
     let message_prefix_encode = hex::encode(&message_prefix);
     let message_prefix_msg =  hex::decode(message_prefix_encode).unwrap();
 
-    let str = format!("SIGN THIS MESSAGE TO LOGIN TO THE INTERNET COMPUTER.\n\nAPP NAME:\nic-communities\n\nPrincipal:\n{}", principal.to_string());
+    let str = login_message(&principal);
     let str_encode = hex::encode(&str);
     let hex_msg =  hex::decode(str_encode).unwrap();
 
@@ -44,7 +48,14 @@ fn login_message_hex(principal: Principal) -> Vec<u8> {
     let msg_length_encode = hex::encode(&msg_length);
     let msg_length_hex =  hex::decode(msg_length_encode).unwrap();
 
-    [message_prefix_msg, msg_length_hex, hex_msg].concat()
+    let msg_vec = [message_prefix_msg, msg_length_hex, hex_msg].concat();
+
+    easy_hasher::easy_hasher::raw_keccak256(msg_vec).to_hex_string()
+
+}
+fn login_message_hex_svm(principal: &Principal) -> String {
+    let msg = login_message(&principal);
+    hex::encode(&msg)
 }
 #[update]
 fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
@@ -53,12 +64,21 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
+
         let authentication = match auth {
             AuthenticationWith::Evm(args) => {
+                if args.message.trim_start_matches("0x") != login_message_hex_evm(&caller) {
+                    return Err("Principal does not match".to_owned());
+                }
+
                 let param = crate::verify::verify_evm(args);
                 Authentication::Evm(param)
             }
             AuthenticationWith::Svm(args) => {
+                if args.message != login_message_hex_svm(&caller) {
+                    return Err("Principal does not match".to_owned());
+                }
+
                 let param = crate::verify::verify_svm(args);
                 Authentication::Svm(param)
             }
@@ -70,6 +90,9 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
             }
         };
 
+        
+
+        let authentication = authentication;
         if state.indexes.profile.contains_key(&authentication) {
             let profile_id = state.indexes.profile.get(&authentication).cloned().unwrap();
             let mut profile = state.profiles.get(&profile_id).cloned().unwrap();
