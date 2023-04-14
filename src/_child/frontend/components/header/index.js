@@ -14,7 +14,7 @@ const Header = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { identity, login, logout, account } = useContext(IdentityContext)
+  const { identity, login, logout, account, setSelectedNetwork, onModalOpen } = useContext(IdentityContext)
   const { setProfile, getProfileByAuth } = useContext(ChildContext)
 
   useEffect(() => {
@@ -23,6 +23,15 @@ const Header = () => {
   }, [account, getProfileByAuth])
 
   const loginAndSet = async (type) => {
+    if(type === 'evm' && !window?.ethereum) {
+      onModalOpen()
+      setSelectedNetwork(type)
+      return
+    } else if(type === 'svm' && !window?.solana) {
+      onModalOpen()
+      setSelectedNetwork(type)
+      return
+    }
     const profile = await login(type)
     setProfile(profile)
   }

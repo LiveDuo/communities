@@ -16,7 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 
 const PostContainer = () => {
-  const { childActor } = useContext(IdentityContext)
+  const { childActor, account, identity, setSelectedNetwork, onModalOpen } = useContext(IdentityContext)
   const { getPost, createReply } = useContext(ChildContext)
   
 	const [replyText, setReplyText] = useState('')
@@ -36,6 +36,12 @@ const PostContainer = () => {
   }, [getPost, params.index])
 
   const replyToPost = async (p) => {
+    if (!(account && identity?.getPrincipal())) {
+      setSelectedNetwork()
+      onModalOpen()
+      return
+    }
+
 		setReplyText('')
 
 		const reply = await createReply(p.post_id, replyText)
