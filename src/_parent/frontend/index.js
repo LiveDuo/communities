@@ -2,7 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ChakraProvider } from '@chakra-ui/react'
-import { getDefaultProvider } from 'ethers'
 
 import { IdentityProvider } from './store/identity'
 import { ParentProvider } from './store/parent'

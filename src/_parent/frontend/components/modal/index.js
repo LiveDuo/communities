@@ -13,7 +13,7 @@ const WalletModal = () =>  {
   const [plugInstalled, setPlugInstalled] = useState()
 
   useEffect(() => {
-    setPlugInstalled(!!window.ic.plug)
+    setPlugInstalled(!!window?.ic?.plug)
   }, [])
 
   return (
