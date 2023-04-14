@@ -27,7 +27,7 @@ const WalletModal = () => {
 		<Modal isOpen={isModalOpen} onClose={onModalClose} isCentered>
 			<ModalOverlay />
 			<ModalContent minW="600px">
-				<ModalHeader>{(window?.ethereum || window?.solana) ? 'Sign in with...' : 'Download Wallet'} </ModalHeader>
+				<ModalHeader>{!selectedNetwork && (window?.ethereum || window?.solana) ? 'Sign in with...' : 'Download Wallet'} </ModalHeader>
 				<ModalCloseButton />
 				<ModalBody>
           {selectedNetwork ? 
