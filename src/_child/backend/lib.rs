@@ -35,6 +35,7 @@ fn get_address(arg: &Authentication) -> String {
 fn login_message(principal: &Principal) -> String {
     format!("Sign this message to login.\n\nApp:\ncommunities.ooo\n\nAddress:\n{}\n\n", principal.to_string())
 }
+
 fn login_message_hex_evm(principal: &Principal) -> String {
     let message_prefix = format!("\x19Ethereum Signed Message:\n");
     let message_prefix_encode = hex::encode(&message_prefix);
@@ -53,10 +54,12 @@ fn login_message_hex_evm(principal: &Principal) -> String {
     easy_hasher::easy_hasher::raw_keccak256(msg_vec).to_hex_string()
 
 }
+
 fn login_message_hex_svm(principal: &Principal) -> String {
     let msg = login_message(&principal);
     hex::encode(&msg)
 }
+
 #[update]
 fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
     let caller = ic_cdk::caller();
