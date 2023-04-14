@@ -23,11 +23,11 @@ const Header = () => {
   }, [account, getProfileByAuth])
 
   const loginAndSet = async (type) => {
-    if(type === 'evm' && !window?.ethereum) {
+    if (type === 'evm' && !window?.ethereum) {
       onModalOpen()
       setSelectedNetwork(type)
       return
-    } else if(type === 'svm' && !window?.solana) {
+    } else if (type === 'svm' && !window?.solana) {
       onModalOpen()
       setSelectedNetwork(type)
       return

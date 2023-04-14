@@ -1,4 +1,3 @@
-import * as ethers from 'ethers'
 import { Ed25519KeyIdentity } from '@dfinity/identity'
 
 const getLoginMessage = (account) => {
