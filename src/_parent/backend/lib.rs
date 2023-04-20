@@ -84,10 +84,10 @@ async fn install_code(_caller: Principal, canister_id: Principal) -> Result<(), 
 	}
 }
 
-async fn create_canister(caller: Principal, canister_id: Principal) -> Result<Principal, String> {
+async fn create_canister(canister_id: Principal) -> Result<Principal, String> {
 	let create_args = CreateCanisterArgs {
-		settings: CreateCanisterSettings {
-			controllers: Some(vec![canister_id, caller]),
+		settings: CanisterSettings {
+			controllers: Some(vec![canister_id]),
 			compute_allocation: None,
 			memory_allocation: None,
 			freezing_threshold: None
@@ -137,6 +137,26 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
 	Ok(())
 }
 
+async fn set_canister_controllers(child_canister_id: Principal, caller: Principal) -> Result<(), String> {
+	let update_settings_args = UpdateSettingsArgs {
+		canister_id: child_canister_id,
+		settings: CanisterSettings {
+			controllers: Some(vec![child_canister_id, caller]),
+			compute_allocation: None,
+			memory_allocation: None,
+			freezing_threshold: None
+		}
+	};
+
+	let _result : ((),)= ic_cdk::api::call::call(
+		Principal::management_canister(), "update_settings", (update_settings_args,))
+		.await
+		.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
+
+
+	Ok(())
+}
+
 #[ic_cdk_macros::update]
 pub async fn create_child() -> Result<Principal, String> {
 
@@ -155,7 +175,7 @@ pub async fn create_child() -> Result<Principal, String> {
 	}
 
 	// create canister
-	let canister_id = create_canister(caller, id).await.unwrap();
+	let canister_id = create_canister(id).await.unwrap();
 	update_user_canister_id(caller, canister_index, canister_id.to_string());
 
 	// install wasm code
@@ -170,7 +190,9 @@ pub async fn create_child() -> Result<Principal, String> {
 
 	// mark as done
 	let arg4 = CallbackData { canister_index, user: caller, state: CanisterState::Ready };
-	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg4, )).await as CallResult<(Option<usize>,)>;
+	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg4, )).await as CallResult<(Option<usize>,)>;	
+	set_canister_controllers(canister_id, caller).await.unwrap();
+
 	Ok(canister_id)
 }
 

@@ -27,7 +27,7 @@ pub struct InstallCanisterArgs {
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct CreateCanisterSettings {
+pub struct CanisterSettings {
 	pub controllers: Option<Vec<Principal>>,
 	pub compute_allocation: Option<u128>,
 	pub memory_allocation: Option<u128>,
@@ -43,7 +43,12 @@ pub struct StoreAssetArgs {
 }
 
 #[derive(CandidType)]
-pub struct CreateCanisterArgs { pub settings: CreateCanisterSettings, }
+pub struct UpdateSettingsArgs { 
+    pub canister_id: Principal,
+    pub settings: CanisterSettings
+}
+#[derive(CandidType)]
+pub struct CreateCanisterArgs { pub settings: CanisterSettings, }
 
 #[derive(CandidType, Deserialize)]
 pub struct CreateCanisterResult { pub canister_id: Principal, }
