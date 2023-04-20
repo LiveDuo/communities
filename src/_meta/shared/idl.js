@@ -51,7 +51,7 @@ const childFactory = ({ IDL }) => {
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResult, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
 		get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
-		upgrade_canister: IDL.Func([IDL.Text], [], ["update"]),
+		upgrade_canister: IDL.Func([], [], ["update"]),
 	});
 };
 exports.childFactory = childFactory

@@ -12,6 +12,7 @@ ic-cdk = { git = "https://github.com/LiveDuo/cdk-rs" }
 ic-cdk-macros = { git = "https://github.com/LiveDuo/cdk-rs" }
 ic-certified-assets = { git = "https://github.com/LiveDuo/cdk-rs" }
 ic-cdk-main = { package = "ic-cdk", version = "0.6.8", features = ["timers"] }
+serde_bytes = "0.11"
 serde = "1.0.140"
 hex = "0.4.3"
 libsecp256k1 = { version = "0.6.0", default-features = false, features = ["lazy-static-context"] }

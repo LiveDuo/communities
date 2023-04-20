@@ -191,8 +191,10 @@ pub async fn create_child() -> Result<Principal, String> {
 	// mark as done
 	let arg4 = CallbackData { canister_index, user: caller, state: CanisterState::Ready };
 	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg4, )).await as CallResult<(Option<usize>,)>;	
-	set_canister_controllers(canister_id, caller).await.unwrap();
+	
+	let _ = ic_cdk::api::call::call(canister_id, "authorize", (canister_id, )).await as CallResult<()>;
 
+	set_canister_controllers(canister_id, caller).await.unwrap();
 	Ok(canister_id)
 }
 

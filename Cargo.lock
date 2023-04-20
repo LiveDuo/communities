@@ -276,6 +276,7 @@ dependencies = [
  "ic-certified-assets",
  "libsecp256k1",
  "serde",
+ "serde_bytes",
 ]
 
 [[package]]

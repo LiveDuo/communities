@@ -21,7 +21,7 @@ describe.only('Testing with done', () => {
 		const identity = await getRandomIdentity()
 		principal = identity.getPrincipal().toString()
 		agent = getAgent('http://localhost:8000', identity)
-    	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
+    actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
 	})
 
@@ -33,10 +33,12 @@ describe.only('Testing with done', () => {
 			await transferIcpToAccount(accountId)
 		}
 
-		// upgrade child
-		const childPrincipalid = await actorParent.create_child().then(p => p.Ok.toString())
-		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalid })
-		await actorChild.upgrade_canister('1.1')
+		// // upgrade child
+		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
+		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
+		await actorChild.upgrade_canister()
+
+		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
 	})
 

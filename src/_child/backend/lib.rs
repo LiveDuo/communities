@@ -388,9 +388,46 @@ fn export_candid() -> String {
 
 use std::time::Duration;
 
-use ic_cdk_main::export::candid::{Principal, Encode};
+use ic_cdk_main::export::candid::{Principal as PrincipalMain, Encode};
+use candid::{ Principal };
 use ic_cdk_main::api::call::CallResult;
+use ic_certified_assets::state_machine::AssetDetails;
 use ic_cdk_main::api::management_canister::main::*;
+use ic_certified_assets::rc_bytes::RcBytes;
+
+#[derive(CandidType, Deserialize)]
+pub enum InstallMode {
+	#[serde(rename = "install")] Install,
+	#[serde(rename = "reinstall")] Reinstall,
+	#[serde(rename = "upgrade")] Upgrade,
+}
+
+
+#[derive(CandidType, Deserialize)]
+pub struct InstallCanisterArgs {
+	pub mode: InstallMode,
+	pub canister_id: Principal,
+	#[serde(with = "serde_bytes")] pub wasm_module: Vec<u8>,
+	pub arg: Vec<u8>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct StoreAssetArgs {
+	pub key: String,
+	pub content_type: String,
+	pub content_encoding: String,
+	pub content: Vec<u8>,
+}
+
+fn get_content_type(name: &str) -> String {
+	if name.ends_with(".html") { return "text/html".to_string() }
+	else if name.ends_with(".js") { return "text/javascript".to_string() }
+	else if name.ends_with(".css") { return "text/css".to_string() } 
+	else if name.ends_with(".txt") { return "text/plain".to_string() }
+	else if name.ends_with(".md") { return "text/markdown".to_string() }
+	else { return "application/octet-stream".to_string() }
+}
+
 
 async fn upgrade_canister_cb(wasm: Vec<u8>) {
     ic_cdk_main::println!("Child: Self upgrading...");
@@ -398,23 +435,64 @@ async fn upgrade_canister_cb(wasm: Vec<u8>) {
     // upgrade code
     let id = ic_cdk_main::id();
     let install_args = InstallCodeArgument { mode: CanisterInstallMode::Upgrade, canister_id: id, wasm_module: wasm, arg: Encode!().unwrap(), };
-    let result: CallResult<()> = ic_cdk_main::api::call::call(Principal::management_canister(), "install_code", (install_args,),).await;
+    let result: CallResult<()> = ic_cdk_main::api::call::call(PrincipalMain::management_canister(), "install_code", (install_args,),).await;
     result.unwrap();
+    ic_cdk_main::print(format!("done"));
+    ic_cdk_main::println!("done");
 }
 
-// dfx canister call child upgrade_canister '("1.1")'
+
+async fn store_assets(assets: Vec<AssetDetails>, parent_canister_id: Principal) -> Result<(), String> {
+    let canister_id = ic_cdk::id();
+
+	for asset in &assets {
+	
+		// skip unnecessary files
+		if !asset.key.starts_with("/child") || asset.key == "/child/child.wasm" { continue; }
+
+		// get asset content
+        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister_id, "retrieve", (asset.key.to_string(),),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
+
+		let content;
+		if asset.key == "/child/static/js/bundle.js" {
+			let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
+			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
+			content = bundle_with_env.as_bytes().to_vec();
+		} else {
+			content = asset_bytes.to_vec();
+		}
+
+		// upload asset
+		let key = asset.key.replace("/child", "");
+		let content_type = get_content_type(&key);
+		let content_encoding = "identity".to_owned();
+
+		let store_args = StoreAssetArgs { key: key.to_string(), content_type, content_encoding, content, };
+		let result: Result<((),), _> = ic_cdk::api::call::call(canister_id, "store", (store_args,),).await;
+		match result {
+			Ok(_) => {},
+			Err((code, msg)) => return Err(format!("Upload asset error: {}: {}", code as u8, msg))
+		}
+    }
+
+	Ok(())
+}
+
+
 #[ic_cdk_macros::update]
-async fn upgrade_canister(version: String) {
+async fn upgrade_canister() {
 
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return; }
     
-    let parent = Principal::from_text(parent_opt.unwrap().to_text()); // FIX
-    let result: CallResult<(Vec<u8>, )> = ic_cdk_main::api::call::call(parent.unwrap(), "get_upgrade", (version,),).await;
-    let wasm = result.unwrap().0;
-    // let wasm = include_bytes!("../../../build/canister/child.wasm").to_vec();
+    let parent = Principal::from_text(parent_opt.unwrap().to_text()).unwrap(); // FIX
+    let (asset_list, ): (Vec<AssetDetails>, ) = ic_cdk::call(parent, "list", (),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
+    store_assets(asset_list,parent).await.unwrap();
+    
 
+    let wasm_key = "/child/child.wasm".to_owned();
+    let wasm_bytes: (RcBytes, ) = ic_cdk::call(parent, "retrieve", (wasm_key,),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
+    let wasm = wasm_bytes.0.as_ref().to_vec();
 
-
-    let _id = ic_cdk_main::timer::set_timer(Duration::from_millis(0), || ic_cdk_main::spawn(upgrade_canister_cb(wasm)));
-}
+    ic_cdk_main::timer::set_timer(Duration::from_millis(2000), || ic_cdk_main::spawn(upgrade_canister_cb(wasm)));
+}   
