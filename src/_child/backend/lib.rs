@@ -386,8 +386,6 @@ fn export_candid() -> String {
     __export_service()
 }
 
-use std::time::Duration;
-
 use ic_cdk_main::export::candid::{Principal as PrincipalMain, Encode};
 use candid::{ Principal };
 use ic_cdk_main::api::call::CallResult;
@@ -494,5 +492,5 @@ async fn upgrade_canister() {
     let wasm_bytes: (RcBytes, ) = ic_cdk::call(parent, "retrieve", (wasm_key,),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
     let wasm = wasm_bytes.0.as_ref().to_vec();
 
-    ic_cdk_main::timer::set_timer(Duration::from_millis(2000), || ic_cdk_main::spawn(upgrade_canister_cb(wasm)));
+    ic_cdk_main::spawn(upgrade_canister_cb(wasm));
 }   
