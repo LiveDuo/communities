@@ -362,7 +362,7 @@ fn pre_upgrade() {
 }
 
 #[ic_cdk_macros::post_upgrade]
-fn post_upgrade() {
+ fn post_upgrade() {
     let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
 
     STATE.with(|s| {
@@ -370,6 +370,7 @@ fn post_upgrade() {
     });
 
     ic_certified_assets::post_upgrade(s_prev.storage);
+    install_assets();
 }
 
 #[ic_cdk_macros::query]
@@ -386,12 +387,14 @@ fn export_candid() -> String {
     __export_service()
 }
 
-use ic_cdk_main::export::candid::{Principal as PrincipalMain, Encode};
+use ic_cdk_main::export::candid::{Principal as PrincipalMain};
 use candid::{ Principal };
+use serde_bytes::ByteBuf;
 use ic_cdk_main::api::call::CallResult;
 use ic_certified_assets::state_machine::AssetDetails;
 use ic_cdk_main::api::management_canister::main::*;
 use ic_certified_assets::rc_bytes::RcBytes;
+use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
 
 #[derive(CandidType, Deserialize)]
 pub enum InstallMode {
@@ -417,6 +420,12 @@ pub struct StoreAssetArgs {
 	pub content: Vec<u8>,
 }
 
+// pub type Key = String;
+// #[derive(Clone, Debug, CandidType, Deserialize)]
+// pub struct DeleteAssetArguments {
+//     pub key: Key,
+// }
+
 fn get_content_type(name: &str) -> String {
 	if name.ends_with(".html") { return "text/html".to_string() }
 	else if name.ends_with(".js") { return "text/javascript".to_string() }
@@ -432,11 +441,41 @@ async fn upgrade_canister_cb(wasm: Vec<u8>) {
 
     // upgrade code
     let id = ic_cdk_main::id();
-    let install_args = InstallCodeArgument { mode: CanisterInstallMode::Upgrade, canister_id: id, wasm_module: wasm, arg: Encode!().unwrap(), };
+    let install_args = InstallCodeArgument { mode: CanisterInstallMode::Upgrade, canister_id: id, wasm_module: wasm, arg: vec![], };
     let result: CallResult<()> = ic_cdk_main::api::call::call(PrincipalMain::management_canister(), "install_code", (install_args,),).await;
     result.unwrap();
-    ic_cdk_main::print(format!("done"));
-    ic_cdk_main::println!("done");
+}
+
+fn install_assets() {
+    let assets = ic_certified_assets::list_assets();
+    for asset  in  &assets {
+        ic_cdk::println!("asset key {}", asset.key);
+        if asset.key.starts_with("/static") {
+            let delete_args = DeleteAssetArguments {
+                key: asset.key.to_owned()
+            };
+            ic_certified_assets::delete(delete_args);
+            continue;
+        }
+
+        if asset.key.starts_with("/temp") {
+            let key = asset.key.replace("/temp", "");
+            let asset_content = ic_certified_assets::get_asset(asset.key.to_owned());
+            let content = ByteBuf::from(asset_content);
+            let args_store = StoreArg {
+                key,
+                content_type: asset.content_type.to_owned(),
+                content_encoding: "identity".to_owned(),
+                content: content,
+                sha256: None
+            };
+            ic_certified_assets::store_asset(args_store);
+            let args_delete = DeleteAssetArguments {
+                key: asset.key.to_owned()
+            };
+            ic_certified_assets::delete(args_delete);
+        }
+    }
 }
 
 
@@ -455,22 +494,18 @@ async fn store_assets(assets: Vec<AssetDetails>, parent_canister_id: Principal) 
 		if asset.key == "/child/static/js/bundle.js" {
 			let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
 			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
-			content = bundle_with_env.as_bytes().to_vec();
+			content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
 		} else {
-			content = asset_bytes.to_vec();
+			content = ByteBuf::from(asset_bytes.to_vec());
 		}
 
 		// upload asset
-		let key = asset.key.replace("/child", "");
+		let key = asset.key.replace("/child", "/temp");
 		let content_type = get_content_type(&key);
 		let content_encoding = "identity".to_owned();
 
-		let store_args = StoreAssetArgs { key: key.to_string(), content_type, content_encoding, content, };
-		let result: Result<((),), _> = ic_cdk::api::call::call(canister_id, "store", (store_args,),).await;
-		match result {
-			Ok(_) => {},
-			Err((code, msg)) => return Err(format!("Upload asset error: {}: {}", code as u8, msg))
-		}
+		let store_args = StoreArg { key: key.to_string(), content_type, content_encoding, content, sha256: None };
+        ic_certified_assets::store_asset(store_args);
     }
 
 	Ok(())
