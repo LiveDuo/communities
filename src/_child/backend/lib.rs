@@ -12,12 +12,13 @@ use std::hash::{Hash, Hasher};
 use crate::state::{*, STATE};
 
 #[ic_cdk_macros::init]
-fn init() {
+fn init(wasm_hash: String) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
 		let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
+        state.wasm_hash = Some(wasm_hash);
 	});
 }
 
@@ -343,6 +344,11 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 
+// #[update]
+// fn test_fn() {
+//     ic_cdk::println!("hello from test fn");
+// }
+
 #[derive(CandidType, Deserialize)]
 pub struct StableState {
     pub state: State,
@@ -412,19 +418,15 @@ pub struct InstallCanisterArgs {
 	pub arg: Vec<u8>,
 }
 
-#[derive(CandidType, Deserialize)]
-pub struct StoreAssetArgs {
-	pub key: String,
-	pub content_type: String,
-	pub content_encoding: String,
-	pub content: Vec<u8>,
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
+pub struct Upgrade { 
+    pub version: String,
+    pub upgrade_from: String, 
+    pub timestamp: u64,
+    pub wasm: Vec<u8>,
+    pub wasm_hash: String,
+    pub assets: Vec<String>
 }
-
-// pub type Key = String;
-// #[derive(Clone, Debug, CandidType, Deserialize)]
-// pub struct DeleteAssetArguments {
-//     pub key: Key,
-// }
 
 fn get_content_type(name: &str) -> String {
 	if name.ends_with(".html") { return "text/html".to_string() }
@@ -460,7 +462,7 @@ fn install_assets() {
 
         if asset.key.starts_with("/temp") {
             let key = asset.key.replace("/temp", "");
-            let asset_content = ic_certified_assets::get_asset(asset.key.to_owned());
+            let asset_content: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_owned());
             let content = ByteBuf::from(asset_content);
             let args_store = StoreArg {
                 key,
@@ -521,11 +523,15 @@ async fn upgrade_canister() {
     let parent = Principal::from_text(parent_opt.unwrap().to_text()).unwrap(); // FIX
     let (asset_list, ): (Vec<AssetDetails>, ) = ic_cdk::call(parent, "list", (),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
     store_assets(asset_list,parent).await.unwrap();
+
+    let current_version_opt = STATE.with(|s| s.borrow().wasm_hash.to_owned());
+    if current_version_opt == None { return; }
     
+    let current_version = current_version_opt.unwrap();
+    let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
+    if next_version_opt == None { return; }
 
-    let wasm_key = "/child/child.wasm".to_owned();
-    let wasm_bytes: (RcBytes, ) = ic_cdk::call(parent, "retrieve", (wasm_key,),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
-    let wasm = wasm_bytes.0.as_ref().to_vec();
+    let next_version = next_version_opt.unwrap();
 
-    ic_cdk_main::spawn(upgrade_canister_cb(wasm));
+    ic_cdk_main::spawn(upgrade_canister_cb(next_version.wasm));
 }   
