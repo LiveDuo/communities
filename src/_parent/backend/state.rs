@@ -146,9 +146,18 @@ pub struct CallbackData {
     pub user: Principal,
     pub state: CanisterState
 }
+#[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
+pub struct Upgrade { 
+    pub version: String,
+    pub upgrade_from: String, 
+    pub timestamp: u64,
+    pub wasm: Vec<u8>,
+    pub wasm_hash: String,
+    pub assets: Vec<String>
+}
 
 #[derive(Default, Clone, CandidType, Deserialize)]
-pub struct State { pub canister_data: HashMap<String, Vec<CanisterData>> }
+pub struct State { pub canister_data: HashMap<String, Vec<CanisterData>> , pub upgrades: Vec<Upgrade> }
 
 thread_local! {
     pub static STATE: RefCell<State> = RefCell::new(State::default());

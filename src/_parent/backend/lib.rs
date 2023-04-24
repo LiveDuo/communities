@@ -1,14 +1,16 @@
+
 use ic_cdk::api::call::CallResult;
 use ic_cdk::export::candid::{export_service};
 
 mod state;
 
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Principal, Encode};
+use ic_certified_assets::types::StoreArg;
+use serde_bytes::ByteBuf;
 
 use crate::state::principal_to_subaccount;
 
 use crate::state::{*, STATE};
-
 use include_macros::{get_canister};
 
 pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
@@ -70,12 +72,13 @@ async fn install_code(_caller: Principal, canister_id: Principal) -> Result<(), 
 	if wasm_bytes.is_empty() {
 		return Err(format!("WASM is not yet uploaded"))
 	}
+	let arg =  Encode!(&"0.0.0".to_string()).unwrap();
 
 	let install_args = InstallCanisterArgs {
 		mode: InstallMode::Install,
 		canister_id: canister_id,
 		wasm_module: wasm_bytes,
-		arg: b" ".to_vec(),
+		arg
 	};
 	
 	match ic_cdk::api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
@@ -255,10 +258,29 @@ fn update_user_canister_id(caller: Principal, index: usize, canister_id: String)
 }
 
 #[ic_cdk_macros::query]
-fn get_upgrade(_version: String) -> Vec<u8> {
-	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/child.wasm".to_string());
-	return wasm_bytes;
+fn get_next_upgrade(version: String) -> Option<Upgrade> {
+	STATE.with(|s| {
+		let state = s.borrow();
+		state.upgrades.to_owned().into_iter().find(|x| x.upgrade_from == version)
+	})
 }
+
+#[ic_cdk_macros::update]
+fn create_upgrade(upgrade: Upgrade) -> Result<(), String>{
+
+	let key = format!("/upgrade/{}/child.wasm", upgrade.version);
+	let content_encoding = "identity".to_string();
+	let content_type = get_content_type(&key);
+	let content = ByteBuf::from(upgrade.wasm.to_owned());
+	let arg = StoreArg { key, content_type, content, content_encoding, sha256: None };
+
+	ic_certified_assets::store_asset(arg);
+
+	STATE.with(|s| s.borrow_mut().upgrades.push(upgrade));
+
+	Ok(())
+}
+
 
 // dfx canister call parent get_user_canisters
 #[ic_cdk_macros::query]
