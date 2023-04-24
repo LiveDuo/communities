@@ -481,28 +481,26 @@ fn install_assets() {
 }
 
 
-async fn store_assets(assets: Vec<AssetDetails>, parent_canister_id: Principal) -> Result<(), String> {
+async fn store_assets(assets: Vec<String>, parent_canister_id: Principal, version: &str) -> Result<(), String> {
     let canister_id = ic_cdk::id();
 
 	for asset in &assets {
 	
-		// skip unnecessary files
-		if !asset.key.starts_with("/child") || asset.key == "/child/child.wasm" { continue; }
 
 		// get asset content
-        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister_id, "retrieve", (asset.key.to_string(),),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
+        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister_id, "retrieve", (asset.to_string(),),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
 
 		let content;
-		if asset.key == "/child/static/js/bundle.js" {
+		if asset.ends_with("bundle.js") {
 			let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
 			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
 			content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
 		} else {
 			content = ByteBuf::from(asset_bytes.to_vec());
 		}
-
 		// upload asset
-		let key = asset.key.replace("/child", "/temp");
+        let from = format!("/upgrade/{}", version);
+		let key = asset.replace(&from, "/temp");
 		let content_type = get_content_type(&key);
 		let content_encoding = "identity".to_owned();
 
@@ -519,19 +517,16 @@ async fn upgrade_canister() {
 
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return; }
-    
-    let parent = Principal::from_text(parent_opt.unwrap().to_text()).unwrap(); // FIX
-    let (asset_list, ): (Vec<AssetDetails>, ) = ic_cdk::call(parent, "list", (),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
-    store_assets(asset_list,parent).await.unwrap();
+    let parent  = parent_opt.unwrap();
 
     let current_version_opt = STATE.with(|s| s.borrow().wasm_hash.to_owned());
     if current_version_opt == None { return; }
-    
     let current_version = current_version_opt.unwrap();
     let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
     if next_version_opt == None { return; }
 
     let next_version = next_version_opt.unwrap();
+    store_assets(next_version.assets,parent, &next_version.version).await.unwrap();
 
     ic_cdk_main::spawn(upgrade_canister_cb(next_version.wasm));
 }   

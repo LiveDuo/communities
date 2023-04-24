@@ -266,7 +266,7 @@ fn get_next_upgrade(version: String) -> Option<Upgrade> {
 }
 
 #[ic_cdk_macros::update]
-fn create_upgrade(upgrade: Upgrade) -> Result<(), String>{
+fn create_upgrade(upgrade: Upgrade) -> Result<(), String> {
 
 	let key = format!("/upgrade/{}/child.wasm", upgrade.version);
 	let content_encoding = "identity".to_string();
@@ -275,6 +275,12 @@ fn create_upgrade(upgrade: Upgrade) -> Result<(), String>{
 	let arg = StoreArg { key, content_type, content, content_encoding, sha256: None };
 
 	ic_certified_assets::store_asset(arg);
+
+	for  asset in &upgrade.assets {
+		if !ic_certified_assets::exists(&asset) {
+			return Err(format!("The {} does not exist", asset));
+		}		
+	}
 
 	STATE.with(|s| s.borrow_mut().upgrades.push(upgrade));
 
