@@ -1,6 +1,7 @@
 const fs = require('fs/promises')
 const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')
+const CryptoJS = require('crypto-js')
 
 const { getCanisters, getAgent, hostType } = require('../_meta/shared/utils')
 const { getFiles, uploadFile } = require('../_meta/shared/assets')
@@ -20,25 +21,15 @@ const id = argv.identity ?? 'default'
 	const actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 	const actorAsset = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 
-
-	// const assets = await fs.readdir('./build/canister/upgrade/0.0.1')
 	const assets = await getFiles('./build/canister/upgrade/0.0.1')
 	for (let asset of assets) {
-		if(asset === 'child.wasm') {
-			continue
-		}
 		const assetBuf = await fs.readFile(`./build/canister/upgrade/0.0.1/${asset}`)
 		await uploadFile(actorAsset, `/upgrade/0.0.1/${asset}`, assetBuf)
 	}
 
+	const assetsWithPath =  assets.map(a => `/upgrade/0.0.1/${a}`)
+	const upgradeFrom = await fs.readFile('./build/canister/child.wasm')
 
-	// upload wasm
-	const wasm = await fs.readFile('./build/canister/upgrade/0.0.1/child.wasm')
-
-	const upgrade = { version: '0.0.1', upgrade_from: '0.0.0', timestamp: new Date().valueOf(), wasm: Array.from(wasm), wasm_hash: '0.0.1', assets: assets.map(a => `/upgrade/0.0.1/${a}`) }
-	await actorParent.create_upgrade(upgrade)
-
-	// let res = await actorParent.get_next_upgrade('0.0.0')
-	// console.log(res)
+	await actorParent.create_upgrade('0.0.1', Array.from(upgradeFrom), assetsWithPath)
 
 })()

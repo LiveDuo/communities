@@ -3,10 +3,9 @@ use ic_cdk::api::call::CallResult;
 use ic_cdk::export::candid::{export_service};
 
 mod state;
+use sha2::{Sha256, Digest};
 
 use candid::{CandidType, Deserialize, Principal, Encode};
-use ic_certified_assets::types::StoreArg;
-use serde_bytes::ByteBuf;
 
 use crate::state::principal_to_subaccount;
 
@@ -72,7 +71,11 @@ async fn install_code(_caller: Principal, canister_id: Principal) -> Result<(), 
 	if wasm_bytes.is_empty() {
 		return Err(format!("WASM is not yet uploaded"))
 	}
-	let arg =  Encode!(&"0.0.0".to_string()).unwrap();
+
+	let mut wasm_hash = Sha256::new();
+  wasm_hash.update(wasm_bytes.clone());
+
+	let arg =  Encode!(&wasm_hash.finalize()[..].to_vec()).unwrap();
 
 	let install_args = InstallCanisterArgs {
 		mode: InstallMode::Install,
@@ -258,29 +261,32 @@ fn update_user_canister_id(caller: Principal, index: usize, canister_id: String)
 }
 
 #[ic_cdk_macros::query]
-fn get_next_upgrade(version: String) -> Option<Upgrade> {
+fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
 	STATE.with(|s| {
 		let state = s.borrow();
-		state.upgrades.to_owned().into_iter().find(|x| x.upgrade_from == version)
+		state.upgrades.to_owned().into_iter().find(|x| x.upgrade_from == wasm_hash)
 	})
 }
 
 #[ic_cdk_macros::update]
-fn create_upgrade(upgrade: Upgrade) -> Result<(), String> {
+fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -> Result<(), String> {
 
-	let key = format!("/upgrade/{}/child.wasm", upgrade.version);
-	let content_encoding = "identity".to_string();
-	let content_type = get_content_type(&key);
-	let content = ByteBuf::from(upgrade.wasm.to_owned());
-	let arg = StoreArg { key, content_type, content, content_encoding, sha256: None };
-
-	ic_certified_assets::store_asset(arg);
-
-	for  asset in &upgrade.assets {
+	for  asset in &assets {
 		if !ic_certified_assets::exists(&asset) {
 			return Err(format!("The {} does not exist", asset));
 		}		
 	}
+
+	let wasm_key = assets.clone().into_iter().find(|x| x.contains("child.wasm")).unwrap();
+	let wasm = ic_certified_assets::get_asset(wasm_key);
+	let mut wasm_hash = Sha256::new();
+  wasm_hash.update(wasm.clone());
+
+	let mut upgrade_from_hash = Sha256::new();
+	upgrade_from_hash.update(upgrade_from.clone());
+
+
+	let upgrade = Upgrade { version, upgrade_from: upgrade_from_hash.finalize()[..].to_vec(), timestamp: ic_cdk::api::time(), wasm_hash: wasm_hash.finalize()[..].to_vec(), assets: assets.clone() };
 
 	STATE.with(|s| s.borrow_mut().upgrades.push(upgrade));
 
@@ -288,7 +294,6 @@ fn create_upgrade(upgrade: Upgrade) -> Result<(), String> {
 }
 
 
-// dfx canister call parent get_user_canisters
 #[ic_cdk_macros::query]
 fn get_user_canisters() -> Vec<CanisterData> {
 	let caller = ic_cdk::caller();

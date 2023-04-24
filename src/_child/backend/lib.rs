@@ -12,7 +12,7 @@ use std::hash::{Hash, Hasher};
 use crate::state::{*, STATE};
 
 #[ic_cdk_macros::init]
-fn init(wasm_hash: String) {
+fn init(wasm_hash: Vec<u8>) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
@@ -344,10 +344,10 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 
-// #[update]
-// fn test_fn() {
-//     ic_cdk::println!("hello from test fn");
-// }
+#[update]
+fn test_fn() {
+    ic_cdk::println!("hello from test fn");
+}
 
 #[derive(CandidType, Deserialize)]
 pub struct StableState {
@@ -418,13 +418,12 @@ pub struct InstallCanisterArgs {
 	pub arg: Vec<u8>,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Upgrade { 
     pub version: String,
-    pub upgrade_from: String, 
+    pub upgrade_from: Vec<u8>,
     pub timestamp: u64,
-    pub wasm: Vec<u8>,
-    pub wasm_hash: String,
+    pub wasm_hash: Vec<u8>,
     pub assets: Vec<String>
 }
 
@@ -451,7 +450,6 @@ async fn upgrade_canister_cb(wasm: Vec<u8>) {
 fn install_assets() {
     let assets = ic_certified_assets::list_assets();
     for asset  in  &assets {
-        ic_cdk::println!("asset key {}", asset.key);
         if asset.key.starts_with("/static") {
             let delete_args = DeleteAssetArguments {
                 key: asset.key.to_owned()
@@ -481,12 +479,10 @@ fn install_assets() {
 }
 
 
-async fn store_assets(assets: Vec<String>, parent_canister_id: Principal, version: &str) -> Result<(), String> {
+async fn store_assets(assets: &Vec<String>, parent_canister_id: Principal, version: &str) -> Result<(), String> {
     let canister_id = ic_cdk::id();
 
-	for asset in &assets {
-	
-
+	for asset in assets {
 		// get asset content
         let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister_id, "retrieve", (asset.to_string(),),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
 
@@ -511,22 +507,32 @@ async fn store_assets(assets: Vec<String>, parent_canister_id: Principal, versio
 	Ok(())
 }
 
+#[ic_cdk_macros::query]
+async fn get_next_upgrade () -> Option<Upgrade>{
+    let parent_opt = STATE.with(|s| { s.borrow().parent });
+    if parent_opt == None { return None; }
+    let parent  = parent_opt.unwrap();
+    let current_version_opt = STATE.with(|s| s.borrow().wasm_hash.to_owned());
+    if current_version_opt == None { return None; }
+    let current_version = current_version_opt.unwrap();
+    
+    let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
+
+    next_version_opt
+}
 
 #[ic_cdk_macros::update]
-async fn upgrade_canister() {
-
+async fn upgrade_canister(upgrade: Upgrade) {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return; }
     let parent  = parent_opt.unwrap();
 
-    let current_version_opt = STATE.with(|s| s.borrow().wasm_hash.to_owned());
-    if current_version_opt == None { return; }
-    let current_version = current_version_opt.unwrap();
-    let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
-    if next_version_opt == None { return; }
+    store_assets(&upgrade.assets,parent, &upgrade.version).await.unwrap();
 
-    let next_version = next_version_opt.unwrap();
-    store_assets(next_version.assets,parent, &next_version.version).await.unwrap();
+    let wasm_key = upgrade.assets.clone().into_iter().find(|x| x.contains("child.wasm")).unwrap();
+    let from = format!("/upgrade/{}", &upgrade.version);
+	let key = wasm_key.replace(&from, "/temp");
+	let wasm = ic_certified_assets::get_asset(key);
 
-    ic_cdk_main::spawn(upgrade_canister_cb(next_version.wasm));
+    ic_cdk_main::spawn(upgrade_canister_cb(wasm));
 }   

@@ -149,7 +149,7 @@ pub struct State {
     pub relations: Relations,
     pub indexes: Indexes,
     pub parent: Option<Principal>,
-    pub wasm_hash: Option<String>
+    pub wasm_hash: Option<Vec<u8>>
 }
 
 thread_local! {
