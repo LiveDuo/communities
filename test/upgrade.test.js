@@ -24,10 +24,7 @@ describe.only('Testing with done', () => {
 		agent = getAgent('http://localhost:8000', identity)
     actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
-		console.log('Start upload Upgrade')
-		const uploadUpgrade = spawnSync('node', [`${process.cwd()}/src/_parent/upload-upgrade.js`])
-		console.log(uploadUpgrade.stdout.toString('ascii'))
-
+		spawnSync('node', [`${process.cwd()}/src/_parent/upload-upgrade.js`] ,{cwd: process.cwd(), stdio: 'inherit'})
 	})
 
 	test('Should create a new community', async () => {
@@ -46,7 +43,7 @@ describe.only('Testing with done', () => {
 		
 		const [ upgrade ] = resNextUpgrade.Ok
 		await actorChild.upgrade_canister(upgrade)
-		
+
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
 	})
