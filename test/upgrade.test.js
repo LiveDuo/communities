@@ -41,8 +41,12 @@ describe.only('Testing with done', () => {
 		// // upgrade child
 		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
 		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
-		// const [upgrade] = await actorChild.get_next_upgrade()
-		// await actorChild.upgrade_canister(upgrade)
+		const resNextUpgrade = await actorChild.get_next_upgrade()
+		expect(resNextUpgrade.Ok.length).toBe(1)
+		
+		const [ upgrade ] = resNextUpgrade.Ok
+		await actorChild.upgrade_canister(upgrade)
+		
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
 	})
