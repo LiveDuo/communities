@@ -146,7 +146,7 @@ pub struct CallbackData {
     pub user: Principal,
     pub state: CanisterState
 }
-#[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
+#[derive(Clone, Debug, CandidType, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Upgrade { 
     pub version: String,
     pub upgrade_from: Vec<u8>,

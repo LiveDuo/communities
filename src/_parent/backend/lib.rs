@@ -270,6 +270,17 @@ fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
 
 #[ic_cdk_macros::update]
 fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -> Result<(), String> {
+	let wasm_key = format!("/upgrade/{}/child.wasm", version);
+	let wasm = ic_certified_assets::get_asset(wasm_key);
+	let mut wasm_hash_hasher = Sha256::new();
+	wasm_hash_hasher.update(wasm.clone());
+	let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
+
+	let upgrades =  STATE.with(|s| s.borrow().upgrades.clone());
+
+	if let Some(_) = upgrades.into_iter().find(|v| v.wasm_hash == wasm_hash) {
+		return Ok(());
+	}
 
 	for  asset in &assets {
 		if !ic_certified_assets::exists(&asset) {
@@ -277,16 +288,7 @@ fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -
 		}		
 	}
 
-	let wasm_key = assets.clone().into_iter().find(|x| x.contains("child.wasm")).unwrap();
-	let wasm = ic_certified_assets::get_asset(wasm_key);
-	let mut wasm_hash = Sha256::new();
-  wasm_hash.update(wasm.clone());
-
-	let mut upgrade_from_hash = Sha256::new();
-	upgrade_from_hash.update(upgrade_from.clone());
-
-
-	let upgrade = Upgrade { version, upgrade_from: upgrade_from_hash.finalize()[..].to_vec(), timestamp: ic_cdk::api::time(), wasm_hash: wasm_hash.finalize()[..].to_vec(), assets: assets.clone() };
+	let upgrade = Upgrade { version, upgrade_from, timestamp: ic_cdk::api::time(), wasm_hash , assets: assets.clone() };
 
 	STATE.with(|s| s.borrow_mut().upgrades.push(upgrade));
 
