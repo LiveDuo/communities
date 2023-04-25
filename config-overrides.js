@@ -16,6 +16,15 @@ const updateEnvVar = (config, key, value) => {
     config.plugins[defineIndex].definitions['process.env'][key] = `"${value}"`
 }
 
+const updatePaths = (paths, srcFolder, buildFolder) => {
+    paths.dotenv = path.resolve(__dirname, '.env')
+    paths.appIndexJs = path.resolve(__dirname, `${srcFolder}/index.js`)
+    paths.appSrc = path.resolve(__dirname, `${srcFolder}`)
+    paths.appHtml = path.resolve(__dirname, `${srcFolder}/public/index.html`)
+    paths.appPublic = path.resolve(__dirname, `${srcFolder}/public`)
+    paths.appBuild = path.resolve(__dirname, buildFolder)
+}
+
 module.exports = {
     webpack: (config) => {
         config.output = { ...config.output, filename: 'static/js/bundle.js' }
@@ -44,13 +53,13 @@ module.exports = {
         return config
     },
     paths: (paths, _env) => {
-        const folder = process.env.CRA_PROJECT === 'child' ? 'src/_child/frontend' : 'src/_parent/frontend'
-        paths.dotenv = path.resolve(__dirname, '.env')
-        paths.appIndexJs = path.resolve(__dirname, `${folder}/index.js`)
-        paths.appSrc = path.resolve(__dirname, `${folder}`)
-        paths.appHtml = path.resolve(__dirname, `${folder}/public/index.html`)
-        paths.appPublic = path.resolve(__dirname, `${folder}/public`)
-        paths.appBuild = path.resolve(__dirname, `build/${process.env.CRA_PROJECT}`)
+
+        if (process.env.CRA_PROJECT === 'child') {
+            updatePaths(paths, 'src/_child/frontend', 'build/child/latest')
+        } else if (process.env.CRA_PROJECT === 'parent') {
+            updatePaths(paths, 'src/_parent/frontend', 'build/parent')
+        }
+
         return paths
     },
 }
