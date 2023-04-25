@@ -498,7 +498,7 @@ async fn store_assets_to_temp(assets: &Vec<String>, version: &str) -> Result<(),
 		}
 
 		// upload asset
-		let key = asset.replace(&["/upgrade/", version].join(""), "/temp");
+		let key = asset.replace(&format!("/upgrade/{}", version), "/temp");
 		let store_args = StoreArg {
             key: key.to_owned(),
             content_type: get_content_type(&key),
