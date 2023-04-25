@@ -33,8 +33,7 @@ fn get_content_type(name: &str) -> String {
 }
 
 async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String) -> Result<(), String> {
-
-	// let assets = ic_certified_assets::list_assets();
+	
 	for asset in assets {
 	
 		// skip unnecessary files
@@ -183,22 +182,24 @@ pub async fn create_child() -> Result<Principal, String> {
 		mint_cycles(caller, id).await.unwrap();
 	}
 
-	let version = STATE.with(|s| {
-		let mut state = s.borrow_mut();
-		state.upgrades.sort_by(|a, b| b.version.cmp(&a.version));
-		state.upgrades.first().unwrap().clone()
-	});
-
-	// // create canister
+	// create canister
 	let canister_id = create_canister(id).await.unwrap();
 	update_user_canister_id(caller, canister_index, canister_id.to_string());
+
+	// get leasts version
+	let version = STATE.with(|s| {
+		let state = s.borrow();
+		let mut upgrades = state.upgrades.clone();
+		upgrades.sort_by(|a, b| b.version.cmp(&a.version));
+		upgrades.first().unwrap().to_owned()
+	});
 
 	// install wasm code
 	let arg2 = CallbackData { canister_index, user: caller, state: CanisterState::Installing };
 	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg2, )).await as CallResult<(Option<usize>,)>;
 	install_code(canister_id, &version.version).await.unwrap();
 
-	// // upload frontend assets
+	// upload frontend assets
 	let arg3 = CallbackData { canister_index, user: caller, state: CanisterState::Uploading };
 	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg3, )).await as CallResult<(Option<usize>,)>;
 	store_assets(canister_id, &version.assets, &version.version).await.unwrap();
