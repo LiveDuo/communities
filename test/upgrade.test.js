@@ -13,7 +13,6 @@ describe.only('Testing with done', () => {
 	let actorParent, agent, principal, canisterIds
 
 	beforeAll(async () => {
-
 		// check ic replica
 		await checkDfxRunning()
 
@@ -24,19 +23,29 @@ describe.only('Testing with done', () => {
 		agent = getAgent('http://localhost:8000', identity)
     actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
-		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
+		const version = '0.0.2'
+		const upgrade = await actorParent.get_upgrades()
+		const upgradeExist = upgrade.find(u => u.version === version)
+
+		
+		if(upgradeExist) {
+			await actorParent.remove_upgrade(version)
+		}
 	})
 
+	jest.setTimeout(60000)
 	test('Should create a new community', async () => {
-
 		// send icp
 		if (canisterIds.ledger) {
 			const accountId = getAccountId(canisterIds.parent.local, principal)
 			await transferIcpToAccount(accountId)
 		}
-
+		
 		// upgrade child
 		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
+
+		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
+
 		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
 
 		const resNextUpgrade = await actorChild.get_next_upgrade()

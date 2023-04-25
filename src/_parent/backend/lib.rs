@@ -32,18 +32,18 @@ fn get_content_type(name: &str) -> String {
 	else { return "application/octet-stream".to_string() }
 }
 
-async fn store_assets(canister_id: Principal) -> Result<(), String> {
+async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String) -> Result<(), String> {
 
-	let assets = ic_certified_assets::list_assets();
-	for asset in &assets {
+	// let assets = ic_certified_assets::list_assets();
+	for asset in assets {
 	
 		// skip unnecessary files
-		if !asset.key.starts_with("/child") || asset.key == "/child/child.wasm" { continue; }
+		if asset == &format!("/upgrade/{}/child.wasm", version){ continue; }
 
 		// get asset content
-		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_string());
+		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(asset.to_owned());
 		let content;
-		if asset.key == "/child/static/js/bundle.js" {
+		if asset == &format!("/upgrade/{}/static/js/bundle.js", version) {
 			let bundle_str = String::from_utf8(asset_bytes).expect("Invalid JS bundle");
 			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
 			content = bundle_with_env.as_bytes().to_vec();
@@ -52,10 +52,13 @@ async fn store_assets(canister_id: Principal) -> Result<(), String> {
 		}
 
 		// upload asset
-		let key = asset.key.replace("/child", "");
-		let content_type = get_content_type(&key);
-		let content_encoding = "identity".to_owned();
-		let store_args = StoreAssetArgs { key: key.to_string(), content_type, content_encoding, content, };
+		let key =  asset.replace(&format!("/upgrade/{}", version), "");
+		let store_args = StoreAssetArgs { 
+			key: key.to_owned(),
+			content_type: get_content_type(&key),
+			content_encoding: "identity".to_owned(),
+			content
+		};
 		let result: Result<((),), _> = ic_cdk::api::call::call(canister_id, "store", (store_args,),).await;
 		match result {
 			Ok(_) => {},
@@ -66,10 +69,10 @@ async fn store_assets(canister_id: Principal) -> Result<(), String> {
 	Ok(())
 }
 
-async fn install_code(canister_id: Principal) -> Result<(), String> {
+async fn install_code(canister_id: Principal, version: &String) -> Result<(), String> {
 
 	// get wasm
-	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/child.wasm".to_string());
+	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
 	if wasm_bytes.is_empty() { return Err(format!("WASM not found")) }
 
 	// get wasm hash
@@ -180,19 +183,25 @@ pub async fn create_child() -> Result<Principal, String> {
 		mint_cycles(caller, id).await.unwrap();
 	}
 
-	// create canister
+	let version = STATE.with(|s| {
+		let mut state = s.borrow_mut();
+		state.upgrades.sort_by(|a, b| b.version.cmp(&a.version));
+		state.upgrades.first().unwrap().clone()
+	});
+
+	// // create canister
 	let canister_id = create_canister(id).await.unwrap();
 	update_user_canister_id(caller, canister_index, canister_id.to_string());
 
 	// install wasm code
 	let arg2 = CallbackData { canister_index, user: caller, state: CanisterState::Installing };
 	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg2, )).await as CallResult<(Option<usize>,)>;
-	install_code(canister_id).await.unwrap();
+	install_code(canister_id, &version.version).await.unwrap();
 
-	// upload frontend assets
+	// // upload frontend assets
 	let arg3 = CallbackData { canister_index, user: caller, state: CanisterState::Uploading };
 	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg3, )).await as CallResult<(Option<usize>,)>;
-	store_assets(canister_id).await.unwrap();
+	store_assets(canister_id, &version.assets, &version.version).await.unwrap();
 
 	// mark as done
 	let arg4 = CallbackData { canister_index, user: caller, state: CanisterState::Ready };
@@ -305,6 +314,14 @@ fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -
 	STATE.with(|s| s.borrow_mut().upgrades.push(upgrade));
 
 	Ok(())
+}
+#[ic_cdk_macros::update]
+fn remove_upgrade(version: String) {
+	STATE.with(|s| {
+		let mut state = s.borrow_mut();
+		let index = state.upgrades.iter().position(|u| u.version == version).unwrap();
+		state.upgrades.remove(index);
+	})
 }
 
 
