@@ -267,6 +267,13 @@ fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
 		state.upgrades.to_owned().into_iter().find(|x| x.upgrade_from == wasm_hash)
 	})
 }
+#[ic_cdk_macros::query]
+fn get_upgrades() -> Vec<Upgrade> {
+	STATE.with(|s| {
+		let state = s.borrow();
+		state.upgrades.to_owned()
+	})
+}
 
 #[ic_cdk_macros::update]
 fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -> Result<(), String> {
@@ -276,7 +283,7 @@ fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -
 	wasm_hash_hasher.update(wasm.clone());
 	let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
 
-	let upgrades =  STATE.with(|s| s.borrow().upgrades.clone());
+	let upgrades =  STATE.with(|s| s.borrow().upgrades.to_owned());
 
 	if let Some(_) = upgrades.into_iter().find(|v| v.wasm_hash == wasm_hash) {
 		return Ok(());
