@@ -26,24 +26,25 @@ const id = argv.identity ?? 'default'
 	const wasmHash = createHash('sha256').update(wasm).digest('hex');
 	const existUpgrade = upgrades.find(u => Buffer.from(u.wasm_hash).toString('hex') === wasmHash)
 
-	if(existUpgrade) {
-		console.log('This version already exist')
+	if (existUpgrade) {
+		console.log('Version already exist')
 		console.log()
 		return
 	}
 
-	const assets = await getFiles('./build/child/0.0.1')
+	const version = "0.0.1"
+
+	const assets = await getFiles(`./build/child/${version}`)
 	for (let asset of assets) {
-		const assetBuf = await fs.readFile(`./build/child/0.0.1/${asset}`)
-		await uploadFile(actorAsset, `/upgrade/0.0.1/${asset}`, assetBuf)
+		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
+		await uploadFile(actorAsset, `/upgrade/${version}/${asset}`, assetBuf)
 	}
 
 	const upgradeFromBytes = await fs.readFile('./build/child/latest/child.wasm')
 	const upgradeFromHash = createHash('sha256').update(upgradeFromBytes).digest('hex');
 	
 	const upgradeFromBuffer = Buffer.from(upgradeFromHash, 'hex')
-	const assetsWithPath =  assets.map(a => `/upgrade/0.0.1/${a}`)
-	const version = '0.0.1'
+	const assetsWithPath =  assets.map(a => `/upgrade/${version}/${a}`)
 
 	await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assetsWithPath)
 })()
