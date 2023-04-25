@@ -474,17 +474,17 @@ fn replace_assets() {
 }
 
 
-async fn store_assets(assets: &Vec<String>, version: &str) -> Result<(), String> {
+async fn store_assets_to_temp(assets: &Vec<String>, version: &str) -> Result<(), String> {
 
-    let parent_canister_id_opt = STATE.with(|s| { s.borrow().parent });
-    if parent_canister_id_opt == None { return Err("Not find the parent canister".to_owned()); }
-    let parent_canister_id = parent_canister_id_opt.unwrap();
+    let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
+    if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
+    let parent_canister = parent_canister_opt.unwrap();
 
     let canister_id = ic_cdk::id();
 
 	for asset in assets {
 		// get asset content
-        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister_id, "retrieve", (asset.to_string(),),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
+        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister, "retrieve", (asset.to_string(),),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
 
 		let content;
 		if asset == &format!("/upgrade/{}/static/js/bundle.js", version) {
@@ -510,10 +510,10 @@ async fn store_assets(assets: &Vec<String>, version: &str) -> Result<(), String>
 #[ic_cdk_macros::query]
 async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
-    if parent_opt == None { return Err("Not find parent canister".to_owned()); }
+    if parent_opt == None { return Err("Parent canister not found".to_owned()); }
     let parent  = parent_opt.unwrap();
     let current_version_opt = STATE.with(|s| s.borrow().wasm_hash.to_owned());
-    if current_version_opt == None { return  Err("Not find current version".to_owned()); }
+    if current_version_opt == None { return  Err("Current version not found".to_owned()); }
     let current_version = current_version_opt.unwrap();
     
     let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
@@ -523,10 +523,9 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
 
 #[ic_cdk_macros::update]
 async fn upgrade_canister(upgrade: Upgrade) {
-    store_assets(&upgrade.assets, &upgrade.version).await.unwrap();
+    store_assets_to_temp(&upgrade.assets, &upgrade.version).await.unwrap();
 
-    let wasm_key = "/temp/child.wasm".to_owned();
-	let wasm = ic_certified_assets::get_asset(wasm_key);
+	let wasm = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
 
     ic_cdk_main::spawn(upgrade_canister_cb(wasm));
 }   

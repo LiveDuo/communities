@@ -35,13 +35,14 @@ describe.only('Testing with done', () => {
 			await transferIcpToAccount(accountId)
 		}
 
-		// // upgrade child
+		// upgrade child
 		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
 		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
+
 		const resNextUpgrade = await actorChild.get_next_upgrade()
-		expect(resNextUpgrade.Ok.length).toBe(1)
-		
 		const [ upgrade ] = resNextUpgrade.Ok
+		expect(upgrade).toBeDefined()
+
 		await actorChild.upgrade_canister(upgrade)
 
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
