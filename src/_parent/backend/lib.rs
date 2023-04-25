@@ -1,4 +1,3 @@
-
 use ic_cdk::api::call::CallResult;
 use ic_cdk::export::candid::{export_service};
 
@@ -33,7 +32,7 @@ fn get_content_type(name: &str) -> String {
 }
 
 async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String) -> Result<(), String> {
-	
+
 	for asset in assets {
 	
 		// skip unnecessary files
@@ -274,7 +273,7 @@ fn update_user_canister_id(caller: Principal, index: usize, canister_id: String)
 fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
 	STATE.with(|s| {
 		let state = s.borrow();
-		state.upgrades.to_owned().into_iter().find(|x| x.upgrade_from == wasm_hash)
+		state.upgrades.iter().find(|x| x.upgrade_from == Some(wasm_hash.to_owned())).map(|s| s.to_owned())
 	})
 }
 #[ic_cdk_macros::query]
@@ -286,7 +285,7 @@ fn get_upgrades() -> Vec<Upgrade> {
 }
 
 #[ic_cdk_macros::update]
-fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -> Result<(), String> {
+fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>) -> Result<(), String> {
 
 	// get wasm
 	let wasm_key = format!("/upgrade/{}/child.wasm", version);

@@ -347,6 +347,12 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
 #[update]
 fn test_fn() {
     ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
 }
 
 #[derive(CandidType, Deserialize)]
@@ -420,7 +426,7 @@ pub struct InstallCanisterArgs {
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Upgrade { 
     pub version: String,
-    pub upgrade_from: Vec<u8>,
+    pub upgrade_from: Option<Vec<u8>>,
     pub timestamp: u64,
     pub wasm_hash: Vec<u8>,
     pub assets: Vec<String>
@@ -518,7 +524,7 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
     let current_version = current_version_opt.unwrap();
     
     let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
-
+    
     Ok(next_version_opt)
 }
 

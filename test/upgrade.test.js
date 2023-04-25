@@ -27,7 +27,6 @@ describe.only('Testing with done', () => {
 		const upgrade = await actorParent.get_upgrades()
 		const upgradeExist = upgrade.find(u => u.version === version)
 
-		
 		if(upgradeExist) {
 			await actorParent.remove_upgrade(version)
 		}

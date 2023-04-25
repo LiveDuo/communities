@@ -149,7 +149,7 @@ pub struct CallbackData {
 #[derive(Clone, Debug, CandidType, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Upgrade { 
     pub version: String,
-    pub upgrade_from: Vec<u8>,
+    pub upgrade_from: Option<Vec<u8>>,
     pub timestamp: u64,
     pub wasm_hash: Vec<u8>,
     pub assets: Vec<String>
