@@ -12,6 +12,8 @@ const argv = minimist(process.argv.slice(2))
 const host = argv.network ?? 'http://localhost:8000'
 const id = argv.identity ?? 'default'
 
+const version = '0.0.1'
+
 // node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
 ; (async () => {
 
@@ -20,7 +22,6 @@ const id = argv.identity ?? 'default'
 	const agent = getAgent(host, identity)
 	const actorAsset = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 	const actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisters.parent[hostType(host)] })
-	const version = '0.0.1'
 
 	// upload domain file
 	const domains = await fs.readFile('./build/domains/index.txt')
