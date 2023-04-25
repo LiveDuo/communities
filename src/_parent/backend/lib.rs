@@ -277,26 +277,31 @@ fn get_upgrades() -> Vec<Upgrade> {
 
 #[ic_cdk_macros::update]
 fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -> Result<(), String> {
+
+	// get wasm
 	let wasm_key = format!("/upgrade/{}/child.wasm", version);
 	let wasm = ic_certified_assets::get_asset(wasm_key);
+
+	// get wasm hash
 	let mut wasm_hash_hasher = Sha256::new();
 	wasm_hash_hasher.update(wasm.clone());
 	let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
 
+	// check if version exists
 	let upgrades =  STATE.with(|s| s.borrow().upgrades.to_owned());
-
-	if let Some(_) = upgrades.into_iter().find(|v| v.wasm_hash == wasm_hash) {
-		return Ok(());
+	if upgrades.iter().any(|v| v.wasm_hash == wasm_hash) {
+		return Err("Version already exists".to_owned());
 	}
 
-	for  asset in &assets {
+	// check if assets exists
+	for asset in &assets {
 		if !ic_certified_assets::exists(&asset) {
 			return Err(format!("The {} does not exist", asset));
-		}		
+		}	
 	}
 
+	// push to state
 	let upgrade = Upgrade { version, upgrade_from, timestamp: ic_cdk::api::time(), wasm_hash , assets: assets.clone() };
-
 	STATE.with(|s| s.borrow_mut().upgrades.push(upgrade));
 
 	Ok(())
