@@ -1,4 +1,5 @@
 const { Actor } = require('@dfinity/agent')
+const { spawnSync } = require('node:child_process')
 
 const { checkDfxRunning, setupTests, getAgent, getCanisters, transferIcpToAccount } = require('../src/_meta/shared/utils')
 const { getAccountId }= require('../src/_meta/shared/account')
@@ -23,6 +24,10 @@ describe.only('Testing with done', () => {
 		agent = getAgent('http://localhost:8000', identity)
     actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
+		console.log('Start upload Upgrade')
+		const uploadUpgrade = spawnSync('node', [`${process.cwd()}/src/_parent/upload-upgrade.js`])
+		console.log(uploadUpgrade.stdout.toString('ascii'))
+
 	})
 
 	test('Should create a new community', async () => {
@@ -36,8 +41,8 @@ describe.only('Testing with done', () => {
 		// // upgrade child
 		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
 		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
-		const [upgrade] = await actorChild.get_next_upgrade()
-		await actorChild.upgrade_canister(upgrade)
+		// const [upgrade] = await actorChild.get_next_upgrade()
+		// await actorChild.upgrade_canister(upgrade)
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
 	})
