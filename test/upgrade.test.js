@@ -24,7 +24,7 @@ describe.only('Testing with done', () => {
 		agent = getAgent('http://localhost:8000', identity)
     actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
-		spawnSync('node', [`${process.cwd()}/src/_parent/upload-upgrade.js`] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
 	})
 
 	test('Should create a new community', async () => {
