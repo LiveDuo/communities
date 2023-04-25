@@ -376,7 +376,7 @@ fn pre_upgrade() {
     });
 
     ic_certified_assets::post_upgrade(s_prev.storage);
-    replace_assets();
+    replace_assets_from_temp();
 }
 
 #[ic_cdk_macros::query]
@@ -446,10 +446,12 @@ async fn upgrade_canister_cb(wasm: Vec<u8>) {
     result.unwrap();
 }
 
-fn replace_assets() {
+fn replace_assets_from_temp() {
     let assets = ic_certified_assets::list_assets();
 
     for asset  in  &assets {
+
+        // store frontend assets
         if asset.key.starts_with("/temp") {
             let asset_content: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_owned());
             let args_store = StoreArg {
@@ -460,16 +462,10 @@ fn replace_assets() {
                 sha256: None
             };
             ic_certified_assets::store_asset(args_store);
-            let args_delete = DeleteAssetArguments {
-                key: asset.key.to_owned()
-            };
-            ic_certified_assets::delete(args_delete);
-        } else {
-            let delete_args = DeleteAssetArguments {
-                key: asset.key.to_owned()
-            };
-            ic_certified_assets::delete(delete_args);
         }
+
+        // delete from temp
+        ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
     }
 }
 
