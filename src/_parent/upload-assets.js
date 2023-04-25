@@ -20,7 +20,7 @@ const id = argv.identity ?? 'default'
 	const actor = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 
 	// upload wasm
-	const wasm = await fs.readFile('./build/canister/child.wasm')
+	const wasm = await fs.readFile('./build/child/latest/child.wasm')
 	await uploadFile(actor, '/child/child.wasm', wasm)
 	
 	// upload domain file
@@ -35,9 +35,9 @@ const id = argv.identity ?? 'default'
 	}
 
 	// upload child assets
-	const assetsChild = await getFiles('./build/child')
+	const assetsChild = await getFiles('./build/child/latest')
 	for (let asset of assetsChild) {
-		const assetBuf = await fs.readFile(`build/child/${asset}`)
+		const assetBuf = await fs.readFile(`./build/child/latest/${asset}`)
 		await uploadFile(actor, `/child/${asset}`, assetBuf)
 	}
 
