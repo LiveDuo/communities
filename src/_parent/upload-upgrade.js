@@ -1,12 +1,14 @@
 const fs = require('fs/promises')
 const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')
-const { createHash } = require('crypto');
+const { createHash } = require('crypto')
 
 const { getCanisters, getAgent, hostType } = require('../_meta/shared/utils')
 const { getFiles, uploadFile } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { parentFactory, assetFactory } = require('../_meta/shared/idl')
+
+const sha256 = (b) => createHash('sha256').update(b).digest('hex')
 
 const argv = minimist(process.argv.slice(2))
 const host = argv.network ?? 'http://localhost:8000'
@@ -15,7 +17,7 @@ const id = argv.identity ?? 'default'
 const version = "0.0.2"
 const versionFrom = "0.0.1"
 
-// node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
+// node src/_parent/upload-upgrade.js --network https://ic0.app --identity with-wallet
 ; (async () => {
 
 	const canisters = await getCanisters(host)
@@ -24,23 +26,21 @@ const versionFrom = "0.0.1"
 	const actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 	const actorAsset = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 
+	// check upgrade version
 	const upgrades = await actorParent.get_upgrades()
 	const wasm = await fs.readFile(`./build/child/${version}/child.wasm`)
-	const wasmHash = createHash('sha256').update(wasm).digest('hex');
-	const existUpgrade = upgrades.find(u => Buffer.from(u.wasm_hash).toString('hex') === wasmHash)
-	if (existUpgrade) { console.log('Version already exist\n'); return }
+	const upgradeExists = upgrades.find(u => Buffer.from(u.wasm_hash).toString('hex') === sha256(wasm))
+	if (upgradeExists) { console.log('Version already exist\n'); return }
 
+	// upload upgrade assets
 	const assets = await getFiles(`./build/child/${version}`)
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
 		await uploadFile(actorAsset, `/upgrade/${version}/${asset}`, assetBuf)
 	}
 
-	const upgradeFromBytes = await fs.readFile(`./build/child/${versionFrom}/child.wasm`)
-	const upgradeFromHash = createHash('sha256').update(upgradeFromBytes).digest('hex');
-	
-	const upgradeFromBuffer = Buffer.from(upgradeFromHash, 'hex')
-	const assetsWithPath =  assets.map(a => `/upgrade/${version}/${a}`)
-
-	await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assetsWithPath)
+	// create upgrade
+	const wasmVersionFrom = await fs.readFile(`./build/child/${versionFrom}/child.wasm`)
+	const upgradeFromBuffer = Buffer.from(sha256(wasmVersionFrom), 'hex')
+	await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assets.map(a => `/upgrade/${version}/${a}`))
 })()
