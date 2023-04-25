@@ -66,24 +66,24 @@ async fn store_assets(canister_id: Principal) -> Result<(), String> {
 	Ok(())
 }
 
-async fn install_code(_caller: Principal, canister_id: Principal) -> Result<(), String> {
+async fn install_code(canister_id: Principal) -> Result<(), String> {
+
+	// get wasm
 	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/child.wasm".to_string());
-	if wasm_bytes.is_empty() {
-		return Err(format!("WASM is not yet uploaded"))
-	}
+	if wasm_bytes.is_empty() { return Err(format!("WASM not found")) }
 
+	// get wasm hash
 	let mut wasm_hash = Sha256::new();
-  wasm_hash.update(wasm_bytes.clone());
-
+  	wasm_hash.update(wasm_bytes.clone());
 	let arg =  Encode!(&wasm_hash.finalize()[..].to_vec()).unwrap();
 
+	// install canister code
 	let install_args = InstallCanisterArgs {
 		mode: InstallMode::Install,
 		canister_id: canister_id,
 		wasm_module: wasm_bytes,
 		arg
 	};
-	
 	match ic_cdk::api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
 		Ok(x) => Ok(x),
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
@@ -187,7 +187,7 @@ pub async fn create_child() -> Result<Principal, String> {
 	// install wasm code
 	let arg2 = CallbackData { canister_index, user: caller, state: CanisterState::Installing };
 	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg2, )).await as CallResult<(Option<usize>,)>;
-	install_code(caller, canister_id).await.unwrap();
+	install_code(canister_id).await.unwrap();
 
 	// upload frontend assets
 	let arg3 = CallbackData { canister_index, user: caller, state: CanisterState::Uploading };
