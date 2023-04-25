@@ -482,10 +482,12 @@ async fn store_assets_to_temp(assets: &Vec<String>, version: &str) -> Result<(),
 
     let canister_id = ic_cdk::id();
 
-	for asset in assets {
-		// get asset content
-        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister, "retrieve", (asset.to_string(),),).await.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
+    for asset in assets {
+		
+        // get asset content
+        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister, "retrieve", (asset.to_owned(),),).await.unwrap();
 
+        // replace env car
 		let content;
 		if asset == &format!("/upgrade/{}/static/js/bundle.js", version) {
 			let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
@@ -494,13 +496,16 @@ async fn store_assets_to_temp(assets: &Vec<String>, version: &str) -> Result<(),
 		} else {
 			content = ByteBuf::from(asset_bytes.to_vec());
 		}
-		// upload asset
-        let from = format!("/upgrade/{}", version);
-		let key = asset.replace(&from, "/temp");
-		let content_type = get_content_type(&key);
-		let content_encoding = "identity".to_owned();
 
-		let store_args = StoreArg { key: key.to_string(), content_type, content_encoding, content, sha256: None };
+		// upload asset
+		let key = asset.replace(&["/upgrade/", version].join(""), "/temp");
+		let store_args = StoreArg {
+            key: key.to_owned(),
+            content_type: get_content_type(&key),
+            content_encoding: "identity".to_owned(),
+            content,
+            sha256: None
+        };
         ic_certified_assets::store_asset(store_args);
     }
 
