@@ -1,8 +1,8 @@
 mod state;
 mod verify;
-
 use candid::{export_service, CandidType, Deserialize};
 
+use sha2::{Sha256, Digest};
 use ic_cdk_macros::*;
 
 use std::borrow::Borrow;
@@ -344,6 +344,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 
+
 #[update]
 fn test_fn() {
     ic_cdk::println!("hello from test fn");
@@ -354,7 +355,6 @@ fn test_fn() {
     ic_cdk::println!("hello from test fn");
     ic_cdk::println!("hello from test fn");
 }
-
 #[derive(CandidType, Deserialize)]
 pub struct StableState {
     pub state: State,
@@ -375,13 +375,21 @@ fn pre_upgrade() {
 
 #[ic_cdk_macros::post_upgrade]
  fn post_upgrade() {
-    let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
+     
+     let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
+ 
+     ic_certified_assets::post_upgrade(s_prev.storage);
 
-    STATE.with(|s| {
-        *s.borrow_mut() = s_prev.state;
-    });
+     let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
+     let mut hasher = Sha256::new();
+     hasher.update(wasm_bytes.clone());
+     let wasm_hash = hasher.finalize()[..].to_vec();
 
-    ic_certified_assets::post_upgrade(s_prev.storage);
+     STATE.with(|s| {
+         *s.borrow_mut() = s_prev.state;
+         s.borrow_mut().wasm_hash = Some(wasm_hash);
+     });
+     
     replace_assets_from_temp();
 }
 
@@ -423,7 +431,7 @@ pub struct InstallCanisterArgs {
 	pub arg: Vec<u8>,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub struct Upgrade { 
     pub version: String,
     pub upgrade_from: Option<Vec<u8>>,
@@ -476,12 +484,7 @@ fn replace_assets_from_temp() {
 }
 
 
-async fn store_assets_to_temp(assets: &Vec<String>, version: &str) -> Result<(), String> {
-
-    let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
-    if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
-    let parent_canister = parent_canister_opt.unwrap();
-
+async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, version: &str) -> Result<(), String> {
     let canister_id = ic_cdk::id();
 
     for asset in assets {
@@ -529,10 +532,21 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
 }
 
 #[ic_cdk_macros::update]
-async fn upgrade_canister(upgrade: Upgrade) {
-    store_assets_to_temp(&upgrade.assets, &upgrade.version).await.unwrap();
+async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
+
+    let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
+    if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
+    let parent_canister = parent_canister_opt.unwrap();
+
+    let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, )).await.unwrap();
+    if upgrade_opt == None { return Err("This version not found".to_owned()); }
+    let upgrade = upgrade_opt.unwrap();
+
+    store_assets_to_temp(parent_canister,&upgrade.assets, &upgrade.version).await.unwrap();
 
 	let wasm = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
 
     ic_cdk_main::spawn(upgrade_canister_cb(wasm));
+
+    Ok(())
 }   

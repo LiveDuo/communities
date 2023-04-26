@@ -41,7 +41,8 @@ describe.only('Testing with done', () => {
 		}
 		
 		// upgrade child
-		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
+		const childPrincipalId = "rdmx6-jaaaa-aaaaa-aaadq-cai"
+		// const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
 
 		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
 
@@ -51,7 +52,7 @@ describe.only('Testing with done', () => {
 		const [ upgrade ] = resNextUpgrade.Ok
 		expect(upgrade).toBeDefined()
 
-		await actorChild.upgrade_canister(upgrade)
+		await actorChild.upgrade_canister(upgrade.wasm_hash)
 
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		

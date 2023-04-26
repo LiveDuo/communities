@@ -284,6 +284,15 @@ fn get_upgrades() -> Vec<Upgrade> {
 	})
 }
 
+
+#[ic_cdk_macros::query]
+fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
+	STATE.with(|s| {
+		let state = s.borrow();
+		state.upgrades.iter().find(|x| x.wasm_hash == wasm_hash).map(|f| f.to_owned())		
+	})
+}
+
 #[ic_cdk_macros::update]
 fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>) -> Result<(), String> {
 
