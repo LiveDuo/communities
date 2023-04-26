@@ -146,6 +146,9 @@ pub struct State {
     pub replay: BTreeMap<u64, Reply>,
     pub relations: Relations,
     pub indexes: Indexes,
+    pub parent: Option<Principal>,
+    pub wasm_hash: Option<Vec<u8>>,
+    // pub broken: String
 }
 
 thread_local! {

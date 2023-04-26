@@ -1,14 +1,14 @@
-use ic_cdk::api::call::CallResult;
+use ic_cdk::api::call::{CallResult};
 use ic_cdk::export::candid::{export_service};
 
 mod state;
+use sha2::{Sha256, Digest};
 
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Principal, Encode};
 
 use crate::state::principal_to_subaccount;
 
 use crate::state::{*, STATE};
-
 use include_macros::{get_canister};
 
 pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
@@ -31,18 +31,17 @@ fn get_content_type(name: &str) -> String {
 	else { return "application/octet-stream".to_string() }
 }
 
-async fn store_assets(canister_id: Principal) -> Result<(), String> {
+async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String) -> Result<(), String> {
 
-	let assets = ic_certified_assets::list_assets();
-	for asset in &assets {
+	for asset in assets {
 	
 		// skip unnecessary files
-		if !asset.key.starts_with("/child") || asset.key == "/child/child.wasm" { continue; }
+		if asset == &format!("/upgrade/{}/child.wasm", version){ continue; }
 
 		// get asset content
-		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_string());
+		let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(asset.to_owned());
 		let content;
-		if asset.key == "/child/static/js/bundle.js" {
+		if asset == &format!("/upgrade/{}/static/js/bundle.js", version) {
 			let bundle_str = String::from_utf8(asset_bytes).expect("Invalid JS bundle");
 			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
 			content = bundle_with_env.as_bytes().to_vec();
@@ -51,10 +50,13 @@ async fn store_assets(canister_id: Principal) -> Result<(), String> {
 		}
 
 		// upload asset
-		let key = asset.key.replace("/child", "");
-		let content_type = get_content_type(&key);
-		let content_encoding = "identity".to_owned();
-		let store_args = StoreAssetArgs { key: key.to_string(), content_type, content_encoding, content, };
+		let key =  asset.replace(&format!("/upgrade/{}", version), "");
+		let store_args = StoreAssetArgs { 
+			key: key.to_owned(),
+			content_type: get_content_type(&key),
+			content_encoding: "identity".to_owned(),
+			content
+		};
 		let result: Result<((),), _> = ic_cdk::api::call::call(canister_id, "store", (store_args,),).await;
 		match result {
 			Ok(_) => {},
@@ -65,29 +67,34 @@ async fn store_assets(canister_id: Principal) -> Result<(), String> {
 	Ok(())
 }
 
-async fn install_code(_caller: Principal, canister_id: Principal) -> Result<(), String> {
-	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset("/child/child.wasm".to_string());
-	if wasm_bytes.is_empty() {
-		return Err(format!("WASM is not yet uploaded"))
-	}
+async fn install_code(canister_id: Principal, version: &String) -> Result<(), String> {
 
+	// get wasm
+	let wasm_bytes: Vec<u8> = ic_certified_assets::get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
+	if wasm_bytes.is_empty() { return Err(format!("WASM not found")) }
+
+	// get wasm hash
+	let mut hasher = Sha256::new();
+	hasher.update(wasm_bytes.clone());
+	let wasm_hash = hasher.finalize()[..].to_vec();
+
+	// install canister code
 	let install_args = InstallCanisterArgs {
 		mode: InstallMode::Install,
 		canister_id: canister_id,
 		wasm_module: wasm_bytes,
-		arg: b" ".to_vec(),
+		arg: Encode!(&Some(wasm_hash)).unwrap()
 	};
-	
 	match ic_cdk::api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
 		Ok(x) => Ok(x),
 		Err((code, msg)) => { return Err(format!("Install code error: {}: {}", code as u8, msg)) }
 	}
 }
 
-async fn create_canister(caller: Principal, canister_id: Principal) -> Result<Principal, String> {
+async fn create_canister(canister_id: Principal) -> Result<Principal, String> {
 	let create_args = CreateCanisterArgs {
-		settings: CreateCanisterSettings {
-			controllers: Some(vec![canister_id, caller]),
+		settings: CanisterSettings {
+			controllers: Some(vec![canister_id]),
 			compute_allocation: None,
 			memory_allocation: None,
 			freezing_threshold: None
@@ -137,6 +144,26 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
 	Ok(())
 }
 
+async fn set_canister_controllers(child_canister_id: Principal, caller: Principal) -> Result<(), String> {
+	let update_settings_args = UpdateSettingsArgs {
+		canister_id: child_canister_id,
+		settings: CanisterSettings {
+			controllers: Some(vec![child_canister_id, caller]),
+			compute_allocation: None,
+			memory_allocation: None,
+			freezing_threshold: None
+		}
+	};
+
+	let _result : ((),)= ic_cdk::api::call::call(
+		Principal::management_canister(), "update_settings", (update_settings_args,))
+		.await
+		.map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg)).unwrap();
+
+
+	Ok(())
+}
+
 #[ic_cdk_macros::update]
 pub async fn create_child() -> Result<Principal, String> {
 
@@ -155,22 +182,34 @@ pub async fn create_child() -> Result<Principal, String> {
 	}
 
 	// create canister
-	let canister_id = create_canister(caller, id).await.unwrap();
+	let canister_id = create_canister(id).await.unwrap();
 	update_user_canister_id(caller, canister_index, canister_id.to_string());
+
+	// get leasts version
+	let version = STATE.with(|s| {
+		let state = s.borrow();
+		let mut upgrades = state.upgrades.clone();
+		upgrades.sort_by(|a, b| b.version.cmp(&a.version));
+		upgrades.first().unwrap().to_owned()
+	});
 
 	// install wasm code
 	let arg2 = CallbackData { canister_index, user: caller, state: CanisterState::Installing };
 	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg2, )).await as CallResult<(Option<usize>,)>;
-	install_code(caller, canister_id).await.unwrap();
+	install_code(canister_id, &version.version).await.unwrap();
 
 	// upload frontend assets
 	let arg3 = CallbackData { canister_index, user: caller, state: CanisterState::Uploading };
 	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg3, )).await as CallResult<(Option<usize>,)>;
-	store_assets(canister_id).await.unwrap();
+	store_assets(canister_id, &version.assets, &version.version).await.unwrap();
 
 	// mark as done
 	let arg4 = CallbackData { canister_index, user: caller, state: CanisterState::Ready };
-	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg4, )).await as CallResult<(Option<usize>,)>;
+	let _ = ic_cdk::api::call::call(id, "update_state_callback", (arg4, )).await as CallResult<(Option<usize>,)>;	
+	
+	let _ = ic_cdk::api::call::call(canister_id, "authorize", (canister_id, )).await as CallResult<()>;
+
+	set_canister_controllers(canister_id, caller).await.unwrap();
 	Ok(canister_id)
 }
 
@@ -230,7 +269,92 @@ fn update_user_canister_id(caller: Principal, index: usize, canister_id: String)
 	});
 }
 
-// dfx canister call parent get_user_canisters
+#[ic_cdk_macros::query]
+fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
+	STATE.with(|s| {
+		let state = s.borrow();
+		state.upgrades.iter().find(|x| x.upgrade_from == Some(wasm_hash.to_owned())).map(|s| s.to_owned())
+	})
+}
+#[ic_cdk_macros::query]
+fn get_upgrades() -> Vec<Upgrade> {
+	STATE.with(|s| {
+		let state = s.borrow();
+		state.upgrades.to_owned()
+	})
+}
+
+
+#[ic_cdk_macros::query]
+fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
+	STATE.with(|s| {
+		let state = s.borrow();
+		state.upgrades.iter().find(|x| x.wasm_hash == wasm_hash).map(|f| f.to_owned())		
+	})
+}
+
+async fn authorize(caller: &Principal) -> Result<(), String>{
+	let canister_id = ic_cdk::id();
+	let args = CanisterStatusArg { canister_id };
+	let (canister_status, ) = ic_cdk::call::<_, (CanisterStatus, )>(Principal::management_canister(), "canister_status", (args,)).await.unwrap();
+
+	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
+		Ok(())
+	} else {
+		Err("Caller is not a controller".to_owned())
+	}
+}
+
+#[ic_cdk_macros::update]
+async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>) -> Result<(), String> {
+
+	// authorize
+	let caller = ic_cdk::caller();
+	authorize(&caller).await?;
+
+	// get wasm
+	let wasm_key = format!("/upgrade/{}/child.wasm", version);
+	let wasm = ic_certified_assets::get_asset(wasm_key);
+
+	// get wasm hash
+	let mut wasm_hash_hasher = Sha256::new();
+	wasm_hash_hasher.update(wasm.clone());
+	let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
+
+	// check if version exists
+	let upgrades =  STATE.with(|s| s.borrow().upgrades.to_owned());
+	if upgrades.iter().any(|v| v.wasm_hash == wasm_hash) {
+		return Err("Version already exists".to_owned());
+	}
+
+	// check if assets exists
+	for asset in &assets {
+		if !ic_certified_assets::exists(&asset) {
+			return Err(format!("The {} does not exist", asset));
+		}	
+	}
+
+	// push to state
+	let upgrade = Upgrade { version, upgrade_from, timestamp: ic_cdk::api::time(), wasm_hash , assets: assets.clone() };
+	STATE.with(|s| s.borrow_mut().upgrades.push(upgrade));
+
+	Ok(())
+}
+#[ic_cdk_macros::update]
+async fn remove_upgrade(version: String) -> Result<(), String> {
+	let caller = ic_cdk::caller();
+	authorize(&caller).await?;
+
+	STATE.with(|s| {
+		let mut state = s.borrow_mut();
+		let index = state.upgrades.iter().position(|u| u.version == version).unwrap();
+		state.upgrades.remove(index);
+	});
+	
+	Ok(())
+}
+
+
 #[ic_cdk_macros::query]
 fn get_user_canisters() -> Vec<CanisterData> {
 	let caller = ic_cdk::caller();

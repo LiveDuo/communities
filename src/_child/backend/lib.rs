@@ -3,6 +3,7 @@ mod verify;
 
 use candid::{export_service, CandidType, Deserialize, Principal};
 
+use sha2::{Sha256, Digest};
 use ic_cdk_macros::*;
 
 use std::borrow::Borrow;
@@ -12,8 +13,14 @@ use std::hash::{Hash, Hasher};
 use crate::state::{*, STATE};
 
 #[ic_cdk_macros::init]
-fn init() {
+fn init(wasm_hash: Option<Vec<u8>>) {
     ic_certified_assets::init();
+
+    STATE.with(|s| {
+		let mut state = s.borrow_mut();
+		state.parent = Some(ic_cdk::caller());
+        state.wasm_hash = wasm_hash;
+	});
 }
 
 fn uuid(seed: &str) -> u64 {
@@ -371,6 +378,25 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 
+
+#[update]
+fn test_fn() {
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+    ic_cdk::println!("hello from test fn");
+}
+
+fn update_wasm_hash() {
+    let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
+    let mut hasher = Sha256::new();
+    hasher.update(wasm_bytes.clone());
+    let wasm_hash = hasher.finalize()[..].to_vec();
+    STATE.with(|s| s.borrow_mut().wasm_hash = Some(wasm_hash));
+}
 #[derive(CandidType, Deserialize)]
 pub struct StableState {
     pub state: State,
@@ -391,13 +417,14 @@ fn pre_upgrade() {
 
 #[ic_cdk_macros::post_upgrade]
 fn post_upgrade() {
+    // restore state
     let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
-
-    STATE.with(|s| {
-        *s.borrow_mut() = s_prev.state;
-    });
-
     ic_certified_assets::post_upgrade(s_prev.storage);
+    STATE.with(|s| *s.borrow_mut() = s_prev.state);
+
+    // finalize upgrade
+    update_wasm_hash();
+    replace_assets_from_temp();
 }
 
 #[ic_cdk_macros::query]
@@ -413,3 +440,152 @@ export_service!();
 fn export_candid() -> String {
     __export_service()
 }
+
+use ic_cdk_main::export::candid::{Principal as PrincipalMain};
+use candid::{ Principal };
+use serde_bytes::ByteBuf;
+use ic_cdk_main::api::call::CallResult;
+use ic_cdk_main::api::management_canister::main::*;
+use ic_certified_assets::rc_bytes::RcBytes;
+use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
+
+#[derive(CandidType, Deserialize)]
+pub enum InstallMode {
+	#[serde(rename = "install")] Install,
+	#[serde(rename = "reinstall")] Reinstall,
+	#[serde(rename = "upgrade")] Upgrade,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
+pub struct Upgrade { 
+    pub version: String,
+    pub upgrade_from: Option<Vec<u8>>,
+    pub timestamp: u64,
+    pub wasm_hash: Vec<u8>,
+    pub assets: Vec<String>
+}
+
+fn get_content_type(name: &str) -> String {
+	if name.ends_with(".html") { return "text/html".to_string() }
+	else if name.ends_with(".js") { return "text/javascript".to_string() }
+	else if name.ends_with(".css") { return "text/css".to_string() } 
+	else if name.ends_with(".txt") { return "text/plain".to_string() }
+	else if name.ends_with(".md") { return "text/markdown".to_string() }
+	else { return "application/octet-stream".to_string() }
+}
+
+
+async fn upgrade_canister_cb(wasm: Vec<u8>) {
+    ic_cdk_main::println!("Child: Self upgrading...");
+
+    // upgrade code
+    let id = ic_cdk_main::id();
+    let install_args = InstallCodeArgument { mode: CanisterInstallMode::Upgrade, canister_id: id, wasm_module: wasm, arg: vec![], };
+    let result: CallResult<()> = ic_cdk_main::api::call::call(PrincipalMain::management_canister(), "install_code", (install_args,),).await;
+    result.unwrap();
+}
+
+fn replace_assets_from_temp() {
+    let assets = ic_certified_assets::list_assets();
+
+    for asset  in  &assets {
+
+        // store frontend assets
+        if asset.key.starts_with("/temp") {
+            let asset_content: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_owned());
+            let args_store = StoreArg {
+                key: asset.key.replace("/temp", ""),
+                content_type: asset.content_type.to_owned(),
+                content_encoding: "identity".to_owned(),
+                content: ByteBuf::from(asset_content),
+                sha256: None
+            };
+            ic_certified_assets::store_asset(args_store);
+        }
+
+        // delete from temp
+        ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+    }
+}
+
+
+async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, version: &str) -> Result<(), String> {
+    let canister_id = ic_cdk::id();
+
+    for asset in assets {
+		
+        // get asset content
+        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister, "retrieve", (asset.to_owned(),),).await.unwrap();
+
+        // replace env car
+		let content;
+		if asset == &format!("/upgrade/{}/static/js/bundle.js", version) {
+			let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
+			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
+			content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
+		} else {
+			content = ByteBuf::from(asset_bytes.to_vec());
+		}
+
+		// upload asset
+		let key = asset.replace(&format!("/upgrade/{}", version), "/temp");
+		let store_args = StoreArg {
+            key: key.to_owned(),
+            content_type: get_content_type(&key),
+            content_encoding: "identity".to_owned(),
+            content,
+            sha256: None
+        };
+        ic_certified_assets::store_asset(store_args);
+    }
+
+	Ok(())
+}
+
+#[ic_cdk_macros::query]
+async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
+    let parent_opt = STATE.with(|s| { s.borrow().parent });
+    if parent_opt == None { return Err("Parent canister not found".to_owned()); }
+    let parent  = parent_opt.unwrap();
+    let current_version_opt = STATE.with(|s| s.borrow().wasm_hash.to_owned());
+    if current_version_opt == None { return  Err("Current version not found".to_owned()); }
+    let current_version = current_version_opt.unwrap();
+    
+    let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
+    
+    Ok(next_version_opt)
+}
+
+async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
+	let canister_id = ic_cdk_main::id();
+	let args = CanisterIdRecord { canister_id };
+	let (canister_status, ) = ic_cdk_main::api::call::call::<_, (CanisterStatusResponse, )>(PrincipalMain::management_canister(), "canister_status", (args,)).await.map_err(|(code, err)| format!("{:?} - {}",code, err)).unwrap();
+
+	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
+		Ok(())
+	} else {
+		Err(format!("This {} is not a controllers", caller))
+	}
+}
+
+#[ic_cdk_macros::update]
+async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
+    let caller = ic_cdk_main::caller();
+    authorize(&caller).await?;
+
+    let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
+    if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
+    let parent_canister = parent_canister_opt.unwrap();
+
+    let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, )).await.unwrap();
+    if upgrade_opt == None { return Err("Version not found".to_owned()); }
+    let upgrade = upgrade_opt.unwrap();
+
+    store_assets_to_temp(parent_canister,&upgrade.assets, &upgrade.version).await.unwrap();
+
+	let wasm = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
+
+    ic_cdk_main::spawn(upgrade_canister_cb(wasm));
+
+    Ok(())
+}   
