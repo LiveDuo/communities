@@ -14,8 +14,8 @@ const argv = minimist(process.argv.slice(2))
 const host = argv.network ?? 'http://localhost:8000'
 const id = argv.identity ?? 'default'
 
-const version = "0.0.2"
-const versionFrom = "0.0.1"
+const version = argv.version ?? '0.0.2'
+const versionFrom = argv.versionFrom ?? '0.0.1'
 
 // node src/_parent/upload-upgrade.js --network https://ic0.app --identity with-wallet
 ; (async () => {
