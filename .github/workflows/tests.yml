@@ -28,11 +28,12 @@ jobs:
       - run: export PATH=~/.cargo/bin:/usr/local/bin/:$PATH
       - run: rustup target add wasm32-unknown-unknown
       - run: sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
+      - run: mkdir ~/.config/dfx/ && cp ./test/networks.json ~/.config/dfx/networks.json
       - run: dfx --version
       - run: dfx identity whoami
       - run: dfx start --background &> dfx.log
       - run: dfx deploy parent
-      - run: npm i
+      - run: npm ci
       - run: npm run upload:parent
       - run: npm run test:parent
       # - run: dfx deploy child
