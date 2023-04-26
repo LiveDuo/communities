@@ -34,26 +34,27 @@ describe.only('Testing with done', () => {
 	})
 
 	jest.setTimeout(60000)
+	
 	test('Should create a new community', async () => {
-		// send icp
+		
+		// create child
 		if (canisterIds.ledger) {
 			const accountId = getAccountId(canisterIds.parent.local, principal)
 			await transferIcpToAccount(accountId)
 		}
-		
-		// upgrade child
 		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
-
+		
+		// upload upgrade
 		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
-
+		
+		// get child upgrade
 		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
-
 		const resNextUpgrade = await actorChild.get_next_upgrade()
 		const [ upgrade ] = resNextUpgrade.Ok
 		expect(upgrade).toBeDefined()
 
+		// upgrade child
 		await actorChild.upgrade_canister(upgrade)
-
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
 	})
