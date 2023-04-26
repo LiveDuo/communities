@@ -12,13 +12,13 @@ use std::hash::{Hash, Hasher};
 use crate::state::{*, STATE};
 
 #[ic_cdk_macros::init]
-fn init(wasm_hash: Vec<u8>) {
+fn init(wasm_hash: Option<Vec<u8>>) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
 		let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
-        state.wasm_hash = Some(wasm_hash);
+        state.wasm_hash = wasm_hash;
 	});
 }
 
@@ -537,7 +537,7 @@ async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
 #[ic_cdk_macros::update]
 async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     let caller = ic_cdk_main::caller();
-    authorize(&caller).await.unwrap();
+    authorize(&caller).await?;
 
     let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
     if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
