@@ -1,0 +1,43 @@
+
+name: Tests
+
+on:
+  push:
+    branches: [ "master", "debug" ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        required: false
+        default: false
+
+env:
+  RUST_BACKTRACE: short
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CI: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+      - uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      - run: export PATH=~/.cargo/bin:/usr/local/bin/:$PATH
+      - run: rustup target add wasm32-unknown-unknown
+      - run: sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
+      - run: dfx --version
+      - run: dfx identity whoami
+      - run: dfx start --background &> dfx.log
+      - run: dfx deploy child
+      - run: npm run test:child
+      # - run: dfx deploy parent
+      # - run: npm run script:upload-parent
+      # - run: npm run test:parent
+      - run: dfx stop
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          path: dfx.log
