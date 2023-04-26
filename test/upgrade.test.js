@@ -23,16 +23,16 @@ describe.only('Testing with done', () => {
 		agent = getAgent('http://localhost:8000', identity)
     actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
-		const version = '0.0.2'
-		const upgrade = await actorParent.get_upgrades()
-		const upgradeExist = upgrade.find(u => u.version === version)
+		const versions = ['0.0.2', '0.0.2b']
+		const upgrades = await actorParent.get_upgrades()
+		const upgradeExist = upgrades.filter(u => versions.includes(u.version))
 
-		if(upgradeExist) {
-			await actorParent.remove_upgrade(version).then( a => console.log(a))
+		for (const upgrade of upgradeExist) {
+			await actorParent.remove_upgrade(upgrade.version)
 		}
 	})
 
-	jest.setTimeout(60000)
+	jest.setTimeout(120000)
 	
 	test('Should create a new community', async () => {
 		
@@ -42,18 +42,31 @@ describe.only('Testing with done', () => {
 			await transferIcpToAccount(accountId)
 		}
 		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
+		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
 		
 		// upload upgrade
 		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
-		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
 		const resNextUpgrade = await actorChild.get_next_upgrade()
 		const [ upgrade ] = resNextUpgrade.Ok
 		expect(upgrade).toBeDefined()
-
+		
 		// upgrade child
 		await actorChild.upgrade_canister(upgrade.wasm_hash)
+		
+		// upload broken version
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--versionFrom', '0.0.2'] ,{cwd: process.cwd(), stdio: 'inherit'})
+
+		const resNextUpgrade1 = await actorChild.get_next_upgrade()
+		const [ upgrade1 ] = resNextUpgrade1.Ok
+		expect(upgrade1).toBeDefined()
+
+		await actorChild.upgrade_canister(upgrade1.wasm_hash)
+
+		const posts = await actorChild.get_posts()
+		expect(posts.length).toBe(0)
+		// call canister
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
 	})
