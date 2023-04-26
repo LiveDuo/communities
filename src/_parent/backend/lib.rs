@@ -76,14 +76,14 @@ async fn install_code(canister_id: Principal, version: &String) -> Result<(), St
 	// get wasm hash
 	let mut hasher = Sha256::new();
 	hasher.update(wasm_bytes.clone());
-	let wasm_hash = &hasher.finalize()[..].to_vec();
+	let wasm_hash = hasher.finalize()[..].to_vec();
 
 	// install canister code
 	let install_args = InstallCanisterArgs {
 		mode: InstallMode::Install,
 		canister_id: canister_id,
 		wasm_module: wasm_bytes,
-		arg: Encode!(wasm_hash).unwrap()
+		arg: Encode!(&Some(wasm_hash)).unwrap()
 	};
 	match ic_cdk::api::call::call(Principal::management_canister(), "install_code", (install_args,),).await {
 		Ok(x) => Ok(x),
