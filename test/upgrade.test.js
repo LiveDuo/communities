@@ -3,7 +3,7 @@ const { spawnSync } = require('node:child_process')
 
 const { checkDfxRunning, setupTests, getAgent, getCanisters, transferIcpToAccount } = require('../src/_meta/shared/utils')
 const { getAccountId }= require('../src/_meta/shared/account')
-const { getRandomIdentity } = require('../src/_meta/shared/identity')
+const { getIdentity } = require('../src/_meta/shared/identity')
 const { parentFactory, childFactory } = require('../src/_meta/shared/idl')
 
 setupTests()
@@ -16,9 +16,9 @@ describe.only('Testing with done', () => {
 		// check ic replica
 		await checkDfxRunning()
 
-    	// create parent actor
+    // create parent actor
 		canisterIds = await getCanisters()
-		const identity = await getRandomIdentity()
+		const identity = await getIdentity("default")
 		principal = identity.getPrincipal().toString()
 		agent = getAgent('http://localhost:8000', identity)
     actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
@@ -27,9 +27,8 @@ describe.only('Testing with done', () => {
 		const upgrade = await actorParent.get_upgrades()
 		const upgradeExist = upgrade.find(u => u.version === version)
 
-		
 		if(upgradeExist) {
-			await actorParent.remove_upgrade(version)
+			await actorParent.remove_upgrade(version).then( a => console.log(a))
 		}
 	})
 
@@ -54,7 +53,7 @@ describe.only('Testing with done', () => {
 		expect(upgrade).toBeDefined()
 
 		// upgrade child
-		await actorChild.upgrade_canister(upgrade)
+		await actorChild.upgrade_canister(upgrade.wasm_hash)
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
 	})

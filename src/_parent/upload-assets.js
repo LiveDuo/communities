@@ -1,7 +1,6 @@
 const fs = require('fs/promises')
 const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')
-const { createHash } = require('crypto')
 
 const { getCanisters, getAgent, hostType } = require('../_meta/shared/utils')
 const { getFiles, uploadFile } = require('../_meta/shared/assets')
@@ -43,6 +42,8 @@ const version = '0.0.1'
 
 	// create upgrade
 	const assetsWithPath =  assetsChild.map(a => `/upgrade/${version}/${a}`)
-	await actorParent.create_upgrade(version, [], assetsWithPath)
-
+	const res = await actorParent.create_upgrade(version, [], assetsWithPath)
+	if (res.Err) {
+		console.log('This version already exist')
+	}
 })()

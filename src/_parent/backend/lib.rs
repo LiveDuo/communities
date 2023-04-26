@@ -1,5 +1,4 @@
-
-use ic_cdk::api::call::CallResult;
+use ic_cdk::api::call::{CallResult};
 use ic_cdk::export::candid::{export_service};
 
 mod state;
@@ -33,7 +32,7 @@ fn get_content_type(name: &str) -> String {
 }
 
 async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String) -> Result<(), String> {
-	
+
 	for asset in assets {
 	
 		// skip unnecessary files
@@ -274,7 +273,7 @@ fn update_user_canister_id(caller: Principal, index: usize, canister_id: String)
 fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
 	STATE.with(|s| {
 		let state = s.borrow();
-		state.upgrades.to_owned().into_iter().find(|x| x.upgrade_from == wasm_hash)
+		state.upgrades.iter().find(|x| x.upgrade_from == Some(wasm_hash.to_owned())).map(|s| s.to_owned())
 	})
 }
 #[ic_cdk_macros::query]
@@ -285,8 +284,33 @@ fn get_upgrades() -> Vec<Upgrade> {
 	})
 }
 
+
+#[ic_cdk_macros::query]
+fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
+	STATE.with(|s| {
+		let state = s.borrow();
+		state.upgrades.iter().find(|x| x.wasm_hash == wasm_hash).map(|f| f.to_owned())		
+	})
+}
+
+async fn authorize(caller: &Principal) -> Result<(), String>{
+	let canister_id = ic_cdk::id();
+	let args = CanisterStatusArg { canister_id };
+	let (canister_status, ) = ic_cdk::call::<_, (CanisterStatus, )>(Principal::management_canister(), "canister_status", (args,)).await.unwrap();
+
+	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
+		Ok(())
+	} else {
+		Err("Caller is not a controller".to_owned())
+	}
+}
+
 #[ic_cdk_macros::update]
-fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -> Result<(), String> {
+async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>) -> Result<(), String> {
+
+	// authorize
+	let caller = ic_cdk::caller();
+	authorize(&caller).await?;
 
 	// get wasm
 	let wasm_key = format!("/upgrade/{}/child.wasm", version);
@@ -317,12 +341,17 @@ fn create_upgrade(version: String, upgrade_from: Vec<u8>, assets: Vec<String>) -
 	Ok(())
 }
 #[ic_cdk_macros::update]
-fn remove_upgrade(version: String) {
+async fn remove_upgrade(version: String) -> Result<(), String> {
+	let caller = ic_cdk::caller();
+	authorize(&caller).await?;
+
 	STATE.with(|s| {
 		let mut state = s.borrow_mut();
 		let index = state.upgrades.iter().position(|u| u.version == version).unwrap();
 		state.upgrades.remove(index);
-	})
+	});
+	
+	Ok(())
 }
 
 

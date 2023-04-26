@@ -44,7 +44,7 @@ const childFactory = ({ IDL }) => {
 	});
 	const Upgrade = IDL.Record({
 		version: IDL.Text,
-		upgrade_from: IDL.Vec(IDL.Nat8),
+		upgrade_from: IDL.Opt(IDL.Vec(IDL.Nat8)),
 		timestamp: IDL.Nat64,
 	 	wasm_hash: IDL.Vec(IDL.Nat8), 
 		assets: IDL.Vec(IDL.Text)
@@ -59,21 +59,21 @@ const childFactory = ({ IDL }) => {
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResult, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
 		get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
-		upgrade_canister: IDL.Func([Upgrade], [], ["update"]),
+		upgrade_canister: IDL.Func([IDL.Vec(IDL.Nat8)], [], ["update"]),
 		get_next_upgrade: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Opt(Upgrade), 'Err': IDL.Text })], ["query"])
 	});
 };
 exports.childFactory = childFactory
 
 const parentFactory = ({ IDL }) => {
-	const Upgrade = IDL.Record({'version': IDL.Text, "upgrade_from": IDL.Vec(IDL.Nat8), 'timestamp': IDL.Nat64, 'wasm_hash': IDL.Vec(IDL.Nat8), 'assets': IDL.Vec(IDL.Text)})
+	const Upgrade = IDL.Record({'version': IDL.Text, "upgrade_from": IDL.Opt(IDL.Vec(IDL.Nat8)), 'timestamp': IDL.Nat64, 'wasm_hash': IDL.Vec(IDL.Nat8), 'assets': IDL.Vec(IDL.Text)})
 
 	return IDL.Service({
 		'create_child': IDL.Func([], [IDL.Variant({ 'Ok': IDL.Principal, 'Err': IDL.Text })], []),
 		'create_upgrade':  IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8), IDL.Vec(IDL.Text)], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
 		'get_next_upgrade':  IDL.Func([IDL.Vec(IDL.Nat8)], [IDL.Opt(Upgrade)], []),
 		'get_upgrades':  IDL.Func([], [IDL.Vec(Upgrade)], []),
-		'remove_upgrade':  IDL.Func([IDL.Text], [], []),
+		'remove_upgrade':  IDL.Func([IDL.Text], [IDL.Variant({ 'Ok': IDL.Principal, 'Err': IDL.Text })], []),
 	})
 }
 exports.parentFactory = parentFactory

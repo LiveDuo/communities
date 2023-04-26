@@ -42,5 +42,6 @@ const versionFrom = "0.0.1"
 	// create upgrade
 	const wasmVersionFrom = await fs.readFile(`./build/child/${versionFrom}/child.wasm`)
 	const upgradeFromBuffer = Buffer.from(sha256(wasmVersionFrom), 'hex')
-	await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assets.map(a => `/upgrade/${version}/${a}`))
+	const res = await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assets.map(a => `/upgrade/${version}/${a}`))
+	console.log(res)
 })()
