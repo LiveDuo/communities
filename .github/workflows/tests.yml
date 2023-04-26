@@ -31,12 +31,12 @@ jobs:
       - run: dfx --version
       - run: dfx identity whoami
       - run: dfx start --background &> dfx.log
+      - run: dfx deploy parent
+      - run: npm ci
+      - run: npm run upload:parent
+      - run: npm run test:parent
       # - run: dfx deploy child
       # - run: npm run test:child
-      - run: npm ci
-      - run: dfx deploy parent
-      - run: npm run script:upload-parent
-      - run: npm run test:parent
       - run: dfx stop
       - uses: actions/upload-artifact@v3
         if: always()
