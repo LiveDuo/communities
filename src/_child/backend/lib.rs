@@ -442,7 +442,6 @@ fn export_candid() -> String {
 }
 
 use ic_cdk_main::export::candid::{Principal as PrincipalMain};
-use candid::{ Principal };
 use serde_bytes::ByteBuf;
 use ic_cdk_main::api::call::CallResult;
 use ic_cdk_main::api::management_canister::main::*;
