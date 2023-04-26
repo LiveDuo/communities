@@ -1,7 +1,6 @@
 const fs = require('fs/promises')
 const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')
-const { createHash } = require('crypto')
 
 const { getCanisters, getAgent, hostType } = require('../_meta/shared/utils')
 const { getFiles, uploadFile } = require('../_meta/shared/assets')

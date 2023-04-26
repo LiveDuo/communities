@@ -73,7 +73,7 @@ const parentFactory = ({ IDL }) => {
 		'create_upgrade':  IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8), IDL.Vec(IDL.Text)], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
 		'get_next_upgrade':  IDL.Func([IDL.Vec(IDL.Nat8)], [IDL.Opt(Upgrade)], []),
 		'get_upgrades':  IDL.Func([], [IDL.Vec(Upgrade)], []),
-		'remove_upgrade':  IDL.Func([IDL.Text], [], []),
+		'remove_upgrade':  IDL.Func([IDL.Text], [IDL.Variant({ 'Ok': IDL.Principal, 'Err': IDL.Text })], []),
 	})
 }
 exports.parentFactory = parentFactory

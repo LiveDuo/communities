@@ -355,6 +355,14 @@ fn test_fn() {
     ic_cdk::println!("hello from test fn");
     ic_cdk::println!("hello from test fn");
 }
+
+fn update_wasm_hash() {
+    let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
+    let mut hasher = Sha256::new();
+    hasher.update(wasm_bytes.clone());
+    let wasm_hash = hasher.finalize()[..].to_vec();
+    STATE.with(|s| s.borrow_mut().wasm_hash = Some(wasm_hash));
+}
 #[derive(CandidType, Deserialize)]
 pub struct StableState {
     pub state: State,
@@ -374,22 +382,14 @@ fn pre_upgrade() {
 }
 
 #[ic_cdk_macros::post_upgrade]
- fn post_upgrade() {
-     
-     let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
- 
-     ic_certified_assets::post_upgrade(s_prev.storage);
+fn post_upgrade() {
+    // restore state
+    let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
+    ic_certified_assets::post_upgrade(s_prev.storage);
+    STATE.with(|s| *s.borrow_mut() = s_prev.state);
 
-     let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
-     let mut hasher = Sha256::new();
-     hasher.update(wasm_bytes.clone());
-     let wasm_hash = hasher.finalize()[..].to_vec();
-
-     STATE.with(|s| {
-         *s.borrow_mut() = s_prev.state;
-         s.borrow_mut().wasm_hash = Some(wasm_hash);
-     });
-     
+    // finalize upgrade
+    update_wasm_hash();
     replace_assets_from_temp();
 }
 
@@ -544,7 +544,7 @@ async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     let parent_canister = parent_canister_opt.unwrap();
 
     let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, )).await.unwrap();
-    if upgrade_opt == None { return Err("This version not found".to_owned()); }
+    if upgrade_opt == None { return Err("Version not found".to_owned()); }
     let upgrade = upgrade_opt.unwrap();
 
     store_assets_to_temp(parent_canister,&upgrade.assets, &upgrade.version).await.unwrap();
