@@ -46,7 +46,7 @@ describe.only('Testing with done', () => {
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 
 		// upload upgrade (0.0.2)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1'] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
 		const resNextUpgrade = await actorChild.get_next_upgrade()
