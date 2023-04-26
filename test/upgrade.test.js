@@ -3,7 +3,7 @@ const { spawnSync } = require('node:child_process')
 
 const { checkDfxRunning, setupTests, getAgent, getCanisters, transferIcpToAccount } = require('../src/_meta/shared/utils')
 const { getAccountId }= require('../src/_meta/shared/account')
-const { getRandomIdentity } = require('../src/_meta/shared/identity')
+const { getIdentity } = require('../src/_meta/shared/identity')
 const { parentFactory, childFactory } = require('../src/_meta/shared/idl')
 
 setupTests()
@@ -16,9 +16,9 @@ describe.only('Testing with done', () => {
 		// check ic replica
 		await checkDfxRunning()
 
-    	// create parent actor
+    // create parent actor
 		canisterIds = await getCanisters()
-		const identity = await getRandomIdentity()
+		const identity = await getIdentity("default")
 		principal = identity.getPrincipal().toString()
 		agent = getAgent('http://localhost:8000', identity)
     actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
@@ -28,7 +28,7 @@ describe.only('Testing with done', () => {
 		const upgradeExist = upgrade.find(u => u.version === version)
 
 		if(upgradeExist) {
-			await actorParent.remove_upgrade(version)
+			await actorParent.remove_upgrade(version).then( a => console.log(a))
 		}
 	})
 
@@ -41,8 +41,8 @@ describe.only('Testing with done', () => {
 		}
 		
 		// upgrade child
-		const childPrincipalId = "rdmx6-jaaaa-aaaaa-aaadq-cai"
-		// const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
+
+		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
 
 		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
 

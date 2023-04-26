@@ -1,4 +1,4 @@
-use ic_cdk::api::call::CallResult;
+use ic_cdk::api::call::{CallResult};
 use ic_cdk::export::candid::{export_service};
 
 mod state;
@@ -293,8 +293,24 @@ fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
 	})
 }
 
+async fn authorize(caller: &Principal) -> Result<(), String>{
+	let canister_id = ic_cdk::id();
+	let args = CanisterStatusArg { canister_id };
+	let (canister_status, ) = ic_cdk::call::<_, (CanisterStatus, )>(Principal::management_canister(), "canister_status", (args,)).await.map_err(|(code, err)| format!("{:?} - {}",code, err)).unwrap();
+
+	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
+		Ok(())
+	} else {
+		Err(format!("This {} is not a controllers", caller))
+	}
+}
+
 #[ic_cdk_macros::update]
-fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>) -> Result<(), String> {
+async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>) -> Result<(), String> {
+
+	// authorize
+	let caller = ic_cdk::caller();
+	authorize(&caller).await.unwrap();
 
 	// get wasm
 	let wasm_key = format!("/upgrade/{}/child.wasm", version);
@@ -325,7 +341,10 @@ fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<St
 	Ok(())
 }
 #[ic_cdk_macros::update]
-fn remove_upgrade(version: String) {
+async fn remove_upgrade(version: String) {
+	let caller = ic_cdk::caller();
+	authorize(&caller).await.unwrap();
+
 	STATE.with(|s| {
 		let mut state = s.borrow_mut();
 		let index = state.upgrades.iter().position(|u| u.version == version).unwrap();

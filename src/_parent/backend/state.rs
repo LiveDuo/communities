@@ -33,6 +33,29 @@ pub struct CanisterSettings {
 	pub memory_allocation: Option<u128>,
 	pub freezing_threshold: Option<u128>,
 }
+#[derive(CandidType, Deserialize)]
+pub struct DefiniteCanisterSettings {
+	pub controllers: Vec<Principal>,
+	pub compute_allocation: u128,
+	pub memory_allocation: u128,
+	pub freezing_threshold: u128,
+}
+
+#[derive(CandidType, Deserialize)]
+pub enum Status {
+    #[serde(rename = "stopped")] Stopped,
+    #[serde(rename = "stopping")] Stopping,
+	#[serde(rename = "running")] Running,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct CanisterStatus {
+    pub status: Status,
+    pub memory_size : u128,
+    pub cycles : u128,
+    pub settings : DefiniteCanisterSettings,
+    pub module_hash: Option<Vec<u8>>
+}
 
 #[derive(CandidType, Deserialize)]
 pub struct StoreAssetArgs {
@@ -46,6 +69,10 @@ pub struct StoreAssetArgs {
 pub struct UpdateSettingsArgs { 
     pub canister_id: Principal,
     pub settings: CanisterSettings
+}
+#[derive(CandidType)]
+pub struct CanisterStatusArg { 
+    pub canister_id: Principal
 }
 #[derive(CandidType)]
 pub struct CreateCanisterArgs { pub settings: CanisterSettings, }

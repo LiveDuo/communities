@@ -422,15 +422,6 @@ pub enum InstallMode {
 	#[serde(rename = "upgrade")] Upgrade,
 }
 
-
-#[derive(CandidType, Deserialize)]
-pub struct InstallCanisterArgs {
-	pub mode: InstallMode,
-	pub canister_id: Principal,
-	#[serde(with = "serde_bytes")] pub wasm_module: Vec<u8>,
-	pub arg: Vec<u8>,
-}
-
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub struct Upgrade { 
     pub version: String,
@@ -531,8 +522,22 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
     Ok(next_version_opt)
 }
 
+async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
+	let canister_id = ic_cdk_main::id();
+	let args = CanisterIdRecord { canister_id };
+	let (canister_status, ) = ic_cdk_main::api::call::call::<_, (CanisterStatusResponse, )>(PrincipalMain::management_canister(), "canister_status", (args,)).await.map_err(|(code, err)| format!("{:?} - {}",code, err)).unwrap();
+
+	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
+		Ok(())
+	} else {
+		Err(format!("This {} is not a controllers", caller))
+	}
+}
+
 #[ic_cdk_macros::update]
 async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
+    let caller = ic_cdk_main::caller();
+    authorize(&caller).await.unwrap();
 
     let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
     if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
