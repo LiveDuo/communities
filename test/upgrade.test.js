@@ -16,18 +16,18 @@ describe.only('Testing with done', () => {
 		// check ic replica
 		await checkDfxRunning()
 
-    // create parent actor
+    	// create parent actor
 		canisterIds = await getCanisters()
 		const identity = await getIdentity("default")
 		principal = identity.getPrincipal().toString()
 		agent = getAgent('http://localhost:8000', identity)
-    actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
+    	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
+		// remove upgrades
 		const versions = ['0.0.2', '0.0.2b']
 		const upgrades = await actorParent.get_upgrades()
-		const upgradeExist = upgrades.filter(u => versions.includes(u.version))
-
-		for (const upgrade of upgradeExist) {
+		const upgradesExist = upgrades.filter(u => versions.includes(u.version))
+		for (const upgrade of upgradesExist) {
 			await actorParent.remove_upgrade(upgrade.version)
 		}
 	})
