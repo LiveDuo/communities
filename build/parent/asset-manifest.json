@@ -2,6 +2,9 @@
   "files": {
     "main.js": "/static/js/bundle.js",
     "static/media/launch.jpg": "/static/media/launch.d5947798dd34e601cdfb.jpg",
+    "static/media/firefox.svg": "/static/media/firefox.94f048fa99a3b87a56d973980a48815a.svg",
+    "static/media/brave.svg": "/static/media/brave.f96467ac5430effa6b69c25c0fbeeeca.svg",
+    "static/media/chrome.svg": "/static/media/chrome.ea5a9d28ece9f5d81368fd6e7b346fb1.svg",
     "index.html": "/index.html"
   },
   "entrypoints": [
