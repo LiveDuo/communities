@@ -43,6 +43,8 @@ const version = '0.0.1'
 
 	// create upgrade
 	const assetsWithPath =  assetsChild.map(a => `/upgrade/${version}/${a}`)
-	await actorParent.create_upgrade(version, [], assetsWithPath)
-
+	const res = await actorParent.create_upgrade(version, [], assetsWithPath)
+	if (res.Err) {
+		console.log('This version already exist')
+	}
 })()
