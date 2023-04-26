@@ -43,8 +43,9 @@ describe.only('Testing with done', () => {
 		}
 		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
 		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
-		
-		// upload upgrade
+		console.log(`http://${childPrincipalId}.localhost:8000/`)
+
+		// upload upgrade (0.0.2)
 		spawnSync('node', ['./src/_parent/upload-upgrade.js'] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
@@ -52,22 +53,23 @@ describe.only('Testing with done', () => {
 		const [ upgrade ] = resNextUpgrade.Ok
 		expect(upgrade).toBeDefined()
 		
-		// upgrade child
+		// upgrade child (0.0.2)
 		await actorChild.upgrade_canister(upgrade.wasm_hash)
 		
-		// upload broken version
+		// upload version (0.0.2b)
 		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--versionFrom', '0.0.2'] ,{cwd: process.cwd(), stdio: 'inherit'})
 
+		// get child upgrade
 		const resNextUpgrade1 = await actorChild.get_next_upgrade()
 		const [ upgrade1 ] = resNextUpgrade1.Ok
 		expect(upgrade1).toBeDefined()
 
+		// upgrade child (0.0.2b)
 		await actorChild.upgrade_canister(upgrade1.wasm_hash)
 
+		// check canister
 		const posts = await actorChild.get_posts()
 		expect(posts.length).toBe(0)
-		// call canister
-		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
 	})
 
