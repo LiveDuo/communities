@@ -1,6 +1,7 @@
 mod state;
 mod verify;
-use candid::{export_service, CandidType, Deserialize};
+
+use candid::{export_service, CandidType, Deserialize, Principal};
 
 use sha2::{Sha256, Digest};
 use ic_cdk_macros::*;
@@ -38,6 +39,34 @@ fn get_address(arg: &Authentication) -> String {
     }
 }
 
+fn login_message(principal: &Principal) -> String {
+    format!("Sign this message to login.\n\nApp:\ncommunities.ooo\n\nAddress:\n{}\n\n", principal.to_string())
+}
+
+fn login_message_hex_evm(principal: &Principal) -> String {
+    let message_prefix = format!("\x19Ethereum Signed Message:\n");
+    let message_prefix_encode = hex::encode(&message_prefix);
+    let message_prefix_msg =  hex::decode(message_prefix_encode).unwrap();
+
+    let str = login_message(&principal);
+    let str_encode = hex::encode(&str);
+    let hex_msg =  hex::decode(str_encode).unwrap();
+
+    let msg_length = format!("{}", hex_msg.len());
+    let msg_length_encode = hex::encode(&msg_length);
+    let msg_length_hex =  hex::decode(msg_length_encode).unwrap();
+
+    let msg_vec = [message_prefix_msg, msg_length_hex, hex_msg].concat();
+
+    easy_hasher::easy_hasher::raw_keccak256(msg_vec).to_hex_string()
+
+}
+
+fn login_message_hex_svm(principal: &Principal) -> String {
+    let msg = login_message(&principal);
+    hex::encode(&msg)
+}
+
 #[update]
 fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
     let caller = ic_cdk::caller();
@@ -45,17 +74,21 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
-        if state.profiles.contains_key(&caller) {
-            let profile_opt = state.profiles.get(&caller);
-            return Ok(profile_opt.unwrap().clone());
-        }
 
         let authentication = match auth {
             AuthenticationWith::Evm(args) => {
+                if args.message.trim_start_matches("0x") != login_message_hex_evm(&caller) {
+                    return Err("Principal does not match".to_owned());
+                }
+
                 let param = crate::verify::verify_evm(args);
                 Authentication::Evm(param)
             }
             AuthenticationWith::Svm(args) => {
+                if args.message != login_message_hex_svm(&caller) {
+                    return Err("Principal does not match".to_owned());
+                }
+
                 let param = crate::verify::verify_svm(args);
                 Authentication::Svm(param)
             }
@@ -67,10 +100,25 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
             }
         };
 
-        state
-            .indexes
-            .profile
-            .insert(authentication.to_owned(), caller.clone());
+        
+
+        let authentication = authentication;
+        if state.indexes.profile.contains_key(&authentication) {
+            let profile_id = state.indexes.profile.get(&authentication).cloned().unwrap();
+            let mut profile = state.profiles.get(&profile_id).cloned().unwrap();
+            profile.active_principal = caller.clone();
+
+            state.indexes.active_principal.insert(caller.clone(), profile_id);
+            state.profiles.insert(profile_id.clone(), profile.clone());
+
+            return Ok(profile);
+        }
+
+        let profile_id = uuid(&caller.to_text());
+
+        state.indexes.profile.insert(authentication.to_owned(), profile_id.to_owned());
+
+        state.indexes.active_principal.insert(caller.clone(), profile_id.to_owned());
 
         ic_cdk::println!("Linked with address {:?}", authentication.to_owned());
 
@@ -78,9 +126,10 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
             authentication: authentication,
             name: "".to_owned(),
             description: "".to_owned(),
+            active_principal: caller
         };
 
-        state.profiles.insert(caller, profile.clone());
+        state.profiles.insert(profile_id, profile.clone());
         Ok(profile)
     })
 }
@@ -92,11 +141,15 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
-        if !state.profiles.contains_key(&caller) {
+        let profile_id_opt = state.indexes.active_principal.get(&caller);
+
+        if profile_id_opt == None {
             return Err("Profile does not exists".to_owned());
         }
+        let profile_id = profile_id_opt.cloned().unwrap();
 
         let post_id = uuid(&caller.to_text());
+
         let post = Post {
             title,
             description,
@@ -105,9 +158,9 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
 
         state.posts.insert(post_id, post.clone());
 
-        state.relations.principal_to_post_id.insert(caller, post_id);
+        state.relations.profile_id_to_post_id.insert(profile_id, post_id);
 
-        let address = state.profiles.get(&caller).unwrap().authentication.clone();
+        let address = state.profiles.get(&profile_id).unwrap().authentication.clone();
         let post = PostSummary {
             title: post.title,
             post_id,
@@ -127,17 +180,17 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
         let mut state = s.borrow_mut();
 
         let caller = ic_cdk::caller();
-        let principal_opt = state.profiles.get(&caller);
 
-        if principal_opt == None {
+        if state.indexes.active_principal.contains_key(&caller){
             return Err("Profile does not exist".to_owned());
         }
 
         if !state.posts.contains_key(&post_id) {
             return Err("Post does not exist".to_owned());
         }
-
-        let address = get_address(&principal_opt.unwrap().authentication);
+        let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
+        let profile = state.profiles.get(&profile_id).unwrap();
+        let address = get_address(&profile.authentication);
 
         let reply = Reply {
             text: context.to_owned(),
@@ -149,15 +202,9 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
 
         state.replay.insert(reply_id, reply.clone());
 
-        state
-            .relations
-            .principal_to_reply_id
-            .insert(caller.clone(), reply_id.clone());
+        state.relations.profile_id_to_reply_id.insert(profile_id.clone(), reply_id.clone());
 
-        state
-            .relations
-            .reply_id_to_post_id
-            .insert(reply_id.clone(), post_id.clone());
+        state.relations.reply_id_to_post_id.insert(reply_id.clone(), post_id.clone());
 
         Ok(reply)
     })
@@ -199,16 +246,9 @@ fn get_posts() -> Vec<PostSummary> {
                     state.replay.get(reply_id).unwrap().timestamp
                 };
 
-                let (principal, _) = state
-                    .relations
-                    .principal_to_post_id
-                    .backward
-                    .get(&post_id)
-                    .unwrap()
-                    .first_key_value()
-                    .unwrap();
+                let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
-                let address = state.profiles.get(&principal).cloned().unwrap().authentication;
+                let address = state.profiles.get(&profile_id).cloned().unwrap().authentication;
 
                 PostSummary {
                     title: post.title.to_owned(),
@@ -230,12 +270,12 @@ fn get_profile() -> Result<Profile, String> {
         let state = s.borrow();
 
         let caller = ic_cdk::caller();
-        let profile_opt = state.profiles.get(&caller);
-        if profile_opt == None {
+        let profile_id_opt = state.indexes.active_principal.get(&caller);
+        if profile_id_opt == None {
             return Err("Profile does not exists".to_owned());
         }
-
-        Ok(profile_opt.unwrap().clone())
+        let profile = state.profiles.get(profile_id_opt.unwrap()).unwrap();
+        Ok(profile.clone())
     })
 }
 
@@ -254,16 +294,9 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
         let post = post_opt.unwrap();
 
-        let (principal, _) = state
-                    .relations
-                    .principal_to_post_id
-                    .backward
-                    .get(&post_id)
-                    .unwrap()
-                    .first_key_value()
-                    .unwrap();
+        let (principal, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
-    let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
+        let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
 
         let post_result = PostResponse {
             replies,
@@ -281,16 +314,17 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     STATE.with(|s| {
         let state = s.borrow();
 
-        let principal_opt = state.indexes.profile.get(&authentication);
-        if principal_opt == None {
+        let profile_id_opt = state.indexes.profile.get(&authentication);
+        if profile_id_opt == None {
             return Err("Profile does not exists".to_owned());
         }
 
         let post_ids_opt = state
             .relations
-            .principal_to_post_id
+            .profile_id_to_post_id
             .forward
-            .get(&principal_opt.unwrap());
+            .get(&profile_id_opt.unwrap());
+
         if post_ids_opt == None {
             return Ok(vec![]);
         }
@@ -317,16 +351,16 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                 };
 
                 // FIX
-                let (principal, _) = state
+                let (profile_id, _) = state
                     .relations
-                    .principal_to_post_id
+                    .profile_id_to_post_id
                     .backward
                     .get(&post_id)
                     .unwrap()
                     .first_key_value()
                     .unwrap();
 
-                let address = state.profiles.get(&principal).cloned().unwrap().authentication;
+                let address = state.profiles.get(&profile_id).cloned().unwrap().authentication;
 
 
                 PostSummary {

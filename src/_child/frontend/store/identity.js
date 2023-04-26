@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react'
-import { useToast } from '@chakra-ui/react'
+import { useToast, useDisclosure } from '@chakra-ui/react'
 import { utils , ethers} from 'ethers'
 import bs58 from 'bs58'
 
@@ -13,8 +13,10 @@ const IdentityContext = createContext()
 const IdentityProvider = ({children}) => {
   const [account, setAccount] = useState()
   const [identity, setIdentity] = useState()
-
+  const [selectedNetwork, setSelectedNetwork] = useState()
   const [childActor, setChildActor] = useState()
+
+  const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure()
 
   const toast = useToast()
   
@@ -33,9 +35,9 @@ const IdentityProvider = ({children}) => {
       await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner()
       const address = await signer.getAddress()
-      const loginMessage = getLoginMessage(address)
+      const identity = getIdentityFromSignature() // generate Ed25519 identity
+      const loginMessage = getLoginMessage(identity.getPrincipal().toString())
       const signature = await signer.signMessage(loginMessage)// sign with metamask
-      const identity = getIdentityFromSignature(signature) // generate Ed25519 identity
       
       // save identity
       const account = {address, type: 'Evm'}
@@ -66,13 +68,13 @@ const IdentityProvider = ({children}) => {
       const phantom = window.solana
       await phantom.connect()
       const address = phantom.publicKey.toString()
-      const loginMessage = getLoginMessage(address)
+      const identity = getIdentityFromSignature() // generate Ed25519 identity
+      const loginMessage = getLoginMessage(identity.getPrincipal().toString())
       
       // get identity
       const encodedMessage = new TextEncoder().encode(loginMessage)
       const signedMessage = await phantom.request({ method: 'signMessage', params: { message: encodedMessage } })
-      const identity = getIdentityFromSignature(Buffer.from(signedMessage.signature)) // generate Ed25519 identity
-      
+
       // set actors
       const _childActor = createChildActor(identity)
       setChildActor(_childActor)
@@ -111,7 +113,7 @@ const IdentityProvider = ({children}) => {
     }
   }
 
-  const value = { account, identity, childActor, login, logout, setAccount }
+  const value = { account, identity, childActor, login, logout, setAccount, isModalOpen, onModalOpen, onModalClose, setSelectedNetwork, selectedNetwork }
   
   return (
     <IdentityContext.Provider value={value}>

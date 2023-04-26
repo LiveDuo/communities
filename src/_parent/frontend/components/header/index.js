@@ -7,16 +7,17 @@ import { LedgerContext } from '../../store/ledger'
 import { isLocal } from '../../agents'
 
 const Header = () => {
-  const {walletConnected, connect, disconnect, host, userPrincipal} = useContext(IdentityContext)
+  const {walletConnected, connect, disconnect, host, userPrincipal, modalDisclosure } = useContext(IdentityContext)
   const { balance } = useContext(LedgerContext)
 
   const userPrincipalShorten = userPrincipal.slice(0, 5) + '...' + userPrincipal.slice(-3)
 
   const onConnect = () => {
-    if (isLocal) {
-      connect('localhost')
-    } else {
-      connect('mainnet')
+    if (!window.ic?.plug) {
+			modalDisclosure.onOpen()
+		} else {
+      const hostType = isLocal ? 'localhost' : 'mainnet'
+      connect(hostType)
     }
   }
 

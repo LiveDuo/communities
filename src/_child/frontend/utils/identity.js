@@ -1,4 +1,3 @@
-import * as ethers from 'ethers'
 import { Ed25519KeyIdentity } from '@dfinity/identity'
 
 const getLoginMessage = (account) => {
@@ -10,9 +9,8 @@ const getLoginMessage = (account) => {
 }
 export { getLoginMessage }
 
-const getIdentityFromSignature = (signature) => {
-  const hash = ethers.utils.keccak256(signature).substring(2)
-  return Ed25519KeyIdentity.generate(Buffer.from(hash, 'hex'))
+const getIdentityFromSignature = () => {
+  return Ed25519KeyIdentity.generate()
 }
 export { getIdentityFromSignature }
 
