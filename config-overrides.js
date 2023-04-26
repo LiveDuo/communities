@@ -8,8 +8,6 @@ const canisterIds = JSON.parse(canisterData)
 const LEDGER_CANISTER_ID = 'ryjl3-tyaaa-aaaaa-aaaba-cai'
 const CMC_CANISTER_ID = 'rkp4c-7iaaa-aaaaa-aaaca-cai'
 
-const version = '0.0.1'
-
 const updateEnvVar = (config, key, value) => {
     const interpolateIndex = config.plugins.findIndex(e => e.constructor.name === 'InterpolateHtmlPlugin')
     config.plugins[interpolateIndex].replacements[key] = value
@@ -57,7 +55,7 @@ module.exports = {
     paths: (paths, _env) => {
 
         if (process.env.CRA_PROJECT === 'child') {
-            updatePaths(paths, 'src/_child/frontend', `build/child/${version}`)
+            updatePaths(paths, 'src/_child/frontend', `build/child/latest`)
         } else if (process.env.CRA_PROJECT === 'parent') {
             updatePaths(paths, 'src/_parent/frontend', 'build/parent')
         }
