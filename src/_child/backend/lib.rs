@@ -563,27 +563,31 @@ async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
 	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
 		Ok(())
 	} else {
-		Err(format!("This {} is not a controllers", caller))
+		Err(format!("Caller is not a controller"))
 	}
 }
 
 #[ic_cdk_macros::update]
 async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
+    
     let caller = ic_cdk_main::caller();
     authorize(&caller).await?;
 
+    // get parent canister
     let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
     if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
+    
+    // get upgrade from parent
     let parent_canister = parent_canister_opt.unwrap();
-
     let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, )).await.unwrap();
     if upgrade_opt == None { return Err("Version not found".to_owned()); }
     let upgrade = upgrade_opt.unwrap();
 
-    store_assets_to_temp(parent_canister,&upgrade.assets, &upgrade.version).await.unwrap();
+    // store assets to temp
+    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version).await.unwrap();
 
-	let wasm = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
-
+    // upgrade wasm
+    let wasm = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());	
     ic_cdk_main::spawn(upgrade_canister_cb(wasm));
 
     Ok(())
