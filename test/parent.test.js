@@ -20,7 +20,7 @@ describe.only('Testing with done', () => {
 		canisterIds = await getCanisters()
 		const identity = await getRandomIdentity()
 		principal = identity.getPrincipal().toString()
-		const agent = getAgent('http://localhost:8000', identity)
+		const agent = getAgent('http://127.0.0.1:8000', identity)
     	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
 	})

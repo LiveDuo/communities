@@ -31,10 +31,10 @@ describe('Testing with done', () => {
 		// create child actor
 		canisters = await getCanisters()
 
-		const agentEvm = getAgent('http://localhost:8000', identityEvm)
+		const agentEvm = getAgent('http://127.0.0.1:8000', identityEvm)
 		actorBackendEvm = Actor.createActor(childFactory, { agent: agentEvm, canisterId: canisters.child.local })
 
-		const agentSvm = getAgent('http://localhost:8000', identitySvm)
+		const agentSvm = getAgent('http://127.0.0.1:8000', identitySvm)
 		actorBackendSvm = Actor.createActor(childFactory, { agent: agentSvm, canisterId: canisters.child.local })
 
 	})
@@ -61,7 +61,7 @@ describe('Testing with done', () => {
 
 		// logout and login
 		identityEvm = Ed25519KeyIdentity.generate()
-		const agentEvm = getAgent('http://localhost:8000', identityEvm)
+		const agentEvm = getAgent('http://127.0.0.1:8000', identityEvm)
 		actorBackendEvm = Actor.createActor(childFactory, { agent: agentEvm, canisterId: canisters.child.local })
 		const {signature: signature2 , loginMessageHash: loginMessageHash2} = await getSignatureAndMessage(signerEvm, identityEvm.getPrincipal())
 		const profile2 = await actorBackendEvm.create_profile({Evm: { signature : signature2,  message: loginMessageHash2 }})
@@ -95,7 +95,7 @@ describe('Testing with done', () => {
 
 		// logout and login
 		identitySvm = Ed25519KeyIdentity.generate()
-		const agentSvm = getAgent('http://localhost:8000', identitySvm)
+		const agentSvm = getAgent('http://127.0.0.1:8000', identitySvm)
 		actorBackendSvm = Actor.createActor(childFactory, { agent: agentSvm, canisterId: canisters.child.local })
 		const {loginMessageHash: loginMessageHash2, signature: signature2} = getSignatureAndMessageSvm(signerSvm, identitySvm.getPrincipal())
 		const profile2 = await actorBackendSvm.create_profile({Svm: { public_key: pubKey, signature: signature2, message: loginMessageHash2 }});

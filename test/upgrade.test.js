@@ -20,7 +20,7 @@ describe.only('Testing with done', () => {
 		canisterIds = await getCanisters()
 		const identity = await getIdentity("default")
 		principal = identity.getPrincipal().toString()
-		agent = getAgent('http://localhost:8000', identity)
+		agent = getAgent('http://127.0.0.1:8000', identity)
     	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
 		// remove upgrades
