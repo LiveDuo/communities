@@ -8,7 +8,7 @@ const { getIdentity } = require('../_meta/shared/identity')
 const { assetFactory } = require('../_meta/shared/idl')
 
 const argv = minimist(process.argv.slice(2))
-const host = argv.network ?? 'http://localhost:8000'
+const host = argv.network ?? 'http://127.0.0.1:8000'
 const id = argv.identity ?? 'default'
 
 // node src/_child/upload-assets.js --network https://ic0.app --identity with-wallet

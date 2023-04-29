@@ -1,4 +1,4 @@
-const { Ed25519KeyIdentity, Ed25519PublicKey } = require('@dfinity/identity')
+const { Ed25519KeyIdentity, Secp256k1KeyIdentity } = require('@dfinity/identity')
 const readlineSync = require('readline-sync')
 const { ethers } = require('ethers')
 const tweetnacl = require('tweetnacl')
@@ -119,6 +119,10 @@ const getIdentity = async (name) => {
 
 	const buffer = pem.decode(pemFile)
 	const secretKey = Buffer.concat([buffer.subarray(16, 48), buffer.subarray(53, 85)])
-	return Ed25519KeyIdentity.fromSecretKey(secretKey)
+	if (pemFile.toString().startsWith('-----BEGIN PRIVATE KEY-----')) {
+		return Ed25519KeyIdentity.fromSecretKey(secretKey)
+	} else {
+		return Secp256k1KeyIdentity.fromSecretKey(secretKey)
+	}
 }
 exports.getIdentity = getIdentity

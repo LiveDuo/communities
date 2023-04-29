@@ -7,11 +7,13 @@ const { getFiles, uploadFile } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { assetFactory, parentFactory } = require('../_meta/shared/idl')
 
-const argv = minimist(process.argv.slice(2))
-const host = argv.network ?? 'http://localhost:8000'
-const id = argv.identity ?? 'default'
+// https://forum.dfinity.org/t/webpack-proxy-econnrefused-for-proxy-to-api/9263/2?u=liveduo
+// https://forum.dfinity.org/t/development-workflow-quickly-test-code-modifications/1793/22?u=liveduo
 
-const version = '0.0.1'
+const argv = minimist(process.argv.slice(2))
+const host = argv.network ?? 'http://127.0.0.1:8000'
+const id = argv.identity ?? 'default'
+const version = argv.version ?? '0.0.1'
 
 // node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
 ; (async () => {
