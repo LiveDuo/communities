@@ -36,8 +36,8 @@ jobs:
       - run: npm ci
       - run: npm run upload:parent
       - run: npm run test:parent
-      # - run: dfx deploy child
-      # - run: npm run test:child
+      - run: dfx deploy child
+      - run: npm run test:child
       - run: dfx stop
       - uses: actions/upload-artifact@v3
         if: always()
