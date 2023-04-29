@@ -118,10 +118,11 @@ const getIdentity = async (name) => {
 	}
 
 	const buffer = pem.decode(pemFile)
-	const secretKey = Buffer.concat([buffer.subarray(16, 48), buffer.subarray(53, 85)])
 	if (pemFile.toString().startsWith('-----BEGIN PRIVATE KEY-----')) {
+		const secretKey = Buffer.concat([buffer.subarray(16, 48), buffer.subarray(53, 85)])
 		return Ed25519KeyIdentity.fromSecretKey(secretKey)
 	} else {
+		const secretKey = buffer.subarray(7, 39)
 		return Secp256k1KeyIdentity.fromSecretKey(secretKey)
 	}
 }
