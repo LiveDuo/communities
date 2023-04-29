@@ -27,7 +27,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - run: export PATH=~/.cargo/bin:/usr/local/bin/:$PATH
       - run: rustup target add wasm32-unknown-unknown
-      - run: sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
+      - run: DFX_VERSION=0.13.1 sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
       - run: mkdir ~/.config/dfx/ && cp ./test/networks.json ~/.config/dfx/networks.json
       - run: dfx --version
       - run: dfx identity whoami
