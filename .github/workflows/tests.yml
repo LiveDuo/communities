@@ -34,7 +34,6 @@ jobs:
       - run: dfx start --background &> dfx.log
       - run: dfx deploy parent
       - run: npm ci
-      - uses: mxschmitt/action-tmate@v3
       # - run: npm run upload:parent
       # - run: npm run test:parent
       # - run: dfx deploy child
