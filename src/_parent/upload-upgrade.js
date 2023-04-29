@@ -11,7 +11,7 @@ const { parentFactory, assetFactory } = require('../_meta/shared/idl')
 const sha256 = (b) => createHash('sha256').update(b).digest('hex')
 
 const argv = minimist(process.argv.slice(2))
-const host = argv.network ?? 'http://localhost:8000'
+const host = argv.network ?? 'http://127.0.0.1:8000'
 const id = argv.identity ?? 'default'
 
 const version = argv.version ?? '0.0.2'
