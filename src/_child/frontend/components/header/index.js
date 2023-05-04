@@ -15,7 +15,7 @@ const Header = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { identity, login, logout, account, setSelectedNetwork, onModalOpen } = useContext(IdentityContext)
+  const { principal, login, logout, account, setSelectedNetwork, onModalOpen } = useContext(IdentityContext)
   const { setProfile, getProfileByAuth } = useContext(ChildContext)
 
   useEffect(() => {
@@ -46,7 +46,7 @@ const Header = () => {
       {location.pathname !== '/' && <Box ml="20px">
         <Button onClick={() => navigate('/')}>Home</Button>
       </Box>}
-      {!(account && identity?.getPrincipal()) &&
+      {!(account && principal) &&
         (<Box ml="auto">
           <Menu>
             <MenuButton as={Button}>
@@ -59,7 +59,7 @@ const Header = () => {
             </MenuList>
           </Menu>
         </Box>)}
-        {(account && identity?.getPrincipal()) &&
+        {(account && principal) &&
         <Box ml="auto">
           <Link as={RouterLink} to={`/user/${account?.address}/${account?.type}`}>
             <Button>
@@ -70,7 +70,7 @@ const Header = () => {
             </Button>
           </Link>
         </Box>}
-        {(account && identity?.getPrincipal()) && 
+        {(account && principal) && 
         <Box display="inline-block" ml="8px">
           <Button onClick={logout}>Logout</Button>
         </Box>}

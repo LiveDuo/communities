@@ -13,7 +13,8 @@ const IdentityContext = createContext()
 
 const IdentityProvider = ({children}) => {
   const [account, setAccount] = useState()
-  const [identity, setIdentity] = useState()
+  const [principal, setPrincipal] = useState()
+
   const [selectedNetwork, setSelectedNetwork] = useState()
   const [childActor, setChildActor] = useState()
 
@@ -26,7 +27,7 @@ const IdentityProvider = ({children}) => {
     const _childActor = createChildActor(data?.identity)
     setChildActor(_childActor)
     setAccount(data?.account)
-    setIdentity(data?.identity)
+    // setIdentity(data?.identity)
   }, [])
 
   const loginWithEvm = async () => {
@@ -43,7 +44,7 @@ const IdentityProvider = ({children}) => {
       // save identity
       const account = {address, type: 'Evm'}
       saveIdentity(identity, account)
-      setIdentity(identity)
+      // setIdentity(identity)
       setAccount(account)
 
       // set actors
@@ -83,7 +84,7 @@ const IdentityProvider = ({children}) => {
       // save identity
       const account = {address, type: 'Svm'}
       saveIdentity(identity, account)
-      setIdentity(identity)
+      // setIdentity(identity)
       setAccount(account)
 
       // link address
@@ -125,10 +126,10 @@ const IdentityProvider = ({children}) => {
       const principal = await window.ic.plug.getPrincipal()
       const account = {address: principal.toString(), type: 'Ic'}
 
-      const identity = null
-      saveIdentity(identity, account)
-      setIdentity(identity)
-      setAccount(account)
+      // const identity = null
+      // saveIdentity(identity, account)
+      // setIdentity(identity)
+      // setAccount(account)
 
 
       return
@@ -163,7 +164,7 @@ const IdentityProvider = ({children}) => {
     }
   }
 
-  const value = { account, identity, childActor, login, logout, setAccount, isModalOpen, onModalOpen, onModalClose, setSelectedNetwork, selectedNetwork }
+  const value = { account, principal,  childActor, login, logout, setAccount, isModalOpen, onModalOpen, onModalClose, setSelectedNetwork, selectedNetwork }
   
   return (
     <IdentityContext.Provider value={value}>
