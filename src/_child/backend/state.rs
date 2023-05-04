@@ -23,6 +23,13 @@ pub struct IcParams {
 pub enum Authentication {
     Evm(EvmParams),
     Svm(SvmParams),
+    Ic,
+}
+
+#[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
+pub enum AuthenticationWithAddress {
+    Evm(EvmParams),
+    Svm(SvmParams),
     Ic(IcParams),
 }
 
@@ -65,16 +72,21 @@ pub struct Post {
 pub struct Reply {
     pub text: String,
     pub timestamp: u64,
-    pub address: String,
+}
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub struct ReplyResponse {
+    pub text: String,
+    pub timestamp: u64,
+    pub authentication: AuthenticationWithAddress,
 }
 
 #[derive(Clone, CandidType, Deserialize, Debug)]
 pub struct PostResponse {
     pub title: String,
     pub description: String,
-    pub address: String,
+    pub authentication: AuthenticationWithAddress,
     pub timestamp: u64,
-    pub replies: Vec<Reply>,
+    pub replies: Vec<ReplyResponse>,
 }
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -83,7 +95,7 @@ pub struct PostSummary {
     pub title: String,
     pub description: String,
     pub timestamp: u64,
-    pub address: Authentication,
+    pub authentication: AuthenticationWithAddress,
     pub replies_count: u64,
     pub last_activity: u64,
 }
@@ -135,7 +147,7 @@ impl Default for Relations {
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Indexes {
-    pub profile: HashMap<Authentication, u64>,
+    pub profile: HashMap<AuthenticationWithAddress, u64>,
     pub active_principal: HashMap<Principal, u64>
 }
 
@@ -143,7 +155,7 @@ pub struct Indexes {
 pub struct State {
     pub profiles: BTreeMap<u64, Profile>,
     pub posts: BTreeMap<u64, Post>,
-    pub replay: BTreeMap<u64, Reply>,
+    pub replies: BTreeMap<u64, Reply>,
     pub relations: Relations,
     pub indexes: Indexes,
     pub parent: Option<Principal>,
