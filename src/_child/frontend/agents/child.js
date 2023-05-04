@@ -1,7 +1,9 @@
 import { Actor } from '@dfinity/agent'
 import { icHost, getAgent } from '.'
 
-export const idlChildFactory = ({ IDL }) => {
+export const CHILD_CANISTER_ID =  process.env.REACT_APP_CHILD_CANISTER_ID ?? 'REACT_APP_CHILD_CANISTER_ID'
+
+const idlChildFactory = ({ IDL }) => {
 	const authentication = IDL.Variant({
 		Ic: IDL.Null,
 		Evm: IDL.Record({ address: IDL.Text }),
@@ -73,7 +75,24 @@ export const idlChildFactory = ({ IDL }) => {
 };
 export const createChildActor = (identity) => Actor.createActor(idlChildFactory, {
   agent: getAgent(identity),
-  canisterId: process.env.REACT_APP_CHILD_CANISTER_ID ?? 'REACT_APP_CHILD_CANISTER_ID',
+  canisterId: CHILD_CANISTER_ID,
   host: icHost,
   identity
 })
+
+
+export const createChildActorFromPlug = async () => {
+	const isConnected = await window.ic.plug.isConnected()
+	
+	if(!isConnected) {
+		const whitelist = [CHILD_CANISTER_ID]
+		await window.ic.plug.requestConnect({whitelist});
+	}
+	
+	const childActor = await window.ic.plug.createActor({
+		canisterId: CHILD_CANISTER_ID,
+		interfaceFactory: idlChildFactory,
+	})
+
+	return childActor
+}

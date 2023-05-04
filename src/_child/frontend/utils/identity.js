@@ -14,25 +14,4 @@ const getIdentityFromSignature = () => {
 }
 export { getIdentityFromSignature }
 
-const loadIdentity = () => {
-  const keyString = localStorage.getItem(`identity`)
-  if (keyString) {
-    const data = JSON.parse(keyString)
-    return { identity: Ed25519KeyIdentity.fromParsedJson(data.identity), account: data.account}
-  } else  {
-    return null
-  }
-}
-export { loadIdentity }
 
-const saveIdentity = (identity, account) => {
-  const data = {identity: identity.toJSON(), account}
-  localStorage.setItem('identity', JSON.stringify(data))
-}
-export { saveIdentity }
-
-const clearIdentity = async () => {
-  localStorage.removeItem('identity')
-  window.location = '/'
-}
-export { clearIdentity }

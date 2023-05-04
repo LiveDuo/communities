@@ -2,12 +2,11 @@ import { createContext, useState, useEffect } from 'react'
 import { useToast, useDisclosure } from '@chakra-ui/react'
 import { utils , ethers} from 'ethers'
 import bs58 from 'bs58'
-import { Ed25519KeyIdentity } from '@dfinity/identity'
 
-import { createChildActor, idlChildFactory } from '../agents/child'
+import { createChildActor, createChildActorFromPlug , idlChildFactory} from '../agents/child'
 
 import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
-import { saveIdentity, loadIdentity, clearIdentity } from '../utils/identity'
+import { saveAccount, loadAccount, clearAccount } from '../utils/stoge'
 
 const IdentityContext = createContext()
 
@@ -21,13 +20,26 @@ const IdentityProvider = ({children}) => {
   const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure()
 
   const toast = useToast()
+
+  const loadActor = async (account, identity) => {
+    let childActor, principal
+    if(!account) {
+      childActor = createChildActor(null)
+    } else if (account.type ==='Evm' || account.type ==='Svm') {
+      childActor = createChildActor(identity)
+      principal = identity.getPrincipal()
+    } else if(account.type === 'Ic') {
+      childActor = await createChildActorFromPlug()
+      principal = await window.ic.plug.getPrincipal()
+    }
+    setChildActor(childActor)
+    setPrincipal(principal)
+  }
   
   useEffect(() => {
-    const data = loadIdentity()
-    const _childActor = createChildActor(data?.identity)
-    setChildActor(_childActor)
-    setAccount(data?.account)
-    // setIdentity(data?.identity)
+    const {account, identity} = loadAccount()
+    setAccount(account)
+    loadActor(account, identity)
   }, [])
 
   const loginWithEvm = async () => {
@@ -43,8 +55,8 @@ const IdentityProvider = ({children}) => {
       
       // save identity
       const account = {address, type: 'Evm'}
-      saveIdentity(identity, account)
-      // setIdentity(identity)
+      saveAccount(identity, account)
+      setPrincipal(identity.getPrincipal())
       setAccount(account)
 
       // set actors
@@ -83,8 +95,8 @@ const IdentityProvider = ({children}) => {
 
       // save identity
       const account = {address, type: 'Svm'}
-      saveIdentity(identity, account)
-      // setIdentity(identity)
+      saveAccount(identity, account)
+      setPrincipal(identity.getPrincipal())
       setAccount(account)
 
       // link address
@@ -127,7 +139,7 @@ const IdentityProvider = ({children}) => {
       const account = {address: principal.toString(), type: 'Ic'}
 
       // const identity = null
-      // saveIdentity(identity, account)
+      // saveAccount(identity, account)
       // setIdentity(identity)
       // setAccount(account)
 
@@ -151,7 +163,7 @@ const IdentityProvider = ({children}) => {
 	}
 
   const logout = () => {
-    clearIdentity()
+    clearAccount()
   }
 
   const login = async (type) => {
