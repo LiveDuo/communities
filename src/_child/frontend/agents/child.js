@@ -1,5 +1,5 @@
 import { Actor } from '@dfinity/agent'
-import { icHost, getAgent } from '.'
+import { icHost, getAgent, isLocal } from '.'
 
 export const CHILD_CANISTER_ID =  process.env.REACT_APP_CHILD_CANISTER_ID ?? 'REACT_APP_CHILD_CANISTER_ID'
 
@@ -85,8 +85,9 @@ export const createChildActorFromPlug = async () => {
 	const isConnected = await window.ic.plug.isConnected()
 	
 	if(!isConnected) {
-		const whitelist = [CHILD_CANISTER_ID]
-		await window.ic.plug.requestConnect({whitelist});
+	const host = isLocal ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
+	const whitelist = [CHILD_CANISTER_ID]
+	await window.ic.plug.requestConnect({whitelist, host});
 	}
 	
 	const childActor = await window.ic.plug.createActor({

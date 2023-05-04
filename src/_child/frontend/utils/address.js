@@ -17,9 +17,12 @@ const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(a.length - 6, 
 export { addressShort }
 
 const getExplorerUrl = (address) => {
-  if (address.Evm) 
-    return `https://etherscan.io/address/${address.Evm.address}`
-   else if(address.Svm) 
-    return `https://explorer.solana.com/address/${address.Svm.address}`
+    if (address.Evm) 
+        return `https://etherscan.io/address/${address.Evm.address}`
+    else if(address.Svm) 
+        return `https://explorer.solana.com/address/${address.Svm.address}`
+    else if(address.Ic) 
+        return `https://www.icscan.io/principal/${address.Ic.principal}`
 }
+
 export { getExplorerUrl }

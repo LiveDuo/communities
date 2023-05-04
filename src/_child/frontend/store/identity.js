@@ -37,9 +37,9 @@ const IdentityProvider = ({children}) => {
   }
   
   useEffect(() => {
-    const {account, identity} = loadAccount()
-    setAccount(account)
-    loadActor(account, identity)
+    const data = loadAccount()
+    setAccount(data?.account)
+    loadActor(data?.account, data?.identity)
   }, [])
 
   const loginWithEvm = async () => {
@@ -117,52 +117,38 @@ const IdentityProvider = ({children}) => {
 
   const loginWithIc = async () => {
     try {
-
-      const canisterId = process.env.REACT_APP_CHILD_CANISTER_ID
-      const isConnected = await window.ic.plug.isConnected()
-
-      if(!isConnected) {
-        const whitelist = [canisterId]
-        await window.ic.plug.requestConnect({whitelist});
-      }
-
-      
-      const _childActor = await window.ic.plug.createActor({
-        canisterId: canisterId,
-        interfaceFactory: idlChildFactory,
-      });
+      const _childActor = await createChildActorFromPlug()
 
       setChildActor(_childActor)
       
-      
       const principal = await window.ic.plug.getPrincipal()
       const account = {address: principal.toString(), type: 'Ic'}
+      saveAccount(undefined, account)
+      setPrincipal(principal)
+      setAccount(account)
+      console.log(_childActor)
 
-      // const identity = null
-      // saveAccount(identity, account)
-      // setIdentity(identity)
-      // setAccount(account)
-
-
-      return
-
-      // // link address
-      // const publicKey = Buffer.from(bs58.decode(signedMessage.publicKey)).toString('hex')
-      // const signature = Buffer.from(bs58.decode(signedMessage.signature)).toString('hex')
-      // const message = Buffer.from(encodedMessage).toString('hex')
-      // const response = await _childActor.create_profile({Svm: { public_key: publicKey, signature, message }});
-      // const profile = response.Ok
+      const response = await _childActor.create_profile({Ic: null});
+      const profile = response.Ok
       
-      // toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
+      toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
 
-      // return profile
+      return profile
     } catch (error) {
       console.log(error)
       toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
     }
 	}
 
-  const logout = () => {
+  const logout = async () => {
+    if (account.type === 'Ic') {
+      const isConnected = await window.ic.plug.isConnected()
+      if(isConnected) {
+        const p1 = new Promise((r) => setTimeout(() => r(), 1000))
+        const p2 = window.ic.plug.disconnect() // not resolving
+        await Promise.race([p1, p2]) // hacky fix
+      }
+    }
     clearAccount()
   }
 
