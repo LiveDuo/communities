@@ -7,11 +7,13 @@ const getAddress = (authentication) => {
         return authentication.Evm.address
     } else if(authentication.Svm) {
         return authentication.Svm.address
+    } else if(authentication.Ic) {
+        return authentication.Ic.principal.toString()
     }
 }
 export { getAddress }
 
-const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(42 - 6, 42)}`
+const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(a.length - 6, a.length)}`
 export { addressShort }
 
 const getExplorerUrl = (address) => {
