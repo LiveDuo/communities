@@ -1,7 +1,7 @@
 import { Actor } from '@dfinity/agent'
 import { icHost, getAgent } from '.'
 
-const idlChildFactory = ({ IDL }) => {
+export const idlChildFactory = ({ IDL }) => {
 	const authentication = IDL.Variant({
 		Ic: IDL.Null,
 		Evm: IDL.Record({ address: IDL.Text }),

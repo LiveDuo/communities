@@ -8,6 +8,7 @@ import { addressShort } from '../../utils/address'
 
 import { ReactComponent as EthereumLogo } from '../../logos/ethereum.svg'
 import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
+import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 
 const Header = () => {
 
@@ -31,6 +32,10 @@ const Header = () => {
       onModalOpen()
       setSelectedNetwork(type)
       return
+    } else if (type === 'ic' && !window?.ic?.plug) {
+      onModalOpen()
+      setSelectedNetwork(type)
+      return
     }
     const profile = await login(type)
     setProfile(profile)
@@ -50,6 +55,7 @@ const Header = () => {
             <MenuList>
               <MenuItem onClick={()=> loginAndSet('evm')}><EthereumLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>Ethereum</MenuItem>
               <MenuItem onClick={()=> loginAndSet('svm')}><SolanaLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>Solana</MenuItem>
+              {/* <MenuItem  onClick={()=> loginAndSet('ic')}><DfinityLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>IC</MenuItem> */}
             </MenuList>
           </Menu>
         </Box>)}

@@ -2,8 +2,9 @@ import { createContext, useState, useEffect } from 'react'
 import { useToast, useDisclosure } from '@chakra-ui/react'
 import { utils , ethers} from 'ethers'
 import bs58 from 'bs58'
+import { Ed25519KeyIdentity } from '@dfinity/identity'
 
-import { createChildActor } from '../agents/child'
+import { createChildActor, idlChildFactory } from '../agents/child'
 
 import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
 import { saveIdentity, loadIdentity, clearIdentity } from '../utils/identity'
@@ -101,6 +102,53 @@ const IdentityProvider = ({children}) => {
     }
 	}
 
+  const loginWithIc = async () => {
+    try {
+
+      const canisterId = process.env.REACT_APP_CHILD_CANISTER_ID
+      const isConnected = await window.ic.plug.isConnected()
+
+      if(!isConnected) {
+        const whitelist = [canisterId]
+        await window.ic.plug.requestConnect({whitelist});
+      }
+
+      
+      const _childActor = await window.ic.plug.createActor({
+        canisterId: canisterId,
+        interfaceFactory: idlChildFactory,
+      });
+
+      setChildActor(_childActor)
+      
+      
+      const principal = await window.ic.plug.getPrincipal()
+      const account = {address: principal.toString(), type: 'Ic'}
+
+      const identity = null
+      saveIdentity(identity, account)
+      setIdentity(identity)
+      setAccount(account)
+
+
+      return
+
+      // // link address
+      // const publicKey = Buffer.from(bs58.decode(signedMessage.publicKey)).toString('hex')
+      // const signature = Buffer.from(bs58.decode(signedMessage.signature)).toString('hex')
+      // const message = Buffer.from(encodedMessage).toString('hex')
+      // const response = await _childActor.create_profile({Svm: { public_key: publicKey, signature, message }});
+      // const profile = response.Ok
+      
+      // toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
+
+      // return profile
+    } catch (error) {
+      console.log(error)
+      toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
+    }
+	}
+
   const logout = () => {
     clearIdentity()
   }
@@ -110,6 +158,8 @@ const IdentityProvider = ({children}) => {
       return await loginWithEvm()
     } else if(type === 'svm') {
       return await loginWithSvm()
+    } else if(type === 'ic'){
+      return await loginWithIc()
     }
   }
 
