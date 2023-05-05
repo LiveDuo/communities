@@ -2,6 +2,7 @@ import { Box } from '@chakra-ui/react'
 
 import Header from '../header'
 import WalletModal from '../modals/WalletModal'
+import UpgradeModal from '../modals/UpgradeModal'
 
 const Layout = ({children}) => (
   <Box>
@@ -10,6 +11,7 @@ const Layout = ({children}) => (
       {children}
     </Box>
     <WalletModal/>
+    <UpgradeModal/>
   </Box>
 )
 export default Layout

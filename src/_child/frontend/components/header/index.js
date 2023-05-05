@@ -15,7 +15,7 @@ const Header = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { principal, login, logout, account, setSelectedNetwork, onModalOpen } = useContext(IdentityContext)
+  const { principal, login, logout, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen } = useContext(IdentityContext)
   const { setProfile, getProfileByAuth } = useContext(ChildContext)
 
   useEffect(() => {
@@ -25,15 +25,15 @@ const Header = () => {
 
   const loginAndSet = async (type) => {
     if (type === 'evm' && !window?.ethereum) {
-      onModalOpen()
+      onWalletModalOpen()
       setSelectedNetwork(type)
       return
     } else if (type === 'svm' && !window?.solana) {
-      onModalOpen()
+      onWalletModalOpen()
       setSelectedNetwork(type)
       return
     } else if (type === 'ic' && !window?.ic?.plug) {
-      onModalOpen()
+      onWalletModalOpen()
       setSelectedNetwork(type)
       return
     }
@@ -61,6 +61,7 @@ const Header = () => {
         </Box>)}
         {(account && principal) &&
         <Box ml="auto">
+          <Button onClick={onUpgradeModalOpen}>upgrade</Button>
           <Link as={RouterLink} to={`/user/${account?.address}/${account?.type}`}>
             <Button>
               <Box h="16px" w="16px" mr="8px">

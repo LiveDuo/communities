@@ -11,7 +11,7 @@ import { ReactComponent as MetamaskLogo } from '../../logos/metamask.svg'
 import { ReactComponent as PhantomLogo } from '../../logos/phantom.svg'
 
 const WalletModal = () => {
-  const {isModalOpen, onModalClose, selectedNetwork, setSelectedNetwork, login} = useContext(IdentityContext)
+  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork, login} = useContext(IdentityContext)
   const { setProfile } = useContext(ChildContext)
 
   const loginAndSet = async (type) => {
@@ -24,11 +24,11 @@ const WalletModal = () => {
     }
     const profile = await login(type)
     setProfile(profile)
-    onModalClose()
+    onWalletModalClose()
   }
 
 	return (
-		<Modal isOpen={isModalOpen} onClose={onModalClose} isCentered>
+		<Modal isOpen={isWalletModalOpen} onClose={onWalletModalClose} isCentered>
 			<ModalOverlay />
 			<ModalContent minW="480px">
 				<ModalHeader>{!selectedNetwork && (window?.ethereum || window?.solana) ? 'Select a network' : 'You\'d need a wallet'} </ModalHeader>
