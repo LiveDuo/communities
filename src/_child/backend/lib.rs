@@ -405,18 +405,6 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 
-
-#[update]
-fn test_fn() {
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-}
-
 fn update_wasm_hash() {
     let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
     let mut hasher = Sha256::new();
@@ -514,22 +502,24 @@ async fn upgrade_canister_cb(wasm: Vec<u8>) {
 fn replace_assets_from_temp() {
     let assets = ic_certified_assets::list_assets();
 
-    for asset  in  &assets {
+    // cleanup previous assets
+    let prev_assets = &assets.iter().filter(|k| !k.key.starts_with("/temp")).collect::<Vec<_>>();
+    for asset  in prev_assets {
+        ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+    }
 
-        // store frontend assets
-        if asset.key.starts_with("/temp") {
-            let asset_content: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_owned());
-            let args_store = StoreArg {
-                key: asset.key.replace("/temp", ""),
-                content_type: asset.content_type.to_owned(),
-                content_encoding: "identity".to_owned(),
-                content: ByteBuf::from(asset_content),
-                sha256: None
-            };
-            ic_certified_assets::store_asset(args_store);
-        }
-
-        // delete from temp
+    // store new assets
+    let temp_assets = &assets.iter().filter(|k| k.key.starts_with("/temp")).collect::<Vec<_>>();
+    for asset in  temp_assets {
+        let asset_content: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_owned());
+        let args_store = StoreArg {
+            key: asset.key.replace("/temp", ""),
+            content_type: asset.content_type.to_owned(),
+            content_encoding: "identity".to_owned(),
+            content: ByteBuf::from(asset_content),
+            sha256: None
+        };
+        ic_certified_assets::store_asset(args_store);
         ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
     }
 }

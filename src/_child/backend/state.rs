@@ -160,7 +160,6 @@ pub struct State {
     pub indexes: Indexes,
     pub parent: Option<Principal>,
     pub wasm_hash: Option<Vec<u8>>,
-    // pub broken: String
 }
 
 thread_local! {

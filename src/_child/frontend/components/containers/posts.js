@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom'
 
 const PostsContainer = ({ posts: _posts }) => {
   const {  createPost } = useContext(ChildContext)
-  const {  account, principal, onModalOpen, setSelectedNetwork} = useContext(IdentityContext)
+  const {  account, principal, onWalletModalOpen, setSelectedNetwork} = useContext(IdentityContext)
   
   const { isOpen: isPostOpen, onOpen: onPostOpen, onClose: onPostClose } = useDisclosure()
   const navigate = useNavigate()
@@ -30,7 +30,7 @@ const PostsContainer = ({ posts: _posts }) => {
   const onCreatePost = () => {
     if (!(account && principal)) {
       setSelectedNetwork()
-      onModalOpen()
+      onWalletModalOpen()
       return
     }
     onPostOpen()
