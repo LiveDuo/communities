@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom'
 
 const PostsContainer = ({ posts: _posts }) => {
   const {  createPost } = useContext(ChildContext)
-  const {  account, identity, onModalOpen, setSelectedNetwork} = useContext(IdentityContext)
+  const {  account, principal, onModalOpen, setSelectedNetwork} = useContext(IdentityContext)
   
   const { isOpen: isPostOpen, onOpen: onPostOpen, onClose: onPostClose } = useDisclosure()
   const navigate = useNavigate()
@@ -28,7 +28,7 @@ const PostsContainer = ({ posts: _posts }) => {
   const posts = _posts?.sort((a, b) => b.timestamp - a.timestamp)
 
   const onCreatePost = () => {
-    if (!(account && identity?.getPrincipal())) {
+    if (!(account && principal)) {
       setSelectedNetwork()
       onModalOpen()
       return
@@ -59,10 +59,10 @@ const PostsContainer = ({ posts: _posts }) => {
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>
                 </Box>
-                <Tooltip label={addressShort(getAddress(p?.address))}>
-                  <Link href={getExplorerUrl(p.address)} isExternal>
+                <Tooltip label={addressShort(getAddress(p?.authentication))}>
+                  <Link href={getExplorerUrl(p.authentication)} isExternal>
                     <Box width="40px" height="20px" textAlign="center" _hover={{cursor: 'pointer', opacity: 0.7}}>
-                      <Jazzicon diameter={20} seed={getAddress(p?.address)} />
+                      <Jazzicon diameter={20} seed={getAddress(p?.authentication)} />
                     </Box>
                   </Link>
                 </Tooltip>

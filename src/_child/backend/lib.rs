@@ -31,11 +31,15 @@ fn uuid(seed: &str) -> u64 {
     s.finish()
 }
 
-fn get_address(arg: &Authentication) -> String {
-    match arg {
-        Authentication::Evm(params) => params.address.to_owned(),
-        Authentication::Svm(params) => params.address.to_owned(),
-        Authentication::Ic(params) => params.principal.to_text(),
+
+fn get_authentication_with_address(authentication: &Authentication, caller: &Principal) -> AuthenticationWithAddress {
+    match authentication {
+        Authentication::Evm(params) => AuthenticationWithAddress::Evm(params.to_owned()),
+        Authentication::Svm(params) => AuthenticationWithAddress::Svm(params.to_owned()),
+        Authentication::Ic => {
+            let params = IcParams {principal: caller.to_owned()};
+            AuthenticationWithAddress::Ic(params)
+        },
     }
 }
 
@@ -75,7 +79,7 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
         let mut state = s.borrow_mut();
 
 
-        let authentication = match auth {
+        let authentication_profile = match auth {
             AuthenticationWith::Evm(args) => {
                 if args.message.trim_start_matches("0x") != login_message_hex_evm(&caller) {
                     return Err("Principal does not match".to_owned());
@@ -92,38 +96,34 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
                 let param = crate::verify::verify_svm(args);
                 Authentication::Svm(param)
             }
-            AuthenticationWith::Ic => {
-                let param = IcParams {
-                    principal: caller.clone(),
-                };
-                Authentication::Ic(param)
-            }
+            AuthenticationWith::Ic => Authentication::Ic
         };
 
-        
+        let authentication_with_address = get_authentication_with_address(&authentication_profile, &caller);
 
-        let authentication = authentication;
-        if state.indexes.profile.contains_key(&authentication) {
-            let profile_id = state.indexes.profile.get(&authentication).cloned().unwrap();
+        if state.indexes.profile.contains_key(&authentication_with_address) {
+            let profile_id = state.indexes.profile.get(&authentication_with_address).cloned().unwrap();
             let mut profile = state.profiles.get(&profile_id).cloned().unwrap();
-            profile.active_principal = caller.clone();
 
-            state.indexes.active_principal.insert(caller.clone(), profile_id);
-            state.profiles.insert(profile_id.clone(), profile.clone());
+            if Authentication::Ic != authentication_profile {
+                profile.active_principal = caller.clone();
+                state.indexes.active_principal.insert(caller.clone(), profile_id);
+                state.profiles.insert(profile_id.clone(), profile.clone());
+            }
 
             return Ok(profile);
         }
 
         let profile_id = uuid(&caller.to_text());
 
-        state.indexes.profile.insert(authentication.to_owned(), profile_id.to_owned());
+        state.indexes.profile.insert(authentication_with_address.to_owned(), profile_id.to_owned());
 
         state.indexes.active_principal.insert(caller.clone(), profile_id.to_owned());
 
-        ic_cdk::println!("Linked with address {:?}", authentication.to_owned());
+        ic_cdk::println!("Linked with address {:?}", authentication_profile.to_owned());
 
         let profile = Profile {
-            authentication: authentication,
+            authentication: authentication_profile,
             name: "".to_owned(),
             description: "".to_owned(),
             active_principal: caller
@@ -160,7 +160,9 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
 
         state.relations.profile_id_to_post_id.insert(profile_id, post_id);
 
-        let address = state.profiles.get(&profile_id).unwrap().authentication.clone();
+        let profile = state.profiles.get(&profile_id).unwrap();
+
+        let authentication = get_authentication_with_address( &profile.authentication, &profile.active_principal);
         let post = PostSummary {
             title: post.title,
             post_id,
@@ -168,45 +170,52 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
             timestamp: post.timestamp,
             replies_count: 0,
             last_activity: post.timestamp,
-            address,
+            authentication,
         };
         Ok(post)
     })
 }
 
 #[update]
-fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
+fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
         let caller = ic_cdk::caller();
 
-        if state.indexes.active_principal.contains_key(&caller){
+        if !state.indexes.active_principal.contains_key(&caller){
             return Err("Profile does not exist".to_owned());
         }
 
         if !state.posts.contains_key(&post_id) {
             return Err("Post does not exist".to_owned());
         }
-        let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
-        let profile = state.profiles.get(&profile_id).unwrap();
-        let address = get_address(&profile.authentication);
 
         let reply = Reply {
             text: context.to_owned(),
-            timestamp: ic_cdk::api::time(),
-            address,
+            timestamp: ic_cdk::api::time()
         };
 
+        let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
+        
         let reply_id = uuid(&caller.to_text());
-
-        state.replay.insert(reply_id, reply.clone());
-
+        
+        state.replies.insert(reply_id, reply.clone());
+        
         state.relations.profile_id_to_reply_id.insert(profile_id.clone(), reply_id.clone());
-
+        
         state.relations.reply_id_to_post_id.insert(reply_id.clone(), post_id.clone());
+        
+        let profile = state.profiles.get(&profile_id).unwrap();
+        let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
-        Ok(reply)
+        let reply_response =  ReplyResponse {
+            text: reply.text,
+            timestamp: reply.timestamp,
+            authentication
+        };
+
+        Ok(reply_response)
     })
 }
 
@@ -214,7 +223,9 @@ fn create_reply(post_id: u64, context: String) -> Result<Reply, String> {
 fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
     STATE.with(|s| {
         let state = s.borrow();
-        let index_opt = state.indexes.profile.get(&authentication);
+        let caller = ic_cdk::caller();
+        let auth = get_authentication_with_address(&authentication, &caller);
+        let index_opt = state.indexes.profile.get(&auth);
         if index_opt == None {
             return None; 
         }
@@ -243,12 +254,14 @@ fn get_posts() -> Vec<PostSummary> {
                     0
                 } else {
                     let (reply_id, _) = replies_opt.unwrap().last_key_value().unwrap();
-                    state.replay.get(reply_id).unwrap().timestamp
+                    state.replies.get(reply_id).unwrap().timestamp
                 };
 
                 let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
-                let address = state.profiles.get(&profile_id).cloned().unwrap().authentication;
+                let profile =  state.profiles.get(&profile_id).unwrap();
+
+                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
                 PostSummary {
                     title: post.title.to_owned(),
@@ -257,7 +270,7 @@ fn get_posts() -> Vec<PostSummary> {
                     timestamp: post.timestamp,
                     replies_count: replies_count as u64,
                     last_activity,
-                    address: address,
+                    authentication,
                 }
             })
             .collect::<Vec<_>>()
@@ -290,20 +303,31 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
         let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
-        let replies = if replies_opt == None { vec![] } else { replies_opt.unwrap().iter().map(|(reply_id, _)| state.replay.get(reply_id).unwrap().to_owned()).collect::<Vec<_>>()};
+        let replies = if replies_opt == None {
+            vec![]
+        } else {
+             replies_opt.unwrap().iter().map(|(reply_id, _)| {
+                let reply = state.replies.get(reply_id).unwrap();
+                let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
+                let profile = state.profiles.get(&profile_id).unwrap();
+                let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                ReplyResponse { text: reply.text.to_owned(), timestamp: reply.timestamp, authentication }
+            }).collect::<Vec<_>>()
+        };
 
         let post = post_opt.unwrap();
 
-        let (principal, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
+        let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
-        let address = get_address(&state.profiles.get(&principal).unwrap().authentication);
+        let profile = state.profiles.get(&profile_id).unwrap();
+        let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
         let post_result = PostResponse {
             replies,
             title: post.title.to_owned(),
             timestamp: post.timestamp,
             description: post.description.to_owned(),
-            address
+            authentication
         };
         Ok(post_result)
     })
@@ -314,7 +338,10 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     STATE.with(|s| {
         let state = s.borrow();
 
-        let profile_id_opt = state.indexes.profile.get(&authentication);
+        let caller = ic_cdk::caller();
+        let auth = get_authentication_with_address(&authentication, &caller);
+
+        let profile_id_opt = state.indexes.profile.get(&auth);
         if profile_id_opt == None {
             return Err("Profile does not exists".to_owned());
         }
@@ -347,7 +374,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                     0
                 } else {
                     let (reply_id, _) = replies_opt.unwrap().last_key_value().unwrap();
-                    state.replay.get(reply_id).unwrap().timestamp
+                    state.replies.get(reply_id).unwrap().timestamp
                 };
 
                 // FIX
@@ -360,8 +387,8 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                     .first_key_value()
                     .unwrap();
 
-                let address = state.profiles.get(&profile_id).cloned().unwrap().authentication;
-
+                let profile = state.profiles.get(&profile_id).unwrap();
+                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
                 PostSummary {
                     post_id: post_id.to_owned(),
@@ -370,7 +397,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                     timestamp: post.timestamp.to_owned(),
                     replies_count: replies_count as u64,
                     last_activity,
-                    address
+                    authentication
                 }
             })
             .collect::<Vec<_>>();

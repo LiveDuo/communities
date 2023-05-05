@@ -38,12 +38,17 @@ const ChildProvider = ({ children }) => {
 	const createReply = async (_post_id, text) => {
 		const post_id = BigInt(_post_id)
 		await childActor.create_reply(post_id, text)
-		const reply = { text, timestamp: new Date(), address: account.address}
+		const reply = { text, timestamp: new Date(), authentication: { [account.type]: {address: account.address} }}
 		return reply
 	}
 
 	const getProfileByAuth = useCallback(async (account) => {
-		const auth = { [account.type]: {address: account.address} }
+		const auth = {}
+		if(account.type === 'Evm' ||  account.type === 'Svm') {
+			auth[account.type] = {address: account.address}
+		} else {
+			auth[account.type] = null
+		}
 		const response = await childActor.get_profile_by_user(auth)
 		setProfile(response[0])
 	}, [childActor])

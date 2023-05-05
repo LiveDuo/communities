@@ -8,13 +8,14 @@ import { addressShort } from '../../utils/address'
 
 import { ReactComponent as EthereumLogo } from '../../logos/ethereum.svg'
 import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
+import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 
 const Header = () => {
 
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { identity, login, logout, account, setSelectedNetwork, onModalOpen } = useContext(IdentityContext)
+  const { principal, login, logout, account, setSelectedNetwork, onModalOpen } = useContext(IdentityContext)
   const { setProfile, getProfileByAuth } = useContext(ChildContext)
 
   useEffect(() => {
@@ -31,6 +32,10 @@ const Header = () => {
       onModalOpen()
       setSelectedNetwork(type)
       return
+    } else if (type === 'ic' && !window?.ic?.plug) {
+      onModalOpen()
+      setSelectedNetwork(type)
+      return
     }
     const profile = await login(type)
     setProfile(profile)
@@ -41,7 +46,7 @@ const Header = () => {
       {location.pathname !== '/' && <Box ml="20px">
         <Button onClick={() => navigate('/')}>Home</Button>
       </Box>}
-      {!(account && identity?.getPrincipal()) &&
+      {!(account && principal) &&
         (<Box ml="auto">
           <Menu>
             <MenuButton as={Button}>
@@ -50,10 +55,11 @@ const Header = () => {
             <MenuList>
               <MenuItem onClick={()=> loginAndSet('evm')}><EthereumLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>Ethereum</MenuItem>
               <MenuItem onClick={()=> loginAndSet('svm')}><SolanaLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>Solana</MenuItem>
+              <MenuItem  onClick={()=> loginAndSet('ic')}><DfinityLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>IC</MenuItem>
             </MenuList>
           </Menu>
         </Box>)}
-        {(account && identity?.getPrincipal()) &&
+        {(account && principal) &&
         <Box ml="auto">
           <Link as={RouterLink} to={`/user/${account?.address}/${account?.type}`}>
             <Button>
@@ -64,7 +70,7 @@ const Header = () => {
             </Button>
           </Link>
         </Box>}
-        {(account && identity?.getPrincipal()) && 
+        {(account && principal) && 
         <Box display="inline-block" ml="8px">
           <Button onClick={logout}>Logout</Button>
         </Box>}

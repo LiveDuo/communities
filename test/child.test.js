@@ -13,7 +13,7 @@ setupTests()
 
 describe('Testing with done', () => {
 
-	let actorBackendEvm, actorBackendSvm, signerEvm, identityEvm, signerSvm, identitySvm, canisters
+	let actorBackendEvm, actorBackendSvm, actorBackendIc, signerEvm, identityEvm, signerSvm, identitySvm, identityIc, canisters
 
 	beforeAll(async () => {
 
@@ -27,6 +27,9 @@ describe('Testing with done', () => {
 		// get random identity for emv
 		signerSvm = web3.Keypair.generate()
 		identitySvm =Ed25519KeyIdentity.generate()
+
+		// get random identity for ic
+		identityIc =Ed25519KeyIdentity.generate()
 		
 		// create child actor
 		canisters = await getCanisters()
@@ -36,6 +39,9 @@ describe('Testing with done', () => {
 
 		const agentSvm = getAgent('http://127.0.0.1:8000', identitySvm)
 		actorBackendSvm = Actor.createActor(childFactory, { agent: agentSvm, canisterId: canisters.child.local })
+
+		const agentIc = getAgent('http://127.0.0.1:8000', identityIc)
+		actorBackendIc = Actor.createActor(childFactory, { agent: agentIc, canisterId: canisters.child.local })
 
 	})
 
@@ -106,16 +112,43 @@ describe('Testing with done', () => {
 		const userPosts2 = await actorBackendSvm.get_posts_by_user({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts2.Ok.length).toBe(2)
   });
+	test("Should sign in with internet computer", async () => {
+		
+		// link address
+    const profile = await actorBackendIc.create_profile({Ic: null})
+    const principal = profile.Ok.active_principal
+    expect(principal.toString()).toBe(identityIc.getPrincipal().toString())
+
+		await actorBackendIc.create_post('hello', '')
+		const userPosts = await actorBackendIc.get_posts_by_user({Ic: null})
+		expect(userPosts.Ok.length).toBe(1)
+
+
+		// logout and login
+		const profile1 = await actorBackendIc.create_profile({Ic: null});
+		const principal1 = profile1.Ok.active_principal
+    expect(principal1.toString()).toBe(identityIc.getPrincipal().toString())
+
+		await actorBackendIc.create_post('hello', '')
+		const userPosts2 = await actorBackendIc.get_posts_by_user({Ic: null})
+		expect(userPosts2.Ok.length).toBe(2)
+  });
 	test('Should create and get a post', async () => {
 		
 		// create a post
-		await actorBackendEvm.create_post('hello', '')
+		const createdPost = await actorBackendEvm.create_post('hello', '')
+		const postId = createdPost.Ok.post_id
+
+		// create a reply
+		await actorBackendEvm.create_reply(postId, 'hello').then(s => console.log(s))
 
 		// get user last post
-		const addressSigner =await signerEvm.getAddress()
+		const addressSigner = await signerEvm.getAddress()
 		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: addressSigner}})
 		const userLastPost = userPosts.Ok[userPosts.Ok.length - 1]
+
 		expect(userLastPost.title).toBe('hello')
-		expect(userLastPost.address.Evm.address).toBe(addressSigner)
+		expect(userLastPost.replies_count).toBe(1n)
+		expect(userLastPost.authentication.Evm.address).toBe(addressSigner)
 	})
 })

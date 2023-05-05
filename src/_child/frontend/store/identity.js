@@ -3,29 +3,43 @@ import { useToast, useDisclosure } from '@chakra-ui/react'
 import { utils , ethers} from 'ethers'
 import bs58 from 'bs58'
 
-import { createChildActor } from '../agents/child'
+import { createChildActor, createChildActorFromPlug , idlChildFactory} from '../agents/child'
 
 import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
-import { saveIdentity, loadIdentity, clearIdentity } from '../utils/identity'
+import { saveAccount, loadAccount, clearAccount } from '../utils/stoge'
 
 const IdentityContext = createContext()
 
 const IdentityProvider = ({children}) => {
   const [account, setAccount] = useState()
-  const [identity, setIdentity] = useState()
+  const [principal, setPrincipal] = useState()
+
   const [selectedNetwork, setSelectedNetwork] = useState()
   const [childActor, setChildActor] = useState()
 
   const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure()
 
   const toast = useToast()
+
+  const loadActor = async (account, identity) => {
+    let childActor, principal
+    if(!account) {
+      childActor = createChildActor(null)
+    } else if (account.type ==='Evm' || account.type ==='Svm') {
+      childActor = createChildActor(identity)
+      principal = identity.getPrincipal()
+    } else if(account.type === 'Ic') {
+      childActor = await createChildActorFromPlug()
+      principal = await window.ic.plug.getPrincipal()
+    }
+    setChildActor(childActor)
+    setPrincipal(principal)
+  }
   
   useEffect(() => {
-    const data = loadIdentity()
-    const _childActor = createChildActor(data?.identity)
-    setChildActor(_childActor)
+    const data = loadAccount()
     setAccount(data?.account)
-    setIdentity(data?.identity)
+    loadActor(data?.account, data?.identity)
   }, [])
 
   const loginWithEvm = async () => {
@@ -41,8 +55,8 @@ const IdentityProvider = ({children}) => {
       
       // save identity
       const account = {address, type: 'Evm'}
-      saveIdentity(identity, account)
-      setIdentity(identity)
+      saveAccount(identity, account)
+      setPrincipal(identity.getPrincipal())
       setAccount(account)
 
       // set actors
@@ -81,8 +95,8 @@ const IdentityProvider = ({children}) => {
 
       // save identity
       const account = {address, type: 'Svm'}
-      saveIdentity(identity, account)
-      setIdentity(identity)
+      saveAccount(identity, account)
+      setPrincipal(identity.getPrincipal())
       setAccount(account)
 
       // link address
@@ -101,8 +115,41 @@ const IdentityProvider = ({children}) => {
     }
 	}
 
-  const logout = () => {
-    clearIdentity()
+  const loginWithIc = async () => {
+    try {
+      const _childActor = await createChildActorFromPlug()
+
+      setChildActor(_childActor)
+      
+      const principal = await window.ic.plug.getPrincipal()
+      const account = {address: principal.toString(), type: 'Ic'}
+      saveAccount(undefined, account)
+      setPrincipal(principal)
+      setAccount(account)
+      console.log(_childActor)
+
+      const response = await _childActor.create_profile({Ic: null});
+      const profile = response.Ok
+      
+      toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
+
+      return profile
+    } catch (error) {
+      console.log(error)
+      toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
+    }
+	}
+
+  const logout = async () => {
+    if (account.type === 'Ic') {
+      const isConnected = await window.ic.plug.isConnected()
+      if(isConnected) {
+        const p1 = new Promise((r) => setTimeout(() => r(), 1000))
+        const p2 = window.ic.plug.disconnect() // not resolving
+        await Promise.race([p1, p2]) // hacky fix
+      }
+    }
+    clearAccount()
   }
 
   const login = async (type) => {
@@ -110,10 +157,12 @@ const IdentityProvider = ({children}) => {
       return await loginWithEvm()
     } else if(type === 'svm') {
       return await loginWithSvm()
+    } else if(type === 'ic'){
+      return await loginWithIc()
     }
   }
 
-  const value = { account, identity, childActor, login, logout, setAccount, isModalOpen, onModalOpen, onModalClose, setSelectedNetwork, selectedNetwork }
+  const value = { account, principal,  childActor, login, logout, setAccount, isModalOpen, onModalOpen, onModalClose, setSelectedNetwork, selectedNetwork }
   
   return (
     <IdentityContext.Provider value={value}>
