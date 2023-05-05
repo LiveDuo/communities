@@ -515,8 +515,13 @@ fn replace_assets_from_temp() {
     let assets = ic_certified_assets::list_assets();
 
     for asset  in  &assets {
+        if !asset.key.starts_with("/temp") {
+            ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+        }
+    }
 
-        // store frontend assets
+    for asset in  &assets {
+            // store frontend assets
         if asset.key.starts_with("/temp") {
             let asset_content: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_owned());
             let args_store = StoreArg {
@@ -527,10 +532,9 @@ fn replace_assets_from_temp() {
                 sha256: None
             };
             ic_certified_assets::store_asset(args_store);
-        }
-
-        // delete from temp
-        ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+            
+            ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+        } 
     }
 }
 
@@ -555,6 +559,7 @@ async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, 
 
 		// upload asset
 		let key = asset.replace(&format!("/upgrade/{}", version), "/temp");
+        ic_cdk::println!("key {:?}", key);
 		let store_args = StoreArg {
             key: key.to_owned(),
             content_type: get_content_type(&key),
