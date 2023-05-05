@@ -405,18 +405,6 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 
-
-#[update]
-fn test_fn() {
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-    ic_cdk::println!("hello from test fn");
-}
-
 fn update_wasm_hash() {
     let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
     let mut hasher = Sha256::new();
@@ -557,7 +545,6 @@ async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, 
 
 		// upload asset
 		let key = asset.replace(&format!("/upgrade/{}", version), "/temp");
-        ic_cdk::println!("key {:?}", key);
 		let store_args = StoreArg {
             key: key.to_owned(),
             content_type: get_content_type(&key),
