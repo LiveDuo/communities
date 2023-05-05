@@ -61,7 +61,7 @@ const Header = () => {
         </Box>)}
         {(account && principal) &&
         <Box ml="auto">
-          <Button onClick={onUpgradeModalOpen}>upgrade</Button>
+          <Button onClick={onUpgradeModalOpen} mr="8px">Upgrade</Button>
           <Link as={RouterLink} to={`/user/${account?.address}/${account?.type}`}>
             <Button>
               <Box h="16px" w="16px" mr="8px">
