@@ -140,12 +140,12 @@ describe('Testing with done', () => {
 		const postId = createdPost.Ok.post_id
 
 		// create a reply
-		await actorBackendEvm.create_reply(postId, 'hello').then(s => console.log(s))
+		await actorBackendEvm.create_reply(postId, 'hello')
 
 		// get user last post
 		const addressSigner = await signerEvm.getAddress()
 		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: addressSigner}})
-		const userLastPost = userPosts.Ok[userPosts.Ok.length - 1]
+		const userLastPost = userPosts.Ok.sort((a, b) => Number(b.timestamp / 1000n / 1000n) -  Number(a.timestamp / 1000n / 1000n)).at(0)
 
 		expect(userLastPost.title).toBe('hello')
 		expect(userLastPost.replies_count).toBe(1n)
