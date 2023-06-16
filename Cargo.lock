@@ -1099,6 +1099,7 @@ dependencies = [
  "candid 0.7.18",
  "crc32fast",
  "ic-cdk 0.5.5",
+ "ic-cdk 0.6.10",
  "ic-cdk-macros 0.5.5",
  "ic-certified-assets",
  "include_macros",

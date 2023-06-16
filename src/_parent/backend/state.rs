@@ -1,11 +1,12 @@
 use candid::{CandidType, Deserialize, Principal};
 
 use serde::Serialize;
+use std::iter::FromIterator;
 
 use sha2::Digest;
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::convert::TryInto;
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
@@ -117,16 +118,26 @@ pub enum CanisterState {
     Ready,
 }
 
-#[derive(Default, CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone)]
 pub struct CanisterData {
-    pub id: Option<String>,
+    pub id: Option<Principal>,
     pub timestamp: u64,
     pub state: CanisterState,
 }
 
+impl Default for CanisterData {
+    fn default() -> Self {
+        Self {
+            id: None,
+            timestamp: ic_cdk::api::time(),
+            state: CanisterState::Preparing,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, CandidType)]
 pub struct CallbackData {
-    pub canister_index: usize,
+    pub canister_data_id: Option<u64>,
     pub user: Principal,
     pub state: CanisterState,
 }
@@ -139,9 +150,67 @@ pub struct Upgrade {
     pub assets: Vec<String>,
 }
 
+#[derive(Default, CandidType, Clone, Deserialize, Debug)]
+pub struct Relation<X: Ord, Y: Ord> {
+    pub forward: BTreeMap<X, BTreeMap<Y, ()>>,
+    pub backward: BTreeMap<Y, BTreeMap<X, ()>>,
+}
+impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
+    pub fn insert(&mut self, x: X, y: Y) {
+        if self.forward.contains_key(&x) {
+            self.forward.get_mut(&x).unwrap().insert(y.clone(), ());
+        } else {
+            self.forward
+                .insert(x.clone(), BTreeMap::from_iter([(y.clone(), ())]));
+        }
+
+        if self.backward.contains_key(&y) {
+            self.backward.get_mut(&y).unwrap().insert(x, ());
+        } else {
+            self.backward
+                .insert(y, BTreeMap::from_iter([(x.clone(), ())]));
+        }
+    }
+}
+
+#[derive(CandidType, Clone, Deserialize, Debug)]
+pub struct Relations {
+    pub profile_id_to_canister_id: Relation<u64, u64>,
+}
+impl Default for Relations {
+    fn default() -> Self {
+        let relation_u64_to_u64: Relation<_, _> = Relation {
+            forward: BTreeMap::default(),
+            backward: BTreeMap::default(),
+        };
+
+        Relations {
+            profile_id_to_canister_id: { relation_u64_to_u64.to_owned() },
+        }
+    }
+}
+#[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
+pub enum Authentication {
+    Ic,
+}
+#[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
+pub struct Profile {
+    pub authentication: Authentication,
+    pub active_principal: Principal,
+}
+
+#[derive(Default, CandidType, Clone, Deserialize, Debug)]
+pub struct Indexes {
+    // pub profile: HashMap<AuthenticationWithAddress, u64>,
+    pub active_principal: HashMap<Principal, u64>,
+}
 #[derive(Default, Clone, CandidType, Deserialize)]
 pub struct State {
-    pub canister_data: HashMap<String, Vec<CanisterData>>,
+    pub profiles: BTreeMap<u64, Profile>,
+    pub canister_data: BTreeMap<u64, CanisterData>,
+    pub indexes: Indexes,
+    pub relations: Relations,
+    // pub canister_data: HashMap<String, Vec<CanisterData>>,
     pub upgrades: Vec<Upgrade>,
 }
 
