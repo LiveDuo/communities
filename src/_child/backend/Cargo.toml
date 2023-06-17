@@ -8,9 +8,9 @@ path = "lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-ic-cdk = { git = "https://github.com/LiveDuo/cdk-rs" }
-ic-cdk-macros = { git = "https://github.com/LiveDuo/cdk-rs" }
-ic-certified-assets = { git = "https://github.com/LiveDuo/cdk-rs" }
+ic-cdk = "0.5.5"
+ic-cdk-macros = "0.5.5"
+ic-certified-assets = { path = "../../_meta/assets" }
 ic-cdk-main = { package = "ic-cdk", version = "0.6.8", features = ["timers"] }
 serde_bytes = "0.11"
 serde = "1.0.140"
