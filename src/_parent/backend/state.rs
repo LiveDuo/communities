@@ -201,7 +201,6 @@ pub struct Profile {
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Indexes {
-    // pub profile: HashMap<AuthenticationWithAddress, u64>,
     pub active_principal: HashMap<Principal, u64>,
 }
 #[derive(Default, Clone, CandidType, Deserialize)]
@@ -210,8 +209,7 @@ pub struct State {
     pub canister_data: BTreeMap<u64, CanisterData>,
     pub indexes: Indexes,
     pub relations: Relations,
-    // pub canister_data: HashMap<String, Vec<CanisterData>>,
-    pub upgrades: Vec<Upgrade>,
+    pub upgrades: BTreeMap<u64, Upgrade>,
 }
 
 thread_local! {

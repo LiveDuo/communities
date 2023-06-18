@@ -247,7 +247,7 @@ pub async fn create_child() -> Result<Principal, String> {
     // get leasts version
     let version = STATE.with(|s| {
         let state = s.borrow();
-        let mut upgrades = state.upgrades.clone();
+        let mut upgrades = state.upgrades.iter().map(|(_, u)| u.to_owned()).collect::<Vec<_>>();
         upgrades.sort_by(|a, b| b.version.cmp(&a.version));
         upgrades.first().unwrap().to_owned()
     });
@@ -365,18 +365,14 @@ fn update_user_canister_id(canister_data_id: u64, canister_id: Principal) {
 fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
-        state
-            .upgrades
-            .iter()
-            .find(|x| x.upgrade_from == Some(wasm_hash.to_owned()))
-            .map(|s| s.to_owned())
+        state.upgrades.iter().find(|(_, u)| u.upgrade_from == Some(wasm_hash.to_owned())).map(|(_, u)| u.to_owned())
     })
 }
 #[ic_cdk_macros::query]
 fn get_upgrades() -> Vec<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
-        state.upgrades.to_owned()
+        state.upgrades.iter().map(|(_, u)|u.to_owned()).collect::<Vec<_>>()
     })
 }
 
@@ -384,11 +380,7 @@ fn get_upgrades() -> Vec<Upgrade> {
 fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
-        state
-            .upgrades
-            .iter()
-            .find(|x| x.wasm_hash == wasm_hash)
-            .map(|f| f.to_owned())
+        state.upgrades.iter().find(|(_, u)| u.wasm_hash == wasm_hash).map(|(_, u)| u.to_owned())
     })
 }
 
@@ -439,7 +431,7 @@ async fn create_upgrade(
 
     // check if version exists
     let upgrades = STATE.with(|s| s.borrow().upgrades.to_owned());
-    if upgrades.iter().any(|v| v.wasm_hash == wasm_hash) {
+    if upgrades.iter().any(|(_, upgrade)| upgrade.wasm_hash == wasm_hash) {
         return Err("Version already exists".to_owned());
     }
 
@@ -458,7 +450,8 @@ async fn create_upgrade(
         wasm_hash,
         assets: assets.clone(),
     };
-    STATE.with(|s| s.borrow_mut().upgrades.push(upgrade));
+    let upgrade_id = uuid(&caller.to_text());
+    STATE.with(|s| s.borrow_mut().upgrades.insert(upgrade_id, upgrade));
 
     Ok(())
 }
@@ -467,19 +460,22 @@ async fn remove_upgrade(version: String) -> Result<(), String> {
     let caller = ic_cdk_main::caller();
     authorize(&caller).await?;
 
+
+
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        let index = state
+        let upgrade_id= state
             .upgrades
             .iter()
-            .position(|u| u.version == version)
+            .find(|(_, u)| u.version == version)
+            .map(|(id, _)| id.to_owned())
             .unwrap();
-        state.upgrades.remove(index);
+        state.upgrades.remove(&upgrade_id);
     });
 
     Ok(())
 }
-// -> Result<Vec<CanisterData>, String>
+
 #[ic_cdk_macros::query]
 fn get_user_canisters() -> Vec<CanisterData> {
     let caller = ic_cdk::caller();
