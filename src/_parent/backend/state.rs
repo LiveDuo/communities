@@ -202,6 +202,9 @@ pub struct Profile {
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Indexes {
     pub active_principal: HashMap<Principal, u64>,
+    pub wasm_hash: HashMap<Vec<u8>, u64>,
+    pub upgrade_from: HashMap<Option<Vec<u8>>, u64>,
+    pub version: HashMap<String, u64>,
 }
 #[derive(Default, Clone, CandidType, Deserialize)]
 pub struct State {

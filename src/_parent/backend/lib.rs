@@ -365,7 +365,11 @@ fn update_user_canister_id(canister_data_id: u64, canister_id: Principal) {
 fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
-        state.upgrades.iter().find(|(_, u)| u.upgrade_from == Some(wasm_hash.to_owned())).map(|(_, u)| u.to_owned())
+        let upgrade_id_opt = state.indexes.upgrade_from.get(&Some(wasm_hash.to_owned()));
+        if upgrade_id_opt == None {
+            return  None;
+        }
+        state.upgrades.get(upgrade_id_opt.unwrap()).cloned()
     })
 }
 #[ic_cdk_macros::query]
@@ -380,7 +384,11 @@ fn get_upgrades() -> Vec<Upgrade> {
 fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
-        state.upgrades.iter().find(|(_, u)| u.wasm_hash == wasm_hash).map(|(_, u)| u.to_owned())
+        let upgrade_id_opt = state.indexes.wasm_hash.get(&wasm_hash);
+        if upgrade_id_opt == None {
+            return None;
+        }
+        state.upgrades.get(upgrade_id_opt.unwrap()).cloned()
     })
 }
 
@@ -430,8 +438,8 @@ async fn create_upgrade(
     let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
 
     // check if version exists
-    let upgrades = STATE.with(|s| s.borrow().upgrades.to_owned());
-    if upgrades.iter().any(|(_, upgrade)| upgrade.wasm_hash == wasm_hash) {
+    let index_wasm_hash = STATE.with(|s| s.borrow().indexes.wasm_hash.to_owned());
+    if index_wasm_hash.contains_key(&wasm_hash) {
         return Err("Version already exists".to_owned());
     }
 
@@ -441,17 +449,22 @@ async fn create_upgrade(
             return Err(format!("The {} does not exist", asset));
         }
     }
-
-    // push to state
+    // insert to state
     let upgrade = Upgrade {
-        version,
-        upgrade_from,
+        version: version.to_owned(),
+        upgrade_from: upgrade_from.to_owned(),
         timestamp: ic_cdk::api::time(),
-        wasm_hash,
+        wasm_hash: wasm_hash.to_owned(),
         assets: assets.clone(),
     };
     let upgrade_id = uuid(&caller.to_text());
-    STATE.with(|s| s.borrow_mut().upgrades.insert(upgrade_id, upgrade));
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        state.upgrades.insert(upgrade_id, upgrade);
+        state.indexes.version.insert(version, upgrade_id);
+        state.indexes.wasm_hash.insert(wasm_hash, upgrade_id);
+        state.indexes.upgrade_from.insert(upgrade_from, upgrade_id)
+    });
 
     Ok(())
 }
@@ -460,20 +473,22 @@ async fn remove_upgrade(version: String) -> Result<(), String> {
     let caller = ic_cdk_main::caller();
     authorize(&caller).await?;
 
-
-
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        let upgrade_id= state
-            .upgrades
-            .iter()
-            .find(|(_, u)| u.version == version)
-            .map(|(id, _)| id.to_owned())
-            .unwrap();
-        state.upgrades.remove(&upgrade_id);
-    });
+        let upgrade_id_opt = state.indexes.version.get(&version).cloned();
+        if upgrade_id_opt == None {
+            return Err("Version does not exist".to_owned()); 
+        }
 
-    Ok(())
+        let upgrade_id= upgrade_id_opt.unwrap();
+        let upgrade = state.upgrades.get(&upgrade_id).cloned().unwrap();
+        state.indexes.version.remove(&upgrade.version);
+        state.indexes.wasm_hash.remove(&upgrade.wasm_hash);
+        state.indexes.upgrade_from.remove(&upgrade.upgrade_from);
+        state.upgrades.remove(&upgrade_id);
+
+        Ok(())
+    })
 }
 
 #[ic_cdk_macros::query]
