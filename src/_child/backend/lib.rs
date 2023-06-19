@@ -13,13 +13,28 @@ use std::hash::{Hash, Hasher};
 use crate::state::{*, STATE};
 
 #[ic_cdk_macros::init]
-fn init(wasm_hash: Option<Vec<u8>>) {
+fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
 		let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
         state.wasm_hash = wasm_hash;
+        if admin_opt != None {
+            let admin = admin_opt.unwrap();
+            let authentication = Authentication::Ic;
+            let admin_profile_id = uuid(&admin.to_text());
+            let admin_profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: admin };
+            
+            state.profiles.insert(admin_profile_id.to_owned(), admin_profile);
+            state.indexes.active_principal.insert(admin, admin_profile_id);
+            state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: admin }), admin_profile_id);
+            
+            let role_id = uuid(&admin.to_text());
+            let role = Role{timestamp: ic_cdk::api::time(), role: UserRole::Admin };
+            state.roles.insert(role_id.to_owned(), role);
+            state.relations.profile_id_to_role_id.insert(admin_profile_id, role_id);
+        }
 	});
 }
 
@@ -404,7 +419,19 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
         Ok(user_post)
     })
 }
-
+#[query]
+fn get_user_role() -> Vec<Role>{
+    let caller = ic_cdk::caller();
+    STATE.with(|s| {
+        let state = s.borrow();
+        let profile_id = state.indexes.active_principal.get(&caller).unwrap();
+        state.relations.profile_id_to_role_id.forward.get(profile_id)
+            .unwrap()
+            .iter()
+            .map(|(role_id, _)| state.roles.get(role_id).unwrap().to_owned())
+            .collect::<Vec<_>>()
+    })
+}
 fn update_wasm_hash() {
     let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
     let mut hasher = Sha256::new();
