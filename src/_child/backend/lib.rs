@@ -500,19 +500,13 @@ fn export_candid() -> String {
     __export_service()
 }
 
-use ic_cdk_main::export::candid::{Principal as PrincipalMain};
+use ic_cdk::export::candid::{Principal as PrincipalMain};
 use serde_bytes::ByteBuf;
-use ic_cdk_main::api::call::CallResult;
-use ic_cdk_main::api::management_canister::main::*;
+use ic_cdk::api::call::CallResult;
+use ic_cdk::api::management_canister::main::*;
 use ic_certified_assets::rc_bytes::RcBytes;
 use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
 
-#[derive(CandidType, Deserialize)]
-pub enum InstallMode {
-	#[serde(rename = "install")] Install,
-	#[serde(rename = "reinstall")] Reinstall,
-	#[serde(rename = "upgrade")] Upgrade,
-}
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub struct Upgrade { 
@@ -534,12 +528,12 @@ fn get_content_type(name: &str) -> String {
 
 
 async fn upgrade_canister_cb(wasm: Vec<u8>) {
-    ic_cdk_main::println!("Child: Self upgrading...");
+    ic_cdk::println!("Child: Self upgrading...");
 
     // upgrade code
-    let id = ic_cdk_main::id();
+    let id = ic_cdk::id();
     let install_args = InstallCodeArgument { mode: CanisterInstallMode::Upgrade, canister_id: id, wasm_module: wasm, arg: vec![], };
-    let result: CallResult<()> = ic_cdk_main::api::call::call(PrincipalMain::management_canister(), "install_code", (install_args,),).await;
+    let result: CallResult<()> = ic_cdk::api::call::call(PrincipalMain::management_canister(), "install_code", (install_args,),).await;
     result.unwrap();
 }
 
@@ -617,9 +611,9 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
 }
 
 async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
-	let canister_id = ic_cdk_main::id();
+	let canister_id = ic_cdk::id();
 	let args = CanisterIdRecord { canister_id };
-	let (canister_status, ) = ic_cdk_main::api::call::call::<_, (CanisterStatusResponse, )>(PrincipalMain::management_canister(), "canister_status", (args,)).await.map_err(|(code, err)| format!("{:?} - {}",code, err)).unwrap();
+	let (canister_status, ) = ic_cdk::api::call::call::<_, (CanisterStatusResponse, )>(PrincipalMain::management_canister(), "canister_status", (args,)).await.map_err(|(code, err)| format!("{:?} - {}",code, err)).unwrap();
 
 	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
 		Ok(())
@@ -631,7 +625,7 @@ async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
 #[ic_cdk_macros::update]
 async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     
-    let caller = ic_cdk_main::caller();
+    let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
     // get parent canister
@@ -649,7 +643,7 @@ async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
 
     // upgrade wasm
     let wasm = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());	
-    ic_cdk_main::spawn(upgrade_canister_cb(wasm));
+    ic_cdk::spawn(upgrade_canister_cb(wasm));
 
     Ok(())
 }   

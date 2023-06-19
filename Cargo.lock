@@ -231,7 +231,6 @@ dependencies = [
  "easy-hasher",
  "ed25519-dalek",
  "hex",
- "ic-cdk 0.6.10",
  "ic-cdk 0.8.1",
  "ic-cdk-macros",
  "ic-certified-assets",
