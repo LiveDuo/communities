@@ -24,29 +24,31 @@ fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
 	});
 
     if let Some(admin) = admin_opt { 
-        let admin_id = create_user(&admin);
-        add_user_role(admin_id, UserRole::Admin, &admin);
+        let admin_id = create_profile_by_principal(&admin);
+        add_profile_role(admin_id, UserRole::Admin);
      }
 }
-fn create_user(principal: &Principal) -> u64 {
+
+fn create_profile_by_principal(principal: &Principal) -> u64 {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
         let authentication = Authentication::Ic;
-        let admin_profile_id = uuid(&principal.to_text());
+        let profile_id  = uuid(&principal.to_text());
         let admin_profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: principal.to_owned() };
-        state.profiles.insert(admin_profile_id.to_owned(), admin_profile);
-        state.indexes.active_principal.insert(principal.to_owned(), admin_profile_id);
-        state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: principal.to_owned() }), admin_profile_id);
-        admin_profile_id
+        state.profiles.insert(profile_id.to_owned(), admin_profile);
+        state.indexes.active_principal.insert(principal.to_owned(), profile_id);
+        state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: principal.to_owned() }), profile_id);
+        profile_id
     })
 }
-fn add_user_role(user_id: u64, role: UserRole, principal: &Principal ) {
+
+fn add_profile_role(profile_id: u64, role: UserRole) {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        let role_id = uuid(&principal.to_text());
+        let role_id = uuid(&profile_id.to_string());
         let role = Role{timestamp: ic_cdk::api::time(), role};
         state.roles.insert(role_id.to_owned(), role);
-        state.relations.profile_id_to_role_id.insert(user_id, role_id)
+        state.relations.profile_id_to_role_id.insert(profile_id, role_id)
     })
 }
 
