@@ -93,7 +93,7 @@ async fn store_assets(
     Ok(())
 }
 
-async fn install_code(canister_id: PrincipalMain, version: &String, caller: &PrincipalMain) -> Result<(), String> {
+async fn install_code(canister_id: PrincipalMain, version: &String, caller: &Principal) -> Result<(), String> {
     // get wasm
     let wasm_bytes: Vec<u8> =
         ic_certified_assets::get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
