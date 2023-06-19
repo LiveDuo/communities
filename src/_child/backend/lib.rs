@@ -34,8 +34,8 @@ fn create_profile_by_principal(principal: &Principal) -> u64 {
         let mut state = s.borrow_mut();
         let authentication = Authentication::Ic;
         let profile_id  = uuid(&principal.to_text());
-        let admin_profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: principal.to_owned() };
-        state.profiles.insert(profile_id.to_owned(), admin_profile);
+        let profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: principal.to_owned() };
+        state.profiles.insert(profile_id.to_owned(), profile);
         state.indexes.active_principal.insert(principal.to_owned(), profile_id);
         state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: principal.to_owned() }), profile_id);
         profile_id
