@@ -93,7 +93,7 @@ async fn store_assets(
     Ok(())
 }
 
-async fn install_code(canister_id: PrincipalMain, version: &String) -> Result<(), String> {
+async fn install_code(canister_id: PrincipalMain, version: &String, caller: &Principal) -> Result<(), String> {
     // get wasm
     let wasm_bytes: Vec<u8> =
         ic_certified_assets::get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
@@ -111,7 +111,7 @@ async fn install_code(canister_id: PrincipalMain, version: &String) -> Result<()
         mode: CanisterInstallMode::Install,
         canister_id: canister_id,
         wasm_module: wasm_bytes,
-        arg: Encode!(&Some(wasm_hash)).unwrap(),
+        arg: Encode!(&Some(caller.to_owned()), &Some(wasm_hash)).unwrap(),
     };
 
     let (result,) = ic_cdk_main::call::<_, ((),)>(
@@ -260,7 +260,7 @@ pub async fn create_child() -> Result<Principal, String> {
     };
     let _ =
         ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg2,)).await;
-    install_code(canister_id, &version.version).await.unwrap();
+    install_code(canister_id, &version.version, &caller).await.unwrap();
 
     // upload frontend assets
     let arg3 = CallbackData {

@@ -13,14 +13,43 @@ use std::hash::{Hash, Hasher};
 use crate::state::{*, STATE};
 
 #[ic_cdk_macros::init]
-fn init(wasm_hash: Option<Vec<u8>>) {
+fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
 		let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
         state.wasm_hash = wasm_hash;
+
 	});
+
+    if let Some(admin) = admin_opt { 
+        let admin_id = create_profile_by_principal(&admin);
+        add_profile_role(admin_id, UserRole::Admin);
+     }
+}
+
+fn create_profile_by_principal(principal: &Principal) -> u64 {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let authentication = Authentication::Ic;
+        let profile_id  = uuid(&principal.to_text());
+        let profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: principal.to_owned() };
+        state.profiles.insert(profile_id.to_owned(), profile);
+        state.indexes.active_principal.insert(principal.to_owned(), profile_id);
+        state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: principal.to_owned() }), profile_id);
+        profile_id
+    })
+}
+
+fn add_profile_role(profile_id: u64, role: UserRole) {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let role_id = uuid(&profile_id.to_string());
+        let role = Role{timestamp: ic_cdk::api::time(), role};
+        state.roles.insert(role_id.to_owned(), role);
+        state.relations.profile_id_to_role_id.insert(profile_id, role_id)
+    })
 }
 
 fn uuid(seed: &str) -> u64 {
@@ -404,7 +433,22 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
         Ok(user_post)
     })
 }
-
+#[query]
+fn get_user_roles() -> Vec<Role>{
+    let caller = ic_cdk::caller();
+    STATE.with(|s| {
+        let state = s.borrow();
+        if let Some(profile_id) =  state.indexes.active_principal.get(&caller) {
+            state.relations.profile_id_to_role_id.forward.get(profile_id)
+                .unwrap()
+                .iter()
+                .map(|(role_id, _)| state.roles.get(role_id).unwrap().to_owned())
+                .collect::<Vec<_>>()
+        } else {
+            vec![]
+        }
+    })
+}
 fn update_wasm_hash() {
     let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
     let mut hasher = Sha256::new();

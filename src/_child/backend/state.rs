@@ -100,6 +100,17 @@ pub struct PostSummary {
     pub last_activity: u64,
 }
 
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum UserRole {
+    Admin
+}
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct  Role {
+    pub timestamp: u64,
+    pub role: UserRole
+}
+
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relation<X: Ord, Y: Ord> {
     pub forward: BTreeMap<X, BTreeMap<Y, ()>>,
@@ -123,26 +134,12 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
     }
 }
 
-#[derive(CandidType, Clone, Deserialize, Debug)]
+#[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relations {
     pub profile_id_to_post_id: Relation<u64, u64>,
     pub profile_id_to_reply_id: Relation<u64, u64>,
     pub reply_id_to_post_id: Relation<u64, u64>,
-}
-
-impl Default for Relations {
-    fn default() -> Self {
-        let relation_u64_to_u64: Relation<_, _> = Relation {
-            forward: BTreeMap::default(),
-            backward: BTreeMap::default(),
-        };
-
-        Relations {
-            profile_id_to_post_id: { relation_u64_to_u64.to_owned() },
-            profile_id_to_reply_id: { relation_u64_to_u64.to_owned() },
-            reply_id_to_post_id: { relation_u64_to_u64 },
-        }
-    }
+    pub profile_id_to_role_id: Relation<u64, u64>,
 }
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
@@ -156,6 +153,7 @@ pub struct State {
     pub profiles: BTreeMap<u64, Profile>,
     pub posts: BTreeMap<u64, Post>,
     pub replies: BTreeMap<u64, Reply>,
+    pub roles: BTreeMap<u64, Role>,
     pub relations: Relations,
     pub indexes: Indexes,
     pub parent: Option<Principal>,

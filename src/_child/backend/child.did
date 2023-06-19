@@ -1,2 +1,1 @@
-
-service : {}
+service : ( admin_opt: opt principal, wasm_hash: opt vec nat8 ) -> {}
