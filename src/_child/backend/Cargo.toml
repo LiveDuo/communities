@@ -8,8 +8,8 @@ path = "lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-ic-cdk = "0.5.5"
-ic-cdk-macros = "0.5.5"
+ic-cdk = "0.8.1"
+ic-cdk-macros = "0.6.10"
 ic-certified-assets = { path = "../../_meta/assets" }
 ic-cdk-main = { package = "ic-cdk", version = "0.6.8", features = ["timers"] }
 serde_bytes = "0.11"
@@ -17,7 +17,7 @@ serde = "1.0.140"
 hex = "0.4.3"
 libsecp256k1 = { version = "0.6.0", default-features = false, features = ["lazy-static-context"] }
 easy-hasher = "2.2.1"
-candid = "0.7.15"
+candid = "0.8.4"
 ed25519-dalek = "1.0.1"
 bs58 = "0.4.0"
 sha2 = "0.10.6"
