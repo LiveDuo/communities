@@ -20,22 +20,28 @@ fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
 		let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
         state.wasm_hash = wasm_hash;
-        if admin_opt != None {
-            let admin = admin_opt.unwrap();
-            let authentication = Authentication::Ic;
-            let admin_profile_id = uuid(&admin.to_text());
-            let admin_profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: admin };
-            
-            state.profiles.insert(admin_profile_id.to_owned(), admin_profile);
-            state.indexes.active_principal.insert(admin, admin_profile_id);
-            state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: admin }), admin_profile_id);
-            
-            let role_id = uuid(&admin.to_text());
-            let role = Role{timestamp: ic_cdk::api::time(), role: UserRole::Admin };
-            state.roles.insert(role_id.to_owned(), role);
-            state.relations.profile_id_to_role_id.insert(admin_profile_id, role_id);
-        }
+
 	});
+
+    if let Some(admin) = admin_opt { add_user_role(admin) }
+}
+fn add_user_role(principal: Principal) {
+    ic_cdk::println!("added");
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let authentication = Authentication::Ic;
+        let admin_profile_id = uuid(&principal.to_text());
+        let admin_profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: principal };
+        
+        state.profiles.insert(admin_profile_id.to_owned(), admin_profile);
+        state.indexes.active_principal.insert(principal, admin_profile_id);
+        state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: principal }), admin_profile_id);
+        
+        let role_id = uuid(&principal.to_text());
+        let role = Role{timestamp: ic_cdk::api::time(), role: UserRole::Admin };
+        state.roles.insert(role_id.to_owned(), role);
+        state.relations.profile_id_to_role_id.insert(admin_profile_id, role_id);
+    });
 }
 
 fn uuid(seed: &str) -> u64 {
@@ -420,16 +426,19 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 #[query]
-fn get_user_role() -> Vec<Role>{
+fn get_user_roles() -> Vec<Role>{
     let caller = ic_cdk::caller();
     STATE.with(|s| {
         let state = s.borrow();
-        let profile_id = state.indexes.active_principal.get(&caller).unwrap();
-        state.relations.profile_id_to_role_id.forward.get(profile_id)
-            .unwrap()
-            .iter()
-            .map(|(role_id, _)| state.roles.get(role_id).unwrap().to_owned())
-            .collect::<Vec<_>>()
+        if let Some(profile_id) =  state.indexes.active_principal.get(&caller) {
+            state.relations.profile_id_to_role_id.forward.get(profile_id)
+                .unwrap()
+                .iter()
+                .map(|(role_id, _)| state.roles.get(role_id).unwrap().to_owned())
+                .collect::<Vec<_>>()
+        } else {
+            vec![]
+        }
     })
 }
 fn update_wasm_hash() {
