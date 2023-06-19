@@ -11,12 +11,12 @@ crate-type = ["cdylib"]
 ic-cdk = "0.8.1"
 ic-cdk-macros = "0.6.10"
 ic-certified-assets = { path = "../../_meta/assets" }
-serde_bytes = "0.11"
-serde = "1.0.140"
+serde_bytes = "0.11.9"
+serde = "1.0.164"
 hex = "0.4.3"
-libsecp256k1 = { version = "0.6.0", default-features = false, features = ["lazy-static-context"] }
+libsecp256k1 = { version = "0.7.1", default-features = false, features = ["lazy-static-context"] }
 easy-hasher = "2.2.1"
 candid = "0.8.4"
 ed25519-dalek = "1.0.1"
-bs58 = "0.4.0"
-sha2 = "0.10.6"
+bs58 = "0.5.0"
+sha2 = "0.10.7"
