@@ -1,84 +1,21 @@
-use candid::{CandidType, Principal, Deserialize};
+use candid::{CandidType, Deserialize, Principal};
 
 use serde::Serialize;
+use std::iter::FromIterator;
 
 use sha2::Digest;
 
 use std::cell::RefCell;
+use std::collections::{BTreeMap, HashMap};
 use std::convert::TryInto;
-use std::collections::HashMap;
-
-#[derive(CandidType, Deserialize, Debug, Clone)]
-struct Asset { data: Vec<u8>, temp: Vec<u8> }
-
-#[derive(CandidType, Deserialize)]
-pub enum InstallMode {
-	#[serde(rename = "install")] Install,
-	#[serde(rename = "reinstall")] Reinstall,
-	#[serde(rename = "upgrade")] Upgrade,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct InstallCanisterArgs {
-	pub mode: InstallMode,
-	pub canister_id: Principal,
-	#[serde(with = "serde_bytes")] pub wasm_module: Vec<u8>,
-	pub arg: Vec<u8>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct CanisterSettings {
-	pub controllers: Option<Vec<Principal>>,
-	pub compute_allocation: Option<u128>,
-	pub memory_allocation: Option<u128>,
-	pub freezing_threshold: Option<u128>,
-}
-#[derive(CandidType, Deserialize)]
-pub struct DefiniteCanisterSettings {
-	pub controllers: Vec<Principal>,
-	pub compute_allocation: u128,
-	pub memory_allocation: u128,
-	pub freezing_threshold: u128,
-}
-
-#[derive(CandidType, Deserialize)]
-pub enum Status {
-    #[serde(rename = "stopped")] Stopped,
-    #[serde(rename = "stopping")] Stopping,
-	#[serde(rename = "running")] Running,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct CanisterStatus {
-    pub status: Status,
-    pub memory_size : u128,
-    pub cycles : u128,
-    pub settings : DefiniteCanisterSettings,
-    pub module_hash: Option<Vec<u8>>
-}
 
 #[derive(CandidType, Deserialize)]
 pub struct StoreAssetArgs {
-	pub key: String,
-	pub content_type: String,
-	pub content_encoding: String,
-	pub content: Vec<u8>,
+    pub key: String,
+    pub content_type: String,
+    pub content_encoding: String,
+    pub content: Vec<u8>,
 }
-
-#[derive(CandidType)]
-pub struct UpdateSettingsArgs { 
-    pub canister_id: Principal,
-    pub settings: CanisterSettings
-}
-#[derive(CandidType)]
-pub struct CanisterStatusArg { 
-    pub canister_id: Principal
-}
-#[derive(CandidType)]
-pub struct CreateCanisterArgs { pub settings: CanisterSettings, }
-
-#[derive(CandidType, Deserialize)]
-pub struct CreateCanisterResult { pub canister_id: Principal, }
 
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct AccountIdentifier(pub [u8; 32]);
@@ -120,7 +57,6 @@ pub fn principal_to_subaccount(principal_id: &Principal) -> Subaccount {
     Subaccount(subaccount)
 }
 
-
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct Timestamp {
     pub timestamp_nanos: u64,
@@ -156,34 +92,101 @@ pub enum TransferError {
 pub type BlockIndex = u64;
 pub type TransferResult = Result<BlockIndex, TransferError>;
 
-
 #[derive(CandidType, Deserialize, Default, Clone, PartialEq, Debug)]
-pub enum CanisterState { #[default] Preparing, Creating, Installing, Uploading, Ready }
+pub enum CanisterState {
+    #[default]
+    Preparing,
+    Creating,
+    Installing,
+    Uploading,
+    Ready,
+}
 
-#[derive(Default, CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone)]
 pub struct CanisterData {
-    pub id: Option<String>,
+    pub id: Option<Principal>,
     pub timestamp: u64,
     pub state: CanisterState,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+impl Default for CanisterData {
+    fn default() -> Self {
+        Self {
+            id: None,
+            timestamp: ic_cdk::api::time(),
+            state: CanisterState::Preparing,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, CandidType)]
 pub struct CallbackData {
-    pub canister_index: usize,
+    pub canister_data_id: Option<u64>,
     pub user: Principal,
-    pub state: CanisterState
+    pub state: CanisterState,
 }
 #[derive(Clone, Debug, CandidType, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Upgrade { 
+pub struct Upgrade {
     pub version: String,
     pub upgrade_from: Option<Vec<u8>>,
     pub timestamp: u64,
     pub wasm_hash: Vec<u8>,
-    pub assets: Vec<String>
+    pub assets: Vec<String>,
 }
 
+#[derive(Default, CandidType, Clone, Deserialize, Debug)]
+pub struct Relation<X: Ord, Y: Ord> {
+    pub forward: BTreeMap<X, BTreeMap<Y, ()>>,
+    pub backward: BTreeMap<Y, BTreeMap<X, ()>>,
+}
+impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
+    pub fn insert(&mut self, x: X, y: Y) {
+        if self.forward.contains_key(&x) {
+            self.forward.get_mut(&x).unwrap().insert(y.clone(), ());
+        } else {
+            self.forward
+                .insert(x.clone(), BTreeMap::from_iter([(y.clone(), ())]));
+        }
+
+        if self.backward.contains_key(&y) {
+            self.backward.get_mut(&y).unwrap().insert(x, ());
+        } else {
+            self.backward
+                .insert(y, BTreeMap::from_iter([(x.clone(), ())]));
+        }
+    }
+}
+
+#[derive(Default,CandidType, Clone, Deserialize, Debug)]
+pub struct Relations {
+    pub profile_id_to_canister_id: Relation<u64, u64>,
+}
+
+#[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
+pub enum Authentication {
+    Ic,
+}
+#[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
+pub struct Profile {
+    pub authentication: Authentication,
+    pub active_principal: Principal,
+}
+
+#[derive(Default, CandidType, Clone, Deserialize, Debug)]
+pub struct Indexes {
+    pub active_principal: HashMap<Principal, u64>,
+    pub wasm_hash: HashMap<Vec<u8>, u64>,
+    pub upgrade_from: HashMap<Option<Vec<u8>>, u64>,
+    pub version: HashMap<String, u64>,
+}
 #[derive(Default, Clone, CandidType, Deserialize)]
-pub struct State { pub canister_data: HashMap<String, Vec<CanisterData>> , pub upgrades: Vec<Upgrade> }
+pub struct State {
+    pub profiles: BTreeMap<u64, Profile>,
+    pub upgrades: BTreeMap<u64, Upgrade>,
+    pub canister_data: BTreeMap<u64, CanisterData>,
+    pub indexes: Indexes,
+    pub relations: Relations,
+}
 
 thread_local! {
     pub static STATE: RefCell<State> = RefCell::new(State::default());

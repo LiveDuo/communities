@@ -24,7 +24,14 @@ const ParentProvider = ({ children }) => {
 	const getUserCanisters = async () => {
 		try {
 			const response = await parentActorPlug.get_user_canisters()
-			return response.map(c => ({id: c.id, timestamp: new Date(Number(c.timestamp / 1000n / 1000n)), state: Object.keys(c.state)[0]}))
+      return response.map((c) => {
+        const canister_id = c.id.length > 0 ? c.id[0].toString() : "";
+        return {
+          id: canister_id,
+          timestamp: new Date(Number(c.timestamp / 1000n / 1000n)),
+          state: Object.keys(c.state)[0],
+        };
+      });
 		} catch (error) {
 			const description = error.result?.reject_message ?? 'Response failed'
 			toast({ description, status: 'error' })
