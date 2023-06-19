@@ -126,9 +126,9 @@ async fn install_code(canister_id: Principal, version: &String, caller: &Princip
 }
 
 async fn create_canister(canister_id: Principal) -> Result<Principal, String> {
-    let convert_to_principal_mail = Principal::from_text(canister_id.to_text()).unwrap();
-    let canister_setting = CanisterSettings {
-        controllers: Some(vec![convert_to_principal_mail]),
+
+let canister_setting = CanisterSettings {
+        controllers: Some(vec![canister_id]),
         compute_allocation: None,
         memory_allocation: None,
         freezing_threshold: None,
@@ -235,8 +235,7 @@ pub async fn create_child() -> Result<Principal, String> {
 
     // create canister
     let canister_id = create_canister(id).await.unwrap();
-    let convert_canister_id = Principal::from_text(canister_id.to_text()).unwrap();
-    update_user_canister_id(canister_data_id, convert_canister_id);
+    update_user_canister_id(canister_data_id, canister_id);
 
     // get leasts version
     let version = STATE.with(|s| {
@@ -265,8 +264,8 @@ pub async fn create_child() -> Result<Principal, String> {
     let _ =
         ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg3,)).await;
 
-    let convert_canister_id = Principal::from_text(canister_id.to_text()).unwrap();
-    store_assets(convert_canister_id, &version.assets, &version.version)
+
+    store_assets(canister_id, &version.assets, &version.version)
         .await
         .unwrap();
 
@@ -282,7 +281,7 @@ pub async fn create_child() -> Result<Principal, String> {
     let _ = ic_cdk::api::call::call::<_, ()>(canister_id, "authorize", (canister_id,)).await;
 
     set_canister_controllers(canister_id, caller).await.unwrap();
-    Ok(convert_canister_id)
+    Ok(canister_id)
 }
 
 fn create_user_canister(caller: Principal) -> u64 {
