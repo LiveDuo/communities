@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 ic-cdk = "0.8.1"
 ic-cdk-macros = "0.6.10"
 ic-certified-assets = { path = "../../_meta/assets" }
+ic-cdk-main = { package = "ic-cdk", version = "0.6.8", features = ["timers"] }
 include_macros = { path = "../../_meta/macros" }
 serde = "1.0.126"
 serde_bytes = "0.11"

@@ -4,7 +4,7 @@ import { icUrl, getAgent } from '.'
 const idlParentFactory = ({ IDL }) => {
 
   const canisterData = IDL.Record({
-    id: IDL.Opt(IDL.Text),
+    id: IDL.Opt(IDL.Principal),
     timestamp: IDL.Nat64,
     state: IDL.Variant({Preparing: IDL.Null, Creating: IDL.Null, Installing: IDL.Null, Uploading: IDL.Null, Ready: IDL.Null}),
   })
