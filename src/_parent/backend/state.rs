@@ -210,9 +210,9 @@ pub struct Indexes {
 pub struct State {
     pub profiles: BTreeMap<u64, Profile>,
     pub canister_data: BTreeMap<u64, CanisterData>,
+    pub upgrades: BTreeMap<u64, Upgrade>,
     pub indexes: Indexes,
     pub relations: Relations,
-    pub upgrades: BTreeMap<u64, Upgrade>,
 }
 
 thread_local! {
