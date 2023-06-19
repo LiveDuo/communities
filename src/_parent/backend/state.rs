@@ -9,22 +9,6 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryInto;
 
-#[derive(CandidType, Deserialize, Debug, Clone)]
-struct Asset {
-    data: Vec<u8>,
-    temp: Vec<u8>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub enum Status {
-    #[serde(rename = "stopped")]
-    Stopped,
-    #[serde(rename = "stopping")]
-    Stopping,
-    #[serde(rename = "running")]
-    Running,
-}
-
 #[derive(CandidType, Deserialize)]
 pub struct StoreAssetArgs {
     pub key: String,
@@ -173,22 +157,11 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
     }
 }
 
-#[derive(CandidType, Clone, Deserialize, Debug)]
+#[derive(Default,CandidType, Clone, Deserialize, Debug)]
 pub struct Relations {
     pub profile_id_to_canister_id: Relation<u64, u64>,
 }
-impl Default for Relations {
-    fn default() -> Self {
-        let relation_u64_to_u64: Relation<_, _> = Relation {
-            forward: BTreeMap::default(),
-            backward: BTreeMap::default(),
-        };
 
-        Relations {
-            profile_id_to_canister_id: { relation_u64_to_u64.to_owned() },
-        }
-    }
-}
 #[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
 pub enum Authentication {
     Ic,
@@ -209,8 +182,8 @@ pub struct Indexes {
 #[derive(Default, Clone, CandidType, Deserialize)]
 pub struct State {
     pub profiles: BTreeMap<u64, Profile>,
-    pub canister_data: BTreeMap<u64, CanisterData>,
     pub upgrades: BTreeMap<u64, Upgrade>,
+    pub canister_data: BTreeMap<u64, CanisterData>,
     pub indexes: Indexes,
     pub relations: Relations,
 }
