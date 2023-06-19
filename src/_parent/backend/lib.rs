@@ -8,8 +8,7 @@ use candid::{CandidType, Deserialize, Encode, Principal};
 use crate::state::principal_to_subaccount;
 
 use crate::state::{STATE, *};
-use ic_cdk_main::api::management_canister::main::*;
-use ic_cdk_main::export::candid::Principal as PrincipalMain;
+use ic_cdk::api::management_canister::main::*;
 use include_macros::get_canister;
 
 use std::collections::hash_map;
@@ -93,7 +92,7 @@ async fn store_assets(
     Ok(())
 }
 
-async fn install_code(canister_id: PrincipalMain, version: &String, caller: &Principal) -> Result<(), String> {
+async fn install_code(canister_id: Principal, version: &String, caller: &Principal) -> Result<(), String> {
     // get wasm
     let wasm_bytes: Vec<u8> =
         ic_certified_assets::get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
@@ -114,8 +113,8 @@ async fn install_code(canister_id: PrincipalMain, version: &String, caller: &Pri
         arg: Encode!(&Some(caller.to_owned()), &Some(wasm_hash)).unwrap(),
     };
 
-    let (result,) = ic_cdk_main::call::<_, ((),)>(
-        PrincipalMain::management_canister(),
+    let (result,) = ic_cdk::call::<_, ((),)>(
+        Principal::management_canister(),
         "install_code",
         (install_args,),
     )
@@ -126,8 +125,8 @@ async fn install_code(canister_id: PrincipalMain, version: &String, caller: &Pri
     Ok(result)
 }
 
-async fn create_canister(canister_id: Principal) -> Result<PrincipalMain, String> {
-    let convert_to_principal_mail = PrincipalMain::from_text(canister_id.to_text()).unwrap();
+async fn create_canister(canister_id: Principal) -> Result<Principal, String> {
+    let convert_to_principal_mail = Principal::from_text(canister_id.to_text()).unwrap();
     let canister_setting = CanisterSettings {
         controllers: Some(vec![convert_to_principal_mail]),
         compute_allocation: None,
@@ -138,8 +137,8 @@ async fn create_canister(canister_id: Principal) -> Result<PrincipalMain, String
         settings: Some(canister_setting),
     };
 
-    let (create_result,) = ic_cdk_main::api::call::call_with_payment::<_, (CanisterIdRecord,)>(
-        PrincipalMain::management_canister(),
+    let (create_result,) = ic_cdk::api::call::call_with_payment::<_, (CanisterIdRecord,)>(
+        Principal::management_canister(),
         "create_canister",
         (create_args,),
         200_000_000_000,
@@ -193,25 +192,20 @@ async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), St
 }
 
 async fn set_canister_controllers(
-    child_canister_id: PrincipalMain,
+    child_canister_id: Principal,
     caller: Principal,
 ) -> Result<(), String> {
-    let convert_caller = PrincipalMain::from_text(caller.to_text()).unwrap();
     let update_settings_args = UpdateSettingsArgument {
         canister_id: child_canister_id,
         settings: CanisterSettings {
-            controllers: Some(vec![child_canister_id, convert_caller]),
+            controllers: Some(vec![child_canister_id, caller]),
             compute_allocation: None,
             memory_allocation: None,
             freezing_threshold: None,
         },
     };
 
-    let _result = ic_cdk_main::call::<_, ((),)>(
-        PrincipalMain::management_canister(),
-        "update_settings",
-        (update_settings_args,),
-    )
+    let _result = ic_cdk::call::<_, ((),)>(Principal::management_canister(),"update_settings",(update_settings_args,),)
     .await
     .map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg))
     .unwrap();
@@ -285,7 +279,7 @@ pub async fn create_child() -> Result<Principal, String> {
     let _ =
         ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg4,)).await;
 
-    let _ = ic_cdk_main::api::call::call::<_, ()>(canister_id, "authorize", (canister_id,)).await;
+    let _ = ic_cdk::api::call::call::<_, ()>(canister_id, "authorize", (canister_id,)).await;
 
     set_canister_controllers(canister_id, caller).await.unwrap();
     Ok(convert_canister_id)
@@ -392,16 +386,12 @@ fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     })
 }
 
-async fn authorize(caller: &PrincipalMain) -> Result<(), String> {
-    let canister_id = ic_cdk_main::id();
+async fn authorize(caller: &Principal) -> Result<(), String> {
+    let canister_id = ic_cdk::id();
 
     let args = CanisterIdRecord { canister_id };
 
-    let (canister_status,) = ic_cdk_main::call::<_, (CanisterStatusResponse,)>(
-        PrincipalMain::management_canister(),
-        "canister_status",
-        (args,),
-    )
+    let (canister_status,) = ic_cdk::call::<_, (CanisterStatusResponse,)>(Principal::management_canister(),"canister_status",(args,),)
     .await
     .map_err(|(code, msg)| format!("Canister status {}: {}", code as u8, msg))
     .unwrap();
@@ -425,7 +415,7 @@ async fn create_upgrade(
     assets: Vec<String>,
 ) -> Result<(), String> {
     // authorize
-    let caller = ic_cdk_main::caller();
+    let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
     // get wasm
@@ -470,7 +460,7 @@ async fn create_upgrade(
 }
 #[ic_cdk_macros::update]
 async fn remove_upgrade(version: String) -> Result<(), String> {
-    let caller = ic_cdk_main::caller();
+    let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
     STATE.with(|s| {
