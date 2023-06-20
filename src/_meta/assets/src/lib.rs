@@ -246,21 +246,8 @@ fn candid_interface_compatibility() {
     .expect("The assets canister interface is not compatible with the assets.did file");
 }
 
-pub fn get_asset_chunk(key: &str, index: usize) -> RcBytes {
-    let arg = GetChunkArg {
-        index: Nat::from(index),
-        key: key.to_string(),
-        content_encoding: "identity".to_string(),
-        sha256: None
-    };
-    STATE.with(|s| match s.borrow().get_chunk(arg) {
-        Ok(content) => content,
-        Err(msg) => trap(&msg),
-    })
-}
 
 pub fn get_asset(asset_name: String) -> Vec<u8> {
-	
     let arg = GetArg {
         key: asset_name.to_owned(),
         accept_encodings: vec!["identity".to_owned()]
@@ -269,11 +256,15 @@ pub fn get_asset(asset_name: String) -> Vec<u8> {
 
 	let mut chunk_index = 0;
 	let mut chunks_all = vec![];
-	let mut current_length = 0;
-    while Nat::lt(&Nat::from(current_length), &asset_data.total_length) {
-		let chunk = get_asset_chunk(&asset_name, chunk_index).as_ref().to_vec();
-        chunks_all.extend(chunk.iter().cloned());
-		current_length += chunk.len();
+    while Nat::lt(&Nat::from(chunks_all.len()), &asset_data.total_length) {
+        let arg = GetChunkArg {
+            index: Nat::from(chunk_index),
+            key: asset_name.to_owned(),
+            content_encoding: "identity".to_string(),
+            sha256: None
+        };
+        let chunk =  get_chunk(arg).content.as_ref().to_vec();
+        chunks_all.extend(chunk.to_owned());
 		chunk_index += 1;
 	}
 	return chunks_all;
