@@ -1,7 +1,7 @@
 mod state;
 mod verify;
 
-use candid::{export_service, CandidType, Deserialize, Principal};
+use candid::{export_service, CandidType, Deserialize, Principal, Nat};
 
 use sha2::{Sha256, Digest};
 use ic_cdk_macros::*;
@@ -9,6 +9,8 @@ use ic_cdk_macros::*;
 use std::borrow::Borrow;
 use std::collections::hash_map;
 use std::hash::{Hash, Hasher};
+use ic_certified_assets::types::{GetArg, GetChunkArg};
+use num_traits::ToPrimitive;
 
 use crate::state::{*, STATE};
 
@@ -450,7 +452,7 @@ fn get_user_roles() -> Vec<Role>{
     })
 }
 fn update_wasm_hash() {
-    let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
+    let wasm_bytes = get_asset("/temp/child.wasm".to_owned());
     let mut hasher = Sha256::new();
     hasher.update(wasm_bytes.clone());
     let wasm_hash = hasher.finalize()[..].to_vec();
@@ -549,7 +551,7 @@ fn replace_assets_from_temp() {
     // store new assets
     let temp_assets = &assets.iter().filter(|k| k.key.starts_with("/temp")).collect::<Vec<_>>();
     for asset in  temp_assets {
-        let asset_content: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_owned());
+        let asset_content: Vec<u8> = get_asset(asset.key.to_owned());
         let args_store = StoreArg {
             key: asset.key.replace("/temp", ""),
             content_type: asset.content_type.to_owned(),
@@ -642,8 +644,33 @@ async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version).await.unwrap();
 
     // upgrade wasm
-    let wasm = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());	
+    let wasm = get_asset("/temp/child.wasm".to_owned());	
     ic_cdk::spawn(upgrade_canister_cb(wasm));
 
     Ok(())
-}   
+}
+
+fn get_asset(key: String) -> Vec<u8> {
+
+    // get asset length
+    let arg = GetArg { key: key.to_owned(), accept_encodings: vec!["identity".to_string()] };
+	let encoded_asset = ic_certified_assets::get(arg);
+    let total_length = encoded_asset.total_length.0.to_usize().unwrap();
+
+    // concat asset chunks
+	let mut index = 0;
+	let mut content = vec![];
+    while content.len() < total_length {
+        let arg = GetChunkArg {
+            index: Nat::from(index),
+            key: key.to_owned(),
+            content_encoding: "identity".to_string(),
+            sha256: None
+        };
+        let chunk_response = ic_certified_assets::get_chunk(arg);
+        let chunk_data = chunk_response.content.as_ref().to_vec();
+        content.extend(chunk_data.to_owned());
+		index += 1;
+	}
+	return content;
+}

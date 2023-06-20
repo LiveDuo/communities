@@ -3,7 +3,7 @@ use ic_cdk::export::candid::export_service;
 mod state;
 use sha2::{Digest, Sha256};
 
-use candid::{CandidType, Deserialize, Encode, Principal};
+use candid::{CandidType, Deserialize, Encode, Principal, Nat};
 
 use crate::state::principal_to_subaccount;
 
@@ -13,6 +13,10 @@ use include_macros::get_canister;
 use std::collections::hash_map;
 use std::hash::Hash;
 use std::hash::Hasher;
+
+use ic_certified_assets::types::{GetArg, GetChunkArg};
+use num_traits::ToPrimitive;
+
 
 pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
 pub const TRANSFER_FEE: u64 = 10_000;
@@ -61,7 +65,7 @@ async fn store_assets(
         }
 
         // get asset content
-        let asset_bytes: Vec<u8> = ic_certified_assets::get_asset(asset.to_owned());
+        let asset_bytes: Vec<u8> = get_asset(asset.to_owned());
         let content;
         if asset == &format!("/upgrade/{}/static/js/bundle.js", version) {
             let bundle_str = String::from_utf8(asset_bytes).expect("Invalid JS bundle");
@@ -93,8 +97,7 @@ async fn store_assets(
 
 async fn install_code(canister_id: Principal, version: &String, caller: &Principal) -> Result<(), String> {
     // get wasm
-    let wasm_bytes: Vec<u8> =
-        ic_certified_assets::get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
+    let wasm_bytes: Vec<u8> = get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
     if wasm_bytes.is_empty() {
         return Err(format!("WASM not found"));
     }
@@ -418,7 +421,7 @@ async fn create_upgrade(
 
     // get wasm
     let wasm_key = format!("/upgrade/{}/child.wasm", version);
-    let wasm = ic_certified_assets::get_asset(wasm_key);
+    let wasm = get_asset(wasm_key);
 
     // get wasm hash
     let mut wasm_hash_hasher = Sha256::new();
@@ -508,6 +511,31 @@ fn get_user_canisters() -> Vec<CanisterData> {
             .collect::<Vec<_>>();
         canisters_data
     })
+}
+
+fn get_asset(key: String) -> Vec<u8> {
+
+    // get asset length
+    let arg = GetArg { key: key.to_owned(), accept_encodings: vec!["identity".to_string()] };
+	let encoded_asset = ic_certified_assets::get(arg);
+    let total_length = encoded_asset.total_length.0.to_usize().unwrap();
+
+    // concat asset chunks
+	let mut index = 0;
+	let mut content = vec![];
+    while content.len() < total_length {
+        let arg = GetChunkArg {
+            index: Nat::from(index),
+            key: key.to_owned(),
+            content_encoding: "identity".to_string(),
+            sha256: None
+        };
+        let chunk_response = ic_certified_assets::get_chunk(arg);
+        let chunk_data = chunk_response.content.as_ref().to_vec();
+        content.extend(chunk_data.to_owned());
+		index += 1;
+	}
+	return content;
 }
 
 #[derive(CandidType, Deserialize)]

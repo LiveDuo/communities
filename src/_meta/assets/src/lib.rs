@@ -13,10 +13,9 @@ use crate::{
     state_machine::{AssetDetails, EncodedAsset, State},
     types::*,
 };
-use candid::{candid_method, Principal, Nat};
+use candid::{candid_method, Principal};
 use ic_cdk::api::{caller, data_certificate, set_certified_data, time, trap};
 use ic_cdk_macros::{query, update};
-use num_traits::ToPrimitive;
 use std::cell::RefCell;
 
 thread_local! {
@@ -135,7 +134,7 @@ pub fn commit_batch(arg: CommitBatchArguments) {
 
 #[query]
 #[candid_method(query)]
-fn get(arg: GetArg) -> EncodedAsset {
+pub fn get(arg: GetArg) -> EncodedAsset {
     STATE.with(|s| match s.borrow().get(arg) {
         Ok(asset) => asset,
         Err(msg) => trap(&msg),
@@ -144,7 +143,7 @@ fn get(arg: GetArg) -> EncodedAsset {
 
 #[query]
 #[candid_method(query)]
-fn get_chunk(arg: GetChunkArg) -> GetChunkResponse {
+pub fn get_chunk(arg: GetChunkArg) -> GetChunkResponse {
     STATE.with(|s| match s.borrow().get_chunk(arg) {
         Ok(content) => GetChunkResponse { content },
         Err(msg) => trap(&msg),
@@ -247,28 +246,3 @@ fn candid_interface_compatibility() {
     .expect("The assets canister interface is not compatible with the assets.did file");
 }
 
-
-pub fn get_asset(key: String) -> Vec<u8> {
-
-    // get asset length
-    let arg = GetArg { key: key.to_owned(), accept_encodings: vec!["identity".to_string()] };
-	let encoded_asset = get(arg);
-    let total_length = encoded_asset.total_length.0.to_usize().unwrap();
-
-    // concat asset chunks
-	let mut index = 0;
-	let mut content = vec![];
-    while content.len() < total_length {
-        let arg = GetChunkArg {
-            index: Nat::from(index),
-            key: key.to_owned(),
-            content_encoding: "identity".to_string(),
-            sha256: None
-        };
-        let chunk_response =  get_chunk(arg);
-        let chunk_data = chunk_response.content.as_ref().to_vec();
-        content.extend(chunk_data.to_owned());
-		index += 1;
-	}
-	return content;
-}
