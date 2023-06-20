@@ -16,6 +16,7 @@ use crate::{
 use candid::{candid_method, Principal, Nat};
 use ic_cdk::api::{caller, data_certificate, set_certified_data, time, trap};
 use ic_cdk_macros::{query, update};
+use num_traits::ToPrimitive;
 use std::cell::RefCell;
 
 thread_local! {
@@ -248,23 +249,25 @@ fn candid_interface_compatibility() {
 
 
 pub fn get_asset(asset_name: String) -> Vec<u8> {
-    let arg = GetArg {
-        key: asset_name.to_owned(),
-        accept_encodings: vec!["identity".to_owned()]
-    };
+
+    // get asset data
+    let arg = GetArg { key: asset_name.to_owned(), accept_encodings: vec!["identity".to_string()] };
 	let asset_data = get(arg);
 
+    // concat asset chunks
 	let mut chunk_index = 0;
 	let mut chunks_all = vec![];
-    while Nat::lt(&Nat::from(chunks_all.len()), &asset_data.total_length) {
+    let total_length = asset_data.total_length.0.to_usize().unwrap();
+    while chunks_all.len() < total_length {
         let arg = GetChunkArg {
             index: Nat::from(chunk_index),
             key: asset_name.to_owned(),
             content_encoding: "identity".to_string(),
             sha256: None
         };
-        let chunk =  get_chunk(arg).content.as_ref().to_vec();
-        chunks_all.extend(chunk.to_owned());
+        let chunk =  get_chunk(arg);
+        let content = chunk.content.as_ref().to_vec();
+        chunks_all.extend(content.to_owned());
 		chunk_index += 1;
 	}
 	return chunks_all;
