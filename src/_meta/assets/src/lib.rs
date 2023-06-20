@@ -248,27 +248,27 @@ fn candid_interface_compatibility() {
 }
 
 
-pub fn get_asset(asset_name: String) -> Vec<u8> {
+pub fn get_asset(key: String) -> Vec<u8> {
 
-    // get asset data
-    let arg = GetArg { key: asset_name.to_owned(), accept_encodings: vec!["identity".to_string()] };
-	let asset_data = get(arg);
+    // get asset length
+    let arg = GetArg { key: key.to_owned(), accept_encodings: vec!["identity".to_string()] };
+	let encoded_asset = get(arg);
+    let total_length = encoded_asset.total_length.0.to_usize().unwrap();
 
     // concat asset chunks
-	let mut chunk_index = 0;
-	let mut chunks_all = vec![];
-    let total_length = asset_data.total_length.0.to_usize().unwrap();
-    while chunks_all.len() < total_length {
+	let mut index = 0;
+	let mut content = vec![];
+    while content.len() < total_length {
         let arg = GetChunkArg {
-            index: Nat::from(chunk_index),
-            key: asset_name.to_owned(),
+            index: Nat::from(index),
+            key: key.to_owned(),
             content_encoding: "identity".to_string(),
             sha256: None
         };
-        let chunk =  get_chunk(arg);
-        let content = chunk.content.as_ref().to_vec();
-        chunks_all.extend(content.to_owned());
-		chunk_index += 1;
+        let chunk_response =  get_chunk(arg);
+        let chunk_data = chunk_response.content.as_ref().to_vec();
+        content.extend(chunk_data.to_owned());
+		index += 1;
 	}
-	return chunks_all;
+	return content;
 }
