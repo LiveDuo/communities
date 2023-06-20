@@ -513,6 +513,14 @@ fn get_user_canisters() -> Vec<CanisterData> {
     })
 }
 
+
+#[ic_cdk_macros::query]
+fn get_childs() ->  Vec<Principal>{
+    STATE.with(|s| {
+        s.borrow().canister_data.iter().map(|(_, canister_data)| canister_data.id.unwrap()).collect::<Vec<_>>()
+    })
+}
+
 fn get_asset(key: String) -> Vec<u8> {
 
     // get asset length
