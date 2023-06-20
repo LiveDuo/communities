@@ -1,7 +1,7 @@
 mod state;
 mod verify;
 
-use candid::{export_service, CandidType, Deserialize, Principal};
+use candid::{export_service, CandidType, Deserialize, Principal, Nat};
 
 use sha2::{Sha256, Digest};
 use ic_cdk_macros::*;
@@ -9,6 +9,8 @@ use ic_cdk_macros::*;
 use std::borrow::Borrow;
 use std::collections::hash_map;
 use std::hash::{Hash, Hasher};
+use ic_certified_assets::types::{GetArg, GetChunkArg};
+use num_traits::ToPrimitive;
 
 use crate::state::{*, STATE};
 
@@ -17,16 +19,16 @@ fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
-		let mut state = s.borrow_mut();
+        let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
         state.wasm_hash = wasm_hash;
-
+        
 	});
-
+    
     if let Some(admin) = admin_opt { 
         let admin_id = create_profile_by_principal(&admin);
         add_profile_role(admin_id, UserRole::Admin);
-     }
+    }
 }
 
 fn create_profile_by_principal(principal: &Principal) -> u64 {
@@ -450,7 +452,7 @@ fn get_user_roles() -> Vec<Role>{
     })
 }
 fn update_wasm_hash() {
-    let wasm_bytes = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());
+    let wasm_bytes = get_asset("/temp/child.wasm".to_owned());
     let mut hasher = Sha256::new();
     hasher.update(wasm_bytes.clone());
     let wasm_hash = hasher.finalize()[..].to_vec();
@@ -500,19 +502,13 @@ fn export_candid() -> String {
     __export_service()
 }
 
-use ic_cdk_main::export::candid::{Principal as PrincipalMain};
+use ic_cdk::export::candid::{Principal as PrincipalMain};
 use serde_bytes::ByteBuf;
-use ic_cdk_main::api::call::CallResult;
-use ic_cdk_main::api::management_canister::main::*;
+use ic_cdk::api::call::CallResult;
+use ic_cdk::api::management_canister::main::*;
 use ic_certified_assets::rc_bytes::RcBytes;
 use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
 
-#[derive(CandidType, Deserialize)]
-pub enum InstallMode {
-	#[serde(rename = "install")] Install,
-	#[serde(rename = "reinstall")] Reinstall,
-	#[serde(rename = "upgrade")] Upgrade,
-}
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub struct Upgrade { 
@@ -534,28 +530,28 @@ fn get_content_type(name: &str) -> String {
 
 
 async fn upgrade_canister_cb(wasm: Vec<u8>) {
-    ic_cdk_main::println!("Child: Self upgrading...");
+    ic_cdk::println!("Child: Self upgrading...");
 
     // upgrade code
-    let id = ic_cdk_main::id();
+    let id = ic_cdk::id();
     let install_args = InstallCodeArgument { mode: CanisterInstallMode::Upgrade, canister_id: id, wasm_module: wasm, arg: vec![], };
-    let result: CallResult<()> = ic_cdk_main::api::call::call(PrincipalMain::management_canister(), "install_code", (install_args,),).await;
+    let result: CallResult<()> = ic_cdk::api::call::call(PrincipalMain::management_canister(), "install_code", (install_args,),).await;
     result.unwrap();
 }
 
 fn replace_assets_from_temp() {
-    let assets = ic_certified_assets::list_assets();
+    let assets = ic_certified_assets::list();
 
     // cleanup previous assets
     let prev_assets = &assets.iter().filter(|k| !k.key.starts_with("/temp")).collect::<Vec<_>>();
     for asset  in prev_assets {
-        ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+        ic_certified_assets::delete_asset(DeleteAssetArguments { key: asset.key.to_owned() });
     }
 
     // store new assets
     let temp_assets = &assets.iter().filter(|k| k.key.starts_with("/temp")).collect::<Vec<_>>();
     for asset in  temp_assets {
-        let asset_content: Vec<u8> = ic_certified_assets::get_asset(asset.key.to_owned());
+        let asset_content: Vec<u8> = get_asset(asset.key.to_owned());
         let args_store = StoreArg {
             key: asset.key.replace("/temp", ""),
             content_type: asset.content_type.to_owned(),
@@ -563,8 +559,8 @@ fn replace_assets_from_temp() {
             content: ByteBuf::from(asset_content),
             sha256: None
         };
-        ic_certified_assets::store_asset(args_store);
-        ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+        ic_certified_assets::store(args_store);
+        ic_certified_assets::delete_asset(DeleteAssetArguments { key: asset.key.to_owned() });
     }
 }
 
@@ -596,7 +592,7 @@ async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, 
             content,
             sha256: None
         };
-        ic_certified_assets::store_asset(store_args);
+        ic_certified_assets::store(store_args);
     }
 
 	Ok(())
@@ -617,9 +613,9 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
 }
 
 async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
-	let canister_id = ic_cdk_main::id();
+	let canister_id = ic_cdk::id();
 	let args = CanisterIdRecord { canister_id };
-	let (canister_status, ) = ic_cdk_main::api::call::call::<_, (CanisterStatusResponse, )>(PrincipalMain::management_canister(), "canister_status", (args,)).await.map_err(|(code, err)| format!("{:?} - {}",code, err)).unwrap();
+	let (canister_status, ) = ic_cdk::api::call::call::<_, (CanisterStatusResponse, )>(PrincipalMain::management_canister(), "canister_status", (args,)).await.map_err(|(code, err)| format!("{:?} - {}",code, err)).unwrap();
 
 	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
 		Ok(())
@@ -631,7 +627,7 @@ async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
 #[ic_cdk_macros::update]
 async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     
-    let caller = ic_cdk_main::caller();
+    let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
     // get parent canister
@@ -648,8 +644,33 @@ async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version).await.unwrap();
 
     // upgrade wasm
-    let wasm = ic_certified_assets::get_asset("/temp/child.wasm".to_owned());	
-    ic_cdk_main::spawn(upgrade_canister_cb(wasm));
+    let wasm = get_asset("/temp/child.wasm".to_owned());	
+    ic_cdk::spawn(upgrade_canister_cb(wasm));
 
     Ok(())
-}   
+}
+
+fn get_asset(key: String) -> Vec<u8> {
+
+    // get asset length
+    let arg = GetArg { key: key.to_owned(), accept_encodings: vec!["identity".to_string()] };
+	let encoded_asset = ic_certified_assets::get(arg);
+    let total_length = encoded_asset.total_length.0.to_usize().unwrap();
+
+    // concat asset chunks
+	let mut index = 0;
+	let mut content = vec![];
+    while content.len() < total_length {
+        let arg = GetChunkArg {
+            index: Nat::from(index),
+            key: key.to_owned(),
+            content_encoding: "identity".to_string(),
+            sha256: None
+        };
+        let chunk_response = ic_certified_assets::get_chunk(arg);
+        let chunk_data = chunk_response.content.as_ref().to_vec();
+        content.extend(chunk_data.to_owned());
+		index += 1;
+	}
+	return content;
+}
