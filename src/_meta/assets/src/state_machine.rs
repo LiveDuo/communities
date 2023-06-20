@@ -562,6 +562,10 @@ impl State {
             token: create_token(asset, &content_encoding, enc, &key, chunk_index),
         })
     }
+    
+    pub fn exists(&self, key: &Key) -> bool {
+        self.assets.contains_key(key)
+    }
 }
 
 impl From<State> for StableState {

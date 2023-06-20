@@ -35,7 +35,7 @@ fn authorize(other: Principal) {
 
 #[query]
 #[candid_method(query)]
-fn retrieve(key: Key) -> RcBytes {
+pub fn retrieve(key: Key) -> RcBytes {
     STATE.with(|s| match s.borrow().retrieve(&key) {
         Ok(bytes) => bytes,
         Err(msg) => trap(&msg),
@@ -44,7 +44,7 @@ fn retrieve(key: Key) -> RcBytes {
 
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
-fn store(arg: StoreArg) {
+pub fn store(arg: StoreArg) {
     STATE.with(move |s| {
         if let Err(msg) = s.borrow_mut().store(arg, time()) {
             trap(&msg);
@@ -55,7 +55,7 @@ fn store(arg: StoreArg) {
 
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
-fn create_batch() -> CreateBatchResponse {
+pub fn create_batch() -> CreateBatchResponse {
     STATE.with(|s| CreateBatchResponse {
         batch_id: s.borrow_mut().create_batch(time()),
     })
@@ -63,7 +63,7 @@ fn create_batch() -> CreateBatchResponse {
 
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
-fn create_chunk(arg: CreateChunkArg) -> CreateChunkResponse {
+pub fn create_chunk(arg: CreateChunkArg) -> CreateChunkResponse {
     STATE.with(|s| match s.borrow_mut().create_chunk(arg, time()) {
         Ok(chunk_id) => CreateChunkResponse { chunk_id },
         Err(msg) => trap(&msg),
@@ -83,7 +83,7 @@ fn create_asset(arg: CreateAssetArguments) {
 
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
-fn set_asset_content(arg: SetAssetContentArguments) {
+pub fn set_asset_content(arg: SetAssetContentArguments) {
     STATE.with(|s| {
         if let Err(msg) = s.borrow_mut().set_asset_content(arg, time()) {
             trap(&msg);
@@ -94,7 +94,7 @@ fn set_asset_content(arg: SetAssetContentArguments) {
 
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
-fn unset_asset_content(arg: UnsetAssetContentArguments) {
+pub fn unset_asset_content(arg: UnsetAssetContentArguments) {
     STATE.with(|s| {
         if let Err(msg) = s.borrow_mut().unset_asset_content(arg) {
             trap(&msg);
@@ -105,7 +105,7 @@ fn unset_asset_content(arg: UnsetAssetContentArguments) {
 
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
-fn delete_asset(arg: DeleteAssetArguments) {
+pub fn delete_asset(arg: DeleteAssetArguments) {
     STATE.with(|s| {
         s.borrow_mut().delete_asset(arg);
         set_certified_data(&s.borrow().root_hash());
@@ -114,7 +114,7 @@ fn delete_asset(arg: DeleteAssetArguments) {
 
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
-fn clear() {
+pub fn clear() {
     STATE.with(|s| {
         s.borrow_mut().clear();
         set_certified_data(&s.borrow().root_hash());
@@ -123,7 +123,7 @@ fn clear() {
 
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
-fn commit_batch(arg: CommitBatchArguments) {
+pub fn commit_batch(arg: CommitBatchArguments) {
     STATE.with(|s| {
         if let Err(msg) = s.borrow_mut().commit_batch(arg, time()) {
             trap(&msg);
@@ -152,8 +152,14 @@ fn get_chunk(arg: GetChunkArg) -> GetChunkResponse {
 
 #[query]
 #[candid_method(query)]
-fn list() -> Vec<AssetDetails> {
+pub fn list() -> Vec<AssetDetails> {
     STATE.with(|s| s.borrow().list_assets())
+}
+
+#[query]
+#[candid_method(query)]
+pub fn exists(key: Key) -> bool{
+    STATE.with(|s| s.borrow().exists(&key))
 }
 
 // #[query]
@@ -272,29 +278,3 @@ pub fn get_asset(asset_name: String) -> Vec<u8> {
 	}
 	return chunks_all;
 }
-
-pub fn store_asset(arg: StoreArg) {
-    store(arg);
-}
-	    
-pub fn delete(arg: DeleteAssetArguments) {
-    delete_asset(arg);
-}
-
-pub fn list_assets() -> Vec<AssetDetails> {
-    list()
-}
-
-pub fn exists(asset_name: &str) -> bool {
-
-    let arg = GetArg {
-        key: asset_name.to_owned(),
-        accept_encodings: vec!["identity".to_owned()]
-    };
-
-    STATE.with(|s| match s.borrow().get(arg) {
-        Ok(_asset) => true,
-        Err(_msg) => false,
-    })
-}
-

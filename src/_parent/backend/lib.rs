@@ -10,7 +10,6 @@ use crate::state::principal_to_subaccount;
 use crate::state::{STATE, *};
 use ic_cdk::api::management_canister::main::*;
 use include_macros::get_canister;
-
 use std::collections::hash_map;
 use std::hash::Hash;
 use std::hash::Hasher;
@@ -434,7 +433,7 @@ async fn create_upgrade(
 
     // check if assets exists
     for asset in &assets {
-        if !ic_certified_assets::exists(&asset) {
+        if !ic_certified_assets::exists(asset.to_owned()) {
             return Err(format!("The {} does not exist", asset));
         }
     }

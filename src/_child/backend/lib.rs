@@ -17,16 +17,16 @@ fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
-		let mut state = s.borrow_mut();
+        let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
         state.wasm_hash = wasm_hash;
-
+        
 	});
-
+    
     if let Some(admin) = admin_opt { 
         let admin_id = create_profile_by_principal(&admin);
         add_profile_role(admin_id, UserRole::Admin);
-     }
+    }
 }
 
 fn create_profile_by_principal(principal: &Principal) -> u64 {
@@ -538,12 +538,12 @@ async fn upgrade_canister_cb(wasm: Vec<u8>) {
 }
 
 fn replace_assets_from_temp() {
-    let assets = ic_certified_assets::list_assets();
+    let assets = ic_certified_assets::list();
 
     // cleanup previous assets
     let prev_assets = &assets.iter().filter(|k| !k.key.starts_with("/temp")).collect::<Vec<_>>();
     for asset  in prev_assets {
-        ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+        ic_certified_assets::delete_asset(DeleteAssetArguments { key: asset.key.to_owned() });
     }
 
     // store new assets
@@ -557,8 +557,8 @@ fn replace_assets_from_temp() {
             content: ByteBuf::from(asset_content),
             sha256: None
         };
-        ic_certified_assets::store_asset(args_store);
-        ic_certified_assets::delete(DeleteAssetArguments { key: asset.key.to_owned() });
+        ic_certified_assets::store(args_store);
+        ic_certified_assets::delete_asset(DeleteAssetArguments { key: asset.key.to_owned() });
     }
 }
 
@@ -590,7 +590,7 @@ async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, 
             content,
             sha256: None
         };
-        ic_certified_assets::store_asset(store_args);
+        ic_certified_assets::store(store_args);
     }
 
 	Ok(())
