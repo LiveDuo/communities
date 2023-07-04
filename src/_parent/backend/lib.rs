@@ -226,8 +226,7 @@ pub async fn create_child() -> Result<Principal, String> {
         user: caller,
         state: CanisterState::Preparing,
     };
-    let result =
-        ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg0,)).await;
+    let result =ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg0,)).await;
     let (canister_data_id_opt,) = result.unwrap();
     let canister_data_id = canister_data_id_opt.unwrap();
 
@@ -253,8 +252,7 @@ pub async fn create_child() -> Result<Principal, String> {
         user: caller,
         state: CanisterState::Installing,
     };
-    let _ =
-        ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg2,)).await;
+    ic_cdk::spawn(async move {let _ = ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg2,)).await;});
     install_code(canister_id, &version.version, &caller).await.unwrap();
 
     // upload frontend assets
@@ -263,9 +261,7 @@ pub async fn create_child() -> Result<Principal, String> {
         user: caller,
         state: CanisterState::Uploading,
     };
-    let _ =
-        ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg3,)).await;
-
+    ic_cdk::spawn(async move {let _ = ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg3,)).await;});
 
     store_assets(canister_id, &version.assets, &version.version)
         .await
@@ -277,11 +273,9 @@ pub async fn create_child() -> Result<Principal, String> {
         user: caller,
         state: CanisterState::Ready,
     };
-    let _ =
-        ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg4,)).await;
-
-    let _ = ic_cdk::api::call::call::<_, ()>(canister_id, "authorize", (canister_id,)).await;
-
+    ic_cdk::spawn(async move { let _ = ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg4,)).await;});
+    
+    ic_cdk::spawn(async move { let _ = ic_cdk::api::call::call::<_, ()>(canister_id, "authorize", (canister_id,)).await;});
     set_canister_controllers(canister_id, caller).await.unwrap();
     Ok(canister_id)
 }
