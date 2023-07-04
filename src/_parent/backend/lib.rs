@@ -32,6 +32,7 @@ fn uuid(seed: &str) -> u64 {
 }
 
 #[init]
+#[candid_method(init)]
 fn init() {
     ic_certified_assets::init();
 }
@@ -602,14 +603,11 @@ fn http_request(
 fn candid_interface_compatibility() {
     use candid::utils::{service_compatible, CandidSource};
     use std::path::PathBuf;
-
-    // candid::export_service!();
+    
     ic_cdk::export::candid::export_service!();
     let new_interface = __export_service();
 
     let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("parent.did");
-
-    println!("Exported interface: {}", new_interface);
 
     service_compatible(
         CandidSource::Text(&new_interface),
