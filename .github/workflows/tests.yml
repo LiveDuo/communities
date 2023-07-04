@@ -34,6 +34,7 @@ jobs:
       - run: dfx start --background &> dfx.log
       - run: dfx deploy parent
       - run: npm ci
+      - run: npm run test:unit
       - run: npm run upload:parent
       - run: npm run test:parent
       - run: dfx deploy child
