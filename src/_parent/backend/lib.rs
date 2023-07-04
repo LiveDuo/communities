@@ -1,4 +1,3 @@
-use ic_cdk::export::candid::{export_service};
 mod state;
 use sha2::{Digest, Sha256};
 
