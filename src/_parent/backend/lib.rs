@@ -226,7 +226,7 @@ pub async fn create_child() -> Result<Principal, String> {
         user: caller,
         state: CanisterState::Preparing,
     };
-    let result =ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg0,)).await;
+    let result = ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "update_state_callback", (arg0,)).await;
     let (canister_data_id_opt,) = result.unwrap();
     let canister_data_id = canister_data_id_opt.unwrap();
 
@@ -252,7 +252,8 @@ pub async fn create_child() -> Result<Principal, String> {
         user: caller,
         state: CanisterState::Installing,
     };
-    ic_cdk::spawn(async move {let _ = ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg2,)).await;});
+    ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "update_state_callback", (arg2,)).await.unwrap().0.unwrap();});
+
     install_code(canister_id, &version.version, &caller).await.unwrap();
 
     // upload frontend assets
@@ -261,7 +262,7 @@ pub async fn create_child() -> Result<Principal, String> {
         user: caller,
         state: CanisterState::Uploading,
     };
-    ic_cdk::spawn(async move {let _ = ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg3,)).await;});
+    ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "update_state_callback", (arg3,)).await.unwrap().0.unwrap();});
 
     store_assets(canister_id, &version.assets, &version.version)
         .await
@@ -273,9 +274,9 @@ pub async fn create_child() -> Result<Principal, String> {
         user: caller,
         state: CanisterState::Ready,
     };
-    ic_cdk::spawn(async move { let _ = ic_cdk::api::call::call::<_, (Option<u64>,)>(id, "update_state_callback", (arg4,)).await;});
+    ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "update_state_callback", (arg4,)).await.unwrap().0.unwrap();});
     
-    ic_cdk::spawn(async move { let _ = ic_cdk::api::call::call::<_, ()>(canister_id, "authorize", (canister_id,)).await;});
+    ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, ()>(canister_id, "authorize", (canister_id,)).await.unwrap();});
     set_canister_controllers(canister_id, caller).await.unwrap();
     Ok(canister_id)
 }
@@ -315,28 +316,30 @@ fn create_user_canister(caller: Principal) -> u64 {
 
 // canister_index: usize
 #[ic_cdk_macros::update]
-fn update_state_callback(data: CallbackData) -> Option<u64> {
+fn update_state_callback(data: CallbackData) -> Result<u64, String> {
     let caller = ic_cdk::caller();
 
     if caller != ic_cdk::id() {
-        return None;
+        return Err("Unauthorized".to_owned());
     };
-    let mut d = data.clone();
-    if data.canister_data_id == None {
-        d.canister_data_id = Some(create_user_canister(data.user));
-    }
 
-    update_user_canister_state(d.canister_data_id, d.state);
+    let canister_data_id = if data.canister_data_id == None {
+        create_user_canister(data.user)
+    } else  {
+        data.canister_data_id.unwrap()
+    };
 
-    return d.canister_data_id;
+    update_user_canister_state(canister_data_id, data.state);
+
+    return Ok(canister_data_id);
 }
 
-fn update_user_canister_state(canister_data_id: Option<u64>, canister_state: CanisterState) {
+fn update_user_canister_state(canister_data_id: u64, canister_state: CanisterState) {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
         let user_data = state
             .canister_data
-            .get_mut(&canister_data_id.unwrap())
+            .get_mut(&canister_data_id)
             .unwrap();
         user_data.state = canister_state;
     });
