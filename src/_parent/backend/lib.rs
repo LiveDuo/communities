@@ -1,9 +1,9 @@
-use ic_cdk::export::candid::export_service;
-
+use ic_cdk::export::candid::{export_service};
 mod state;
 use sha2::{Digest, Sha256};
 
-use candid::{CandidType, Deserialize, Encode, Principal, Nat};
+use candid::{CandidType, Deserialize, Encode, Principal, Nat, candid_method};
+use ic_cdk_macros::{query, update, init};
 
 use crate::state::principal_to_subaccount;
 
@@ -32,7 +32,7 @@ fn uuid(seed: &str) -> u64 {
     s.finish()
 }
 
-#[ic_cdk_macros::init]
+#[init]
 fn init() {
     ic_certified_assets::init();
 }
@@ -215,7 +215,8 @@ async fn set_canister_controllers(
     Ok(())
 }
 
-#[ic_cdk_macros::update]
+#[update]
+#[candid_method(update)]
 pub async fn create_child() -> Result<Principal, String> {
     let id = ic_cdk::id();
     let caller = ic_cdk::caller();
@@ -320,7 +321,8 @@ fn create_user_canister(caller: Principal) -> u64 {
 }
 
 // canister_index: usize
-#[ic_cdk_macros::update]
+#[update]
+#[candid_method(update)]
 fn update_state_callback(data: CallbackData) -> Option<u64> {
     let caller = ic_cdk::caller();
 
@@ -356,7 +358,8 @@ fn update_user_canister_id(canister_data_id: u64, canister_id: Principal) {
     });
 }
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -367,7 +370,9 @@ fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
         state.upgrades.get(upgrade_id_opt.unwrap()).cloned()
     })
 }
-#[ic_cdk_macros::query]
+
+#[query]
+#[candid_method(query)]
 fn get_upgrades() -> Vec<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -375,7 +380,8 @@ fn get_upgrades() -> Vec<Upgrade> {
     })
 }
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -409,7 +415,8 @@ async fn authorize(caller: &Principal) -> Result<(), String> {
     }
 }
 
-#[ic_cdk_macros::update]
+#[update]
+#[candid_method(update)]
 async fn create_upgrade(
     version: String,
     upgrade_from: Option<Vec<u8>>,
@@ -459,7 +466,9 @@ async fn create_upgrade(
 
     Ok(())
 }
-#[ic_cdk_macros::update]
+
+#[update]
+#[candid_method(update)]
 async fn remove_upgrade(version: String) -> Result<(), String> {
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
@@ -482,7 +491,8 @@ async fn remove_upgrade(version: String) -> Result<(), String> {
     })
 }
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn get_user_canisters() -> Vec<CanisterData> {
     let caller = ic_cdk::caller();
     STATE.with(|s| {
@@ -514,7 +524,8 @@ fn get_user_canisters() -> Vec<CanisterData> {
 }
 
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn get_childs() ->  Vec<Principal>{
     STATE.with(|s| {
         s.borrow().canister_data.iter().map(|(_, canister_data)| canister_data.id.unwrap()).collect::<Vec<_>>()
@@ -571,16 +582,38 @@ fn post_upgrade() {
     ic_certified_assets::post_upgrade(s_prev.assets);
 }
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn http_request(
     req: ic_certified_assets::types::HttpRequest,
 ) -> ic_certified_assets::types::HttpResponse {
     return ic_certified_assets::http_request_handle(req);
 }
 
-export_service!();
 
-#[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
-fn export_candid() -> String {
-    __export_service()
+// #[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
+// fn export_candid() -> String {
+//     export_service!();
+//     __export_service()
+// }
+
+
+
+#[test]
+fn candid_interface_compatibility() {
+    use candid::utils::{service_compatible, CandidSource};
+    use std::path::PathBuf;
+
+    // candid::export_service!();
+    ic_cdk::export::candid::export_service!();
+    let new_interface = __export_service();
+
+    let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("parent.did");
+
+    println!("Exported interface: {}", new_interface);
+
+    service_compatible(
+        CandidSource::Text(&new_interface),
+        CandidSource::File(old_interface.as_path()),
+    ).expect("The assets canister interface is not compatible with the parent.did file");
 }
