@@ -99,7 +99,7 @@ pub enum CanisterState {
     Creating,
     Installing,
     Uploading,
-    Authorize,
+    Authorizing,
     Ready,
 }
 
