@@ -45,7 +45,7 @@ const CTA = () => {
 
 export default CTA
 
-const Blur = (props) => {
+export const Blur = (props) => {
   return (
     <Icon
       width={useBreakpointValue({ base: '100%', md: '40vw', lg: '30vw' })}
