@@ -1,4 +1,4 @@
-import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, VisuallyHidden, useColorModeValue} from '@chakra-ui/react';
+import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, VisuallyHidden } from '@chakra-ui/react';
 import { FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa';
 
 const Logo = (props) => {
@@ -23,7 +23,7 @@ const Logo = (props) => {
 const SocialButton = ({ children, label, href,}) => {
   return (
     <chakra.button
-      bg={useColorModeValue('blackAlpha.100', 'whiteAlpha.100')}
+      bg={'whiteAlpha.100'}
       rounded={'full'}
       w={8}
       h={8}
@@ -35,7 +35,7 @@ const SocialButton = ({ children, label, href,}) => {
       justifyContent={'center'}
       transition={'background 0.3s ease'}
       _hover={{
-        bg: useColorModeValue('blackAlpha.200', 'whiteAlpha.200'),
+        bg:'whiteAlpha.200',
       }}>
       <VisuallyHidden>{label}</VisuallyHidden>
       {children}
@@ -54,15 +54,15 @@ const ListHeader = ({ children }) => {
 const Footer = () => {
   return (
     <Box
-      bg={useColorModeValue('gray.50', 'gray.900')}
-      color={useColorModeValue('gray.700', 'gray.200')}>
+      bg={'gray.900'}
+      color={'gray.200'}>
       <Container as={Stack} maxW={'6xl'} py={10}>
         <SimpleGrid
           templateColumns={{ sm: '1fr 1fr', md: '2fr 1fr 1fr' }}
           spacing={8}>
           <Stack spacing={6}>
             <Box>
-              <Logo color={useColorModeValue('gray.700', 'white')} />
+              <Logo color={'white'} />
             </Box>
             <Text fontSize={'sm'}>© 2023 Communities.ooo. All rights reserved</Text>
             <Stack direction={'row'} spacing={6}>
