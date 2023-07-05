@@ -5,6 +5,7 @@ import Hero from '../components/landing/Hero'
 import HowItWork from '../components/landing/HowItWork'
 import Features from '../components/landing/Features'
 import CTA from '../components/landing/CTA'
+import FAQ from '../components/landing/FAQ'
 
 
 const Landing = () => {
@@ -15,6 +16,7 @@ const Landing = () => {
       <HowItWork/>
       <Features/>
       <CTA/>
+      <FAQ/>
     </Box>
   )
 }
