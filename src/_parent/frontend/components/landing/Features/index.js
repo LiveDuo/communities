@@ -20,7 +20,7 @@ const Card = ({ heading, description, icon }) => {
 
 const Features = () =>  {
   return (
-    <Box p={4} mb="100px">
+    <Box id='Features' p={4} mb="100px">
       <Stack spacing={4} as={Container} maxW={'3xl'} textAlign={'center'}>
         <Heading fontSize={{ base: '2xl', sm: '4xl' }} fontWeight={'bold'}>
           What is included?

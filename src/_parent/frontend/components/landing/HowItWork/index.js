@@ -4,7 +4,7 @@ const HowItWork = () => {
   const [isMobile] = useMediaQuery('(max-width: 700px)')
   return (
     <>
-      <Box position={'relative'}>
+      <Box id="how-it-works" position={'relative'}>
           <Stack spacing={{ base: 10, md: 20 }}>
             <Heading textAlign={'center'} lineHeight={1.1} fontSize={{ base: '3xl', sm: '4xl', md: '5xl', lg: '6xl' }}>
               <Box mt="60px" mb="30px">
@@ -18,7 +18,7 @@ const HowItWork = () => {
           <Blur position={'absolute'} top={-10} right={-10} style={{ filter: 'blur(70px)' }}/>
         </Box>
         <Container maxW={'5xl'} py={12}>
-          <SimpleGrid mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
+          <SimpleGrid id='ownership' mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
             <Stack spacing={4}>
               <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'flex-start'} rounded={'md'}>
                 Ownership
@@ -35,7 +35,7 @@ const HowItWork = () => {
               />
             </Flex>
           </SimpleGrid>
-          <SimpleGrid mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
+          <SimpleGrid  id='maintenance' mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
             <Flex>
               <Image
                 rounded={'md'}
@@ -52,7 +52,7 @@ const HowItWork = () => {
               <Text color={'gray.500'} fontSize={'lg'}>You don't have to manage servers for your community on AWS or Google Cloud. You only need to fund the service depending on usage.</Text>
             </Stack>
           </SimpleGrid>
-          <SimpleGrid mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
+          <SimpleGrid id='management' mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
             <Stack spacing={4}>
               <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'flex-start'} rounded={'md'}>
                 Management

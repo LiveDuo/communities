@@ -54,10 +54,10 @@ const Footer = () => {
           </Stack>
           <Stack align={'flex-start'}>
             <ListHeader>Sections</ListHeader>
-            <Link href={'#'}>How it works</Link>
-            <Link href={'#'}>Features</Link>
-            <Link href={'#'}>Get Started</Link>
-            <Link href={'#'}>FAQs</Link>
+            <Link href={'#how-it-works'}>How it works</Link>
+            <Link href={'#features'}>Features</Link>
+            <Link href={'#get-started'}>Get Started</Link>
+            <Link href={'#FAQ'}>FAQs</Link>
           </Stack>
           <Stack align={'flex-start'}>
             <ListHeader>Useful Links</ListHeader>

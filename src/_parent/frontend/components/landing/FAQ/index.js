@@ -3,7 +3,7 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 
 const FAQ = () =>  {
   return (
-    <Flex minH={'50vh'} align={'center'} justify={'center'}>
+    <Flex id='FAQ' minH={'50vh'} align={'center'} justify={'center'}>
       <Container>
         <Accordion allowMultiple width="100%" maxW="lg" bg="white" rounded="lg">
           <AccordionItem>
