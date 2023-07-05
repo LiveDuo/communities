@@ -4,6 +4,7 @@ import Navbar from '../components/landing/Navbar'
 import Hero from '../components/landing/Hero'
 import HowItWork from '../components/landing/HowItWork'
 import Features from '../components/landing/Features'
+import CTA from '../components/landing/CTA'
 
 
 const Landing = () => {
@@ -13,6 +14,7 @@ const Landing = () => {
       <Hero/>
       <HowItWork/>
       <Features/>
+      <CTA/>
     </Box>
   )
 }
