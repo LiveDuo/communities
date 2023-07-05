@@ -1,10 +1,13 @@
 import Navbar from '../components/landing/Navbar'
-import {Box} from '@chakra-ui/react'
+import Hero from '../components/landing/Hero'
+import { Box } from '@chakra-ui/react'
+
 
 const Landing = () => {
   return( 
     <Box>
       <Navbar/>
+      <Hero/>
     </Box>
   )
 }
