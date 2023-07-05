@@ -7,15 +7,14 @@ import MobileNav from './MobileNav'
 const NAV_ITEMS = [
   {
     label: 'How it works',
-    href: '#how-it-works',
     children: [
       { label: 'Create a new community', subLabel: 'Right from your web3 wallet', href: '#ownership', },
       { label: 'No servers involved', subLabel: 'To keep the community alive', href: '#maintenance', },
       { label: 'Manage your community', subLabel: 'And nature a healthy ecosystem', href: '#management', },
     ],
   },
-  { label: 'Features', href: '#Features', },
-  { label: 'FAQs', href: '#FAQ', },
+  { label: 'Features', href: '#features', },
+  { label: 'FAQs', href: '#faq', },
 ];
 
 const Navbar = () => {

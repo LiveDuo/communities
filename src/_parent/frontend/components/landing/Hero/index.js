@@ -1,4 +1,4 @@
-import { Box, Heading, Container, Text, Button, Stack, Icon, useColorModeValue, createIcon, } from '@chakra-ui/react'
+import { Box, Heading, Container, Text, Button, Stack, Icon, Link, useColorModeValue, createIcon, } from '@chakra-ui/react'
 
 const Arrow = createIcon({
   displayName: 'Arrow',
@@ -27,7 +27,9 @@ const Hero = () => {
           <Button colorScheme={'green'} bg={'green.400'} rounded={'full'} px={6} _hover={{ bg: 'green.500' }}>
             Get Started
           </Button>
-          <Button variant={'link'} colorScheme={'blue'} size={'sm'}>Learn more</Button>
+          <Link href="#how-it-works">
+            <Button variant={'link'} colorScheme={'blue'} size={'sm'}>Learn more</Button>
+          </Link>
           <Box>
             <Icon as={Arrow} color={useColorModeValue('gray.800', 'gray.300')} w={71} position={'absolute'} right={-71} top={'10px'} />
             <Text fontSize={'lg'} fontFamily={'Caveat'} position={'absolute'} right={'-125px'} top={'-15px'} transform={'rotate(10deg)'}>
