@@ -28,14 +28,11 @@ const FAQ = () =>  {
             </AccordionButton>
             <AccordionPanel pb={4}>
               <Text>
-                All communities run on the Internet Computer. They are assigned <b>a subnet of 13 nodes</b> that takes care of hosting the service.
+                All communities run on the Internet Computer. They are assigned <b>a subnet of 13 nodes</b> that takes care of hosting the service. When user create a post, 
+                sends a reply or uploads a picture all nodes <b>should come in consensus</b> over the result of that operation. 
                 <br/>
                 <br/>
-                That means that when a user create a post, sends a reply or uploads a picture that's handled from many geographically distributed servers 
-                that <b>should come in consensus</b> over the result of that operation. 
-                <br/>
-                <br/>
-                That also means that there <b>isn't someone in the middle</b> to increase the server costs for the service besides Internet Computer onchain governance.
+                Since there <b>isn't anyone in the middle</b>, server costs can only be increased by Internet Computer onchain governance.
               </Text>
             </AccordionPanel>
           </AccordionItem>

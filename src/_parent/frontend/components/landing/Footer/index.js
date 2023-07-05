@@ -1,6 +1,5 @@
-import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, VisuallyHidden, Input, IconButton, useColorModeValue} from '@chakra-ui/react';
+import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, VisuallyHidden, useColorModeValue} from '@chakra-ui/react';
 import { FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa';
-import { BiMailSend } from 'react-icons/bi';
 
 const Logo = (props) => {
   return (
@@ -65,17 +64,15 @@ const Footer = () => {
             <Box>
               <Logo color={useColorModeValue('gray.700', 'white')} />
             </Box>
-            <Text fontSize={'sm'}>
-              © 2023 Communities.ooo. All rights reserved
-            </Text>
+            <Text fontSize={'sm'}>© 2023 Communities.ooo. All rights reserved</Text>
             <Stack direction={'row'} spacing={6}>
-              <SocialButton label={'Twitter'} href={'#'}>
+              <SocialButton label={'Twitter'} href={'https://twitter.com/home'}>
                 <FaTwitter />
               </SocialButton>
-              <SocialButton label={'Github'} href={'#'}>
+              <SocialButton label={'Github'} href={'https://github.com/'}>
                 <FaGithub />
               </SocialButton>
-              <SocialButton label={'YouTube'} href={'#'}>
+              <SocialButton label={'YouTube'} href={'https://www.youtube.com/'}>
                 <FaYoutube />
               </SocialButton>
             </Stack>
@@ -89,10 +86,10 @@ const Footer = () => {
           </Stack>
           <Stack align={'flex-start'}>
             <ListHeader>Learn more</ListHeader>
-            <Link href={'#'}>Internet Computer</Link>
-            <Link href={'#'}>Technical details</Link>
-            <Link href={'#'}>IC Explorer</Link>
-            <Link href={'#'}>Forum</Link>
+            <Link href={'https://dashboard.internetcomputer.org/'} target="_blank">Internet Computer</Link>
+            <Link href={'https://internetcomputer.org/how-it-works'} target="_blank">Technical details</Link>
+            <Link href={'https://icscan.io/canister/2227b-baaaa-aaaao-abd6a-cai'} target="_blank">IC Explorer</Link>
+            <Link href={'#'} target="_blank">Forum</Link>
           </Stack>
         </SimpleGrid>
       </Container>
