@@ -1,9 +1,9 @@
-import { Accordion, AccordionItem, AccordionButton, AccordionPanel, Flex, useColorModeValue, Text, Container} from '@chakra-ui/react'
+import { Accordion, AccordionItem, AccordionButton, AccordionPanel, Flex, Text, Container} from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 
 const FAQ = () =>  {
   return (
-    <Flex minH={'50vh'} align={'center'} justify={'center'} bg={useColorModeValue('gray.50', 'gray.800')}>
+    <Flex minH={'50vh'} align={'center'} justify={'center'}>
       <Container>
         <Accordion allowMultiple width="100%" maxW="lg" bg="white" rounded="lg">
           <AccordionItem>
