@@ -6,7 +6,7 @@ import HowItWork from '../components/landing/HowItWork'
 import Features from '../components/landing/Features'
 import CTA from '../components/landing/CTA'
 import FAQ from '../components/landing/FAQ'
-
+import Footer from '../components/landing/Footer'
 
 const Landing = () => {
   return( 
@@ -17,6 +17,7 @@ const Landing = () => {
       <Features/>
       <CTA/>
       <FAQ/>
+      <Footer/>
     </Box>
   )
 }
