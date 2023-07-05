@@ -1,4 +1,4 @@
-import { Container, SimpleGrid, Image, Flex, Heading, Text, Stack , useMediaQuery} from '@chakra-ui/react'
+import { Container, SimpleGrid, Image, Flex, Heading, Text, Stack, Tag, useMediaQuery} from '@chakra-ui/react'
 
 const HowItWork = () => {
   const [isMobile] = useMediaQuery('(max-width: 700px)')
@@ -10,7 +10,7 @@ const HowItWork = () => {
             Ownership
           </Text>
           <Heading>Create a new community</Heading>
-          <Text color={'gray.500'} fontSize={'lg'}>Lorem ipsum dolor sit amet consetetur sadi pscing elitr sed diam nonumy eirmod tempor invidunt ut labore</Text>
+          <Text color={'gray.500'} fontSize={'lg'}>Launch a new community on the Internet Computer. Ownership is transfer straight to your wallet.</Text>
         </Stack>
         <Flex>
           <Image
@@ -35,7 +35,7 @@ const HowItWork = () => {
             Maintenance
           </Text>
           <Heading>No servers involved</Heading>
-          <Text color={'gray.500'} fontSize={'lg'}>Lorem ipsum dolor sit amet consetetur sadi pscing elitr sed diam nonumy eirmod tempor invidunt ut labore</Text>
+          <Text color={'gray.500'} fontSize={'lg'}>You don't have to manage servers for your community on AWS or Google Cloud. You only need to fund the service depending on usage.</Text>
         </Stack>
       </SimpleGrid>
       <SimpleGrid mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
@@ -44,7 +44,7 @@ const HowItWork = () => {
             Management
           </Text>
           <Heading>Tools to nurture and grow</Heading>
-          <Text color={'gray.500'} fontSize={'lg'}>Lorem ipsum dolor sit amet consetetur sadi pscing elitr sed diam nonumy eirmod tempor invidunt ut labore</Text>
+          <Text color={'gray.500'} fontSize={'lg'}> <Tag colorScheme="green">Coming soon</Tag> All the features you'd expect to manage a community. Tools to drop NFTs to your community wallet addresses.</Text>
         </Stack>
         <Flex>
           <Image
