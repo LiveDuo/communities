@@ -1,5 +1,6 @@
 import { Container, SimpleGrid, Image, Flex, Heading, Text, Stack, Tag, Box, useMediaQuery} from '@chakra-ui/react'
 import { Blur } from '../CTA'
+
 const HowItWork = () => {
   const [isMobile] = useMediaQuery('(max-width: 700px)')
   return (
@@ -8,10 +9,7 @@ const HowItWork = () => {
           <Stack spacing={{ base: 10, md: 20 }}>
             <Heading textAlign={'center'} lineHeight={1.1} fontSize={{ base: '3xl', sm: '4xl', md: '5xl', lg: '6xl' }}>
               <Box mt="60px" mb="30px">
-                Digital <Text as={'span'} color="white" bgColor="green.300">&nbsp;spaces&nbsp;</Text>
-              </Box>
-              <Box>
-                <Text as={'span'} color="green.300" bgColor="white">&nbsp;Owned&nbsp;</Text> by creators
+                How it <Text as={'span'} color="white" bgColor="green.300">&nbsp;works&nbsp;</Text>?
               </Box>
             </Heading>
           </Stack>
@@ -69,7 +67,6 @@ const HowItWork = () => {
               />
             </Flex>
           </SimpleGrid>
-          
         </Container>
     </>
   )
