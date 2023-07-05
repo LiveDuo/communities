@@ -1,5 +1,5 @@
 import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, VisuallyHidden, Input, IconButton, useColorModeValue} from '@chakra-ui/react';
-import { FaInstagram, FaTwitter, FaYoutube } from 'react-icons/fa';
+import { FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa';
 import { BiMailSend } from 'react-icons/bi';
 
 const Logo = (props) => {
@@ -59,64 +59,40 @@ const Footer = () => {
       color={'gray.200'}>
       <Container as={Stack} maxW={'6xl'} py={10}>
         <SimpleGrid
-          templateColumns={{ sm: '1fr 1fr', md: '2fr 1fr 1fr 2fr' }}
+          templateColumns={{ sm: '1fr 1fr', md: '2fr 1fr 1fr' }}
           spacing={8}>
           <Stack spacing={6}>
             <Box>
               <Logo color={'white'} />
             </Box>
             <Text fontSize={'sm'}>
-              © 2022 Chakra Templates. All rights reserved
+              © 2023 Communities.ooo. All rights reserved
             </Text>
             <Stack direction={'row'} spacing={6}>
               <SocialButton label={'Twitter'} href={'#'}>
                 <FaTwitter />
               </SocialButton>
+              <SocialButton label={'Github'} href={'#'}>
+                <FaGithub />
+              </SocialButton>
               <SocialButton label={'YouTube'} href={'#'}>
                 <FaYoutube />
               </SocialButton>
-              <SocialButton label={'Instagram'} href={'#'}>
-                <FaInstagram />
-              </SocialButton>
             </Stack>
           </Stack>
           <Stack align={'flex-start'}>
-            <ListHeader>Company</ListHeader>
-            <Link href={'#'}>About us</Link>
-            <Link href={'#'}>Blog</Link>
-            <Link href={'#'}>Contact us</Link>
-            <Link href={'#'}>Pricing</Link>
-            <Link href={'#'}>Testimonials</Link>
+            <ListHeader>Sections</ListHeader>
+            <Link href={'#'}>How it works</Link>
+            <Link href={'#'}>Features</Link>
+            <Link href={'#'}>Get Started</Link>
+            <Link href={'#'}>FAQs</Link>
           </Stack>
           <Stack align={'flex-start'}>
-            <ListHeader>Support</ListHeader>
-            <Link href={'#'}>Help Center</Link>
-            <Link href={'#'}>Terms of Service</Link>
-            <Link href={'#'}>Legal</Link>
-            <Link href={'#'}>Privacy Policy</Link>
-            <Link href={'#'}>Satus</Link>
-          </Stack>
-          <Stack align={'flex-start'}>
-            <ListHeader>Stay up to date</ListHeader>
-            <Stack direction={'row'}>
-              <Input
-                placeholder={'Your email address'}
-                bg={'whiteAlpha.100'}
-                border={0}
-                _focus={{
-                  bg: 'whiteAlpha.300',
-                }}
-              />
-              <IconButton
-                bg={'green.800'}
-                color={'gray.800'}
-                _hover={{
-                  bg: 'green.600',
-                }}
-                aria-label="Subscribe"
-                icon={<BiMailSend />}
-              />
-            </Stack>
+            <ListHeader>Learn more</ListHeader>
+            <Link href={'#'}>Internet Computer</Link>
+            <Link href={'#'}>Technical details</Link>
+            <Link href={'#'}>IC Explorer</Link>
+            <Link href={'#'}>Forum</Link>
           </Stack>
         </SimpleGrid>
       </Container>
