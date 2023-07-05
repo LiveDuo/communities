@@ -47,7 +47,7 @@ const Home = () => {
 			toast({ description: `Created canister` })
 		}
 
-		const interval = setInterval(() => getUserCanisters().then(c => setChildPrincipals(c)), !isLocal ? 5000 : 500)
+		const interval = setInterval(() => getUserCanisters().then(c => setChildPrincipals(c)), !isLocal ? 5000 : 1000)
 
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
 		const transferTx = balance < CREATE_CHILD_COST ? [getTransferIcpTx({accountId, amount: BigInt(CREATE_CHILD_COST)}, onTransfer)] : []
