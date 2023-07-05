@@ -1,6 +1,9 @@
+import { Box } from '@chakra-ui/react'
+
 import Navbar from '../components/landing/Navbar'
 import Hero from '../components/landing/Hero'
-import { Box } from '@chakra-ui/react'
+import HowItWork from '../components/landing/HowItWork'
+import Features from '../components/landing/Features'
 
 
 const Landing = () => {
@@ -8,6 +11,8 @@ const Landing = () => {
     <Box>
       <Navbar/>
       <Hero/>
+      <HowItWork/>
+      <Features/>
     </Box>
   )
 }
