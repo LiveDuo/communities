@@ -1,6 +1,7 @@
-import { Container, SimpleGrid, Image, Flex, Heading, Text, Stack } from '@chakra-ui/react'
+import { Container, SimpleGrid, Image, Flex, Heading, Text, Stack , useMediaQuery} from '@chakra-ui/react'
 
 const HowItWork = () => {
+  const [isMobile] = useMediaQuery('(max-width: 700px)')
   return (
     <Container maxW={'5xl'} py={12}>
       <SimpleGrid mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
@@ -29,7 +30,7 @@ const HowItWork = () => {
             objectFit={'cover'}
           />
         </Flex>
-        <Stack spacing={4}>
+        <Stack spacing={4} order={isMobile && -1}>
           <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'flex-start'} rounded={'md'}>
             Maintenance
           </Text>
