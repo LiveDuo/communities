@@ -1,23 +1,10 @@
-import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, VisuallyHidden, Heading } from '@chakra-ui/react';
+import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, Heading } from '@chakra-ui/react';
 import { FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa';
 
-const SocialButton = ({ children, label, href,}) => {
+const SocialButton = ({ children, href,}) => {
   return (
-    <chakra.button
-      bg={'whiteAlpha.100'}
-      rounded={'full'}
-      w={8}
-      h={8}
-      cursor={'pointer'}
-      as={'a'}
-      href={href}
-      target='_blank'
-      display={'inline-flex'}
-      alignItems={'center'}
-      justifyContent={'center'}
-      transition={'background 0.3s ease'}
-      _hover={{ bg:'whiteAlpha.200', }}>
-      <VisuallyHidden>{label}</VisuallyHidden>
+    <chakra.button bg={'whiteAlpha.100'} rounded={'full'} w={8} h={8} cursor={'pointer'} as={'a'} href={href}
+      target='_blank' display={'inline-flex'} alignItems={'center'} justifyContent={'center'} _hover={{ bg:'whiteAlpha.300', }}>
       {children}
     </chakra.button>
   );
@@ -38,13 +25,13 @@ const Footer = () => {
             </Box>
             <Text fontSize={'sm'}>© 2023 Communities.ooo. All rights reserved.</Text>
             <Stack direction={'row'} spacing={6}>
-              <SocialButton label={'Twitter'} href={'https://twitter.com/dfinity'}>
+              <SocialButton href={'https://twitter.com/dfinity'}>
                 <FaTwitter />
               </SocialButton>
-              <SocialButton label={'Github'} href={'https://github.com/dfinity'}>
+              <SocialButton href={'https://github.com/dfinity'}>
                 <FaGithub />
               </SocialButton>
-              <SocialButton label={'YouTube'} href={'https://www.youtube.com/dfinity'}>
+              <SocialButton href={'https://www.youtube.com/dfinity'}>
                 <FaYoutube />
               </SocialButton>
             </Stack>
@@ -61,7 +48,7 @@ const Footer = () => {
             <Link href={'https://dashboard.internetcomputer.org/'} target="_blank">Internet Computer</Link>
             <Link href={'https://internetcomputer.org/how-it-works'} target="_blank">Technical details</Link>
             <Link href={'https://icscan.io/canister/2227b-baaaa-aaaao-abd6a-cai'} target="_blank">IC Explorer</Link>
-            <Link href={'#'} target="_blank">Forum</Link>
+            <Link href={'https://forum.dfinity.org/'} target="_blank">Forum</Link>
           </Stack>
         </SimpleGrid>
       </Container>
