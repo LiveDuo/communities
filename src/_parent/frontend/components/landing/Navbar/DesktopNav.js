@@ -29,7 +29,7 @@ const DesktopNav = ({navItems}) => {
         <Box key={navItem.label}>
           <Popover trigger={'hover'} placement={'bottom-start'}>
             <PopoverTrigger>
-              <Link p={2} href={navItem.href ?? '#'} fontSize={'sm'} fontWeight={500} color={linkColor} _hover={{ textDecoration: 'none', color: linkHoverColor, }}>
+              <Link p={2} href={navItem.href ?? '#'} color={linkColor} _hover={{ textDecoration: 'none', color: linkHoverColor, }}>
                 {navItem.label}
               </Link>
             </PopoverTrigger>

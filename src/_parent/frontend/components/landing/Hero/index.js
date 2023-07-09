@@ -21,7 +21,9 @@ const Hero = () => {
           Communities owned <br /><Text as={'span'} fontWeight={800} color={'green.400'}>by creators</Text>
         </Heading>
         <Text fontSize={{ sm: 'md', md: '2xl' }} color={'gray.500'}>
-          True ownership through digital wallets. Decentralized and simple to deploy and manage.
+          True ownership through a digital wallet. Decentralized hosting.
+          <br/>
+          Quick to deploy. Easy to manage.
         </Text>
         <Stack direction={'column'} spacing={3} align={'center'} alignSelf={'center'} position={'relative'}>
           <Button colorScheme={'green'} bg={'green.400'} rounded={'full'} px={6} _hover={{ bg: 'green.500' }}>
