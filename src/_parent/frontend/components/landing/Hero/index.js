@@ -17,11 +17,11 @@ const Hero = () => {
   return (
     <Container maxW={'3xl'}>
       <Stack as={Box} textAlign={'center'} spacing={{ base: 8, md: 14 }} py={{ base: 20, md: 36 }}>
-        <Heading fontWeight={600} fontSize={{ base: '2xl', sm: '4xl', md: '6xl' }} lineHeight={'110%'}>
-          Communities owned <br /><Text as={'span'} color={'green.400'}>by creators</Text>
+        <Heading fontWeight={700} fontSize={{ sm: '4xl', md: '6xl' }} lineHeight={'110%'}>
+          Communities owned <br /><Text as={'span'} fontWeight={800} color={'green.400'}>by creators</Text>
         </Heading>
-        <Text color={'gray.500'}>
-          Empowers creators with true ownership from their digital wallets. Built on a decentralized network for creators and users to flourish together.
+        <Text fontSize={{ sm: 'md', md: '2xl' }} color={'gray.500'}>
+          True ownership through digital wallets. Decentralized and simple to deploy and manage.
         </Text>
         <Stack direction={'column'} spacing={3} align={'center'} alignSelf={'center'} position={'relative'}>
           <Button colorScheme={'green'} bg={'green.400'} rounded={'full'} px={6} _hover={{ bg: 'green.500' }}>

@@ -2,7 +2,7 @@ import { Box } from '@chakra-ui/react'
 
 import Navbar from '../components/landing/Navbar'
 import Hero from '../components/landing/Hero'
-import HowItWork from '../components/landing/HowItWork'
+import HowItWorks from '../components/landing/HowItWorks'
 import Features from '../components/landing/Features'
 import CTA from '../components/landing/CTA'
 import FAQ from '../components/landing/FAQ'
@@ -13,7 +13,7 @@ const Landing = () => {
     <Box>
       <Navbar/>
       <Hero/>
-      <HowItWork/>
+      <HowItWorks/>
       <Features/>
       <CTA/>
       <FAQ/>

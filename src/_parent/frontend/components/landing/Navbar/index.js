@@ -47,7 +47,7 @@ const Navbar = () => {
       </Flex>
 
       <Collapse in={isOpen} animateOpacity>
-        <MobileNav  navItems={NAV_ITEMS}  />
+        <MobileNav navItems={NAV_ITEMS}/>
       </Collapse>
     </Box>
   );

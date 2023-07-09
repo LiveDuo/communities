@@ -71,10 +71,10 @@ const Home = () => {
 
 	return (
 		<Box>
-			<Tabs m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded" colorScheme="gray">
+			<Tabs m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded" colorScheme="green">
 			<TabList p="20px" borderBottomWidth="1px">
-				<Tab>New Community</Tab>
-				<Tab>User Communities</Tab>
+				<Tab>Launch a community</Tab>
+				<Tab>User's Communities</Tab>
 			</TabList>
 			<TabPanels p="20px">
 				<TabPanel>

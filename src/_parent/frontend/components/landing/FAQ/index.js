@@ -3,9 +3,9 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 
 const FAQ = () =>  {
   return (
-    <Flex id='faq' minH={'50vh'} align={'center'} justify={'center'}>
+    <Flex id='faq' minH={'60vh'}>
       <Container>
-        <Accordion allowMultiple width="100%" maxW="lg" bg="white" rounded="lg">
+        <Accordion maxW="xl" bg="white">
           <AccordionItem>
             <AccordionButton display="flex" alignItems="center" justifyContent="space-between" p={4} _hover={{ bg: 'gray.100' }}>
               <Text fontSize="md">What does community ownership means?</Text>
