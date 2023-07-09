@@ -8,9 +8,9 @@ const NAV_ITEMS = [
   {
     label: 'How it works',
     children: [
-      { label: 'Create a new community', subLabel: 'Right from your web3 wallet', href: '#ownership', },
-      { label: 'No servers involved', subLabel: 'To keep the community alive', href: '#maintenance', },
-      { label: 'Manage your community', subLabel: 'And nature a healthy ecosystem', href: '#management', },
+      { label: 'Create a new community', subLabel: 'Owned through a digital wallet', href: '#ownership', },
+      { label: 'Simple to host', subLabel: 'No hosting provider required', href: '#maintenance', },
+      { label: 'Manage your community', subLabel: 'Tools to nature and grow', href: '#management', },
     ],
   },
   { label: 'Features', href: '#features', },
@@ -38,7 +38,7 @@ const Navbar = () => {
 
         <Stack flex={{ base: 1, md: 0 }} justify={'flex-end'} direction={'row'} spacing={6}>
           <Button as={'a'} display={{ base: 'none', md: 'inline-flex' }} fontSize={'sm'} fontWeight={400} variant={'link'} href={'#'}>
-            About
+            Already an owner?
           </Button>
           <Button as={'a'} display={{ base: 'none', md: 'inline-flex' }} fontSize={'sm'} fontWeight={600} color={'white'} bg={'green.400'} href={'#'} _hover={{bg: 'green.300',}}>
             Get Started
