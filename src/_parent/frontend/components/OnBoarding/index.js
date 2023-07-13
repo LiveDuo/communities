@@ -84,29 +84,43 @@ const OnBoarding = ({ createChildBatch }) => {
       )}
       {userFlowStep === 'top-up-wallet' && (
         <Flex>
-          <Box flex={1}>
-            <img src={require('../../public/launch.jpg')} alt="get started communities" width={400}/>
+          <Box flex={1} position="relative">
+            <Box position="relative">
+              <Box position="absolute" width="100%" height="100%">
+                <BlobBackground fill={"#F2F4F8"}/>
+              </Box>
+            </Box>
+            <Flex position="relative" justifyContent="center" mt="20px">
+              <img src={require('../../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
+            </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
-            <Heading size="lg" mb="16px">Top up your wallet</Heading>
-            <Text mb="8px" >✓ Running completely on the Internet Computer</Text>
-            <Text mb="8px"> ✓ Supports Ethereum & Solana authentication </Text>
-            <Text mb="24px"> ✓ One click deploy to user wallet</Text>
-            <Button mb="8px" isLoading={loading} onClick={() => {}}>Top Up</Button>
+            <Heading size="lg" mb="32px">Top up your wallet</Heading>
+            <Text mb="16px" >You will new a few cents for transaction fees</Text>
+            <Text mb="24px"> Transfer a few ICP tokens to your address to continue</Text>
+            <Button mb="24px" isLoading={loading} onClick={() => {}}>Top up balance</Button>
+            <Text fontSize="sm" color='gray'> <b>Note:</b> That's usually 20c or less worth of ICP</Text>
           </Flex>
         </Flex>
       )}
       {userFlowStep === 'deploy-community' && (
         <Flex>
-          <Box flex={1}>
-            <img src={require('../../public/launch.jpg')} alt="get started communities" width={400}/>
+          <Box flex={1} position="relative">
+            <Box position="relative">
+              <Box position="absolute" width="100%" height="100%">
+                <BlobBackground fill={"#F2F4F8"}/>
+              </Box>
+            </Box>
+            <Flex position="relative" justifyContent="center" mt="20px">
+              <img src={require('../../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
+            </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
-            <Heading size="lg" mb="16px">Deploy a community</Heading>
-            <Text mb="8px" >✓ Running completely on the Internet Computer</Text>
-            <Text mb="8px"> ✓ Supports Ethereum & Solana authentication </Text>
-            <Text mb="24px"> ✓ One click deploy to user wallet</Text>
-            <Button mb="8px" isLoading={loading} onClick={() => createChildBatch()}>Deploy Community</Button>
+            <Heading size="lg" mb="32px">Deploy a community</Heading>
+            <Text mb="16px" >You will deploy a virtual server on the Internet Computer</Text>
+            <Text mb="24px">The ownership of this server will be transferred to your wallet</Text>
+            <Button mb="24px" isLoading={loading} onClick={() => createChildBatch()}>Deploy community</Button>
+            <Text fontSize="sm" color='gray'> <b>Note:</b> New communities take about 1 min to deploy</Text>
           </Flex>
         </Flex>
       )}
