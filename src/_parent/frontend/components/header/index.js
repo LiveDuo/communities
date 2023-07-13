@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { Button, Flex, Box, Tag, Text } from '@chakra-ui/react'
+import { Button, Flex, Box, Tag, Text, Link } from '@chakra-ui/react'
 
 import { IdentityContext } from '../../store/identity'
 import { LedgerContext } from '../../store/ledger'
@@ -22,7 +22,9 @@ const Header = () => {
           <>
             <Flex display="inline-flex" bgColor="gray.200" p="4px" alignItems="center" borderRadius="8px">
               <Text m="0px 20px">{(balance / 1e8).toFixed(2)} ICP</Text>
-              <Button height="32px">{userPrincipalShorten}</Button>
+              <Link href={`https://www.icscan.io/principal/${userPrincipal}`} isExternal>
+                <Button height="32px">{userPrincipalShorten}</Button>
+              </Link>
             </Flex>
             <Button ml="8px" onClick={disconnect}>Disconnect</Button>
           </>
