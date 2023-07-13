@@ -27,18 +27,17 @@ const IdentityProvider = ({ children }) => {
 	const loadPlug = useCallback(async () => {
 		// setIsLocalhost(window.location.hostname.endsWith('localhost'))
 		const connected = await window.ic.plug.isConnected()
-		if (connected) {
-			const principal = await window.ic?.plug.getPrincipal()
-			setUserPrincipal(principal.toString())
-			setHost(window.ic?.plug.sessionManager.host)
-			setWalletConnected(true)
-		}
+		if (!connected) return
+		const principal = await window.ic?.plug.getPrincipal()
+		setUserPrincipal(principal.toString())
+		setHost(window.ic?.plug.sessionManager.host)
+		setWalletConnected(true)
+	
 	}, [])
 
 
 	const connect = async () => {
-		const hostType = isLocal ? 'localhost' : 'mainnet'
-		const host = hostType === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
+		const host = isLocal === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
 		const whitelist = ledgerCanisterId ? [ledgerCanisterId, parentCanisterId] : [parentCanisterId]
 		try {
 			const hasAllowed = await window.ic?.plug?.requestConnect({ host, whitelist })
