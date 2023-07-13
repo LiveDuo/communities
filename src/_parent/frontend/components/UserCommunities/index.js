@@ -28,7 +28,7 @@ const UserCommunities = ({ childPrincipals }) => {
 			childPrincipals ? 
 				childPrincipals?.length > 0 ? <TableContainer>
 					<Table variant='simple'>
-						<TableCaption>Communities corresponding to <b>{userPrincipal.slice(0, 5)}...{userPrincipal.slice(-3)}</b></TableCaption>
+						<TableCaption>Communities created by <b>{userPrincipal.slice(0, 5)}...{userPrincipal.slice(-3)}</b></TableCaption>
 						<Thead>
 							<Tr>
 								<Th>State</Th>

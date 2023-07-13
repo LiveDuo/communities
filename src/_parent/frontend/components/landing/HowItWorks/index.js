@@ -17,8 +17,8 @@ const HowItWork = () => {
         </Box>
         <Container maxW={'5xl'} py={12}>
           <SimpleGrid id='ownership' mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
-            <Stack spacing={4}>
-              <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'flex-start'} rounded={'md'}>
+            <Stack spacing={4} textAlign="center" justifyContent="center">
+              <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'center'} rounded={'md'}>
                 Ownership
               </Text>
               <Heading>Create a new community</Heading>
@@ -42,8 +42,8 @@ const HowItWork = () => {
                 objectFit={'cover'}
               />
             </Flex>
-            <Stack spacing={4} order={isMobile && -1}>
-              <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'flex-start'} rounded={'md'}>
+            <Stack spacing={4} order={isMobile && -1} textAlign="center" justifyContent="center">
+              <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'center'} rounded={'md'}>
                 Maintenance
               </Text>
               <Heading>No servers involved</Heading>
@@ -51,8 +51,8 @@ const HowItWork = () => {
             </Stack>
           </SimpleGrid>
           <SimpleGrid id='management' mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
-            <Stack spacing={4}>
-              <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'flex-start'} rounded={'md'}>
+            <Stack spacing={4} textAlign="center" justifyContent="center">
+              <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'center'} rounded={'md'}>
                 Management
               </Text>
               <Heading>Tools to nurture and grow</Heading>
