@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useState, useEffect, useCallback, useContext } from 'react'
 
 import { createParentActor } from '../agents/parent'
 
@@ -33,11 +33,6 @@ const IdentityProvider = ({ children }) => {
 		}
 	}, [])
 
-	useEffect(() => {
-		if (window.ic?.plug) {
-			loadPlug()
-		}
-	}, [loadPlug])
 
 	const connect = async (hostType) => {
 		const host = hostType === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
@@ -86,7 +81,7 @@ const IdentityProvider = ({ children }) => {
 		loadActors()
 	}, [loadActors])
 
-	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect, modalDisclosure }
+	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect, loadPlug, modalDisclosure }
 
 	return (
 		<IdentityContext.Provider value={value}>
