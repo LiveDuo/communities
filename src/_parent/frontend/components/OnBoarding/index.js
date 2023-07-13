@@ -3,7 +3,6 @@ import { useState, useContext, useEffect } from 'react'
 import { Flex, Box, Heading, Text, Button, Link } from '@chakra-ui/react'
 
 import { IdentityContext } from '../../store/identity'
-import { ParentContext } from '../../store/parent'
 import { LedgerContext } from '../../store/ledger'
 
 import { isLocal } from '../../agents'
@@ -22,7 +21,6 @@ const OnBoarding = ({ createChildBatch }) => {
   const [userFlowStep, setUserFlowStep] = useState()
 
   const { walletConnected, connect } = useContext(IdentityContext)
-	const { loading } = useContext(ParentContext)
   const { balance } = useContext(LedgerContext)
 
 
@@ -77,7 +75,7 @@ const OnBoarding = ({ createChildBatch }) => {
             <Heading size="lg" mb="32px">Connect your wallet</Heading>
             <Text mb="16px" >Your community is about to be deployed</Text>
             <Text mb="32px"> Ownership will be transferred to your wallet</Text>
-            <Button mb="24px" isLoading={loading} onClick={connect}>Connect wallet</Button>
+            <Button mb="24px" onClick={connect}>Connect wallet</Button>
             <Text fontSize="sm" color='gray'> <b>Note:</b> You can change the owner wallet later</Text>
           </Flex>
         </Flex>
@@ -98,7 +96,7 @@ const OnBoarding = ({ createChildBatch }) => {
             <Heading size="lg" mb="32px">Top up your wallet</Heading>
             <Text mb="16px" >You will new a few cents for transaction fees</Text>
             <Text mb="24px"> Transfer a few ICP tokens to your address to continue</Text>
-            <Button mb="24px" isLoading={loading} onClick={() => {}}>Top up balance</Button>
+            <Button mb="24px" onClick={() => {}}>Top up balance</Button>
             <Text fontSize="sm" color='gray'> <b>Note:</b> That's usually 20c or less worth of ICP</Text>
           </Flex>
         </Flex>
@@ -119,7 +117,7 @@ const OnBoarding = ({ createChildBatch }) => {
             <Heading size="lg" mb="32px">Deploy a community</Heading>
             <Text mb="16px" >You will deploy a virtual server on the Internet Computer</Text>
             <Text mb="24px">The ownership of this server will be transferred to your wallet</Text>
-            <Button mb="24px" isLoading={loading} onClick={() => createChildBatch()}>Deploy community</Button>
+            <Button mb="24px" onClick={() => createChildBatch()}>Deploy community</Button>
             <Text fontSize="sm" color='gray'> <b>Note:</b> New communities take about 1 min to deploy</Text>
           </Flex>
         </Flex>
