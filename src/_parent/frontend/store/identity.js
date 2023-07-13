@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback, useContext } from 'react'
+import { createContext, useState, useEffect, useCallback } from 'react'
 
 import { createParentActor } from '../agents/parent'
 
@@ -6,6 +6,8 @@ import { useToast, useDisclosure } from '@chakra-ui/react'
 
 import { ledgerCanisterId, createLedgerActorPlug } from '../agents/ledger'
 import { parentCanisterId, createParentActorPlug } from '../agents/parent'
+
+import { isLocal } from '../agents'
 
 const IdentityContext = createContext()
 
@@ -34,7 +36,8 @@ const IdentityProvider = ({ children }) => {
 	}, [])
 
 
-	const connect = async (hostType) => {
+	const connect = async () => {
+		const hostType = isLocal ? 'localhost' : 'mainnet'
 		const host = hostType === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
 		const whitelist = ledgerCanisterId ? [ledgerCanisterId, parentCanisterId] : [parentCanisterId]
 		try {
