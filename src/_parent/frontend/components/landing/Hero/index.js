@@ -26,7 +26,7 @@ const Hero = () => {
           Quick to deploy. Easy to manage.
         </Text>
         <Stack direction={'column'} spacing={3} align={'center'} alignSelf={'center'} position={'relative'}>
-          <Button colorScheme={'green'} bg={'green.400'} rounded={'full'} px={6} _hover={{ bg: 'green.500' }}>
+          <Button as={'a'} href={'/app'} colorScheme={'green'} bg={'green.400'} rounded={'full'} px={6} _hover={{ bg: 'green.500' }}>
             Get Started
           </Button>
           <Link href="#how-it-works">

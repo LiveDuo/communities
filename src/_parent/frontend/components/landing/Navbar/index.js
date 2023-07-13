@@ -1,6 +1,6 @@
 import { Box, Flex, Text, IconButton, Button,Stack, Collapse, useColorModeValue, useBreakpointValue, useDisclosure } from '@chakra-ui/react'
 import { HamburgerIcon, CloseIcon,} from '@chakra-ui/icons'
-
+import { useNavigate } from 'react-router-dom'
 import DesktopNav from './DesktopNav'
 import MobileNav from './MobileNav'
 
@@ -19,7 +19,7 @@ const NAV_ITEMS = [
 
 const Navbar = () => {
   const { isOpen, onToggle } = useDisclosure();
-
+  const navigate = useNavigate()
   return (
     <Box>
       <Flex bg={useColorModeValue('white', 'gray.800')} color={useColorModeValue('gray.600', 'white')} minH={'60px'} 
@@ -37,10 +37,10 @@ const Navbar = () => {
         </Flex>
 
         <Stack flex={{ base: 1, md: 0 }} justify={'flex-end'} direction={'row'} spacing={6}>
-          <Button as={'a'} display={{ base: 'none', md: 'inline-flex' }} fontSize={'sm'} fontWeight={400} variant={'link'} href={'#'}>
+          <Button as={'a'} display={{ base: 'none', md: 'inline-flex' }} fontSize={'sm'} fontWeight={400} variant={'link'} href={'/app'}>
             Already an owner?
           </Button>
-          <Button as={'a'} display={{ base: 'none', md: 'inline-flex' }} fontSize={'sm'} fontWeight={600} color={'white'} bg={'green.400'} href={'#'} _hover={{bg: 'green.300',}}>
+          <Button as={'a'} display={{ base: 'none', md: 'inline-flex' }} fontSize={'sm'} fontWeight={600} color={'white'} bg={'green.400'} href={'/app'} _hover={{bg: 'green.300',}}>
             Get Started
           </Button>
         </Stack>
