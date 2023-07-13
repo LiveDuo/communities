@@ -49,7 +49,12 @@ const IdentityProvider = ({ children }) => {
 			setHost(window.ic?.plug.sessionManager.host)
 			toast({ description: 'Connected' })
 		} catch (error) {
-			toast({ description: 'Wallet connection failed', status: 'error' })
+			console.log(error.message)
+			if (error.message === 'The agent creation was rejected.') {
+				toast({ description: 'Wallet connection declined', status: 'info' })
+			} else {
+				toast({ description: 'Wallet connection failed', status: 'error' })
+			}
 		}
 	}
 
