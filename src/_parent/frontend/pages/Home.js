@@ -1,6 +1,5 @@
-import { useContext, useState, useEffect, useCallback } from 'react'
-import { Box, Button, Link, Text, useToast, Flex, Spinner, Tag, Heading } from '@chakra-ui/react'
-import { Table, Thead, Tbody, Tr, Th, Td, TableCaption, TableContainer, } from '@chakra-ui/react'
+import { useContext, useState, useEffect } from 'react'
+import { Box, useToast} from '@chakra-ui/react'
 
 import { ParentContext } from '../store/parent'
 import { LedgerContext } from '../store/ledger'
@@ -69,7 +68,7 @@ const Home = () => {
 		<Box>
 			<Box m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded">
 			<Box p="20px">
-					{childPrincipals.length > 0 ? <UserCommunities childPrincipals={childPrincipals}/> : <OnBoarding/> }
+					{childPrincipals?.length > 0 ? <UserCommunities childPrincipals={childPrincipals}/> : <OnBoarding createChildBatch={createChildBatch}/> }
 			</Box>
 			</Box>
 		</Box>

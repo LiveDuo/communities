@@ -43,6 +43,7 @@ const IdentityProvider = ({ children }) => {
 		try {
 			const hasAllowed = await window.ic?.plug?.requestConnect({ host, whitelist })
 			const principal = await window.ic?.plug.getPrincipal()
+			await loadActors()
 			setUserPrincipal(principal.toString())
 			setWalletConnected(!!hasAllowed)
 			setHost(window.ic?.plug.sessionManager.host)

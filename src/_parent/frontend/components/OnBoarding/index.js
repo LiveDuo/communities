@@ -4,13 +4,16 @@ import { Flex, Box, Heading, Text, Button } from '@chakra-ui/react'
 
 import { IdentityContext } from '../../store/identity'
 import { ParentContext } from '../../store/parent'
+import { LedgerContext } from '../../store/ledger'
 
-const OnBoarding = () => {
+import { isLocal } from '../../agents'
+const OnBoarding = ({ createChildBatch }) => {
 
   const [userFlowStep, setUserFlowStep] = useState()
 
   const { walletConnected, connect } = useContext(IdentityContext)
 	const { loading } = useContext(ParentContext)
+  const { balance } = useContext(LedgerContext)
 
 
   useEffect(() => {
@@ -18,10 +21,12 @@ const OnBoarding = () => {
 			setUserFlowStep('download-wallet')
 		} else if(!walletConnected) {
 			setUserFlowStep('connect-wallet')
-		} else {
+		} else if (!isLocal && balance < 0) {
 			setUserFlowStep('top-up-wallet')	
-		}
-	},[walletConnected])
+		} else if(isLocal || balance > 0) {
+      setUserFlowStep('deploy-community')
+    }
+	},[walletConnected, balance])
 
   return (
     <Box>
@@ -77,7 +82,7 @@ const OnBoarding = () => {
             <Text mb="8px" >✓ Running completely on the Internet Computer</Text>
             <Text mb="8px"> ✓ Supports Ethereum & Solana authentication </Text>
             <Text mb="24px"> ✓ One click deploy to user wallet</Text>
-            <Button mb="8px" isLoading={loading} onClick={() => {}}>Deploy Community</Button>
+            <Button mb="8px" isLoading={loading} onClick={() => createChildBatch()}>Deploy Community</Button>
           </Flex>
         </Flex>
       )}
