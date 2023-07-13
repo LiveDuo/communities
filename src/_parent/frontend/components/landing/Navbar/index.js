@@ -1,6 +1,5 @@
 import { Box, Flex, Text, IconButton, Button,Stack, Collapse, useColorModeValue, useBreakpointValue, useDisclosure } from '@chakra-ui/react'
 import { HamburgerIcon, CloseIcon,} from '@chakra-ui/icons'
-import { useNavigate } from 'react-router-dom'
 import DesktopNav from './DesktopNav'
 import MobileNav from './MobileNav'
 
@@ -19,7 +18,6 @@ const NAV_ITEMS = [
 
 const Navbar = () => {
   const { isOpen, onToggle } = useDisclosure();
-  const navigate = useNavigate()
   return (
     <Box>
       <Flex bg={useColorModeValue('white', 'gray.800')} color={useColorModeValue('gray.600', 'white')} minH={'60px'} 
