@@ -67,7 +67,7 @@ const Home = () => {
 	return (
 		<Box>
 			<Box m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded">
-				{childPrincipals.length > 0 ? <UserCommunities childPrincipals={childPrincipals}/> : <OnBoarding createChildBatch={createChildBatch}/> }
+				{childPrincipals?.length > 0 ? <UserCommunities childPrincipals={childPrincipals}/> : <OnBoarding createChildBatch={createChildBatch}/> }
 			</Box>
 		</Box>
 	)
