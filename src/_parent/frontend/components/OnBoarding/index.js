@@ -43,35 +43,40 @@ const OnBoarding = ({ createChildBatch }) => {
   return (
     <Box p="120px 60px">
       {userFlowStep === 'download-wallet' && (
-          <Flex position="relative">
+        <Flex position="relative">
           <Box flex={1} position="relative">
             <Box position="relative">
               <BlobBackground1 fill={"#F2F4F8"}/>
             </Box>
             <Flex position="relative" justifyContent="center">
-              <img src={"https://storageapi2.fleek.co/fleek-team-bucket/plug-homepage/plug-extension-tokens-preview.png"} alt="get started communities" width={'50%'}/>
+              <img src={require('../../public/download-wallet.png')} alt="get started communities" width={'50%'}/>
             </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
-            <Heading size="lg" mb="32px">Download a Wallet</Heading>
+            <Heading size="lg" mb="32px">Download a wallet</Heading>
             <Text mb="16px" >You will need a wallet for the Internet Computer</Text>
             <Text mb="32px"> Our recommendation is <Link href="https://plugwallet.ooo/" target="_blank"><b>Plug Wallet</b></Link></Text>
-            <Button mb="24px" isLoading={loading} onClick={() =>  window.open(chromeStoreUrl, '_blank')}>Download Wallet</Button>
+            <Button mb="24px" onClick={() =>  window.open(chromeStoreUrl, '_blank')}>Get it now</Button>
             <Text fontSize="sm" color='gray'> Refresh the page after installing</Text>
           </Flex>
         </Flex>
       )}
       {userFlowStep === 'connect-wallet' && (
         <Flex>
-          <Box flex={1}>
-            <img src={require('../../public/launch.jpg')} alt="get started communities" width={400}/>
+          <Box flex={1} position="relative">
+            <Box position="relative">
+              <BlobBackground1 fill={"#F2F4F8"}/>
+            </Box>
+            <Flex position="relative" justifyContent="center" mt="20px">
+              <img src={require('../../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
+            </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
-            <Heading size="lg" mb="16px">Connect Wallet</Heading>
+            <Heading size="lg" mb="16px">Connect your wallet</Heading>
             <Text mb="8px" >✓ Running completely on the Internet Computer</Text>
             <Text mb="8px"> ✓ Supports Ethereum & Solana authentication </Text>
             <Text mb="24px"> ✓ One click deploy to user wallet</Text>
-            <Button mb="8px" isLoading={loading} onClick={connect}>Connect Wallet</Button>
+            <Button mb="8px" isLoading={loading} onClick={connect}>Connect wallet</Button>
           </Flex>
         </Flex>
       )}
@@ -81,11 +86,11 @@ const OnBoarding = ({ createChildBatch }) => {
             <img src={require('../../public/launch.jpg')} alt="get started communities" width={400}/>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
-            <Heading size="lg" mb="16px">Top Up Wallet</Heading>
+            <Heading size="lg" mb="16px">Top up your wallet</Heading>
             <Text mb="8px" >✓ Running completely on the Internet Computer</Text>
             <Text mb="8px"> ✓ Supports Ethereum & Solana authentication </Text>
             <Text mb="24px"> ✓ One click deploy to user wallet</Text>
-            <Button mb="8px" isLoading={loading} onClick={() => {}}>Top Up Wallet</Button>
+            <Button mb="8px" isLoading={loading} onClick={() => {}}>Top Up</Button>
           </Flex>
         </Flex>
       )}
@@ -95,7 +100,7 @@ const OnBoarding = ({ createChildBatch }) => {
             <img src={require('../../public/launch.jpg')} alt="get started communities" width={400}/>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
-            <Heading size="lg" mb="16px">Deploy Community</Heading>
+            <Heading size="lg" mb="16px">Deploy a community</Heading>
             <Text mb="8px" >✓ Running completely on the Internet Computer</Text>
             <Text mb="8px"> ✓ Supports Ethereum & Solana authentication </Text>
             <Text mb="24px"> ✓ One click deploy to user wallet</Text>
