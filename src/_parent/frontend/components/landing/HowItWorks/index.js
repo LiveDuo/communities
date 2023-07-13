@@ -16,7 +16,7 @@ const HowItWork = () => {
           <Blur position={'absolute'} top={-10} right={-10} style={{ filter: 'blur(70px)' }}/>
         </Box>
         <Container maxW={'5xl'} py={12}>
-          <SimpleGrid id='ownership' mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
+          <SimpleGrid id='ownership' mb="80px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
             <Stack spacing={4} textAlign="center" justifyContent="center">
               <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'center'} rounded={'md'}>
                 Ownership
@@ -25,22 +25,12 @@ const HowItWork = () => {
               <Text color={'gray.500'} fontSize={'lg'}>Launch a new community on the Internet Computer. Ownership is transfer straight to your wallet.</Text>
             </Stack>
             <Flex>
-              <Image
-                rounded={'md'}
-                alt={'feature image'}
-                src={'https://images.unsplash.com/photo-1554200876-56c2f25224fa?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'}
-                objectFit={'cover'}
-              />
+              <Image src={require('../../../public/laptop-nature-cuate.png')} alt={'feature image'}/>
             </Flex>
           </SimpleGrid>
-          <SimpleGrid  id='maintenance' mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
+          <SimpleGrid  id='maintenance' mb="80px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
             <Flex>
-              <Image
-                rounded={'md'}
-                alt={'feature image'}
-                src={'https://images.unsplash.com/photo-1554200876-56c2f25224fa?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'}
-                objectFit={'cover'}
-              />
+              <Image src={require('../../../public/bike-travellers-cuate.png')} alt={'feature image'}/>
             </Flex>
             <Stack spacing={4} order={isMobile && -1} textAlign="center" justifyContent="center">
               <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'center'} rounded={'md'}>
@@ -50,7 +40,7 @@ const HowItWork = () => {
               <Text color={'gray.500'} fontSize={'lg'}>You don't have to manage servers for your community on AWS or Google Cloud. You only need to fund the service depending on usage.</Text>
             </Stack>
           </SimpleGrid>
-          <SimpleGrid id='management' mb="200px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
+          <SimpleGrid id='management' mb="80px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
             <Stack spacing={4} textAlign="center" justifyContent="center">
               <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'center'} rounded={'md'}>
                 Management
@@ -59,12 +49,7 @@ const HowItWork = () => {
               <Text color={'gray.500'} fontSize={'lg'}> <Tag colorScheme="green">Coming soon</Tag> All the features you'd expect to manage a community. Tools to drop NFTs to your community wallet addresses.</Text>
             </Stack>
             <Flex>
-              <Image
-                rounded={'md'}
-                alt={'feature image'}
-                src={'https://images.unsplash.com/photo-1554200876-56c2f25224fa?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'}
-                objectFit={'cover'}
-              />
+              <Image src={require('../../../public/coffee-farm-cuate.png')} alt={'feature image'}/>
             </Flex>
           </SimpleGrid>
         </Container>
