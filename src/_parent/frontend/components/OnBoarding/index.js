@@ -31,7 +31,7 @@ const OnBoarding = ({ createChildBatch }) => {
 			setUserFlowStep('download-wallet')
 		} else if(!walletConnected) {
 			setUserFlowStep('connect-wallet')
-		} else if (!isLocal && balance < 0) {
+		} else if (!isLocal && (balance / 1e8) <= 0) {
 			setUserFlowStep('top-up-wallet')	
 		} else if(isLocal || balance > 0) {
       setUserFlowStep('deploy-community')

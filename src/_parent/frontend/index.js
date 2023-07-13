@@ -20,8 +20,8 @@ const App = () => (
           <ParentProvider>
             <BrowserRouter>
                 <Routes>
-                  <Route exact path="/" element={<Layout><Home /></Layout>}/>
-                  <Route exact path="/landing" element={<Landing/>}/>
+                  <Route exact path="/app" element={<Layout><Home /></Layout>}/>
+                  <Route exact path="/" element={<Landing/>}/>
                 </Routes>
             </BrowserRouter>
           </ParentProvider>
