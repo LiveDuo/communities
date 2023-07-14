@@ -43,9 +43,7 @@ const Home = () => {
 		}
 		const onTransfer = () => toast({ description: `Transfer success` })
 		
-		const onCreate = (result) => {
-			const canister = {id: result.Ok.toString(), timestamp: 'u64', state: 'Ready'}
-			setChildPrincipals(r => (r.some(c => c.id[0] === canister.id)) ? r : [...r, canister])
+		const onCreate = () => {
 			toast({ description: `Created canister` })
 		}
 
