@@ -16,15 +16,15 @@ use crate::state::{STATE, *};
 fn init() {
     ic_certified_assets::init();
 }
-// create child
+
 #[update]
 #[candid_method(update)]
 async fn create_child() -> Result<Principal, String> {
     let id = ic_cdk::id();
     let caller = ic_cdk::caller();
 
+    // check upgrade
     let upgrades_length = STATE.with(|s| s.borrow().upgrades.len());
-
     if upgrades_length == 0 {
         return Err("No upgrade available".to_owned())
     }
@@ -129,7 +129,6 @@ fn create_canister_data_callback(caller: Principal) -> Result<u64, String> {
 }
 
 
-// canister_index: usize
 #[query]
 #[candid_method(update)]
 fn get_user_canisters() -> Vec<CanisterData> {
@@ -167,8 +166,6 @@ fn get_children() ->  Vec<Principal>{
     STATE.with(|s| s.borrow().canister_data.iter().map(|(_, canister_data)| canister_data.id.unwrap()).collect::<Vec<_>>())
 }
 
-
-// upgrade
 #[query]
 #[candid_method(query)]
 fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
@@ -310,27 +307,16 @@ fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_as
     ic_certified_assets::http_request_handle(req)
 }
 
-
-// #[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
-// fn export_candid() -> String {
-//     export_service!();
-//     __export_service()
-// }
-
-
-
 #[test]
 fn candid_interface_compatibility() {
-    use candid::utils::{service_compatible, CandidSource};
-    use std::path::PathBuf;
     
-    ic_cdk::export::candid::export_service!();
+    use candid::utils::*;
+    use std::path::PathBuf;
+    use ic_cdk::export::candid::export_service;
+    
+    export_service!();
+
     let new_interface = __export_service();
-
     let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("parent.did");
-
-    service_compatible(
-        CandidSource::Text(&new_interface),
-        CandidSource::File(old_interface.as_path()),
-    ).expect("The assets canister interface is not compatible with the parent.did file");
+    service_compatible(CandidSource::Text(&new_interface), CandidSource::File(old_interface.as_path())).unwrap();
 }
