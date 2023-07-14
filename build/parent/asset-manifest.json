@@ -1,7 +1,16 @@
 {
   "files": {
     "main.js": "/static/js/bundle.js",
-    "static/media/launch.jpg": "/static/media/launch.d5947798dd34e601cdfb.jpg",
+    "static/media/download-wallet.png": "/static/media/download-wallet.729b60329f77f312af52.png",
+    "static/media/connect-wallet.png": "/static/media/connect-wallet.a5a06b2d59eaf58a7601.png",
+    "static/media/coffee-farm-cuate.png": "/static/media/coffee-farm-cuate.cfae1f04cb4cd1595141.png",
+    "static/media/bike-travellers-cuate.png": "/static/media/bike-travellers-cuate.e30c08a61b7520c5273f.png",
+    "static/media/laptop-nature-cuate.png": "/static/media/laptop-nature-cuate.b4934a20c820cfa72a0c.png",
+    "static/media/plants-icon.png": "/static/media/plants-icon.a3aa5fc34adeab8026f3.png",
+    "static/media/bag-icon.png": "/static/media/bag-icon.715c07b28f5232718f8b.png",
+    "static/media/ball-icon.png": "/static/media/ball-icon.eb4bcf884f1598972224.png",
+    "static/media/coffee-icon.png": "/static/media/coffee-icon.1db7fe1fe45d66a2704d.png",
+    "static/media/backpack-icon.png": "/static/media/backpack-icon.46a1f43293bcd33d8bcd.png",
     "static/media/firefox.svg": "/static/media/firefox.94f048fa99a3b87a56d973980a48815a.svg",
     "static/media/brave.svg": "/static/media/brave.f96467ac5430effa6b69c25c0fbeeeca.svg",
     "static/media/chrome.svg": "/static/media/chrome.ea5a9d28ece9f5d81368fd6e7b346fb1.svg",
