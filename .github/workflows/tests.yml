@@ -6,10 +6,10 @@ on:
     branches: [ "master", "debug" ]
   workflow_dispatch:
     inputs:
-      debug_enabled:
-        type: boolean
+      mode:
+        description: 'Runtime Mode: "standard" or "interactive"'
         required: false
-        default: false
+        default: 'standard'
 
 env:
   RUST_BACKTRACE: short
