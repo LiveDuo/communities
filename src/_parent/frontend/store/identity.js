@@ -7,6 +7,8 @@ import { useToast, useDisclosure } from '@chakra-ui/react'
 import { ledgerCanisterId, createLedgerActorPlug } from '../agents/ledger'
 import { parentCanisterId, createParentActorPlug } from '../agents/parent'
 
+import { isLocal } from '../agents'
+
 const IdentityContext = createContext()
 
 const IdentityProvider = ({ children }) => {
@@ -25,32 +27,33 @@ const IdentityProvider = ({ children }) => {
 	const loadPlug = useCallback(async () => {
 		// setIsLocalhost(window.location.hostname.endsWith('localhost'))
 		const connected = await window.ic.plug.isConnected()
-		if (connected) {
-			const principal = await window.ic?.plug.getPrincipal()
-			setUserPrincipal(principal.toString())
-			setHost(window.ic?.plug.sessionManager.host)
-			setWalletConnected(true)
-		}
+		if (!connected) return
+		const principal = await window.ic?.plug.getPrincipal()
+		setUserPrincipal(principal.toString())
+		setHost(window.ic?.plug.sessionManager.host)
+		setWalletConnected(true)
+	
 	}, [])
 
-	useEffect(() => {
-		if (window.ic?.plug) {
-			loadPlug()
-		}
-	}, [loadPlug])
 
-	const connect = async (hostType) => {
-		const host = hostType === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
+	const connect = async () => {
+		const host = isLocal === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
 		const whitelist = ledgerCanisterId ? [ledgerCanisterId, parentCanisterId] : [parentCanisterId]
 		try {
 			const hasAllowed = await window.ic?.plug?.requestConnect({ host, whitelist })
 			const principal = await window.ic?.plug.getPrincipal()
+			await loadActors()
 			setUserPrincipal(principal.toString())
 			setWalletConnected(!!hasAllowed)
 			setHost(window.ic?.plug.sessionManager.host)
 			toast({ description: 'Connected' })
 		} catch (error) {
-			toast({ description: 'Wallet connection failed', status: 'error' })
+			console.log(error.message)
+			if (error.message === 'The agent creation was rejected.') {
+				toast({ description: 'Wallet connection declined', status: 'info' })
+			} else {
+				toast({ description: 'Wallet connection failed', status: 'error' })
+			}
 		}
 	}
 
@@ -86,7 +89,7 @@ const IdentityProvider = ({ children }) => {
 		loadActors()
 	}, [loadActors])
 
-	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect, modalDisclosure }
+	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect, loadPlug, modalDisclosure }
 
 	return (
 		<IdentityContext.Provider value={value}>

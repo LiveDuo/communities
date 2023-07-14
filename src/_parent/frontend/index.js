@@ -10,6 +10,7 @@ import { LedgerProvider } from './store/ledger'
 import Layout from './components/layout'
 
 import Home from './pages/Home'
+import Landing from './pages/Landing'
 
 const App = () => (
   <StrictMode>
@@ -19,7 +20,8 @@ const App = () => (
           <ParentProvider>
             <BrowserRouter>
                 <Routes>
-                  <Route exact path="/" element={<Layout><Home /></Layout>}/>
+                  <Route exact path="/app" element={<Layout><Home /></Layout>}/>
+                  <Route exact path="/" element={<Landing/>}/>
                 </Routes>
             </BrowserRouter>
           </ParentProvider>
