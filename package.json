@@ -9,6 +9,7 @@
     "dev:parent": "CRA_MODE=development CRA_PROJECT=parent react-app-rewired start",
     "test": "jest",
     "test:child": "jest -i test/child.test.js",
+    "test:unit": "cargo test",
     "test:parent": "jest -i test/parent.test.js",
     "test:upgrade": "jest -i test/upgrade.test.js",
     "upload:child": "CRA_MODE=production npm run build:child && node ./src/_child/upload-assets.js",

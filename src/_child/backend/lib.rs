@@ -1,20 +1,25 @@
 mod state;
 mod verify;
+mod utils;
+mod upgrade;
+mod auth;
 
-use candid::{export_service, CandidType, Deserialize, Principal, Nat};
+use candid::{ CandidType, Deserialize, Principal, candid_method};
 
-use sha2::{Sha256, Digest};
-use ic_cdk_macros::*;
+use ic_cdk_macros::{update, query, init};
 
 use std::borrow::Borrow;
-use std::collections::hash_map;
-use std::hash::{Hash, Hasher};
-use ic_certified_assets::types::{GetArg, GetChunkArg};
-use num_traits::ToPrimitive;
 
 use crate::state::{*, STATE};
 
-#[ic_cdk_macros::init]
+use upgrade::{update_wasm_hash, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
+use upgrade::Upgrade;
+use utils::{uuid, get_asset};
+
+use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
+
+#[init]
+#[candid_method(init)]
 fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
     ic_certified_assets::init();
 
@@ -54,55 +59,8 @@ fn add_profile_role(profile_id: u64, role: UserRole) {
     })
 }
 
-fn uuid(seed: &str) -> u64 {
-    let timestamp: u64 = ic_cdk::api::time() * 1000 * 1000;
-    let str = format!("{}-{}", seed, timestamp);
-    let mut s = hash_map::DefaultHasher::new();
-    str.hash(&mut s);
-    s.finish()
-}
-
-
-fn get_authentication_with_address(authentication: &Authentication, caller: &Principal) -> AuthenticationWithAddress {
-    match authentication {
-        Authentication::Evm(params) => AuthenticationWithAddress::Evm(params.to_owned()),
-        Authentication::Svm(params) => AuthenticationWithAddress::Svm(params.to_owned()),
-        Authentication::Ic => {
-            let params = IcParams {principal: caller.to_owned()};
-            AuthenticationWithAddress::Ic(params)
-        },
-    }
-}
-
-fn login_message(principal: &Principal) -> String {
-    format!("Sign this message to login.\n\nApp:\ncommunities.ooo\n\nAddress:\n{}\n\n", principal.to_string())
-}
-
-fn login_message_hex_evm(principal: &Principal) -> String {
-    let message_prefix = format!("\x19Ethereum Signed Message:\n");
-    let message_prefix_encode = hex::encode(&message_prefix);
-    let message_prefix_msg =  hex::decode(message_prefix_encode).unwrap();
-
-    let str = login_message(&principal);
-    let str_encode = hex::encode(&str);
-    let hex_msg =  hex::decode(str_encode).unwrap();
-
-    let msg_length = format!("{}", hex_msg.len());
-    let msg_length_encode = hex::encode(&msg_length);
-    let msg_length_hex =  hex::decode(msg_length_encode).unwrap();
-
-    let msg_vec = [message_prefix_msg, msg_length_hex, hex_msg].concat();
-
-    easy_hasher::easy_hasher::raw_keccak256(msg_vec).to_hex_string()
-
-}
-
-fn login_message_hex_svm(principal: &Principal) -> String {
-    let msg = login_message(&principal);
-    hex::encode(&msg)
-}
-
 #[update]
+#[candid_method(update)]
 fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
     let caller = ic_cdk::caller();
 
@@ -166,6 +124,7 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
 }
 
 #[update]
+#[candid_method(update)]
 fn create_post(title: String, description: String) -> Result<PostSummary, String> {
     let caller = ic_cdk::caller();
 
@@ -208,6 +167,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
 }
 
 #[update]
+#[candid_method(update)]
 fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
@@ -251,6 +211,7 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 }
 
 #[query]
+#[candid_method(query)]
 fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -265,6 +226,7 @@ fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
 }
 
 #[query]
+#[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
     STATE.with(|s| {
         let state = &mut s.borrow_mut();
@@ -309,6 +271,7 @@ fn get_posts() -> Vec<PostSummary> {
 }
 
 #[query]
+#[candid_method(query)]
 fn get_profile() -> Result<Profile, String> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -324,6 +287,7 @@ fn get_profile() -> Result<Profile, String> {
 }
 
 #[query]
+#[candid_method(query)]
 fn get_post(post_id: u64) -> Result<PostResponse, String> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -365,6 +329,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 }
 
 #[query]
+#[candid_method(query)]
 fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -436,6 +401,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 #[query]
+#[candid_method(query)]
 fn get_user_roles() -> Vec<Role>{
     let caller = ic_cdk::caller();
     STATE.with(|s| {
@@ -451,13 +417,7 @@ fn get_user_roles() -> Vec<Role>{
         }
     })
 }
-fn update_wasm_hash() {
-    let wasm_bytes = get_asset("/temp/child.wasm".to_owned());
-    let mut hasher = Sha256::new();
-    hasher.update(wasm_bytes.clone());
-    let wasm_hash = hasher.finalize()[..].to_vec();
-    STATE.with(|s| s.borrow_mut().wasm_hash = Some(wasm_hash));
-}
+
 #[derive(CandidType, Deserialize)]
 pub struct StableState {
     pub state: State,
@@ -488,117 +448,16 @@ fn post_upgrade() {
     replace_assets_from_temp();
 }
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn http_request(
     req: ic_certified_assets::types::HttpRequest,
 ) -> ic_certified_assets::types::HttpResponse {
     return ic_certified_assets::http_request_handle(req);
 }
 
-export_service!();
-
-#[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
-fn export_candid() -> String {
-    __export_service()
-}
-
-use ic_cdk::export::candid::{Principal as PrincipalMain};
-use serde_bytes::ByteBuf;
-use ic_cdk::api::call::CallResult;
-use ic_cdk::api::management_canister::main::*;
-use ic_certified_assets::rc_bytes::RcBytes;
-use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
-
-
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
-pub struct Upgrade { 
-    pub version: String,
-    pub upgrade_from: Option<Vec<u8>>,
-    pub timestamp: u64,
-    pub wasm_hash: Vec<u8>,
-    pub assets: Vec<String>
-}
-
-fn get_content_type(name: &str) -> String {
-	if name.ends_with(".html") { return "text/html".to_string() }
-	else if name.ends_with(".js") { return "text/javascript".to_string() }
-	else if name.ends_with(".css") { return "text/css".to_string() } 
-	else if name.ends_with(".txt") { return "text/plain".to_string() }
-	else if name.ends_with(".md") { return "text/markdown".to_string() }
-	else { return "application/octet-stream".to_string() }
-}
-
-
-async fn upgrade_canister_cb(wasm: Vec<u8>) {
-    ic_cdk::println!("Child: Self upgrading...");
-
-    // upgrade code
-    let id = ic_cdk::id();
-    let install_args = InstallCodeArgument { mode: CanisterInstallMode::Upgrade, canister_id: id, wasm_module: wasm, arg: vec![], };
-    let result: CallResult<()> = ic_cdk::api::call::call(PrincipalMain::management_canister(), "install_code", (install_args,),).await;
-    result.unwrap();
-}
-
-fn replace_assets_from_temp() {
-    let assets = ic_certified_assets::list();
-
-    // cleanup previous assets
-    let prev_assets = &assets.iter().filter(|k| !k.key.starts_with("/temp")).collect::<Vec<_>>();
-    for asset  in prev_assets {
-        ic_certified_assets::delete_asset(DeleteAssetArguments { key: asset.key.to_owned() });
-    }
-
-    // store new assets
-    let temp_assets = &assets.iter().filter(|k| k.key.starts_with("/temp")).collect::<Vec<_>>();
-    for asset in  temp_assets {
-        let asset_content: Vec<u8> = get_asset(asset.key.to_owned());
-        let args_store = StoreArg {
-            key: asset.key.replace("/temp", ""),
-            content_type: asset.content_type.to_owned(),
-            content_encoding: "identity".to_owned(),
-            content: ByteBuf::from(asset_content),
-            sha256: None
-        };
-        ic_certified_assets::store(args_store);
-        ic_certified_assets::delete_asset(DeleteAssetArguments { key: asset.key.to_owned() });
-    }
-}
-
-
-async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, version: &str) -> Result<(), String> {
-    let canister_id = ic_cdk::id();
-
-    for asset in assets {
-		
-        // get asset content
-        let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister, "retrieve", (asset.to_owned(),),).await.unwrap();
-
-        // replace env car
-		let content;
-		if asset == &format!("/upgrade/{}/static/js/bundle.js", version) {
-			let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
-			let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
-			content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
-		} else {
-			content = ByteBuf::from(asset_bytes.to_vec());
-		}
-
-		// upload asset
-		let key = asset.replace(&format!("/upgrade/{}", version), "/temp");
-		let store_args = StoreArg {
-            key: key.to_owned(),
-            content_type: get_content_type(&key),
-            content_encoding: "identity".to_owned(),
-            content,
-            sha256: None
-        };
-        ic_certified_assets::store(store_args);
-    }
-
-	Ok(())
-}
-
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
@@ -612,19 +471,10 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
     Ok(next_version_opt)
 }
 
-async fn authorize(caller: &PrincipalMain) -> Result<(), String>{
-	let canister_id = ic_cdk::id();
-	let args = CanisterIdRecord { canister_id };
-	let (canister_status, ) = ic_cdk::api::call::call::<_, (CanisterStatusResponse, )>(PrincipalMain::management_canister(), "canister_status", (args,)).await.map_err(|(code, err)| format!("{:?} - {}",code, err)).unwrap();
 
-	if canister_status.settings.controllers.iter().any(|c| c ==  caller) {
-		Ok(())
-	} else {
-		Err(format!("Caller is not a controller"))
-	}
-}
 
-#[ic_cdk_macros::update]
+#[update]
+#[candid_method(update)]
 async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     
     let caller = ic_cdk::caller();
@@ -650,27 +500,22 @@ async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     Ok(())
 }
 
-fn get_asset(key: String) -> Vec<u8> {
 
-    // get asset length
-    let arg = GetArg { key: key.to_owned(), accept_encodings: vec!["identity".to_string()] };
-	let encoded_asset = ic_certified_assets::get(arg);
-    let total_length = encoded_asset.total_length.0.to_usize().unwrap();
 
-    // concat asset chunks
-	let mut index = 0;
-	let mut content = vec![];
-    while content.len() < total_length {
-        let arg = GetChunkArg {
-            index: Nat::from(index),
-            key: key.to_owned(),
-            content_encoding: "identity".to_string(),
-            sha256: None
-        };
-        let chunk_response = ic_certified_assets::get_chunk(arg);
-        let chunk_data = chunk_response.content.as_ref().to_vec();
-        content.extend(chunk_data.to_owned());
-		index += 1;
-	}
-	return content;
+
+
+#[test]
+fn candid_interface_compatibility() {
+    use candid::utils::{service_compatible, CandidSource};
+    use std::path::PathBuf;
+
+    ic_cdk::export::candid::export_service!();
+    let new_interface = __export_service();
+
+    let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("child.did");
+
+    service_compatible(
+        CandidSource::Text(&new_interface),
+        CandidSource::File(old_interface.as_path()),
+    ).expect("The assets canister interface is not compatible with the child.did file");
 }

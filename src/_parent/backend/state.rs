@@ -99,6 +99,7 @@ pub enum CanisterState {
     Creating,
     Installing,
     Uploading,
+    Authorizing,
     Ready,
 }
 
@@ -119,12 +120,6 @@ impl Default for CanisterData {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, CandidType)]
-pub struct CallbackData {
-    pub canister_data_id: Option<u64>,
-    pub user: Principal,
-    pub state: CanisterState,
-}
 #[derive(Clone, Debug, CandidType, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Upgrade {
     pub version: String,
