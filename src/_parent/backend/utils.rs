@@ -2,7 +2,7 @@ use candid::{Nat, Principal};
 use ic_cdk::api::management_canister::main::{CanisterIdRecord, CanisterStatusResponse};
 use ic_certified_assets::types::{GetArg, GetChunkArg};
 use num_traits::cast::ToPrimitive;
-use crate::state::{StoreAssetArgs};
+use crate::state::StoreAssetArgs;
 use std::collections::hash_map;
 use std::hash::Hash;
 use std::hash::Hasher;
