@@ -8,6 +8,7 @@ import { LedgerContext } from '../store/ledger'
 import { isLocal } from '../agents/'
 
 const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm'
+const transakUrl = 'https://global.transak.com/'
 
 // https://www.blobmaker.app/
 const BlobBackground = ({fill}) => (
@@ -89,15 +90,19 @@ const OnBoarding = ({ createChildBatch }) => {
               </Box>
             </Box>
             <Flex position="relative" justifyContent="center" mt="20px">
-              <img src={require('../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
+              <img src={require('../public/topup-wallet.png')} alt="get started communities" width={'50%'}/>
             </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
             <Heading size="lg" mb="32px">Top up your wallet</Heading>
             <Text mb="16px" >You will new a few cents for transaction fees</Text>
-            <Text mb="24px"> Transfer a few ICP tokens to your address to continue</Text>
-            <Button mb="24px" onClick={() => {}}>Top up balance</Button>
-            <Text fontSize="sm" color='gray'> <b>Note:</b> That's usually 20c or less worth of ICP</Text>
+            <Text mb="24px"> Transfer ~20c worth of ICP tokens to your address to continue</Text>
+            <Button mb="24px" onClick={() =>  window.open(transakUrl, '_blank')}>Top up balance</Button>
+            <Text fontSize="sm" color='gray'> <b>Alternatives:</b>{' '}
+              <Link href="https://www.binance.com/en/how-to-buy/internet-computer" target="_blank">Binance</Link>,{' '}
+              <Link href="https://www.coinbase.com/how-to-buy/internet-computer" target="_blank">Coinbase</Link>,{' '}
+              <Link href="https://www.kraken.com/learn/buy-internet-computer-protocol-icp" target="_blank">Kraken</Link>
+            </Text>
           </Flex>
         </Flex>
       )}
@@ -110,7 +115,7 @@ const OnBoarding = ({ createChildBatch }) => {
               </Box>
             </Box>
             <Flex position="relative" justifyContent="center" mt="20px">
-              <img src={require('../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
+              <img src={require('../public/deploy-community.png')} alt="get started communities" width={'50%'}/>
             </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
