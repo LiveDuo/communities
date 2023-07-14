@@ -23,8 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: Swatinem/rust-cache@v2
-      - uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - run: export PATH=~/.cargo/bin:/usr/local/bin/:$PATH
       - run: rustup target add wasm32-unknown-unknown
       - run: DFX_VERSION=0.13.1 sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
@@ -32,6 +30,8 @@ jobs:
       - run: dfx --version
       - run: dfx identity whoami
       - run: dfx start --background &> dfx.log
+      - uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - run: dfx deploy parent
       - run: npm ci
       - run: npm run upload:parent
