@@ -132,7 +132,7 @@ fn create_canister_data_callback(caller: Principal) -> Result<u64, String> {
 
 
 // canister_index: usize
-#[update]
+#[query]
 #[candid_method(update)]
 fn get_user_canisters() -> Vec<CanisterData> {
     let caller = ic_cdk::caller();
@@ -173,7 +173,6 @@ fn get_children() ->  Vec<Principal>{
 // upgrade
 #[query]
 #[candid_method(query)]
-
 fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
