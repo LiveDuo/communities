@@ -1,9 +1,8 @@
-use ic_cdk::export::candid::export_service;
-
 mod state;
 use sha2::{Digest, Sha256};
 
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Principal, candid_method};
+use ic_cdk_macros::{query, update, init};
 
 use crate::state::{STATE, *};
 
@@ -14,12 +13,15 @@ mod create_child;
 use create_child::{create_canister, install_code, set_canister_controllers, mint_cycles};
 use create_child::LEDGER_CANISTER;
 
-#[ic_cdk_macros::init]
+#[init]
+#[candid_method(init)]
 fn init() {
     ic_certified_assets::init();
 }
 // create child
-#[ic_cdk_macros::update]
+
+#[update]
+#[candid_method(update)]
 async fn create_child() -> Result<Principal, String> {
     let id = ic_cdk::id();
     let caller = ic_cdk::caller();
@@ -123,7 +125,10 @@ fn create_canister_data_callback(caller: Principal) -> Result<u64, String> {
     })
 }
 
-#[ic_cdk_macros::query]
+
+// canister_index: usize
+#[update]
+#[candid_method(update)]
 fn get_user_canisters() -> Vec<CanisterData> {
     let caller = ic_cdk::caller();
     STATE.with(|s| {
@@ -159,8 +164,11 @@ fn get_children() ->  Vec<Principal>{
     STATE.with(|s| s.borrow().canister_data.iter().map(|(_, canister_data)| canister_data.id.unwrap()).collect::<Vec<_>>())
 }
 
+
 // upgrade
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
+
 fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -172,7 +180,9 @@ fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     })
 }
 
-#[ic_cdk_macros::query]
+
+#[query]
+#[candid_method(query)]
 fn get_upgrades() -> Vec<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -180,7 +190,8 @@ fn get_upgrades() -> Vec<Upgrade> {
     })
 }
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -192,7 +203,9 @@ fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
     })
 }
 
-#[ic_cdk_macros::update]
+
+#[update]
+#[candid_method(update)]
 async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>,) -> Result<(), String> {
     // authorize
     let caller = ic_cdk::caller();
@@ -239,7 +252,9 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
     Ok(())
 }
 
-#[ic_cdk_macros::update]
+
+#[update]
+#[candid_method(update)]
 async fn remove_upgrade(version: String) -> Result<(), String> {
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
@@ -287,14 +302,33 @@ fn post_upgrade() {
     ic_certified_assets::post_upgrade(s_prev.assets);
 }
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_assets::types::HttpResponse {
     ic_certified_assets::http_request_handle(req)
 }
 
-export_service!();
 
-#[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
-fn export_candid() -> String {
-    __export_service()
+// #[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
+// fn export_candid() -> String {
+//     export_service!();
+//     __export_service()
+// }
+
+
+
+#[test]
+fn candid_interface_compatibility() {
+    use candid::utils::{service_compatible, CandidSource};
+    use std::path::PathBuf;
+    
+    ic_cdk::export::candid::export_service!();
+    let new_interface = __export_service();
+
+    let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("parent.did");
+
+    service_compatible(
+        CandidSource::Text(&new_interface),
+        CandidSource::File(old_interface.as_path()),
+    ).expect("The assets canister interface is not compatible with the parent.did file");
 }

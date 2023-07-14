@@ -4,22 +4,22 @@ mod utils;
 mod upgrade;
 mod auth;
 
-use candid::{export_service, CandidType, Deserialize, Principal};
+use candid::{ CandidType, Deserialize, Principal, candid_method};
 
-use ic_cdk_macros::*;
+use ic_cdk_macros::{update, query, init};
 
 use std::borrow::Borrow;
 
 use crate::state::{*, STATE};
 
-use utils::{get_asset, uuid};
-
 use upgrade::{update_wasm_hash, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::Upgrade;
+use utils::{uuid, get_asset};
 
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 
-#[ic_cdk_macros::init]
+#[init]
+#[candid_method(init)]
 fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
     ic_certified_assets::init();
 
@@ -60,6 +60,7 @@ fn add_profile_role(profile_id: u64, role: UserRole) {
 }
 
 #[update]
+#[candid_method(update)]
 fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
     let caller = ic_cdk::caller();
 
@@ -123,6 +124,7 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
 }
 
 #[update]
+#[candid_method(update)]
 fn create_post(title: String, description: String) -> Result<PostSummary, String> {
     let caller = ic_cdk::caller();
 
@@ -165,6 +167,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
 }
 
 #[update]
+#[candid_method(update)]
 fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
@@ -208,6 +211,7 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 }
 
 #[query]
+#[candid_method(query)]
 fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -222,6 +226,7 @@ fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
 }
 
 #[query]
+#[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
     STATE.with(|s| {
         let state = &mut s.borrow_mut();
@@ -266,6 +271,7 @@ fn get_posts() -> Vec<PostSummary> {
 }
 
 #[query]
+#[candid_method(query)]
 fn get_profile() -> Result<Profile, String> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -281,6 +287,7 @@ fn get_profile() -> Result<Profile, String> {
 }
 
 #[query]
+#[candid_method(query)]
 fn get_post(post_id: u64) -> Result<PostResponse, String> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -322,6 +329,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 }
 
 #[query]
+#[candid_method(query)]
 fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -393,6 +401,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
     })
 }
 #[query]
+#[candid_method(query)]
 fn get_user_roles() -> Vec<Role>{
     let caller = ic_cdk::caller();
     STATE.with(|s| {
@@ -439,21 +448,16 @@ fn post_upgrade() {
     replace_assets_from_temp();
 }
 
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 fn http_request(
     req: ic_certified_assets::types::HttpRequest,
 ) -> ic_certified_assets::types::HttpResponse {
     return ic_certified_assets::http_request_handle(req);
 }
 
-export_service!();
-
-#[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
-fn export_candid() -> String {
-    __export_service()
-}
-
-#[ic_cdk_macros::query]
+#[query]
+#[candid_method(query)]
 async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
@@ -467,7 +471,10 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
     Ok(next_version_opt)
 }
 
-#[ic_cdk_macros::update]
+
+
+#[update]
+#[candid_method(update)]
 async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     
     let caller = ic_cdk::caller();
@@ -491,4 +498,24 @@ async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     ic_cdk::spawn(upgrade_canister_cb(wasm));
 
     Ok(())
+}
+
+
+
+
+
+#[test]
+fn candid_interface_compatibility() {
+    use candid::utils::{service_compatible, CandidSource};
+    use std::path::PathBuf;
+
+    ic_cdk::export::candid::export_service!();
+    let new_interface = __export_service();
+
+    let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("child.did");
+
+    service_compatible(
+        CandidSource::Text(&new_interface),
+        CandidSource::File(old_interface.as_path()),
+    ).expect("The assets canister interface is not compatible with the child.did file");
 }
