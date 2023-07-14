@@ -14,6 +14,7 @@ use crate::state::{*, STATE};
 
 use upgrade::{update_wasm_hash, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::Upgrade;
+use utils::{uuid, get_asset};
 
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 
