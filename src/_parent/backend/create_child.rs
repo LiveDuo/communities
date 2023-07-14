@@ -1,9 +1,11 @@
-use candid::{Principal, Encode};
 use ic_cdk::api::management_canister::main::*;
-use crate::state::{ AccountIdentifier, AccountBalanceArgs, Tokens, TransferArgs, TransferResult, Subaccount, Memo };
-use crate::state::principal_to_subaccount;
+use candid::{Principal, Encode};
+
 use include_macros::get_canister;
-use crate::utils::{get_asset};
+
+use crate::state::*;
+use crate::utils::*;
+
 use sha2::{Digest, Sha256};
 
 pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
