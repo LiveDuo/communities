@@ -6,7 +6,7 @@ const idlParentFactory = ({ IDL }) => {
   const canisterData = IDL.Record({
     id: IDL.Opt(IDL.Principal),
     timestamp: IDL.Nat64,
-    state: IDL.Variant({Preparing: IDL.Null, Creating: IDL.Null, Installing: IDL.Null, Uploading: IDL.Null, Ready: IDL.Null}),
+    state: IDL.Variant({Preparing: IDL.Null, Creating: IDL.Null, Installing: IDL.Null, Uploading: IDL.Null, Authorizing: IDL.Null, Ready: IDL.Null}),
   })
 
   return IDL.Service({

@@ -34,6 +34,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - run: dfx deploy parent
       - run: npm ci
+      - run: npm run test:unit
       - run: npm run upload:parent
       - run: npm run test:parent
       - run: dfx deploy child
