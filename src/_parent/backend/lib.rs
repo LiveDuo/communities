@@ -19,12 +19,17 @@ fn init() {
     ic_certified_assets::init();
 }
 // create child
-
 #[update]
 #[candid_method(update)]
 async fn create_child() -> Result<Principal, String> {
     let id = ic_cdk::id();
     let caller = ic_cdk::caller();
+
+    let upgrades_length = STATE.with(|s| s.borrow().upgrades.len());
+
+    if upgrades_length == 0 {
+        return Err("No upgrade available".to_owned())
+    }
 
     // mint cycles
     let result = ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "create_canister_data_callback", (caller,)).await;
