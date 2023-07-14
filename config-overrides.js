@@ -28,6 +28,7 @@ const updatePaths = (paths, srcFolder, buildFolder) => {
 module.exports = {
     webpack: (config) => {
         config.output = { ...config.output, filename: 'static/js/bundle.js' }
+        config.devtool = false
 
         // set child
         if (process.env.CRA_PROJECT === 'child') {
