@@ -1,10 +1,10 @@
 import { useContext } from 'react'
 import { Button, Flex, Box, Tag, Text, Link } from '@chakra-ui/react'
 
-import { IdentityContext } from '../../store/identity'
-import { LedgerContext } from '../../store/ledger'
+import { IdentityContext } from '../store/identity'
+import { LedgerContext } from '../store/ledger'
 
-import { isLocal } from '../../agents'
+import { isLocal } from '../agents'
 
 const Header = () => {
   const {walletConnected, disconnect, host, userPrincipal } = useContext(IdentityContext)

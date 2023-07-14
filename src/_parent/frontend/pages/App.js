@@ -9,14 +9,16 @@ import { getAccountId } from '../utils/account'
 
 import { isLocal } from '../agents'
 
-import OnBoarding from '../components/OnBoarding'
-import UserCommunities from '../components/UserCommunities'
+import OnBoarding from '../app/OnBoarding'
+import UserCommunities from '../app/UserCommunities'
+import Header from '../app/Header'
+import WalletModal from '../app/WalletModal'
 
 const CREATE_CHILD_COST = 1 * 1e8
 
 /* global BigInt */
 
-const Home = () => {
+const App = () => {
 
 	const { walletConnected, userPrincipal, parentActorPlug, modalDisclosure, loadPlug } = useContext(IdentityContext)
 	const { parentCanisterId, getCreateChildTx, getUserCanisters } = useContext(ParentContext)
@@ -63,10 +65,17 @@ const Home = () => {
 	},[loadPlug])
 
 	return (
+
+	<Box>
+    <Header />
+    <WalletModal/>
+    <Box m="40px" mt="80px" textAlign="center">
 		<Box m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded">
 			{childPrincipals?.length > 0 ? <UserCommunities childPrincipals={childPrincipals}/> : <OnBoarding createChildBatch={createChildBatch}/> }
 		</Box>
+    </Box>
+  </Box>
 	)
 }
 
-export default Home
+export default App

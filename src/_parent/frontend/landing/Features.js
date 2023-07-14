@@ -31,27 +31,27 @@ const Features = () =>  {
         <Flex flexWrap="wrap" gridGap={6} justify="center">
           <Card
             heading={'Wallet Login'}
-            image={<Image src={require('../../../public/backpack-icon.png')} alt={'feature icon'} width="160px"/>}
+            image={<Image src={require('../public/backpack-icon.png')} alt={'feature icon'} width="160px"/>}
             description={'Login with Metamask, Phantom or Plug wallet.'}
           />
           <Card
             heading={'Free for users'}
-            image={<Image src={require('../../../public/bag-icon.png')} alt={'feature icon'} width="160px"/>}
+            image={<Image src={require('../public/bag-icon.png')} alt={'feature icon'} width="160px"/>}
             description={'Users don\'t have to pay transaction fees to interact.'}
           />
           <Card
             heading={'Owned by creators'}
-            image={<Image src={require('../../../public/ball-icon.png')} alt={'feature icon'} width="160px"/>}
+            image={<Image src={require('../public/ball-icon.png')} alt={'feature icon'} width="160px"/>}
             description={'Creators have 100% ownership of the communities they create.'}
           />
           <Card
             heading={'Runs on blockchain'}
-            image={<Image src={require('../../../public/plants-icon.png')} alt={'feature icon'} width="160px"/>}
+            image={<Image src={require('../public/plants-icon.png')} alt={'feature icon'} width="160px"/>}
             description={'All actions are carried out by 13 nodes.'}
           />
           <Card
             heading={'Easy to deploy'}
-            image={<Image src={require('../../../public/coffee-icon.png')} alt={'feature icon'} width="160px"/>}
+            image={<Image src={require('../public/coffee-icon.png')} alt={'feature icon'} width="160px"/>}
             description={'You can create new communities with only one click.'}
           />
         </Flex>

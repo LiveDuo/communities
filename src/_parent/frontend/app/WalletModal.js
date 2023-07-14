@@ -1,11 +1,11 @@
 import { useContext, useEffect, useState } from 'react'
-import { IdentityContext } from '../../store/identity'
+import { IdentityContext } from '../store/identity'
 import { Modal, ModalFooter, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Box,} from '@chakra-ui/react'
 import { Text, Button, Link } from '@chakra-ui/react'
 
-import { ReactComponent as ChromeLogo } from '../../logos/chrome.svg'
-import { ReactComponent as BraveLogo } from '../../logos/brave.svg'
-import { ReactComponent as FirefoxLogo } from '../../logos/firefox.svg'
+import { ReactComponent as ChromeLogo } from '../logos/chrome.svg'
+import { ReactComponent as BraveLogo } from '../logos/brave.svg'
+import { ReactComponent as FirefoxLogo } from '../logos/firefox.svg'
 
 const WalletModal = () =>  {
   

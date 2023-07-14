@@ -1,5 +1,5 @@
 import { Container, SimpleGrid, Image, Flex, Heading, Text, Stack, Tag, Box, useMediaQuery} from '@chakra-ui/react'
-import { Blur } from '../CTA'
+import { Blur } from './CTA'
 
 const HowItWork = () => {
   const [isMobile] = useMediaQuery('(max-width: 700px)')
@@ -25,12 +25,12 @@ const HowItWork = () => {
               <Text color={'gray.500'} fontSize={'lg'}>Launch a new community on the Internet Computer. Ownership is transfer straight to your wallet.</Text>
             </Stack>
             <Flex>
-              <Image src={require('../../../public/laptop-nature-cuate.png')} alt={'feature image'}/>
+              <Image src={require('../public/laptop-nature-cuate.png')} alt={'feature image'}/>
             </Flex>
           </SimpleGrid>
           <SimpleGrid  id='maintenance' mb="80px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
             <Flex>
-              <Image src={require('../../../public/bike-travellers-cuate.png')} alt={'feature image'}/>
+              <Image src={require('../public/bike-travellers-cuate.png')} alt={'feature image'}/>
             </Flex>
             <Stack spacing={4} order={isMobile && -1} textAlign="center" justifyContent="center">
               <Text textTransform={'uppercase'} color={'green.400'} fontWeight={600} fontSize={'sm'} bg="green.50" p={2} alignSelf={'center'} rounded={'md'}>
@@ -49,7 +49,7 @@ const HowItWork = () => {
               <Text color={'gray.500'} fontSize={'lg'}> <Tag colorScheme="green">Coming soon</Tag> All the features you'd expect to manage a community. Tools to drop NFTs to your community wallet addresses.</Text>
             </Stack>
             <Flex>
-              <Image src={require('../../../public/coffee-farm-cuate.png')} alt={'feature image'}/>
+              <Image src={require('../public/coffee-farm-cuate.png')} alt={'feature image'}/>
             </Flex>
           </SimpleGrid>
         </Container>

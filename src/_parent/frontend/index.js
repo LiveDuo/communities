@@ -7,12 +7,10 @@ import { IdentityProvider } from './store/identity'
 import { ParentProvider } from './store/parent'
 import { LedgerProvider } from './store/ledger'
 
-import Layout from './components/layout'
-
-import Home from './pages/Home'
+import App from './pages/App'
 import Landing from './pages/Landing'
 
-const App = () => (
+const Index = () => (
   <StrictMode>
     <ChakraProvider>
       <IdentityProvider>
@@ -20,7 +18,7 @@ const App = () => (
           <ParentProvider>
             <BrowserRouter>
                 <Routes>
-                  <Route exact path="/app" element={<Layout><Home /></Layout>}/>
+                  <Route exact path="/app" element={<App />}/>
                   <Route exact path="/" element={<Landing/>}/>
                 </Routes>
             </BrowserRouter>
@@ -33,4 +31,4 @@ const App = () => (
 
 const container = document.getElementById('root')
 const root = createRoot(container)
-root.render(<App/>)
+root.render(<Index/>)

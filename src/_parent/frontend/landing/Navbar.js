@@ -1,7 +1,7 @@
 import { Box, Flex, Text, IconButton, Button,Stack, Collapse, useColorModeValue, useBreakpointValue, useDisclosure } from '@chakra-ui/react'
 import { HamburgerIcon, CloseIcon,} from '@chakra-ui/icons'
-import DesktopNav from './DesktopNav'
-import MobileNav from './MobileNav'
+import DesktopNav from './shared/DesktopNav'
+import MobileNav from './shared/MobileNav'
 
 const NAV_ITEMS = [
   {

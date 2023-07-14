@@ -2,10 +2,10 @@ import { useState, useContext, useEffect } from 'react'
 
 import { Flex, Box, Heading, Text, Button, Link } from '@chakra-ui/react'
 
-import { IdentityContext } from '../../store/identity'
-import { LedgerContext } from '../../store/ledger'
+import { IdentityContext } from '../store/identity'
+import { LedgerContext } from '../store/ledger'
 
-import { isLocal } from '../../agents'
+import { isLocal } from '../agents/'
 
 const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm'
 
@@ -47,7 +47,7 @@ const OnBoarding = ({ createChildBatch }) => {
               </Box>
             </Box>
             <Flex position="relative" justifyContent="center">
-              <img src={require('../../public/download-wallet.png')} alt="get started communities" width={'50%'}/>
+              <img src={require('../public/download-wallet.png')} alt="get started communities" width={'50%'}/>
             </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
@@ -68,7 +68,7 @@ const OnBoarding = ({ createChildBatch }) => {
               </Box>
             </Box>
             <Flex position="relative" justifyContent="center" mt="20px">
-              <img src={require('../../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
+              <img src={require('../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
             </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
@@ -89,7 +89,7 @@ const OnBoarding = ({ createChildBatch }) => {
               </Box>
             </Box>
             <Flex position="relative" justifyContent="center" mt="20px">
-              <img src={require('../../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
+              <img src={require('../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
             </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
@@ -110,7 +110,7 @@ const OnBoarding = ({ createChildBatch }) => {
               </Box>
             </Box>
             <Flex position="relative" justifyContent="center" mt="20px">
-              <img src={require('../../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
+              <img src={require('../public/connect-wallet.png')} alt="get started communities" width={'50%'}/>
             </Flex>
           </Box>
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">

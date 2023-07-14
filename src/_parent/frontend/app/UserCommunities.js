@@ -4,10 +4,10 @@ import { TableContainer, Table, TableCaption, Thead, Tr, Th, Tbody, Td} from '@c
 
 import { ExternalLinkIcon } from '@chakra-ui/icons'
 
-import { timeSince } from '../../utils/time'
-import { getPrincipalUrl } from '../../utils/principal'
+import { timeSince } from '../utils/time'
+import { getPrincipalUrl } from '../utils/principal'
 
-import { IdentityContext } from '../../store/identity'
+import { IdentityContext } from '../store/identity'
 
 
 const UserCommunities = ({ childPrincipals }) => {

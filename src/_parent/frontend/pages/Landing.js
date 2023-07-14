@@ -1,12 +1,12 @@
 import { Box } from '@chakra-ui/react'
 
-import Navbar from '../components/landing/Navbar'
-import Hero from '../components/landing/Hero'
-import HowItWorks from '../components/landing/HowItWorks'
-import Features from '../components/landing/Features'
-import CTA from '../components/landing/CTA'
-import FAQ from '../components/landing/FAQ'
-import Footer from '../components/landing/Footer'
+import Navbar from '../landing/Navbar'
+import Hero from '../landing/Hero'
+import HowItWorks from '../landing/HowItWorks'
+import Features from '../landing/Features'
+import CTA from '../landing/CTA'
+import FAQ from '../landing/FAQ'
+import Footer from '../landing/Footer'
 
 const Landing = () => {
   return( 
