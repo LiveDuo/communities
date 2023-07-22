@@ -12,14 +12,18 @@ const IdentityContext = createContext()
 const IdentityProvider = ({ children }) => {
 
 	const [walletConnected, setWalletConnected] = useState(false)
+	const [walletDetected, setWalletDetected] = useState(false)
 	const [userPrincipal, setUserPrincipal] = useState('')
 	const [host, setHost] = useState('')
 	const toast = useToast()
 
 	const loadWallet = useCallback(async () => {
-		// setIsLocalhost(window.location.hostname.endsWith('localhost'))
+		
+		// check connected
 		const connected = await window.ic.plug.isConnected()
 		if (!connected) return
+
+		// load params
 		const principal = await window.ic?.plug.getPrincipal()
 		setUserPrincipal(principal.toString())
 		setHost(window.ic?.plug.sessionManager.host)
@@ -27,6 +31,17 @@ const IdentityProvider = ({ children }) => {
 	
 	}, [])
 
+	useEffect(() => {
+		setWalletDetected(!!window?.ic?.plug)
+	}, [])
+	
+	const createActor = (...params) => {
+		return window.ic?.plug.createActor(...params)
+	}
+
+	const batchTransactions = (...params) => {
+		return window.ic.plug.batchTransactions(...params)
+	}
 
 	const connect = async () => {
 		const host = isLocal === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
@@ -49,9 +64,8 @@ const IdentityProvider = ({ children }) => {
 	}
 
 	const disconnect = async () => {
-		const p1 = new Promise((r) => setTimeout(() => r(), 1000))
-		const p2 = window.ic.plug.disconnect() // not resolving
-		await Promise.race([p1, p2]) // hacky fix
+		// not resolving
+		// await window.ic.plug.disconnect()
 
 		setUserPrincipal('')
 		setWalletConnected(false)
@@ -61,12 +75,12 @@ const IdentityProvider = ({ children }) => {
 	}
 
 	useEffect(()=>{
-		if (window.ic?.plug) {
+		if (walletDetected) {
 			loadWallet()
 		}
 	},[loadWallet])
 
-	const value = { walletConnected, userPrincipal, host, connect, disconnect, loadWallet }
+	const value = { createActor, userPrincipal, host, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
 
 	return (
 		<IdentityContext.Provider value={value}>

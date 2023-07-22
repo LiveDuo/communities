@@ -21,12 +21,11 @@ const OnBoarding = ({ createChildBatch }) => {
 
   const [userFlowStep, setUserFlowStep] = useState()
 
-  const { walletConnected, connect } = useContext(IdentityContext)
+  const { walletConnected, connect, walletDetected } = useContext(IdentityContext)
   const { balance } = useContext(LedgerContext)
 
-
   useEffect(() => {
-		if(!window.ic?.plug) {
+		if(!walletDetected) {
 			setUserFlowStep('download-wallet')
 		} else if(!walletConnected) {
 			setUserFlowStep('connect-wallet')

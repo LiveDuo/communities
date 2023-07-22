@@ -32,14 +32,14 @@ const LedgerProvider = ({ children }) => {
 
 	const toast = useToast()
 	const [loading, setLoading] = useState()
-	const { userPrincipal, walletConnected } = useContext(IdentityContext)
+	const { userPrincipal, walletConnected, createActor } = useContext(IdentityContext)
 	const [ledgerActorPlug, setLedgerActorPlug] = useState()
 	const [balance, setBalance] = useState(null)
 
 	const loadActor = useCallback(async () => {
 
 		if (!ledgerCanisterId) return
-		const actor = await window.ic?.plug.createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		const actor = await createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
 		setLedgerActorPlug(actor)
 	}, [])
 	

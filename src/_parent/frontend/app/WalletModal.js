@@ -9,21 +9,16 @@ import { ReactComponent as FirefoxLogo } from '../logos/firefox.svg'
 
 const WalletModal = ({modalDisclosure}) =>  {
   
-  const {connect} = useContext(IdentityContext)
-  const [plugInstalled, setPlugInstalled] = useState()
-
-  useEffect(() => {
-    setPlugInstalled(!!window?.ic?.plug)
-  }, [])
+  const {connect, walletDetected} = useContext(IdentityContext)
 
   return (
     <Modal isOpen={modalDisclosure.isOpen} onClose={modalDisclosure.onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{plugInstalled ? 'Connect Plug Wallet' : 'You\'d need a wallet'}</ModalHeader>
+        <ModalHeader>{walletDetected ? 'Connect Plug Wallet' : 'You\'d need a wallet'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {!plugInstalled ? 
+          {!walletDetected ? 
             <Box m='8px' mb='20px'>
               <Text mb='20px'>
                 Get the Plug Wallet extension for your browser.
@@ -45,7 +40,7 @@ const WalletModal = ({modalDisclosure}) =>  {
             </Box>
             }
         </ModalBody>
-        {plugInstalled && 
+          {walletDetected && 
           <ModalFooter>
           <Button variant='solid' onClick={connect}>Connect</Button>
         </ModalFooter>}

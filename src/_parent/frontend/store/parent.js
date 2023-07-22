@@ -28,7 +28,7 @@ const ParentProvider = ({ children }) => {
 	const [loading, setLoading] = useState()
 	const [parentActor, setParentActor] = useState()
 	const [parentActorPlug, setParentActorPlug] = useState()
-	const { walletConnected } = useContext(IdentityContext)
+	const { walletConnected, createActor } = useContext(IdentityContext)
 
 	const loadActor = useCallback(async () => {
 
@@ -36,7 +36,7 @@ const ParentProvider = ({ children }) => {
 		const actorAnonymous = Actor.createActor(idlParentFactory, actorOptions)
 		setParentActor(actorAnonymous)
 
-		const actorPlug = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
+		const actorPlug = await createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
 		setParentActorPlug(actorPlug)
 	}, [])
 	

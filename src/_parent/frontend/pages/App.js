@@ -21,7 +21,7 @@ const CREATE_CHILD_COST = 1 * 1e8
 const App = () => {
 
 	const modalDisclosure = useDisclosure()
-	const { walletConnected, userPrincipal } = useContext(IdentityContext)
+	const { walletConnected, userPrincipal, walletDetected, batchTransactions } = useContext(IdentityContext)
 	const { parentActorPlug, parentCanisterId, getCreateChildTx, getUserCanisters } = useContext(ParentContext)
 	const { balance, getTransferIcpTx, ledgerCanisterId } = useContext(LedgerContext)
 	const [childPrincipals, setChildPrincipals] = useState([])
@@ -29,7 +29,7 @@ const App = () => {
 	const toast = useToast()
 
 	const createChildBatch = async () => {
-    	if (!window.ic?.plug || !walletConnected) {
+    	if (!walletDetected || !walletConnected) {
 			modalDisclosure.onOpen()
 			return
 		}
@@ -45,7 +45,7 @@ const App = () => {
 		const transferTx = balance < CREATE_CHILD_COST ? [getTransferIcpTx({accountId, amount: BigInt(CREATE_CHILD_COST)}, onTransfer)] : []
 		try {
 			const txs = ledgerCanisterId ? [...transferTx, getCreateChildTx(null, onCreate)] : [getCreateChildTx(null, onCreate)]
-			await window.ic.plug.batchTransactions(txs)
+			await batchTransactions(txs)
 		} catch (error) {
 			const description = error.message ?? 'Transaction failed'
 			toast({ description, status: 'error' })
