@@ -5,7 +5,7 @@ import { Flex, Box, Heading, Text, Button, Link } from '@chakra-ui/react'
 import { IdentityContext } from '../store/identity'
 import { LedgerContext } from '../store/ledger'
 
-import { isLocal } from '../agents/'
+import { isLocal } from '../utils/url'
 
 const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm'
 const transakUrl = 'https://global.transak.com/'

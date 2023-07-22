@@ -1,10 +1,24 @@
-import { useState, useContext, createContext } from 'react'
+import { useState, useEffect, createContext, useCallback, useContext } from 'react'
+
+import { useToast } from '@chakra-ui/react'
+import { Actor } from '@dfinity/agent'
+
+import { getAgent, icHost } from '../utils/agent'
 
 import { IdentityContext } from './identity'
 
-import { idlParentFactory, parentCanisterId } from '../agents/parent'
+export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
 
-import { useToast } from '@chakra-ui/react'
+const idlParentFactory = ({ IDL }) => {
+
+	const canisterState = IDL.Variant({ Preparing: IDL.Null, Creating: IDL.Null, Installing: IDL.Null, Uploading: IDL.Null, Authorizing: IDL.Null, Ready: IDL.Null })
+	const canisterData = IDL.Record({ id: IDL.Opt(IDL.Principal), timestamp: IDL.Nat64, state: canisterState, })
+
+	return IDL.Service({
+		'get_user_canisters': IDL.Func([], [IDL.Vec(canisterData)], ['query']),
+		'create_child': IDL.Func([], [IDL.Variant({ Ok: IDL.Principal, Err: IDL.Text })], []), // Result<Principal, String>
+	})
+}
 
 const ParentContext = createContext()
 
@@ -12,7 +26,25 @@ const ParentProvider = ({ children }) => {
 
 	const toast = useToast()
 	const [loading, setLoading] = useState()
-	const { parentActor, parentActorPlug } = useContext(IdentityContext)
+	const [parentActor, setParentActor] = useState()
+	const [parentActorPlug, setParentActorPlug] = useState()
+	const { walletConnected } = useContext(IdentityContext)
+
+	const loadActor = useCallback(async () => {
+
+		const actorOptions = { agent: getAgent(null), canisterId: parentCanisterId, host: icHost }
+		const actorAnonymous = Actor.createActor(idlParentFactory, actorOptions)
+		setParentActor(actorAnonymous)
+
+		const actorPlug = await window.ic?.plug.createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
+		setParentActorPlug(actorPlug)
+	}, [])
+	
+	useEffect(() => {
+		if (walletConnected) {
+			loadActor()
+		}
+	}, [loadActor, walletConnected])
 
 	const createChild = async () => {
 		setLoading(true)
@@ -61,7 +93,7 @@ const ParentProvider = ({ children }) => {
 		onFail: (_res) => toast({ description: 'Something went wrong', status: 'error' })
 	})
 
-	const value = { getCreateChildTx, createChild, parentCanisterId, callCreateCanister, getUserCanisters, loading, setLoading }
+	const value = { parentActor, parentActorPlug, getCreateChildTx, createChild, parentCanisterId, callCreateCanister, getUserCanisters, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }

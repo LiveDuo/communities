@@ -7,9 +7,9 @@ import { ReactComponent as ChromeLogo } from '../logos/chrome.svg'
 import { ReactComponent as BraveLogo } from '../logos/brave.svg'
 import { ReactComponent as FirefoxLogo } from '../logos/firefox.svg'
 
-const WalletModal = () =>  {
+const WalletModal = ({modalDisclosure}) =>  {
   
-  const {modalDisclosure, connect} = useContext(IdentityContext)
+  const {connect} = useContext(IdentityContext)
   const [plugInstalled, setPlugInstalled] = useState()
 
   useEffect(() => {

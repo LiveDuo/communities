@@ -1,4 +1,5 @@
-import { icHost, isLocal } from '../agents'
+import { isLocal } from './url'
+import { icHost } from './agent'
 
 const getPrincipalUrl = (childPrincipal) => {
 	if (isLocal)

@@ -1,30 +1,22 @@
-import { createContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useState, useCallback, useEffect } from 'react'
 
-import { createParentActor } from '../agents/parent'
+import { useToast } from '@chakra-ui/react'
 
-import { useToast, useDisclosure } from '@chakra-ui/react'
+import { parentCanisterId } from './parent'
+import { ledgerCanisterId } from './ledger'
 
-import { ledgerCanisterId, createLedgerActorPlug } from '../agents/ledger'
-import { parentCanisterId, createParentActorPlug } from '../agents/parent'
-
-import { isLocal } from '../agents'
+import { isLocal } from '../utils/url'
 
 const IdentityContext = createContext()
 
 const IdentityProvider = ({ children }) => {
-
-	const [parentActor, setParentActor] = useState()
-	const [parentActorPlug, setParentActorPlug] = useState()
-	const [ledgerActorPlug, setLedgerActorPlug] = useState()
 
 	const [walletConnected, setWalletConnected] = useState(false)
 	const [userPrincipal, setUserPrincipal] = useState('')
 	const [host, setHost] = useState('')
 	const toast = useToast()
 
-	const modalDisclosure = useDisclosure()
-
-	const loadPlug = useCallback(async () => {
+	const loadWallet = useCallback(async () => {
 		// setIsLocalhost(window.location.hostname.endsWith('localhost'))
 		const connected = await window.ic.plug.isConnected()
 		if (!connected) return
@@ -42,7 +34,6 @@ const IdentityProvider = ({ children }) => {
 		try {
 			const hasAllowed = await window.ic?.plug?.requestConnect({ host, whitelist })
 			const principal = await window.ic?.plug.getPrincipal()
-			await loadActors()
 			setUserPrincipal(principal.toString())
 			setWalletConnected(!!hasAllowed)
 			setHost(window.ic?.plug.sessionManager.host)
@@ -69,27 +60,13 @@ const IdentityProvider = ({ children }) => {
 		toast({ description: 'Disconnected' })
 	}
 
-	const loadActors = useCallback(async () => {
-		const _parentActor = createParentActor(null)
-		setParentActor(_parentActor)
-
-		const connected = await window.ic.plug.isConnected()
-		if (connected) {
-			const _parentActorPlug = await createParentActorPlug()
-			setParentActorPlug(_parentActorPlug)
-			
-			if (ledgerCanisterId) {
-				const _ledgerActorPlug = await createLedgerActorPlug()
-				setLedgerActorPlug(_ledgerActorPlug)
-			}
+	useEffect(()=>{
+		if (window.ic?.plug) {
+			loadWallet()
 		}
-	}, [])
-	
-	useEffect(() => {
-		loadActors()
-	}, [loadActors])
+	},[loadWallet])
 
-	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect, loadPlug, modalDisclosure }
+	const value = { walletConnected, userPrincipal, host, connect, disconnect, loadWallet }
 
 	return (
 		<IdentityContext.Provider value={value}>

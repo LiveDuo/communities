@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from 'react'
-import { Box, useToast} from '@chakra-ui/react'
+import { Box, useToast, useDisclosure} from '@chakra-ui/react'
 
 import { ParentContext } from '../store/parent'
 import { LedgerContext } from '../store/ledger'
@@ -7,7 +7,7 @@ import { IdentityContext } from '../store/identity'
 
 import { getAccountId } from '../utils/account'
 
-import { isLocal } from '../agents'
+import { isLocal } from '../utils/url'
 
 import OnBoarding from '../app/OnBoarding'
 import UserCommunities from '../app/UserCommunities'
@@ -20,8 +20,9 @@ const CREATE_CHILD_COST = 1 * 1e8
 
 const App = () => {
 
-	const { walletConnected, userPrincipal, parentActorPlug, modalDisclosure, loadPlug } = useContext(IdentityContext)
-	const { parentCanisterId, getCreateChildTx, getUserCanisters } = useContext(ParentContext)
+	const modalDisclosure = useDisclosure()
+	const { walletConnected, userPrincipal } = useContext(IdentityContext)
+	const { parentActorPlug, parentCanisterId, getCreateChildTx, getUserCanisters } = useContext(ParentContext)
 	const { balance, getTransferIcpTx, ledgerCanisterId } = useContext(LedgerContext)
 	const [childPrincipals, setChildPrincipals] = useState([])
 
@@ -58,17 +59,11 @@ const App = () => {
 			getUserCanisters().then(canisters => setChildPrincipals(canisters))
 	}, [parentActorPlug, getUserCanisters])
 
-	useEffect(()=>{
-		if (window.ic?.plug) {
-			loadPlug()
-		}
-	},[loadPlug])
-
 	return (
 
 	<Box>
     <Header />
-    <WalletModal/>
+    <WalletModal modalDisclosure={modalDisclosure}/>
     <Box m="40px" mt="80px" textAlign="center">
 		<Box m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded">
 			{childPrincipals?.length > 0 ? <UserCommunities  createChildBatch={createChildBatch} childPrincipals={childPrincipals}/> : <OnBoarding createChildBatch={createChildBatch}/> }
