@@ -6,8 +6,16 @@ import { Actor } from '@dfinity/agent'
 import { getAgent, icHost } from '../utils/agent'
 
 import { IdentityContext } from './identity'
+import { LedgerContext, ledgerCanisterId } from './ledger'
+
+import { getAccountId } from '../utils/account'
+import { isLocal } from '../utils/url'
 
 export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
+
+const CREATE_CHILD_COST = 1 * 1e8
+
+/* global BigInt */
 
 const idlParentFactory = ({ IDL }) => {
 
@@ -28,7 +36,9 @@ const ParentProvider = ({ children }) => {
 	const [loading, setLoading] = useState()
 	const [parentActor, setParentActor] = useState()
 	const [parentActorPlug, setParentActorPlug] = useState()
-	const { walletConnected, createActor } = useContext(IdentityContext)
+	const [childPrincipals, setChildPrincipals] = useState([])
+	const { walletConnected, walletDetected, createActor, userPrincipal, batchTransactions, walletDisclosure } = useContext(IdentityContext)
+	const { balance, getTransferIcpTx } = useContext(LedgerContext)
 
 	const loadActor = useCallback(async () => {
 
@@ -38,7 +48,7 @@ const ParentProvider = ({ children }) => {
 
 		const actorPlug = await createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
 		setParentActorPlug(actorPlug)
-	}, [])
+	}, [createActor])
 	
 	useEffect(() => {
 		if (walletConnected) {
@@ -53,7 +63,7 @@ const ParentProvider = ({ children }) => {
 		return childPrincipal
 	}
 
-	const getUserCanisters = async () => {
+	const getUserCanisters = useCallback(async () => {
 		try {
 			const response = await parentActorPlug.get_user_canisters()
       return response.map((c) => {
@@ -68,7 +78,7 @@ const ParentProvider = ({ children }) => {
 			const description = error.result?.reject_message ?? 'Response failed'
 			toast({ description, status: 'error' })
 		}
-	}
+	}, [toast, parentActorPlug])
 
 	const callCreateCanister = async () => {
 		try {
@@ -93,7 +103,36 @@ const ParentProvider = ({ children }) => {
 		onFail: (_res) => toast({ description: 'Something went wrong', status: 'error' })
 	})
 
-	const value = { parentActor, parentActorPlug, getCreateChildTx, createChild, parentCanisterId, callCreateCanister, getUserCanisters, loading, setLoading }
+	const createChildBatch = async () => {
+    	if (!walletDetected || !walletConnected) {
+			walletDisclosure.onOpen()
+			return
+		}
+
+		const interval = setInterval(() => getUserCanisters().then(c => setChildPrincipals(c)), !isLocal ? 5000 : 1000)
+
+		const onTransfer = () => toast({ description: `Transfer success` })
+		const onCreate = () => toast({ description: `Created canister` })
+
+		const accountId = getAccountId(parentCanisterId, userPrincipal)
+		const transferTx = balance < CREATE_CHILD_COST ? [getTransferIcpTx({accountId, amount: BigInt(CREATE_CHILD_COST)}, onTransfer)] : []
+		try {
+			const txs = ledgerCanisterId ? [...transferTx, getCreateChildTx(null, onCreate)] : [getCreateChildTx(null, onCreate)]
+			await batchTransactions(txs)
+		} catch (error) {
+			const description = error.message ?? 'Transaction failed'
+			toast({ description, status: 'error' })
+		}
+
+		clearInterval(interval)
+	}
+
+	useEffect(() => {
+		if (parentActorPlug)
+			getUserCanisters().then(canisters => setChildPrincipals(canisters))
+	}, [parentActorPlug, getUserCanisters])
+
+	const value = { createChildBatch, childPrincipals, getCreateChildTx, createChild, parentCanisterId, callCreateCanister, getUserCanisters, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }

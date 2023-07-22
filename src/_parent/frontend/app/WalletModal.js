@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
 import { IdentityContext } from '../store/identity'
 import { Modal, ModalFooter, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Box,} from '@chakra-ui/react'
 import { Text, Button, Link } from '@chakra-ui/react'
@@ -7,12 +7,12 @@ import { ReactComponent as ChromeLogo } from '../logos/chrome.svg'
 import { ReactComponent as BraveLogo } from '../logos/brave.svg'
 import { ReactComponent as FirefoxLogo } from '../logos/firefox.svg'
 
-const WalletModal = ({modalDisclosure}) =>  {
+const WalletModal = () =>  {
   
-  const {connect, walletDetected} = useContext(IdentityContext)
+  const {connect, walletDetected, walletDisclosure} = useContext(IdentityContext)
 
   return (
-    <Modal isOpen={modalDisclosure.isOpen} onClose={modalDisclosure.onClose} isCentered>
+    <Modal isOpen={walletDisclosure.isOpen} onClose={walletDisclosure.onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>{walletDetected ? 'Connect Plug Wallet' : 'You\'d need a wallet'}</ModalHeader>

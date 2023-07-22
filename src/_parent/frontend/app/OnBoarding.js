@@ -6,6 +6,7 @@ import { IdentityContext } from '../store/identity'
 import { LedgerContext } from '../store/ledger'
 
 import { isLocal } from '../utils/url'
+import { ParentContext } from '../store/parent'
 
 const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm'
 const transakUrl = 'https://global.transak.com/'
@@ -17,12 +18,13 @@ const BlobBackground = ({fill}) => (
   </svg>
 )
 
-const OnBoarding = ({ createChildBatch }) => {
+const OnBoarding = () => {
 
   const [userFlowStep, setUserFlowStep] = useState()
 
   const { walletConnected, connect, walletDetected } = useContext(IdentityContext)
   const { balance } = useContext(LedgerContext)
+  const { createChildBatch } = useContext(ParentContext)
 
   useEffect(() => {
 		if(!walletDetected) {
@@ -34,7 +36,7 @@ const OnBoarding = ({ createChildBatch }) => {
 		} else if(isLocal || balance > 0) {
       setUserFlowStep('deploy-community')
     }
-	},[walletConnected, balance])
+	},[walletConnected, walletDetected, balance])
 
   return (
     <Box p="120px 60px">

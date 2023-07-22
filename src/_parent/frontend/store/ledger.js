@@ -41,7 +41,7 @@ const LedgerProvider = ({ children }) => {
 		if (!ledgerCanisterId) return
 		const actor = await createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
 		setLedgerActorPlug(actor)
-	}, [])
+	}, [createActor])
 	
 	useEffect(() => {
 		if (walletConnected) {

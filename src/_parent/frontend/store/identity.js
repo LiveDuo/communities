@@ -1,6 +1,6 @@
 import { createContext, useState, useCallback, useEffect } from 'react'
 
-import { useToast } from '@chakra-ui/react'
+import { useToast, useDisclosure } from '@chakra-ui/react'
 
 import { parentCanisterId } from './parent'
 import { ledgerCanisterId } from './ledger'
@@ -16,6 +16,7 @@ const IdentityProvider = ({ children }) => {
 	const [userPrincipal, setUserPrincipal] = useState('')
 	const [host, setHost] = useState('')
 	const toast = useToast()
+	const walletDisclosure = useDisclosure()
 
 	const loadWallet = useCallback(async () => {
 		
@@ -78,9 +79,9 @@ const IdentityProvider = ({ children }) => {
 		if (walletDetected) {
 			loadWallet()
 		}
-	},[loadWallet])
+	},[loadWallet, walletDetected])
 
-	const value = { createActor, userPrincipal, host, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
+	const value = { walletDisclosure, createActor, userPrincipal, host, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
 
 	return (
 		<IdentityContext.Provider value={value}>

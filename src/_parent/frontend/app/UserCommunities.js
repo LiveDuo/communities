@@ -8,9 +8,13 @@ import { timeSince } from '../utils/time'
 import { getPrincipalUrl } from '../utils/principal'
 
 import { IdentityContext } from '../store/identity'
+import { ParentContext } from '../store/parent'
 
 
-const UserCommunities = ({ childPrincipals, createChildBatch }) => {
+const UserCommunities = () => {
+
+	const { walletConnected, userPrincipal } = useContext(IdentityContext)
+	const { createChildBatch, childPrincipals } = useContext(ParentContext)
 
 	const getStateColor = (state) => {
 		if (state === 'Preparing') return 'green'
@@ -20,7 +24,6 @@ const UserCommunities = ({ childPrincipals, createChildBatch }) => {
 		else if (state === 'Ready') return 'purple'
 	}
 
-	const { walletConnected, userPrincipal } = useContext(IdentityContext)
 	return (
 		<Box  p="20px 0px">
 			{!walletConnected ?
