@@ -20,6 +20,8 @@ const IdentityProvider = ({ children }) => {
 	const toast = useToast()
 	const walletDisclosure = useDisclosure()
 
+	const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
+
 	const loadWallet = useCallback(async () => {
 		
 		// check connected
@@ -37,8 +39,9 @@ const IdentityProvider = ({ children }) => {
 		setWalletDetected(!!wallet_object)
 	}, [])
 	
-	const createActor = (...params) => {
-		return wallet_object.createActor(...params)
+	const createActor = (options) => {
+		options.host = host
+		return wallet_object.createActor(options)
 	}
 
 	const batchTransactions = (...params) => {
@@ -46,7 +49,6 @@ const IdentityProvider = ({ children }) => {
 	}
 
 	const connect = async () => {
-		const host = isLocal === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
 		const whitelist = ledgerCanisterId ? [ledgerCanisterId, parentCanisterId] : [parentCanisterId]
 		try {
 			const hasAllowed = await wallet_object?.requestConnect({ host, whitelist })
@@ -66,7 +68,7 @@ const IdentityProvider = ({ children }) => {
 
 	const disconnect = async () => {
 		// not resolving
-		// await wallet_object.disconnect()
+		await wallet_object.disconnect()
 
 		setUserPrincipal('')
 		setWalletConnected(false)
