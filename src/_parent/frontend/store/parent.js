@@ -56,43 +56,26 @@ const ParentProvider = ({ children }) => {
 		}
 	}, [loadActor, walletConnected])
 
-	const createChild = async () => {
-		setLoading(true)
-		const {Ok: childPrincipal} = await parentActor.create_child()
-		setLoading(false)
-		return childPrincipal
-	}
+	// const createChild = async () => {
+	// 	setLoading(true)
+	// 	const {Ok: childPrincipal} = await parentActor.create_child()
+	// 	setLoading(false)
+	// 	return childPrincipal
+	// }
 
-	const getUserCanisters = useCallback(async () => {
-		try {
-			const response = await parentActorPlug.get_user_canisters()
-      return response.map((c) => {
-        const canister_id = c.id.length > 0 ? c.id[0].toString() : "";
-        return {
-          id: canister_id,
-          timestamp: new Date(Number(c.timestamp / 1000n / 1000n)),
-          state: Object.keys(c.state)[0],
-        };
-      });
-		} catch (error) {
-			const description = error.result?.reject_message ?? 'Response failed'
-			toast({ description, status: 'error' })
-		}
-	}, [toast, parentActorPlug])
-
-	const callCreateCanister = async () => {
-		try {
-			const response = await parentActorPlug.create_child()
-			if (response.Ok) {
-				toast({ description: `Response: ${response.Ok}` })
-			} else {
-				toast({ description: `Response: ${response.Err}`, status: 'error' })
-			}
-		} catch (error) {
-			const description = error.result?.reject_message ?? 'Response failed'
-			toast({ description, status: 'error' })
-		}
-	}
+	// const callCreateCanister = async () => {
+	// 	try {
+	// 		const response = await parentActorPlug.create_child()
+	// 		if (response.Ok) {
+	// 			toast({ description: `Response: ${response.Ok}` })
+	// 		} else {
+	// 			toast({ description: `Response: ${response.Err}`, status: 'error' })
+	// 		}
+	// 	} catch (error) {
+	// 		const description = error.result?.reject_message ?? 'Response failed'
+	// 		toast({ description, status: 'error' })
+	// 	}
+	// }
 
 	const getCreateChildTx = (_params, callback = () => {}) => ({
 		idl: idlParentFactory,
@@ -128,12 +111,29 @@ const ParentProvider = ({ children }) => {
 		clearInterval(interval)
 	}
 
+	const getUserCanisters = useCallback(async () => {
+		try {
+			const response = await parentActorPlug.get_user_canisters()
+      return response.map((c) => {
+        const canister_id = c.id.length > 0 ? c.id[0].toString() : "";
+        return {
+          id: canister_id,
+          timestamp: new Date(Number(c.timestamp / 1000n / 1000n)),
+          state: Object.keys(c.state)[0],
+        };
+      });
+		} catch (error) {
+			const description = error.result?.reject_message ?? 'Response failed'
+			toast({ description, status: 'error' })
+		}
+	}, [toast, parentActorPlug])
+	
 	useEffect(() => {
 		if (parentActorPlug)
 			getUserCanisters().then(canisters => setChildPrincipals(canisters))
 	}, [parentActorPlug, getUserCanisters])
 
-	const value = { createChildBatch, childPrincipals, getCreateChildTx, createChild, parentCanisterId, callCreateCanister, getUserCanisters, loading, setLoading }
+	const value = { createChildBatch, childPrincipals, getUserCanisters, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }
