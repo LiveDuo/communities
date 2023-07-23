@@ -16,7 +16,7 @@ const IdentityProvider = ({ children }) => {
 
 	const [walletConnected, setWalletConnected] = useState(false)
 	const [walletDetected, setWalletDetected] = useState(false)
-	const [userPrincipal, setUserPrincipal] = useState('')
+	const [userPrincipal, setUserPrincipal] = useState()
 	const toast = useToast()
 	const walletDisclosure = useDisclosure()
 
@@ -70,7 +70,7 @@ const IdentityProvider = ({ children }) => {
 		// not resolving
 		await wallet_object.disconnect()
 
-		setUserPrincipal('')
+		setUserPrincipal()
 		setWalletConnected(false)
 
 		toast({ description: 'Disconnected' })

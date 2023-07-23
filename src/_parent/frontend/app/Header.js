@@ -10,7 +10,7 @@ const Header = () => {
   const {walletConnected, disconnect, host, userPrincipal } = useContext(IdentityContext)
   const { balance } = useContext(LedgerContext)
 
-  const userPrincipalShorten = userPrincipal.slice(0, 5) + '...' + userPrincipal.slice(-3)
+  const userPrincipalShorten = userPrincipal?.slice(0, 5) + '...' + userPrincipal?.slice(-3)
 
   return (
     <Flex justifyContent="center" alignItems="center" m="20px">
