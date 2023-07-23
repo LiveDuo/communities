@@ -3,8 +3,8 @@
 
 ```js
 
-await window.ic.infinityWallet.isConnected()
-await window.ic.infinityWallet.requestConnect({ whitelist: ['rrkah-fqaaa-aaaaa-aaaaq-cai'] })
+await window.ic.plug.isConnected()
+await window.ic.plug.requestConnect({ whitelist: ['rrkah-fqaaa-aaaaa-aaaaq-cai'] })
 
 const interfaceFactory = ({ IDL }) => {
 
@@ -16,11 +16,11 @@ const interfaceFactory = ({ IDL }) => {
 		'create_child': IDL.Func([], [IDL.Variant({ Ok: IDL.Principal, Err: IDL.Text })], []), // Result<Principal, String>
 	})
 }
-const actor = await window.ic.infinityWallet.createActor({ canisterId: 'rrkah-fqaaa-aaaaa-aaaaq-cai', interfaceFactory, host: "http://localhost:8000/" })
+const actor = await window.ic.plug.createActor({ canisterId: 'rrkah-fqaaa-aaaaa-aaaaq-cai', interfaceFactory, host: "http://localhost:8000/" })
 
 await actor.create_child()
 await actor.get_user_canisters()
 
-await window.ic.infinityWallet.disconnect()
+await window.ic.plug.disconnect()
 
 ```
