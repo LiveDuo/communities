@@ -134,7 +134,7 @@ const ParentProvider = ({ children }) => {
 			getUserCanisters().then(canisters => setChildPrincipals(canisters))
 	}, [parentActorPlug, getUserCanisters])
 
-	const value = { createChildBatch, childPrincipals, getUserCanisters, loading, setLoading }
+	const value = { parentActor, createChildBatch, childPrincipals, getUserCanisters, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }
