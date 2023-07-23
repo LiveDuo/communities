@@ -9,7 +9,7 @@ import { isLocal } from '../utils/url'
 
 const IdentityContext = createContext()
 
-const wallet_name = 'plug' // or 'plug'
+const wallet_name = 'plug' // or 'infinityWallet'
 const wallet_object = window.ic?.[wallet_name]
 
 const IdentityProvider = ({ children }) => {
