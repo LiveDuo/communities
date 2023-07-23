@@ -33,12 +33,14 @@ const ParentContext = createContext()
 const ParentProvider = ({ children }) => {
 
 	const toast = useToast()
-	const [loading, setLoading] = useState()
-	const [parentActor, setParentActor] = useState()
-	const [parentActorPlug, setParentActorPlug] = useState()
-	const [childPrincipals, setChildPrincipals] = useState([])
+
 	const { walletConnected, walletDetected, createActor, userPrincipal, batchTransactions, walletDisclosure } = useContext(IdentityContext)
 	const { balance, getTransferIcpTx } = useContext(LedgerContext)
+
+	const [parentActorPlug, setParentActorPlug] = useState(null)
+	const [childPrincipals, setChildPrincipals] = useState(null)
+	const [parentActor, setParentActor] = useState(null)
+	const [loading, setLoading] = useState(false)
 
 	const loadActor = useCallback(async () => {
 

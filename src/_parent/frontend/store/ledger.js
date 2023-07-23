@@ -30,11 +30,13 @@ const LedgerContext = createContext()
 
 const LedgerProvider = ({ children }) => {
 
-	const toast = useToast()
-	const [loading, setLoading] = useState()
 	const { userPrincipal, walletConnected, createActor } = useContext(IdentityContext)
-	const [ledgerActorPlug, setLedgerActorPlug] = useState()
+	
+	const [ledgerActorPlug, setLedgerActorPlug] = useState(null)
+	const [loading, setLoading] = useState(false)
 	const [balance, setBalance] = useState(null)
+
+	const toast = useToast()
 
 	const loadActor = useCallback(async () => {
 

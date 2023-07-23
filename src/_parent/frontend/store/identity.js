@@ -16,9 +16,11 @@ const IdentityProvider = ({ children }) => {
 
 	const [walletConnected, setWalletConnected] = useState(false)
 	const [walletDetected, setWalletDetected] = useState(false)
-	const [userPrincipal, setUserPrincipal] = useState()
-	const toast = useToast()
+	const [userPrincipal, setUserPrincipal] = useState(null)
+	
 	const walletDisclosure = useDisclosure()
+
+	const toast = useToast()
 
 	const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
 
