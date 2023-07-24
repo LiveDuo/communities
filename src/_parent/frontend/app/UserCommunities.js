@@ -14,7 +14,7 @@ import { ParentContext } from '../store/parent'
 const UserCommunities = () => {
 
 	const { walletConnected, userPrincipal } = useContext(IdentityContext)
-	const { createChildBatch, childPrincipals } = useContext(ParentContext)
+	const { createChildBatch, userCommunities } = useContext(ParentContext)
 
 	const getStateColor = (state) => {
 		if (state === 'Preparing') return 'green'
@@ -28,8 +28,8 @@ const UserCommunities = () => {
 		<Box  p="20px 0px">
 			{!walletConnected ?
 			<Text>Wallet not connected</Text> :
-			childPrincipals ? 
-				childPrincipals?.length > 0 ?
+			userCommunities ? 
+				userCommunities?.length > 0 ?
 					<>
 						<Flex marginBottom="10px">
 							<Button marginRight="20px" colorScheme={'green'} onClick={createChildBatch}>Deploy Community</Button>
@@ -45,7 +45,7 @@ const UserCommunities = () => {
 									</Tr>
 								</Thead>
 								<Tbody>
-								{childPrincipals?.map((canister, i) => 
+								{userCommunities?.map((canister, i) => 
 									<Tr key={i}>
 										<Td><Tag colorScheme={getStateColor(canister.state)}>{canister.state}</Tag></Td>
 										<Td><Link href={getPrincipalUrl(canister.id)} isExternal>

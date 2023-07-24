@@ -32,7 +32,7 @@ const LedgerProvider = ({ children }) => {
 
 	const { userPrincipal, walletConnected, createActor } = useContext(IdentityContext)
 	
-	const [ledgerActorPlug, setLedgerActorPlug] = useState(null)
+	const [ledgerActor, setLedgerActor] = useState(null)
 	const [loading, setLoading] = useState(false)
 	const [balance, setBalance] = useState(null)
 
@@ -42,7 +42,7 @@ const LedgerProvider = ({ children }) => {
 
 		if (!ledgerCanisterId) return
 		const actor = await createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
-		setLedgerActorPlug(actor)
+		setLedgerActor(actor)
 	}, [createActor])
 	
 	useEffect(() => {
@@ -54,13 +54,13 @@ const LedgerProvider = ({ children }) => {
 	const ledgerBalanceICP = useCallback(async (parentCanisterId, userPrincipal) => {
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
 		try {
-			const response = await ledgerActorPlug.account_balance_dfx({ account: accountId })
+			const response = await ledgerActor.account_balance_dfx({ account: accountId })
 			return Number(response.e8s)
 		} catch (error) {
 			const description = error.result?.reject_message ?? 'Balance failed'
 			toast({ description, status: 'error' })
 		}
-	}, [ledgerActorPlug, toast])
+	}, [ledgerActor, toast])
 
 	const getTransferIcpTx = (params, callback = () => {}) => ({
 		idl: idlLedgerFactory,
@@ -84,12 +84,12 @@ const LedgerProvider = ({ children }) => {
 	}, [ledgerBalanceICP, userPrincipal])
 
 	useEffect(() => {
-		if (ledgerActorPlug) {
+		if (ledgerActor) {
 			getUserBalance()
 		}
-	}, [getUserBalance, ledgerActorPlug])
+	}, [getUserBalance, ledgerActor])
 
-	const value = { balance, ledgerActorPlug, getTransferIcpTx, ledgerBalanceICP, loading, setLoading, ledgerCanisterId }
+	const value = { balance, getTransferIcpTx, ledgerBalanceICP, loading, setLoading, ledgerCanisterId }
 
 	return <LedgerContext.Provider value={value}>{children}</LedgerContext.Provider>
 }

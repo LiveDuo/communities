@@ -10,7 +10,7 @@ import WalletModal from '../app/WalletModal'
 
 const App = () => {
 
-	const { childPrincipals } = useContext(IdentityContext)
+	const { userCommunities } = useContext(IdentityContext)
 
 	return (
 
@@ -19,7 +19,7 @@ const App = () => {
     <WalletModal/>
     <Box m="40px" mt="80px" textAlign="center">
 		<Box m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded">
-			{childPrincipals?.length > 0 ? <UserCommunities/> : <OnBoarding/> }
+			{userCommunities?.length > 0 ? <UserCommunities/> : <OnBoarding/> }
 		</Box>
     </Box>
   </Box>

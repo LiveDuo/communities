@@ -37,19 +37,19 @@ const ParentProvider = ({ children }) => {
 	const { walletConnected, walletDetected, createActor, userPrincipal, batchTransactions, walletDisclosure } = useContext(IdentityContext)
 	const { balance, getTransferIcpTx } = useContext(LedgerContext)
 
-	const [parentActorPlug, setParentActorPlug] = useState(null)
-	const [childPrincipals, setChildPrincipals] = useState(null)
 	const [parentActor, setParentActor] = useState(null)
+	const [userCommunities, setUserCommunities] = useState(null)
 	const [loading, setLoading] = useState(false)
+	// const [parentActorAnonymous, setParentActorAnonymous] = useState(null)
 
 	const loadActor = useCallback(async () => {
 
-		const actorOptions = { agent: getAgent(null), canisterId: parentCanisterId, host: icHost }
-		const actorAnonymous = Actor.createActor(idlParentFactory, actorOptions)
-		setParentActor(actorAnonymous)
+		// const actorOptions = { agent: getAgent(null), canisterId: parentCanisterId, host: icHost }
+		// const actorAnonymous = Actor.createActor(idlParentFactory, actorOptions)
+		// setParentActorAnonymous(actorAnonymous)
 
-		const actorPlug = await createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
-		setParentActorPlug(actorPlug)
+		const actorWallet = await createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
+		setParentActor(actorWallet)
 	}, [createActor])
 	
 	useEffect(() => {
@@ -60,14 +60,14 @@ const ParentProvider = ({ children }) => {
 
 	// const createChild = async () => {
 	// 	setLoading(true)
-	// 	const {Ok: childPrincipal} = await parentActor.create_child()
+	// 	const {Ok: childPrincipal} = await parentActorAnonymous.create_child()
 	// 	setLoading(false)
 	// 	return childPrincipal
 	// }
 
 	// const callCreateCanister = async () => {
 	// 	try {
-	// 		const response = await parentActorPlug.create_child()
+	// 		const response = await parentActor.create_child()
 	// 		if (response.Ok) {
 	// 			toast({ description: `Response: ${response.Ok}` })
 	// 		} else {
@@ -94,7 +94,7 @@ const ParentProvider = ({ children }) => {
 			return
 		}
 
-		const interval = setInterval(() => getUserCanisters().then(c => setChildPrincipals(c)), !isLocal ? 5000 : 1000)
+		const interval = setInterval(() => getUserCanisters().then(c => setUserCommunities(c)), !isLocal ? 5000 : 1000)
 
 		const onTransfer = () => toast({ description: `Transfer success` })
 		const onCreate = () => toast({ description: `Created canister` })
@@ -115,7 +115,7 @@ const ParentProvider = ({ children }) => {
 
 	const getUserCanisters = useCallback(async () => {
 		try {
-			const response = await parentActorPlug.get_user_canisters()
+			const response = await parentActor.get_user_canisters()
 			const canisters = response.map((c) => {
 				const canister_id = c.id.length > 0 ? c.id[0].toString() : ""
 				return {
@@ -129,14 +129,14 @@ const ParentProvider = ({ children }) => {
 			const description = error.result?.reject_message ?? 'Response failed'
 			toast({ description, status: 'error' })
 		}
-	}, [toast, parentActorPlug])
+	}, [toast, parentActor])
 
 	useEffect(() => {
-		if (parentActorPlug)
-			getUserCanisters().then(canisters => setChildPrincipals(canisters))
-	}, [parentActorPlug, getUserCanisters])
+		if (parentActor)
+			getUserCanisters().then(canisters => setUserCommunities(canisters))
+	}, [parentActor, getUserCanisters])
 
-	const value = { parentActor, createChildBatch, childPrincipals, getUserCanisters, loading, setLoading }
+	const value = { createChildBatch, userCommunities, getUserCanisters, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }
