@@ -1,5 +1,6 @@
 import { Actor } from '@dfinity/agent'
-import { icHost, getAgent, isLocal } from '.'
+import { icHost, isLocal } from '../utils/url'
+import { getAgent} from '../utils/agent'
 import { MANAGEMENT_CANISTER_ID } from './management'
 
 export const CHILD_CANISTER_ID =  process.env.REACT_APP_CHILD_CANISTER_ID ?? 'REACT_APP_CHILD_CANISTER_ID'

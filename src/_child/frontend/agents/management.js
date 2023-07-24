@@ -1,5 +1,6 @@
-import { Actor } from "@dfinity/agent";
-import { getAgent, icHost } from ".";
+import { Actor } from "@dfinity/agent"
+import { getAgent } from "../utils/agent"
+import { icHost } from "../utils/url"
 
 export const MANAGEMENT_CANISTER_ID = "aaaaa-aa";
 
