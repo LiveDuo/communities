@@ -76,17 +76,6 @@ const IdentityProvider = ({children}) => {
       return !!window.ic?.[walletIcName]
   }, [])
 
-  const createActor = useCallback(async(options) => {
-    if (options.type === 'ic') {
-      await connectWallet('ic')
-      const host = isLocal && 'http://localhost:8000/'
-      const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
-	    return await walletIcObject.createActor(actorOptions)
-    } else {
-      const actorOptions = { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity}
-      return Actor.createActor(options.interfaceFactory, actorOptions)
-    }
-	}, [connectWallet])
 
   const connectWallet = useCallback(async (type) => {
     if (type === 'ic') {
@@ -101,6 +90,20 @@ const IdentityProvider = ({children}) => {
       await walletIcObject.requestConnect({whitelist, host});
     }
   }, [])
+  
+  const createActor = useCallback(async(options) => {
+    if (options.type === 'ic') {
+      await connectWallet('ic')
+      const host = isLocal && 'http://localhost:8000/'
+      const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
+	    return await walletIcObject.createActor(actorOptions)
+    } else {
+      const actorOptions = { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity}
+      return Actor.createActor(options.interfaceFactory, actorOptions)
+    }
+	}, [connectWallet])
+
+
 
   const disconnect = async () => {
     if (account.type === 'Ic') {
