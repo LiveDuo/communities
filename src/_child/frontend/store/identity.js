@@ -83,7 +83,16 @@ const IdentityProvider = ({children}) => {
     clearAccount()
   }
 
-  const value = { identity, account, principal, setUser, disconnect, setAccount, connectIcWallet, createActor, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
+  const IsWalletDetected = useCallback((type) => {
+    if(type === 'evm') 
+      return !!window?.ethereum
+    else if(type === 'svm')
+      return !!window?.solana
+    else if(type === 'ic')
+      return !!window.ic?.[walletIcName]
+  }, [])
+
+  const value = { identity, account, principal, setUser, disconnect, setAccount, connectIcWallet, createActor, IsWalletDetected, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
   
   return (
     <IdentityContext.Provider value={value}>

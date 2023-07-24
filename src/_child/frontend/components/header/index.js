@@ -15,7 +15,7 @@ const Header = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen } = useContext(IdentityContext)
+  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, IsWalletDetected } = useContext(IdentityContext)
   const { getProfileByAuth, login } = useContext(ChildContext)
 
   useEffect(() => {
@@ -24,15 +24,15 @@ const Header = () => {
   }, [account, getProfileByAuth])
 
   const loginAndSet = async (type) => {
-    if (type === 'evm' && !window?.ethereum) {
+    if (type === 'evm' && IsWalletDetected(type)) {
       onWalletModalOpen()
       setSelectedNetwork(type)
       return
-    } else if (type === 'svm' && !window?.solana) {
+    } else if (type === 'svm' && IsWalletDetected(type)) {
       onWalletModalOpen()
       setSelectedNetwork(type)
       return
-    } else if (type === 'ic' && !window?.ic?.plug) {
+    } else if (type === 'ic' && IsWalletDetected(type)) {
       onWalletModalOpen()
       setSelectedNetwork(type)
       return
