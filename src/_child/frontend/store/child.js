@@ -178,7 +178,7 @@ const ChildProvider = ({ children }) => {
 
 			toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
 		} catch (error) {
-		toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
+			toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
 		}
 	}, [toast, updateIdentity, createActor, getWallet])
 

@@ -18,13 +18,13 @@ const WalletModal = () => {
   const { login } = useContext(ChildContext)
 
   const loginAndSet = async (type) => {
-    if (type === 'evm' && isWalletDetected(type)) {
+    if (type === 'evm' && !isWalletDetected(type)) {
       setSelectedNetwork(type)
       return
-    } else if (type === 'svm' && isWalletDetected(type)) {
+    } else if (type === 'svm' && !isWalletDetected(type)) {
       setSelectedNetwork(type)
       return
-    } else if (type === 'ic' && isWalletDetected(type)) {
+    } else if (type === 'ic' && !isWalletDetected(type)) {
       setSelectedNetwork(type)
       return
     }
