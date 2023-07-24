@@ -14,17 +14,17 @@ import PhantomLogo from '../../logos/phantom.svg'
 import PlugLogo from '../../logos/plug.png'
 
 const WalletModal = () => {
-  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork, IsWalletDetected} = useContext(IdentityContext)
+  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork, isWalletDetected} = useContext(IdentityContext)
   const { login } = useContext(ChildContext)
 
   const loginAndSet = async (type) => {
-    if (type === 'evm' && IsWalletDetected(type)) {
+    if (type === 'evm' && isWalletDetected(type)) {
       setSelectedNetwork(type)
       return
-    } else if (type === 'svm' && IsWalletDetected(type)) {
+    } else if (type === 'svm' && isWalletDetected(type)) {
       setSelectedNetwork(type)
       return
-    } else if (type === 'ic' && IsWalletDetected(type)) {
+    } else if (type === 'ic' && isWalletDetected(type)) {
       setSelectedNetwork(type)
       return
     }
@@ -36,7 +36,7 @@ const WalletModal = () => {
 		<Modal isOpen={isWalletModalOpen} onClose={onWalletModalClose} isCentered>
 			<ModalOverlay />
 			<ModalContent minW="480px">
-				<ModalHeader>{!selectedNetwork && (IsWalletDetected('evm') || IsWalletDetected('svm') ||  IsWalletDetected('ic')) ? 'Select a network' : 'You\'d need a wallet'} </ModalHeader>
+				<ModalHeader>{!selectedNetwork && (isWalletDetected('evm') || isWalletDetected('svm') ||  isWalletDetected('ic')) ? 'Select a network' : 'You\'d need a wallet'} </ModalHeader>
 				<ModalCloseButton />
 				<ModalBody>
           {selectedNetwork ? 
@@ -57,15 +57,15 @@ const WalletModal = () => {
                 </Box>}
             </Box> : 
             <Box>
-              {(IsWalletDetected('evm') || IsWalletDetected('svm') ||  IsWalletDetected('ic')) ?
+              {(isWalletDetected('evm') || isWalletDetected('svm') ||  isWalletDetected('ic')) ?
               <Box mb="20px">
                 <Text mb="20px">
                   Sign in with your wallet. Available wallets:
                 </Text>
                 <Box>
-                  {IsWalletDetected('evm') && <Button ml="8px" leftIcon={<Icon as={EthereumLogo}/>} onClick={() => loginAndSet('evm')}>Ethereum</Button>}
-                  {IsWalletDetected('svm') && <Button ml="8px" leftIcon={<Icon as={SolanaLogo}/>} onClick={() => loginAndSet('svm')}>Solana</Button>}
-                  {IsWalletDetected('ic') && <Button ml="8px" leftIcon={<Icon as={DfinityLogo}/>} onClick={() => loginAndSet('ic')}>Internet Computer</Button>}
+                  {isWalletDetected('evm') && <Button ml="8px" leftIcon={<Icon as={EthereumLogo}/>} onClick={() => loginAndSet('evm')}>Ethereum</Button>}
+                  {isWalletDetected('svm') && <Button ml="8px" leftIcon={<Icon as={SolanaLogo}/>} onClick={() => loginAndSet('svm')}>Solana</Button>}
+                  {isWalletDetected('ic') && <Button ml="8px" leftIcon={<Icon as={DfinityLogo}/>} onClick={() => loginAndSet('ic')}>Internet Computer</Button>}
                 </Box>
               </Box> :
                 <Box mb="20px">

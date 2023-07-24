@@ -43,7 +43,7 @@ const IdentityProvider = ({children}) => {
     setIdentity(data?.identity)
   }, [])
 
-  const setUser = useCallback( async (identity, account) => {
+  const setUser = useCallback(async (identity, account) => {
     const principal = identity ? identity.getPrincipal() : await walletIcObject.getPrincipal()
     setPrincipal(principal)
     saveAccount(identity, account)
@@ -51,40 +51,42 @@ const IdentityProvider = ({children}) => {
     setIdentity(identity)
   },[])
 
-  const connectIcWallet = useCallback( async ()=>{
-    const isConnected = await walletIcObject.isConnected()
-    if(!isConnected) {
+  const connectWallet = useCallback(async (type) => {
+    if (type === 'ic') {
+      
+      // check connected
+      const isConnected = await walletIcObject.isConnected()
+      if(isConnected) return
+
+      // request connect
       const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
       const whitelist = [CHILD_CANISTER_ID, MANAGEMENT_CANISTER_ID]
       await walletIcObject.requestConnect({whitelist, host});
     }
-  },[])
+  }, [])
 
   const createActor = useCallback(async(options) => {
-    if(options.type === 'ic') {
-      await connectIcWallet()
+    if (options.type === 'ic') {
+      await connectWallet('ic')
       const host = isLocal && 'http://localhost:8000/'
 	    return await walletIcObject.createActor({canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host})
     } else {
-      return Actor.createActor(options.interfaceFactory, { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity})
+      const actorOptions = { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity}
+      return Actor.createActor(options.interfaceFactory, actorOptions)
     }
-	},[connectIcWallet])
+	},[connectWallet])
 
-  
-  const disconnect = async () => { // disconnect
+  const disconnect = async () => {
     if (account.type === 'Ic') {
       const isConnected = await walletIcObject.isConnected()
-      if(isConnected) {
-        const p1 = new Promise((r) => setTimeout(() => r(), 1000))
-        const p2 = walletIcObject.disconnect() // not resolving
-        await Promise.race([p1, p2]) // hacky fix
-      }
+      if (!isConnected) return
+      await walletIcObject.disconnect() // not resolving
     }
     clearAccount()
   }
 
-  const IsWalletDetected = useCallback((type) => {
-    if(type === 'evm') 
+  const isWalletDetected = useCallback((type) => {
+    if (type === 'evm') 
       return !!window?.ethereum
     else if(type === 'svm')
       return !!window?.solana
@@ -92,12 +94,9 @@ const IdentityProvider = ({children}) => {
       return !!window.ic?.[walletIcName]
   }, [])
 
-  const value = { identity, account, principal, setUser, disconnect, setAccount, connectIcWallet, createActor, IsWalletDetected, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
+  const value = { identity, account, principal, setUser, disconnect, setAccount, createActor, isWalletDetected, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
   
-  return (
-    <IdentityContext.Provider value={value}>
-      {children}
-    </IdentityContext.Provider>
-  )
+  return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
+  
 }
 export { IdentityContext, IdentityProvider }
