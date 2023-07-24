@@ -11,6 +11,7 @@ import { MANAGEMENT_CANISTER_ID } from './management'
 import { getAgent, icHost } from '../utils/agent'
 import { isLocal} from '../utils/url'
 
+import { ethers } from 'ethers'
 
 const walletIcName = 'infinityWallet' // or 'plug'
 const walletIcObject = window.ic?.[walletIcName]
@@ -43,12 +44,27 @@ const IdentityProvider = ({children}) => {
     setIdentity(data?.identity)
   }, [])
 
-  const setUser = useCallback(async (identity, account) => {
-    const principal = identity ? identity.getPrincipal() : await walletIcObject.getPrincipal()
-    setPrincipal(principal)
-    saveAccount(identity, account)
-    setAccount(account)
+  const updateIdentity = useCallback(async (type, identity) => {
+    let _account, _principal
+    if(type === 'Evm') {
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      const signer = await provider.getSigner()
+      const address = await signer.getAddress()
+      _account = {type: 'Evm', address: address}
+      _principal = identity.getPrincipal()
+    } else if( type === 'Evm') {
+      const phantom = window.solana
+      const address = phantom.publicKey.toString()
+      _account = {type: 'Svm', address: address}
+      _principal = identity.getPrincipal()
+    } else if (type === 'Ic') {
+      _principal = await walletIcObject.getPrincipal()
+      _account = {address: _principal.toString(), type: 'Ic'}
+    }
+    setAccount(_account)
+    setPrincipal(_principal)
     setIdentity(identity)
+    saveAccount(identity, _account)
   }, [])
 
   const isWalletDetected = useCallback((type) => {
@@ -95,7 +111,7 @@ const IdentityProvider = ({children}) => {
     clearAccount()
   }
 
-  const value = { identity, account, principal, setUser, disconnect, setAccount, createActor, isWalletDetected, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
+  const value = { identity, account, principal, updateIdentity, disconnect, setAccount, createActor, isWalletDetected, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
   
   return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
   

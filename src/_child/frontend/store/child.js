@@ -95,7 +95,7 @@ const ChildProvider = ({ children }) => {
 	const [loading, setLoading] = useState()
 	const [profile, setProfile] = useState()
 
-	const { identity, account, setUser, createActor } = useContext(IdentityContext)
+	const { identity, account, createActor, updateIdentity } = useContext(IdentityContext)
 
 	const toast = useToast()
 
@@ -157,31 +157,28 @@ const ChildProvider = ({ children }) => {
 
 	const loginWithEvm = useCallback(async () => {
 		try {
-			// get identity
-			const provider = new ethers.providers.Web3Provider(window.ethereum);
-			await provider.send("eth_requestAccounts", []);
-			const signer = await provider.getSigner()
-			const identity = getIdentityFromSignature() // generate Ed25519 identity
-			const loginMessage = getLoginMessage(identity.getPrincipal().toString())
-			const signature = await signer.signMessage(loginMessage)// sign with metamask
-			
-			// link address
-			const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
-			const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
-			const response = await _childActor.create_profile(auth)
-			const profile = response.Ok
-			setProfile(profile)
+		// get identity
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = await provider.getSigner()
+		const identity = getIdentityFromSignature() // generate Ed25519 identity
+		const loginMessage = getLoginMessage(identity.getPrincipal().toString())
+		const signature = await signer.signMessage(loginMessage)// sign with metamask
+		
+		// link address
+		const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
+		const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
+		const response = await _childActor.create_profile(auth)
+		const profile = response.Ok
+		setProfile(profile)
 
-			// update store
-			const address = await signer.getAddress()
-			const account = {address, type: 'Evm'}
-			setUser(identity, account)
+		updateIdentity('Evm', identity)
 
 			toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
 		} catch (error) {
 		toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
 		}
-	}, [toast, setUser, createActor])
+	}, [toast, updateIdentity, createActor])
 
   const loginWithSvm = useCallback(async () => {
     try {
@@ -205,17 +202,14 @@ const ChildProvider = ({ children }) => {
       const profile = response.Ok
       setProfile(profile)
 
-			// update store
-      const address = phantom.publicKey.toString()
-			const account = {address, type: 'Svm'}
-			setUser(identity, account)
+			updateIdentity('Svm', identity)
 
       toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
     } catch (error) {
       console.log(error)
       toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
     }
-	}, [toast, setUser, createActor])
+	}, [toast, updateIdentity, createActor])
 
   const loginWithIc = useCallback(async () => {
     try {
@@ -223,16 +217,15 @@ const ChildProvider = ({ children }) => {
       const response = await _childActor.create_profile({Ic: null});
       const profile = response.Ok
 			setProfile(profile)
-      const principal = await window.ic.infinityWallet.getPrincipal()
-			const account = {address: principal.toString(), type: 'Ic'}
-			setUser(undefined, account)
+
+			updateIdentity('Ic', undefined)
       
       toast({ title: 'Signed in with Internet Computer', status: 'success', duration: 4000, isClosable: true })
     } catch (error) {
       console.log(error)
       toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
     }
-	}, [toast, setUser, createActor])
+	}, [toast, createActor, updateIdentity])
 
 	const login = async (type) => {
     if(type === 'evm') {
