@@ -4,7 +4,7 @@
 ```js
 
 await window.ic.plug.isConnected()
-await window.ic.plug.requestConnect({ whitelist: ['rrkah-fqaaa-aaaaa-aaaaq-cai'] })
+await window.ic.plug.requestConnect({ whitelist: ['rrkah-fqaaa-aaaaa-aaaaq-cai'], host: 'http://localhost:8000/' })
 
 const interfaceFactory = ({ IDL }) => {
 
@@ -13,10 +13,10 @@ const interfaceFactory = ({ IDL }) => {
 
 	return IDL.Service({
 		'get_user_canisters': IDL.Func([], [IDL.Vec(canisterData)], ['query']),
-		'create_child': IDL.Func([], [IDL.Variant({ Ok: IDL.Principal, Err: IDL.Text })], []), // Result<Principal, String>
+		'create_child': IDL.Func([], [IDL.Variant({ Ok: IDL.Principal, Err: IDL.Text })], []),
 	})
 }
-const actor = await window.ic.plug.createActor({ canisterId: 'rrkah-fqaaa-aaaaa-aaaaq-cai', interfaceFactory, host: "http://localhost:8000/" })
+const actor = await window.ic.plug.createActor({ canisterId: 'rrkah-fqaaa-aaaaa-aaaaq-cai', interfaceFactory })
 
 await actor.create_child()
 await actor.get_user_canisters()
