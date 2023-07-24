@@ -27,7 +27,7 @@ const IdentityProvider = ({children}) => {
   const { isOpen: isWalletModalOpen, onOpen: onWalletModalOpen, onClose: onWalletModalClose } = useDisclosure()
   const { isOpen: isUpgradeModalOpen, onOpen: onUpgradeModalOpen, onClose: onUpgradeModalClose } = useDisclosure()
 
-  const loadPrincipal = async (account, identity) => {
+  const updatePrincipal = async (account, identity) => {
     if (!account)
       setPrincipal(null)
     else if (account.type ==='Evm' || account.type ==='Svm')
@@ -38,7 +38,7 @@ const IdentityProvider = ({children}) => {
   
   useEffect(() => {
     const data = loadAccount()
-    loadPrincipal(data?.account, data?.identity)
+    updatePrincipal(data?.account, data?.identity)
     setAccount(data?.account)
     setIdentity(data?.identity)
   }, [])
@@ -50,6 +50,27 @@ const IdentityProvider = ({children}) => {
     setAccount(account)
     setIdentity(identity)
   }, [])
+
+  const isWalletDetected = useCallback((type) => {
+    if (type === 'evm') 
+      return !!window?.ethereum
+    else if(type === 'svm')
+      return !!window?.solana
+    else if(type === 'ic')
+      return !!window.ic?.[walletIcName]
+  }, [])
+
+  const createActor = useCallback(async(options) => {
+    if (options.type === 'ic') {
+      await connectWallet('ic')
+      const host = isLocal && 'http://localhost:8000/'
+      const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
+	    return await walletIcObject.createActor(actorOptions)
+    } else {
+      const actorOptions = { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity}
+      return Actor.createActor(options.interfaceFactory, actorOptions)
+    }
+	}, [connectWallet])
 
   const connectWallet = useCallback(async (type) => {
     if (type === 'ic') {
@@ -65,18 +86,6 @@ const IdentityProvider = ({children}) => {
     }
   }, [])
 
-  const createActor = useCallback(async(options) => {
-    if (options.type === 'ic') {
-      await connectWallet('ic')
-      const host = isLocal && 'http://localhost:8000/'
-      const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
-	    return await walletIcObject.createActor(actorOptions)
-    } else {
-      const actorOptions = { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity}
-      return Actor.createActor(options.interfaceFactory, actorOptions)
-    }
-	}, [connectWallet])
-
   const disconnect = async () => {
     if (account.type === 'Ic') {
       const isConnected = await walletIcObject.isConnected()
@@ -85,15 +94,6 @@ const IdentityProvider = ({children}) => {
     }
     clearAccount()
   }
-
-  const isWalletDetected = useCallback((type) => {
-    if (type === 'evm') 
-      return !!window?.ethereum
-    else if(type === 'svm')
-      return !!window?.solana
-    else if(type === 'ic')
-      return !!window.ic?.[walletIcName]
-  }, [])
 
   const value = { identity, account, principal, setUser, disconnect, setAccount, createActor, isWalletDetected, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
   

@@ -157,26 +157,27 @@ const ChildProvider = ({ children }) => {
 
 	const loginWithEvm = useCallback(async () => {
 		try {
-		// get identity
-		const provider = new ethers.providers.Web3Provider(window.ethereum);
-		await provider.send("eth_requestAccounts", []);
-		const signer = await provider.getSigner()
-		const identity = getIdentityFromSignature() // generate Ed25519 identity
-		const loginMessage = getLoginMessage(identity.getPrincipal().toString())
-		const signature = await signer.signMessage(loginMessage)// sign with metamask
-		
-		// link address
-		const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
-		const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
-		const response = await _childActor.create_profile(auth)
-		const profile = response.Ok
-				setProfile(profile)
+			// get identity
+			const provider = new ethers.providers.Web3Provider(window.ethereum);
+			await provider.send("eth_requestAccounts", []);
+			const signer = await provider.getSigner()
+			const identity = getIdentityFromSignature() // generate Ed25519 identity
+			const loginMessage = getLoginMessage(identity.getPrincipal().toString())
+			const signature = await signer.signMessage(loginMessage)// sign with metamask
+			
+			// link address
+			const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
+			const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
+			const response = await _childActor.create_profile(auth)
+			const profile = response.Ok
+			setProfile(profile)
 
-				const address = await signer.getAddress()
-				const account = {address, type: 'Evm'}
-				setUser(identity, account)
+			// update store
+			const address = await signer.getAddress()
+			const account = {address, type: 'Evm'}
+			setUser(identity, account)
 
-		toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
+			toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
 		} catch (error) {
 		toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
 		}
@@ -204,6 +205,7 @@ const ChildProvider = ({ children }) => {
       const profile = response.Ok
       setProfile(profile)
 
+			// update store
       const address = phantom.publicKey.toString()
 			const account = {address, type: 'Svm'}
 			setUser(identity, account)
