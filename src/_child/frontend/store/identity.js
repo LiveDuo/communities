@@ -80,7 +80,7 @@ const IdentityProvider = ({children}) => {
 
   const isWalletDetected = useCallback((type) => {
     return !!getWallet(type)
-  }, [])
+  }, [getWallet])
 
   const connectWallet = useCallback(async (type) => {
     if (type === 'ic') {
@@ -93,7 +93,7 @@ const IdentityProvider = ({children}) => {
       const whitelist = [CHILD_CANISTER_ID, MANAGEMENT_CANISTER_ID]
       await walletIcObject.requestConnect({whitelist, host});
     }
-  }, [])
+  }, [host])
   
   const createActor = useCallback(async(options) => {
     if (options.type === 'ic') {
@@ -103,7 +103,7 @@ const IdentityProvider = ({children}) => {
       const actorOptions = { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity}
       return Actor.createActor(options.interfaceFactory, actorOptions)
     }
-	}, [connectWallet])
+	}, [host])
 
 
 
@@ -116,7 +116,7 @@ const IdentityProvider = ({children}) => {
     clearAccount()
   }
 
-  const value = { identity, account, principal, updateIdentity, disconnect, setAccount, createActor, isWalletDetected, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
+  const value = { identity, account, principal, updateIdentity, disconnect, setAccount, createActor, isWalletDetected, getWallet, connectWallet, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
   
   return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
   

@@ -95,7 +95,7 @@ const ChildProvider = ({ children }) => {
 	const [loading, setLoading] = useState()
 	const [profile, setProfile] = useState()
 
-	const { identity, account, createActor, updateIdentity, getWallet } = useContext(IdentityContext)
+	const { identity, account, createActor, updateIdentity, getWallet, connectWallet} = useContext(IdentityContext)
 
 	const toast = useToast()
 
@@ -180,7 +180,7 @@ const ChildProvider = ({ children }) => {
 		} catch (error) {
 		toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
 		}
-	}, [toast, updateIdentity, createActor])
+	}, [toast, updateIdentity, createActor, getWallet])
 
   const loginWithSvm = useCallback(async () => {
     try {
@@ -211,7 +211,7 @@ const ChildProvider = ({ children }) => {
       console.log(error)
       toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
     }
-	}, [toast, updateIdentity, createActor])
+	}, [toast, updateIdentity, createActor, getWallet])
 
   const loginWithIc = useCallback(async () => {
     try {
@@ -229,7 +229,7 @@ const ChildProvider = ({ children }) => {
       console.log(error)
       toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
     }
-	}, [toast, createActor, updateIdentity])
+	}, [toast, createActor, updateIdentity, connectWallet])
 
 	const login = async (type) => {
     if(type === 'evm') {
