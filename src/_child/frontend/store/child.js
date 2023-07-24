@@ -101,12 +101,12 @@ const ChildProvider = ({ children }) => {
 
 	const loadActor = useCallback(async ()=>{
 		let _actor
-    if(!account) 
-      _actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: null})
-    else if (account.type ==='Evm' || account.type ==='Svm') 
-      _actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
-    else if(account.type === 'Ic')
-      _actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, type: 'ic'})
+		if(!account) 
+		_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: null})
+		else if (account.type ==='Evm' || account.type ==='Svm') 
+		_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
+		else if(account.type === 'Ic')
+		_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, type: 'ic'})
 		
 		setChildActor(_actor)
   },[account, identity, createActor])
@@ -124,7 +124,6 @@ const ChildProvider = ({ children }) => {
 
 	const createPost = useCallback(async (title, description) => {
 		const response = await childActor.create_post(title, description)
-    console.log(response)
 		const _post = {...response.Ok, last_activity: new Date(Number(response.Ok.timestamp / 1000n / 1000n)), timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
 		setPosts([...posts, _post])
 	},[childActor, posts])
@@ -157,30 +156,30 @@ const ChildProvider = ({ children }) => {
 	}, [childActor])
 
 	const loginWithEvm = useCallback(async () => {
-    try {
-      // get identity
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner()
-      const identity = getIdentityFromSignature() // generate Ed25519 identity
-      const loginMessage = getLoginMessage(identity.getPrincipal().toString())
-      const signature = await signer.signMessage(loginMessage)// sign with metamask
-    
-      // link address
-      const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
-      const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
-      const response = await _childActor.create_profile(auth)
-      const profile = response.Ok
-			setProfile(profile)
+		try {
+		// get identity
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		await provider.send("eth_requestAccounts", []);
+		const signer = await provider.getSigner()
+		const identity = getIdentityFromSignature() // generate Ed25519 identity
+		const loginMessage = getLoginMessage(identity.getPrincipal().toString())
+		const signature = await signer.signMessage(loginMessage)// sign with metamask
+		
+		// link address
+		const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
+		const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
+		const response = await _childActor.create_profile(auth)
+		const profile = response.Ok
+				setProfile(profile)
 
-			const address = await signer.getAddress()
-			const account = {address, type: 'Evm'}
-			setUser(identity, account)
+				const address = await signer.getAddress()
+				const account = {address, type: 'Evm'}
+				setUser(identity, account)
 
-      toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
-    } catch (error) {
-      toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
-    }
+		toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
+		} catch (error) {
+		toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
+		}
 	}, [toast, setUser, createActor])
 
   const loginWithSvm = useCallback(async () => {
@@ -218,7 +217,6 @@ const ChildProvider = ({ children }) => {
 
   const loginWithIc = useCallback(async () => {
     try {
-      console.log("_childActor")
       const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, type: 'ic'})
       const response = await _childActor.create_profile({Ic: null});
       const profile = response.Ok
