@@ -23,20 +23,20 @@ const OnBoarding = () => {
   const [userFlowStep, setUserFlowStep] = useState()
 
   const { walletConnected, connect, walletDetected } = useContext(IdentityContext)
-  const { balance } = useContext(LedgerContext)
-  const { createChildBatch } = useContext(ParentContext)
+  const { userBalance } = useContext(LedgerContext)
+  const { createUserCommunity } = useContext(ParentContext)
 
   useEffect(() => {
 		if(!walletDetected) {
 			setUserFlowStep('download-wallet')
 		} else if(!walletConnected) {
 			setUserFlowStep('connect-wallet')
-		} else if (!isLocal && (balance / 1e8) <= 0) {
+		} else if (!isLocal && (userBalance / 1e8) <= 0) {
 			setUserFlowStep('top-up-wallet')	
-		} else if(isLocal || balance > 0) {
+		} else if(isLocal || userBalance > 0) {
       setUserFlowStep('deploy-community')
     }
-	},[walletConnected, walletDetected, balance])
+	},[walletConnected, walletDetected, userBalance])
 
   return (
     <Box p="120px 60px">
@@ -123,7 +123,7 @@ const OnBoarding = () => {
             <Heading size="lg" mb="32px">Deploy a community</Heading>
             <Text mb="16px" >You will deploy a virtual server on the Internet Computer</Text>
             <Text mb="24px">The ownership of this server will be transferred to your wallet</Text>
-            <Button mb="24px" onClick={() => createChildBatch()}>Deploy community</Button>
+            <Button mb="24px" onClick={() => createUserCommunity()}>Deploy community</Button>
             <Text fontSize="sm" color='gray'> <b>Note:</b> New communities take about 1 min to deploy</Text>
           </Flex>
         </Flex>

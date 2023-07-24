@@ -9,8 +9,8 @@ import { isLocal } from '../utils/url'
 
 const IdentityContext = createContext()
 
-const wallet_name = 'plug' // or 'infinityWallet'
-const wallet_object = window.ic?.[wallet_name]
+const walletName = 'plug' // or 'infinityWallet'
+const walletObject = window.ic?.[walletName]
 
 const IdentityProvider = ({ children }) => {
 
@@ -27,34 +27,34 @@ const IdentityProvider = ({ children }) => {
 	const loadWallet = useCallback(async () => {
 		
 		// check connected
-		const connected = await wallet_object.isConnected()
+		const connected = await walletObject.isConnected()
 		if (!connected) return
 
 		// load params
-		const principal = await wallet_object.getPrincipal()
+		const principal = await walletObject.getPrincipal()
 		setUserPrincipal(principal.toString())
 		setWalletConnected(true)
 	
 	}, [])
 
 	useEffect(() => {
-		setWalletDetected(!!wallet_object)
+		setWalletDetected(!!walletObject)
 	}, [])
 	
 	const createActor = (options) => {
 		options.host = host
-		return wallet_object.createActor(options)
+		return walletObject.createActor(options)
 	}
 
 	const batchTransactions = (...params) => {
-		return wallet_object.batchTransactions(...params)
+		return walletObject.batchTransactions(...params)
 	}
 
 	const connect = async () => {
 		const whitelist = ledgerCanisterId ? [ledgerCanisterId, parentCanisterId] : [parentCanisterId]
 		try {
-			const hasAllowed = await wallet_object?.requestConnect({ host, whitelist })
-			const principal = await wallet_object?.getPrincipal()
+			const hasAllowed = await walletObject?.requestConnect({ host, whitelist })
+			const principal = await walletObject?.getPrincipal()
 			setUserPrincipal(principal.toString())
 			setWalletConnected(!!hasAllowed)
 			toast({ description: 'Connected' })
@@ -70,7 +70,7 @@ const IdentityProvider = ({ children }) => {
 
 	const disconnect = async () => {
 		// not resolving
-		await wallet_object.disconnect()
+		await walletObject.disconnect()
 
 		setUserPrincipal()
 		setWalletConnected(false)

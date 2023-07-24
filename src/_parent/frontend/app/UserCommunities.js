@@ -14,7 +14,7 @@ import { ParentContext } from '../store/parent'
 const UserCommunities = () => {
 
 	const { walletConnected, userPrincipal } = useContext(IdentityContext)
-	const { createChildBatch, userCommunities } = useContext(ParentContext)
+	const { createUserCommunity, userCommunities } = useContext(ParentContext)
 
 	const getStateColor = (state) => {
 		if (state === 'Preparing') return 'green'
@@ -32,7 +32,7 @@ const UserCommunities = () => {
 				userCommunities?.length > 0 ?
 					<>
 						<Flex marginBottom="10px">
-							<Button marginRight="20px" colorScheme={'green'} onClick={createChildBatch}>Deploy Community</Button>
+							<Button marginRight="20px" colorScheme={'green'} onClick={createUserCommunity}>Deploy Community</Button>
 						</Flex>
 						<TableContainer>
 							<Table variant='simple'>

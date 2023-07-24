@@ -1,9 +1,6 @@
 import { useState, useEffect, createContext, useCallback, useContext } from 'react'
 
 import { useToast } from '@chakra-ui/react'
-import { Actor } from '@dfinity/agent'
-
-import { getAgent, icHost } from '../utils/agent'
 
 import { IdentityContext } from './identity'
 import { LedgerContext, ledgerCanisterId } from './ledger'
@@ -35,7 +32,7 @@ const ParentProvider = ({ children }) => {
 	const toast = useToast()
 
 	const { walletConnected, walletDetected, createActor, userPrincipal, batchTransactions, walletDisclosure } = useContext(IdentityContext)
-	const { balance, getTransferIcpTx } = useContext(LedgerContext)
+	const { userBalance, getTransferIcpTx } = useContext(LedgerContext)
 
 	const [parentActor, setParentActor] = useState(null)
 	const [userCommunities, setUserCommunities] = useState(null)
@@ -88,13 +85,13 @@ const ParentProvider = ({ children }) => {
 		onFail: (_res) => toast({ description: 'Something went wrong', status: 'error' })
 	})
 
-	const createChildBatch = async () => {
+	const createUserCommunity = async () => {
     	if (!walletDetected || !walletConnected) {
 			walletDisclosure.onOpen()
 			return
 		}
 
-		const interval = setInterval(() => getUserCanisters().then(c => setUserCommunities(c)), !isLocal ? 5000 : 1000)
+		const interval = setInterval(() => getUserCommunities().then(c => setUserCommunities(c)), !isLocal ? 5000 : 1000)
 
 		const onTransfer = () => toast({ description: `Transfer success` })
 		const onCreate = () => toast({ description: `Created canister` })
@@ -103,7 +100,7 @@ const ParentProvider = ({ children }) => {
 		const transferTx = getTransferIcpTx({accountId, amount: BigInt(CREATE_CHILD_COST)}, onTransfer)
 		const createChildTx = getCreateChildTx(null, onCreate)
 		try {
-			const txs = ledgerCanisterId ? [...balance < CREATE_CHILD_COST ? [transferTx] : [], createChildTx] : [createChildTx]
+			const txs = ledgerCanisterId ? [...userBalance < CREATE_CHILD_COST ? [transferTx] : [], createChildTx] : [createChildTx]
 			await batchTransactions(txs)
 		} catch (error) {
 			const description = error.message ?? 'Transaction failed'
@@ -113,7 +110,7 @@ const ParentProvider = ({ children }) => {
 		clearInterval(interval)
 	}
 
-	const getUserCanisters = useCallback(async () => {
+	const getUserCommunities = useCallback(async () => {
 		try {
 			const response = await parentActor.get_user_canisters()
 			const canisters = response.map((c) => {
@@ -133,10 +130,10 @@ const ParentProvider = ({ children }) => {
 
 	useEffect(() => {
 		if (parentActor)
-			getUserCanisters().then(canisters => setUserCommunities(canisters))
-	}, [parentActor, getUserCanisters])
+			getUserCommunities().then(canisters => setUserCommunities(canisters))
+	}, [parentActor, getUserCommunities])
 
-	const value = { createChildBatch, userCommunities, getUserCanisters, loading, setLoading }
+	const value = { createUserCommunity, userCommunities, getUserCommunities, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }

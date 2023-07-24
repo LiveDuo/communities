@@ -33,8 +33,8 @@ const LedgerProvider = ({ children }) => {
 	const { userPrincipal, walletConnected, createActor } = useContext(IdentityContext)
 	
 	const [ledgerActor, setLedgerActor] = useState(null)
+	const [userBalance, setUserBalance] = useState(null)
 	const [loading, setLoading] = useState(false)
-	const [balance, setBalance] = useState(null)
 
 	const toast = useToast()
 
@@ -50,17 +50,6 @@ const LedgerProvider = ({ children }) => {
 			loadActor()
 		}
 	}, [loadActor, walletConnected])
-
-	const ledgerBalanceICP = useCallback(async (parentCanisterId, userPrincipal) => {
-		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		try {
-			const response = await ledgerActor.account_balance_dfx({ account: accountId })
-			return Number(response.e8s)
-		} catch (error) {
-			const description = error.result?.reject_message ?? 'Balance failed'
-			toast({ description, status: 'error' })
-		}
-	}, [ledgerActor, toast])
 
 	const getTransferIcpTx = (params, callback = () => {}) => ({
 		idl: idlLedgerFactory,
@@ -79,9 +68,16 @@ const LedgerProvider = ({ children }) => {
 	})
 
 	const getUserBalance = useCallback(async () => {
-		const _balance = await ledgerBalanceICP(parentCanisterId, userPrincipal)
-		setBalance(_balance)
-	}, [ledgerBalanceICP, userPrincipal])
+		
+		const accountId = getAccountId(parentCanisterId, userPrincipal)
+		try {
+			const response = await ledgerActor.account_balance_dfx({ account: accountId })
+			setUserBalance(Number(response.e8s))
+		} catch (error) {
+			const description = error.result?.reject_message ?? 'Balance failed'
+			toast({ description, status: 'error' })
+		}
+	}, [ledgerActor, toast, userPrincipal])
 
 	useEffect(() => {
 		if (ledgerActor) {
@@ -89,7 +85,7 @@ const LedgerProvider = ({ children }) => {
 		}
 	}, [getUserBalance, ledgerActor])
 
-	const value = { balance, getTransferIcpTx, ledgerBalanceICP, loading, setLoading, ledgerCanisterId }
+	const value = { userBalance, getTransferIcpTx, loading, setLoading }
 
 	return <LedgerContext.Provider value={value}>{children}</LedgerContext.Provider>
 }
