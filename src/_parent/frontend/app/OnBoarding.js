@@ -55,7 +55,7 @@ const OnBoarding = () => {
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
             <Heading size="lg" mb="32px">Download a wallet</Heading>
             <Text mb="16px" >You will need a wallet for the Internet Computer</Text>
-            <Text mb="32px"> Our recommendation is <Link href="https://plugwallet.ooo/" target="_blank"><b>Plug Wallet</b></Link></Text>
+            <Text mb="32px"> Our recommendation is <Link href="https://wallet.bitfinity.network/" target="_blank"><b>Bitfinity Wallet</b></Link></Text>
             <Button mb="24px" onClick={() =>  window.open(chromeStoreUrl, '_blank')}>Get it now</Button>
             <Text fontSize="sm" color='gray'> Refresh the page after installing</Text>
           </Flex>
