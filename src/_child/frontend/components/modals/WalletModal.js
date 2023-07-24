@@ -14,8 +14,8 @@ import PhantomLogo from '../../logos/phantom.svg'
 import PlugLogo from '../../logos/plug.png'
 
 const WalletModal = () => {
-  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork, login} = useContext(IdentityContext)
-  const { setProfile } = useContext(ChildContext)
+  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork} = useContext(IdentityContext)
+  const { login } = useContext(ChildContext)
 
   const loginAndSet = async (type) => {
     if (type === 'evm' && !window?.ethereum) {
@@ -28,8 +28,7 @@ const WalletModal = () => {
       setSelectedNetwork(type)
       return
     }
-    const profile = await login(type)
-    setProfile(profile)
+    await login(type)
     onWalletModalClose()
   }
 
