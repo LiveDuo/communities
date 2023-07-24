@@ -9,7 +9,7 @@ import { isLocal } from '../utils/url'
 
 const IdentityContext = createContext()
 
-const walletName = 'plug' // or 'infinityWallet'
+const walletName = 'infinityWallet' // or 'plug'
 const walletObject = window.ic?.[walletName]
 
 const IdentityProvider = ({ children }) => {
@@ -59,7 +59,6 @@ const IdentityProvider = ({ children }) => {
 			setWalletConnected(!!hasAllowed)
 			toast({ description: 'Connected' })
 		} catch (error) {
-			console.log(error.message)
 			if (error.message === 'The agent creation was rejected.') {
 				toast({ description: 'Wallet connection declined', status: 'info' })
 			} else {
@@ -69,8 +68,7 @@ const IdentityProvider = ({ children }) => {
 	}
 
 	const disconnect = async () => {
-		// not resolving
-		await walletObject.disconnect()
+		await walletObject.disconnect() // not resolving with plug wallet
 
 		setUserPrincipal()
 		setWalletConnected(false)
@@ -86,10 +84,7 @@ const IdentityProvider = ({ children }) => {
 
 	const value = { walletDisclosure, createActor, userPrincipal, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
 
-	return (
-		<IdentityContext.Provider value={value}>
-			{children}
-		</IdentityContext.Provider>
-	)
+	return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
+	
 }
 export { IdentityContext, IdentityProvider }

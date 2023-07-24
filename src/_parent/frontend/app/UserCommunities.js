@@ -32,7 +32,7 @@ const UserCommunities = () => {
 				userCommunities?.length > 0 ?
 					<>
 						<Flex marginBottom="10px">
-							<Button marginRight="20px" colorScheme={'green'} onClick={createUserCommunity}>Deploy Community</Button>
+							<Button marginLeft="auto" marginRight="20px" colorScheme="green" size="sm" onClick={createUserCommunity}>Deploy Community</Button>
 						</Flex>
 						<TableContainer>
 							<Table variant='simple'>

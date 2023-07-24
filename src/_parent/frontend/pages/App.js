@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { Box} from '@chakra-ui/react'
 
-import { IdentityContext } from '../store/identity'
+import { ParentContext } from '../store/parent'
 
 import OnBoarding from '../app/OnBoarding'
 import UserCommunities from '../app/UserCommunities'
@@ -10,7 +10,7 @@ import WalletModal from '../app/WalletModal'
 
 const App = () => {
 
-	const { userCommunities } = useContext(IdentityContext)
+	const { userCommunities } = useContext(ParentContext)
 
 	return (
 

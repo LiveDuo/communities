@@ -21,7 +21,7 @@ const idlParentFactory = ({ IDL }) => {
 
 	return IDL.Service({
 		'get_user_canisters': IDL.Func([], [IDL.Vec(canisterData)], ['query']),
-		'create_child': IDL.Func([], [IDL.Variant({ Ok: IDL.Principal, Err: IDL.Text })], []), // Result<Principal, String>
+		'create_child': IDL.Func([], [IDL.Variant({ Ok: IDL.Principal, Err: IDL.Text })], []),
 	})
 }
 
@@ -91,7 +91,7 @@ const ParentProvider = ({ children }) => {
 			return
 		}
 
-		const interval = setInterval(() => getUserCommunities().then(c => setUserCommunities(c)), !isLocal ? 5000 : 1000)
+		const interval = setInterval(() => getUserCommunities(), !isLocal ? 5000 : 1000)
 
 		const onTransfer = () => toast({ description: `Transfer success` })
 		const onCreate = () => toast({ description: `Created canister` })
@@ -114,14 +114,14 @@ const ParentProvider = ({ children }) => {
 		try {
 			const response = await parentActor.get_user_canisters()
 			const canisters = response.map((c) => {
-				const canister_id = c.id.length > 0 ? c.id[0].toString() : ""
+				const canisterId = c.id.length > 0 ? c.id[0].toString() : ''
 				return {
-					id: canister_id,
+					id: canisterId,
 					timestamp: new Date(Number(c.timestamp / 1000n / 1000n)),
 					state: Object.keys(c.state)[0],
 				}
 			})
-			return canisters
+			setUserCommunities(canisters)
 		} catch (error) {
 			const description = error.result?.reject_message ?? 'Response failed'
 			toast({ description, status: 'error' })
@@ -130,10 +130,10 @@ const ParentProvider = ({ children }) => {
 
 	useEffect(() => {
 		if (parentActor)
-			getUserCommunities().then(canisters => setUserCommunities(canisters))
+			getUserCommunities()
 	}, [parentActor, getUserCommunities])
 
-	const value = { createUserCommunity, userCommunities, getUserCommunities, loading, setLoading }
+	const value = { createUserCommunity, userCommunities, loading, setLoading }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }
