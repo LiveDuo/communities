@@ -28,6 +28,8 @@ const IdentityProvider = ({children}) => {
   const { isOpen: isWalletModalOpen, onOpen: onWalletModalOpen, onClose: onWalletModalClose } = useDisclosure()
   const { isOpen: isUpgradeModalOpen, onOpen: onUpgradeModalOpen, onClose: onUpgradeModalClose } = useDisclosure()
 
+  const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
+  
   const updatePrincipal = async (account, identity) => {
     if (!account)
       setPrincipal(null)
@@ -67,15 +69,18 @@ const IdentityProvider = ({children}) => {
     saveAccount(identity, _account)
   }, [])
 
-  const isWalletDetected = useCallback((type) => {
+  const getWallet = useCallback((type) => {
     if (type === 'evm') 
-      return !!window?.ethereum
+      return window?.ethereum
     else if(type === 'svm')
-      return !!window?.solana
+      return window?.solana
     else if(type === 'ic')
-      return !!window.ic?.[walletIcName]
+      return window.ic?.[walletIcName]
   }, [])
 
+  const isWalletDetected = useCallback((type) => {
+    return !!getWallet(type)
+  }, [])
 
   const connectWallet = useCallback(async (type) => {
     if (type === 'ic') {
@@ -85,7 +90,6 @@ const IdentityProvider = ({children}) => {
       if(isConnected) return
 
       // request connect
-      const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
       const whitelist = [CHILD_CANISTER_ID, MANAGEMENT_CANISTER_ID]
       await walletIcObject.requestConnect({whitelist, host});
     }
@@ -93,8 +97,6 @@ const IdentityProvider = ({children}) => {
   
   const createActor = useCallback(async(options) => {
     if (options.type === 'ic') {
-      await connectWallet('ic')
-      const host = isLocal && 'http://localhost:8000/'
       const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
 	    return await walletIcObject.createActor(actorOptions)
     } else {

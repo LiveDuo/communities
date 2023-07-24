@@ -95,25 +95,26 @@ const ChildProvider = ({ children }) => {
 	const [loading, setLoading] = useState()
 	const [profile, setProfile] = useState()
 
-	const { identity, account, createActor, updateIdentity } = useContext(IdentityContext)
+	const { identity, account, createActor, updateIdentity, getWallet } = useContext(IdentityContext)
 
 	const toast = useToast()
 
-	const loadActor = useCallback(async ()=>{
+	const loadActor = useCallback(async () => {
 		let _actor
-		if(!account) 
-		_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: null})
-		else if (account.type ==='Evm' || account.type ==='Svm') 
-		_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
-		else if(account.type === 'Ic')
-		_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, type: 'ic'})
+		if (!account) {
+			_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: null})
+		} else if (account.type ==='Evm' || account.type ==='Svm') {
+			_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
+		} else if(account.type === 'Ic') {
+			_actor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, type: 'ic'})
+		}
 		
 		setChildActor(_actor)
   },[account, identity, createActor])
 
   useEffect(() => {
     loadActor()
-  },[loadActor])
+  }, [loadActor])
 
 	const createReply = useCallback(async (_post_id, text) => {
 		const post_id = BigInt(_post_id)
@@ -137,16 +138,16 @@ const ChildProvider = ({ children }) => {
 		const response = await childActor.get_post(BigInt(index)).then(r =>  r.Ok)
 		const _post = {...response, timestamp: new Date(Number(response.timestamp / 1000n / 1000n)), replies: response.replies.map(r => ({...r, timestamp: new Date(Number(r.timestamp / 1000n / 1000n))}))}
 		return _post
-	},[childActor])
+	}, [childActor])
 
 	const getPostsByUser = useCallback(async () => {
 		const response = await childActor.get_posts_by_user(profile.authentication)
 		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: 0})))
-	},[profile, childActor])
+	}, [profile, childActor])
 
 	const getProfileByAuth = useCallback(async (account) => {
 		const auth = {}
-		if(account.type === 'Evm' ||  account.type === 'Svm') {
+		if (account.type === 'Evm' ||  account.type === 'Svm') {
 			auth[account.type] = {address: account.address}
 		} else {
 			auth[account.type] = null
@@ -157,22 +158,23 @@ const ChildProvider = ({ children }) => {
 
 	const loginWithEvm = useCallback(async () => {
 		try {
-		// get identity
-		const provider = new ethers.providers.Web3Provider(window.ethereum);
-		await provider.send("eth_requestAccounts", []);
-		const signer = await provider.getSigner()
-		const identity = getIdentityFromSignature() // generate Ed25519 identity
-		const loginMessage = getLoginMessage(identity.getPrincipal().toString())
-		const signature = await signer.signMessage(loginMessage)// sign with metamask
-		
-		// link address
-		const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
-		const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
-		const response = await _childActor.create_profile(auth)
-		const profile = response.Ok
-		setProfile(profile)
+			// get identity
+			const ethereum = getWallet('evm')
+			const provider = new ethers.providers.Web3Provider(ethereum)
+			await provider.send("eth_requestAccounts", [])
+			const signer = await provider.getSigner()
+			const identity = getIdentityFromSignature() // generate Ed25519 identity
+			const loginMessage = getLoginMessage(identity.getPrincipal().toString())
+			const signature = await signer.signMessage(loginMessage)// sign with metamask
+			
+			// link address
+			const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
+			const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
+			const response = await _childActor.create_profile(auth)
+			const profile = response.Ok
+			setProfile(profile)
 
-		updateIdentity('Evm', identity)
+			updateIdentity('Evm', identity)
 
 			toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
 		} catch (error) {
@@ -183,7 +185,7 @@ const ChildProvider = ({ children }) => {
   const loginWithSvm = useCallback(async () => {
     try {
 
-      const phantom = window.solana
+      const phantom = getWallet('svm')
       await phantom.connect()
       const identity = getIdentityFromSignature() // generate Ed25519 identity
       const loginMessage = getLoginMessage(identity.getPrincipal().toString())
@@ -213,6 +215,8 @@ const ChildProvider = ({ children }) => {
 
   const loginWithIc = useCallback(async () => {
     try {
+			await connectWallet('ic')
+			
       const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, type: 'ic'})
       const response = await _childActor.create_profile({Ic: null});
       const profile = response.Ok

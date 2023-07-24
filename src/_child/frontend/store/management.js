@@ -32,18 +32,20 @@ const ManagementContext = createContext()
 
 const ManagementProvider = ({ children }) => {
 
-  const {identity, account, createActor} = useContext(IdentityContext)
+  const {identity, account, createActor, connectWallet} = useContext(IdentityContext)
 
 	const [managementActor, setManagementActor] = useState()
 
-  const loadActor = useCallback(()=>{
+  const loadActor = useCallback(async ()=>{
     let _actor
-    if (!account) 
+    if (!account) {
       _actor = createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, identity: null})
-    else if (account.type ==='Evm' || account.type ==='Svm')
+    } else if (account.type ==='Evm' || account.type ==='Svm') {
       _actor = createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, identity: identity})
-    else if(account.type === 'Ic')
+    } else if (account.type === 'Ic') {
+      await connectWallet('ic')
       _actor = createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, type: 'ic'})
+    }
     setManagementActor(_actor)
   },[account, identity, createActor])
 
