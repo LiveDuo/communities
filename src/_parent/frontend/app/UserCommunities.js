@@ -13,7 +13,7 @@ import { ParentContext } from '../store/parent'
 
 const UserCommunities = () => {
 
-	const { walletConnected, userPrincipal } = useContext(IdentityContext)
+	const { userPrincipal } = useContext(IdentityContext)
 	const { createUserCommunity, userCommunities } = useContext(ParentContext)
 
 	const getStateColor = (state) => {
@@ -26,9 +26,7 @@ const UserCommunities = () => {
 
 	return (
 		<Box  p="20px 0px">
-			{!walletConnected ?
-			<Text>Wallet not connected</Text> :
-			userCommunities ? 
+			{userCommunities ? 
 				userCommunities?.length > 0 ?
 					<>
 						<Flex marginBottom="10px">

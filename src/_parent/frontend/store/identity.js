@@ -46,8 +46,9 @@ const IdentityProvider = ({ children }) => {
 		return walletObject.createActor(options)
 	}
 
-	const batchTransactions = (...params) => {
-		return walletObject.batchTransactions(...params)
+	const batchTransactions = (txs) => {
+		const options = { host }
+		return walletObject.batchTransactions(txs, options)
 	}
 
 	const connect = async () => {
