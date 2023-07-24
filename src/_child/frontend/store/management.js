@@ -6,24 +6,10 @@ export const MANAGEMENT_CANISTER_ID = "aaaaa-aa";
 
 const idlFactory = ({ IDL }) => {
   const canisterId = IDL.Principal;
-  const definiteCanisterSettings = IDL.Record({
-    freezing_threshold: IDL.Nat,
-    controllers: IDL.Vec(IDL.Principal),
-    memory_allocation: IDL.Nat,
-    compute_allocation: IDL.Nat,
-  });
-  const canisterSettings = IDL.Record({
-    freezing_threshold: IDL.Opt(IDL.Nat),
-    controllers: IDL.Opt(IDL.Vec(IDL.Principal)),
-    memory_allocation: IDL.Opt(IDL.Nat),
-    compute_allocation: IDL.Opt(IDL.Nat),
-  });
+  const definiteCanisterSettings = IDL.Record({ freezing_threshold: IDL.Nat, controllers: IDL.Vec(IDL.Principal), memory_allocation: IDL.Nat, compute_allocation: IDL.Nat, });
+  const canisterSettings = IDL.Record({ freezing_threshold: IDL.Opt(IDL.Nat), controllers: IDL.Opt(IDL.Vec(IDL.Principal)), memory_allocation: IDL.Opt(IDL.Nat), compute_allocation: IDL.Opt(IDL.Nat), });
   const wasmModule = IDL.Vec(IDL.Nat8);
-  const status = IDL.Variant({
-    stopped: IDL.Null,
-    stopping: IDL.Null,
-    running: IDL.Null,
-  })
+  const status = IDL.Variant({ stopped: IDL.Null, stopping: IDL.Null, running: IDL.Null, })
   const canisterMode = IDL.Variant({ reinstall: IDL.Null, upgrade: IDL.Null, install: IDL.Null})
   return IDL.Service({
     canister_status: IDL.Func([IDL.Record({ canister_id: canisterId })],[IDL.Record({ status: status, memory_size: IDL.Nat, cycles: IDL.Nat, settings: definiteCanisterSettings, module_hash: IDL.Opt(IDL.Vec(IDL.Nat8)),}),],[]),
@@ -52,7 +38,7 @@ const ManagementProvider = ({ children }) => {
 
   const loadActor = useCallback(()=>{
     let _actor
-    if(!account) 
+    if (!account) 
       _actor = createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, identity: null})
     else if (account.type ==='Evm' || account.type ==='Svm')
       _actor = createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, identity: identity})
