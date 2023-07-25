@@ -29,16 +29,15 @@ const IdentityProvider = ({children}) => {
 
   const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
   
-  const getIcWalletName = useCallback(async ()=>{
+  const getIcWalletName = useCallback(async () => {
+    // bitfinity wallet
 		const isConnectedWithInfinity = await window?.ic?.infinityWallet?.isConnected()
+		if (isConnectedWithInfinity) return 'infinityWallet'
+
+    // plug wallet
 		const isConnectedWithPlug = await window?.ic?.plug?.isConnected()
-		if(isConnectedWithInfinity) {
-			return 'infinityWallet'
-		} else if(isConnectedWithPlug) {
-			return 'plug'
-		} else {
-			return
-		}
+    if (isConnectedWithPlug) return 'plug'
+		
   },[])
 
   const loadWallet = useCallback(async (account, identity) => {
@@ -48,10 +47,11 @@ const IdentityProvider = ({children}) => {
       setPrincipal(identity.getPrincipal())
     } else if (account.type ==='Svm') {
       setPrincipal(identity.getPrincipal())
-    } else if(account.type === 'Ic') {
+    } else if (account.type === 'Ic') {
       const IcWalletName = getIcWalletName()
-      const _principal = await window.ic[IcWalletName]?.getPrincipal()
       setWalletIcName(IcWalletName)
+      
+      const _principal = await window.ic[IcWalletName]?.getPrincipal()
       setPrincipal(_principal)
     }
   }, [getIcWalletName])
