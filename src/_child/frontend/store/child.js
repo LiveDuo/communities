@@ -193,12 +193,11 @@ const ChildProvider = ({ children }) => {
       // get identity
       const encodedMessage = new TextEncoder().encode(loginMessage)
       const signedMessage = await phantom.signMessage(encodedMessage, "utf8")
-      // const signedMessage = await phantom.request({ method: 'signMessage', params: { message: encodedMessage } })
 			
       // link address
       const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, identity: identity})
-      const publicKey = Buffer.from(bs58.decode(signedMessage.publicKey)).toString('hex')
-      const signature = Buffer.from(bs58.decode(signedMessage.signature)).toString('hex')
+      const publicKey = Buffer.from(bs58.decode(signedMessage.publicKey.toString())).toString('hex')
+      const signature = signedMessage.signature.toString('hex')
       const message = Buffer.from(encodedMessage).toString('hex')
       const response = await _childActor.create_profile({Svm: { public_key: publicKey, signature, message }});
       const profile = response.Ok

@@ -54,7 +54,7 @@ const IdentityProvider = ({children}) => {
       const address = await signer.getAddress()
       _account = {type: 'Evm', address: address}
       _principal = identity.getPrincipal()
-    } else if( type === 'Evm') {
+    } else if( type === 'Svm') {
       const phantom = window.solana
       const address = phantom.publicKey.toString()
       _account = {type: 'Svm', address: address}
