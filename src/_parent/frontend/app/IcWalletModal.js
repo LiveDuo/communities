@@ -1,8 +1,12 @@
+// import React from 'react'
 import { useContext, useCallback} from 'react'
-import { IdentityContext } from '../store/identity'
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Box } from '@chakra-ui/react'
-import { Text, Button } from '@chakra-ui/react'
 
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Flex, Button, Text, Image } from '@chakra-ui/react'
+
+import { IdentityContext } from '../store/identity'
+
+import PlugLogo from '../logos/plug.png'
+import BitfinityLogo from '../logos/bitfinity.png'
 
 const IcWalletModal = () =>  {
   
@@ -18,16 +22,14 @@ const IcWalletModal = () =>  {
     <Modal isOpen={icWalletDisclosure.isOpen} onClose={icWalletDisclosure.onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Select Wallet</ModalHeader>
+        <ModalHeader>Select a wallet</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Box m='8px' mb='20px'>
-            <Text mb='20px'>
-              Get the Plug Wallet extension for your browser.
-            </Text>
-              <Button isDisabled={!isWalletDetected('plug')} onClick={()=> selectWalletAndConnect('plug')}>Plug</Button>
-              <Button isDisabled={!isWalletDetected('infinityWallet')} onClick={() => selectWalletAndConnect('infinityWallet')} ml="12px">InfinityWallet</Button>
-          </Box> 
+          <Flex flexDir="column" m='8px' mb='32px'>
+            <Text mb='20px'>Pick an Internet Computer wallet. Ownership will be transfer to that wallet.</Text>
+            <Button size="lg" leftIcon={<Image src={PlugLogo} width={8} />} mb="12px" isDisabled={!isWalletDetected('plug')} onClick={()=> selectWalletAndConnect('plug')}>Plug Wallet</Button>
+            <Button size="lg" leftIcon={<Image src={BitfinityLogo} width={5} />} isDisabled={!isWalletDetected('infinityWallet')} onClick={() => selectWalletAndConnect('infinityWallet')}>Infinity Wallet</Button>
+          </Flex> 
         </ModalBody>
       </ModalContent>
     </Modal>
