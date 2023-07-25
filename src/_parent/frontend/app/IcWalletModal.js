@@ -4,9 +4,9 @@ import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseBu
 import { Text, Button } from '@chakra-ui/react'
 
 
-const IcoWalletModal = () =>  {
+const IcWalletModal = () =>  {
   
-  const {connect, icWalletDisclosure, setWalletName} = useContext(IdentityContext)
+  const {connect, icWalletDisclosure, setWalletName, isWalletDetected} = useContext(IdentityContext)
 
   const selectWalletAndConnect = useCallback(async(wallet)=>{
     await connect(wallet)
@@ -25,8 +25,8 @@ const IcoWalletModal = () =>  {
             <Text mb='20px'>
               Get the Plug Wallet extension for your browser.
             </Text>
-              <Button onClick={()=> selectWalletAndConnect('plug')}>Plug</Button>
-              <Button onClick={() => selectWalletAndConnect('infinityWallet')} ml="12px">InfinityWallet</Button>
+              <Button isDisabled={!isWalletDetected('plug')} onClick={()=> selectWalletAndConnect('plug')}>Plug</Button>
+              <Button isDisabled={!isWalletDetected('infinityWallet')} onClick={() => selectWalletAndConnect('infinityWallet')} ml="12px">InfinityWallet</Button>
           </Box> 
         </ModalBody>
       </ModalContent>
@@ -34,4 +34,4 @@ const IcoWalletModal = () =>  {
   )
 }
 
-export default IcoWalletModal
+export default IcWalletModal

@@ -14,7 +14,7 @@ const IdentityProvider = ({ children }) => {
 	const [walletConnected, setWalletConnected] = useState(false)
 	const [walletDetected, setWalletDetected] = useState(false)
 	const [userPrincipal, setUserPrincipal] = useState(null)
-	const [walletName, setWalletName] = useState('')
+	const [walletName, setWalletName] = useState(null)
 	
 	const noWalletDisclosure = useDisclosure()
 	const icWalletDisclosure = useDisclosure()
@@ -24,15 +24,14 @@ const IdentityProvider = ({ children }) => {
 	const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
 
 	const loadWallet = useCallback(async () => {
-		
 		// check wallet connected
 		let _walletName
-		if(window?.ic?.infinityWallet) {
-			const isConnected = await window?.ic?.infinityWallet.isConnected()
-			_walletName = isConnected && 'infinityWallet'
-		} else if(window?.ic?.plug) {
-			const isConnected = await window?.ic?.plug.isConnected()
-			_walletName = isConnected && 'plug'
+		const isConnectedWithInfinity = await window?.ic?.infinityWallet?.isConnected()
+		const isConnectedWithPlug = await window?.ic?.plug?.isConnected()
+		if(isConnectedWithInfinity) {
+			_walletName = 'infinityWallet'
+		} else if(isConnectedWithPlug) {
+			_walletName = 'plug'
 		} else {
 			return
 		}
@@ -47,6 +46,9 @@ const IdentityProvider = ({ children }) => {
 	useEffect(() => {
 		setWalletDetected(!!(window?.ic?.plug || window?.ic?.infinityWallet))
 	}, [])
+
+
+	const isWalletDetected = useCallback((type) => !!window.ic[type], [])
 	
 	const createActor = (options) => {
 		options.host = host
@@ -90,7 +92,7 @@ const IdentityProvider = ({ children }) => {
 		}
 	},[loadWallet, walletDetected])
 
-	const value = { noWalletDisclosure, icWalletDisclosure, setWalletName, createActor, userPrincipal, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
+	const value = { noWalletDisclosure, icWalletDisclosure, setWalletName, createActor, isWalletDetected, userPrincipal, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
 
 	return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
 	
