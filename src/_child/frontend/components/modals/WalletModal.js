@@ -15,31 +15,26 @@ import PlugLogo from '../../logos/plug.png'
 import BitfinityLogo from '../../logos/bitfinity.png'
 
 const WalletModal = () => {
-  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork, isWalletDetected, icWalletDisclosure} = useContext(IdentityContext)
+  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, isWalletDetected, icWalletDisclosure} = useContext(IdentityContext)
   const { login } = useContext(ChildContext)
 
   const loginAndSet = async (type) => {
-    if (type === 'evm' && !isWalletDetected(type)) {
-      setSelectedNetwork(type)
-      return
-    } else if (type === 'svm' && !isWalletDetected(type)) {
-      setSelectedNetwork(type)
-      return
-    } else if (type === 'ic' && !isWalletDetected(type)) {
-      setSelectedNetwork(type)
-      return
-    } else if(type === 'ic' && isWalletDetected(type)) {
+    if(type === 'evm') {
+      onWalletModalClose()
+      await login(type)
+    } else if(type === 'svm') {
+      onWalletModalClose()
+      await login(type)
+    } else if(type === 'ic') {
+      onWalletModalClose()
       icWalletDisclosure.onOpen()
-      return
     }
-    await login(type)
-    onWalletModalClose()
   }
 
 	return (
 		<Modal isOpen={isWalletModalOpen} onClose={onWalletModalClose} isCentered>
 			<ModalOverlay />
-			<ModalContent minW="480px">
+			<ModalContent minW="520px">
 				<ModalHeader>{!selectedNetwork && (isWalletDetected('evm') || isWalletDetected('svm') ||  isWalletDetected('ic')) ? 'Select a network' : 'You\'d need a wallet'} </ModalHeader>
 				<ModalCloseButton />
 				<ModalBody>

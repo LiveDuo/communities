@@ -30,8 +30,8 @@ const IcWalletModal = () =>  {
         <ModalBody>
           <Flex flexDir="column" m='8px' mb='32px'>
             <Text mb='20px'>Pick an Internet Computer wallet. Ownership will be transfer to that wallet.</Text>
-            <Button size="lg" mb="12px" isDisabled={!window.ic.plug} leftIcon={<Image src={PlugLogo} width={8} />} onClick={()=> selectWalletAndConnect('plug')}>Plug Wallet</Button>
-            <Button size="lg" isDisabled={!window.ic.infinityWallet} leftIcon={<Image src={BitfinityLogo} width={5} />} onClick={() => selectWalletAndConnect('infinityWallet')}>Infinity Wallet</Button>
+            <Button size="lg" mb="12px" isDisabled={!window?.ic?.plug} leftIcon={<Image src={PlugLogo} width={8} />} onClick={()=> selectWalletAndConnect('plug')}>Plug Wallet</Button>
+            <Button size="lg" isDisabled={!window?.ic?.infinityWallet} leftIcon={<Image src={BitfinityLogo} width={5} />} onClick={() => selectWalletAndConnect('infinityWallet')}>Infinity Wallet</Button>
           </Flex> 
         </ModalBody>
       </ModalContent>

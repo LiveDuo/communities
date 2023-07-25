@@ -29,37 +29,39 @@ const IdentityProvider = ({children}) => {
 
   const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
   
-  const updatePrincipal = useCallback(async (account, identity) => {
-    if (!account)
-      setPrincipal(null)
-    else if (account.type ==='Evm' || account.type ==='Svm')
-      setPrincipal(identity.getPrincipal())
-    else if(account.type === 'Ic') 
-      setPrincipal(await window.ic[walletIcName]?.getPrincipal())
-  },[walletIcName])
-
-
-  const loadWallet = useCallback(async ()=>{
+  const getIcWalletName = useCallback(async ()=>{
 		const isConnectedWithInfinity = await window?.ic?.infinityWallet?.isConnected()
 		const isConnectedWithPlug = await window?.ic?.plug?.isConnected()
 		if(isConnectedWithInfinity) {
-      setWalletIcName('infinityWallet')
 			return 'infinityWallet'
 		} else if(isConnectedWithPlug) {
-      setWalletIcName('plug')
 			return 'plug'
 		} else {
 			return
 		}
   },[])
+
+  const loadWallet = useCallback(async (account, identity) => {
+    if (!account){
+      setPrincipal(null)
+    } else if (account.type ==='Evm') {
+      setPrincipal(identity.getPrincipal())
+    } else if (account.type ==='Svm') {
+      setPrincipal(identity.getPrincipal())
+    } else if(account.type === 'Ic') {
+      const IcWalletName = getIcWalletName()
+      const _principal = await window.ic[IcWalletName]?.getPrincipal()
+      setWalletIcName(IcWalletName)
+      setPrincipal(_principal)
+    }
+  }, [getIcWalletName])
   
   useEffect(() => {
     const data = loadAccount()
-    loadWallet()
-    updatePrincipal(data?.account, data?.identity)
+    loadWallet(data?.account, data?.identity)
     setAccount(data?.account)
     setIdentity(data?.identity)
-  }, [loadWallet, updatePrincipal])
+  }, [getIcWalletName, loadWallet])
 
   const updateIdentity = useCallback(async (type, identity, walletIcName) => {
     let _account, _principal
@@ -110,7 +112,6 @@ const IdentityProvider = ({children}) => {
   }, [host])
   
   const createActor = useCallback(async(options) => {
-    console.log(options)
     if (options.type === 'ic') {
       const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
 	    return await window.ic[options.wallet ?? walletIcName]?.createActor(actorOptions)
