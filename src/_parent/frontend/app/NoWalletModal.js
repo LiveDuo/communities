@@ -7,12 +7,12 @@ import { ReactComponent as ChromeLogo } from '../logos/chrome.svg'
 import { ReactComponent as BraveLogo } from '../logos/brave.svg'
 import { ReactComponent as FirefoxLogo } from '../logos/firefox.svg'
 
-const WalletModal = () =>  {
+const NoWalletModal = () =>  {
   
-  const {connect, walletDetected, walletDisclosure} = useContext(IdentityContext)
+  const {connect, walletDetected, noWalletDisclosure} = useContext(IdentityContext)
 
   return (
-    <Modal isOpen={walletDisclosure.isOpen} onClose={walletDisclosure.onClose} isCentered>
+    <Modal isOpen={noWalletDisclosure.isOpen} onClose={noWalletDisclosure.onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>{walletDetected ? 'Connect Plug Wallet' : 'You\'d need a wallet'}</ModalHeader>
@@ -49,4 +49,4 @@ const WalletModal = () =>  {
   )
 }
 
-export default WalletModal
+export default NoWalletModal

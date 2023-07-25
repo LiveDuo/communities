@@ -7,7 +7,8 @@ import { IdentityContext } from '../store/identity'
 import OnBoarding from '../app/OnBoarding'
 import UserCommunities from '../app/UserCommunities'
 import Header from '../app/Header'
-import WalletModal from '../app/WalletModal'
+import NoWalletModal from '../app/NoWalletModal'
+import IcWalletModal from '../app/IcWalletModal'
 
 const App = () => {
 
@@ -17,7 +18,8 @@ const App = () => {
 	return (
 		<Box>
 			<Header />
-			<WalletModal/>
+			<NoWalletModal/>
+			<IcWalletModal/>
 			<Box m="40px" mt="80px" textAlign="center">
 				<Box m="0 auto" maxW="1120px" borderWidth="1px" borderRadius="lg" variant="soft-rounded">
 					{(userCommunities?.length > 0 && walletConnected) ? <UserCommunities/> : <OnBoarding/> }

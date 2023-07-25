@@ -9,16 +9,15 @@ import { isLocal } from '../utils/url'
 
 const IdentityContext = createContext()
 
-const walletName = 'infinityWallet' // or 'plug'
-const walletObject = window.ic?.[walletName]
-
 const IdentityProvider = ({ children }) => {
 
 	const [walletConnected, setWalletConnected] = useState(false)
 	const [walletDetected, setWalletDetected] = useState(false)
 	const [userPrincipal, setUserPrincipal] = useState(null)
+	const [walletName, setWalletName] = useState('')
 	
-	const walletDisclosure = useDisclosure()
+	const noWalletDisclosure = useDisclosure()
+	const icWalletDisclosure = useDisclosure()
 
 	const toast = useToast()
 
@@ -26,36 +25,44 @@ const IdentityProvider = ({ children }) => {
 
 	const loadWallet = useCallback(async () => {
 		
-		// check connected
-		const connected = await walletObject.isConnected()
-		if (!connected) return
+		// check wallet connected
+		let _walletName
+		if(window?.ic?.infinityWallet) {
+			const isConnected = await window?.ic?.infinityWallet.isConnected()
+			_walletName = isConnected && 'infinityWallet'
+		} else if(window?.ic?.plug) {
+			const isConnected = await window?.ic?.plug.isConnected()
+			_walletName = isConnected && 'plug'
+		} else {
+			return
+		}
 
 		// load params
-		const principal = await walletObject.getPrincipal()
+		const principal = await window?.ic[_walletName].getPrincipal()
 		setUserPrincipal(principal.toString())
 		setWalletConnected(true)
-	
+		setWalletName(_walletName)
 	}, [])
 
 	useEffect(() => {
-		setWalletDetected(!!walletObject)
+		setWalletDetected(!!(window?.ic?.plug || window?.ic?.infinityWallet))
 	}, [])
 	
 	const createActor = (options) => {
 		options.host = host
-		return walletObject.createActor(options)
+		return window?.ic[walletName].createActor(options)
 	}
 
 	const batchTransactions = (txs) => {
 		const options = { host }
-		return walletObject.batchTransactions(txs, options)
+		return window?.ic[walletName].batchTransactions(txs, options)
 	}
 
-	const connect = async () => {
+	const connect = async (wallet) => {
 		const whitelist = ledgerCanisterId ? [ledgerCanisterId, parentCanisterId] : [parentCanisterId]
 		try {
-			const hasAllowed = await walletObject?.requestConnect({ host, whitelist })
-			const principal = await walletObject?.getPrincipal()
+			const hasAllowed = await window?.ic[wallet]?.requestConnect({ host, whitelist })
+			const principal = await window?.ic[wallet]?.getPrincipal()
 			setUserPrincipal(principal.toString())
 			setWalletConnected(!!hasAllowed)
 			toast({ description: 'Connected' })
@@ -69,7 +76,7 @@ const IdentityProvider = ({ children }) => {
 	}
 
 	const disconnect = async () => {
-		await walletObject.disconnect() // not resolving with plug wallet
+		await window?.ic[walletName].disconnect() // not resolving with plug wallet
 
 		setUserPrincipal()
 		setWalletConnected(false)
@@ -83,7 +90,7 @@ const IdentityProvider = ({ children }) => {
 		}
 	},[loadWallet, walletDetected])
 
-	const value = { walletDisclosure, createActor, userPrincipal, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
+	const value = { noWalletDisclosure, icWalletDisclosure, setWalletName, createActor, userPrincipal, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
 
 	return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
 	

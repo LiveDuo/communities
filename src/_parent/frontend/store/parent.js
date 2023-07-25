@@ -31,7 +31,7 @@ const ParentProvider = ({ children }) => {
 
 	const toast = useToast()
 
-	const { walletConnected, walletDetected, createActor, userPrincipal, batchTransactions, walletDisclosure } = useContext(IdentityContext)
+	const { walletConnected, walletDetected, createActor, userPrincipal, batchTransactions, noWalletDisclosure } = useContext(IdentityContext)
 	const { userBalance, getTransferIcpTx } = useContext(LedgerContext)
 
 	const [parentActor, setParentActor] = useState(null)
@@ -87,7 +87,7 @@ const ParentProvider = ({ children }) => {
 
 	const createUserCommunity = async () => {
     	if (!walletDetected || !walletConnected) {
-			walletDisclosure.onOpen()
+				noWalletDisclosure.onOpen()
 			return
 		}
 

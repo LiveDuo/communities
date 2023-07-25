@@ -22,7 +22,7 @@ const OnBoarding = () => {
 
   const [userFlowStep, setUserFlowStep] = useState()
 
-  const { walletConnected, connect, walletDetected } = useContext(IdentityContext)
+  const { walletConnected, walletDetected, icWalletDisclosure } = useContext(IdentityContext)
   const { userBalance } = useContext(LedgerContext)
   const { createUserCommunity } = useContext(ParentContext)
 
@@ -77,7 +77,7 @@ const OnBoarding = () => {
             <Heading size="lg" mb="32px">Connect your wallet</Heading>
             <Text mb="16px" >Your community is about to be deployed</Text>
             <Text mb="32px"> Ownership will be transferred to your wallet</Text>
-            <Button mb="24px" onClick={connect}>Connect wallet</Button>
+            <Button mb="24px" onClick={() => icWalletDisclosure.onOpen()}>Connect wallet</Button>
             <Text fontSize="sm" color='gray'> <b>Note:</b> You can change the owner wallet later</Text>
           </Flex>
         </Flex>
