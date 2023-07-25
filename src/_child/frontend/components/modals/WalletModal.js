@@ -12,9 +12,10 @@ import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 import { ReactComponent as MetamaskLogo } from '../../logos/metamask.svg'
 import PhantomLogo from '../../logos/phantom.svg'
 import PlugLogo from '../../logos/plug.png'
+import BitfinityLogo from '../../logos/bitfinity.png'
 
 const WalletModal = () => {
-  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork, isWalletDetected} = useContext(IdentityContext)
+  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork, isWalletDetected, icWalletDisclosure} = useContext(IdentityContext)
   const { login } = useContext(ChildContext)
 
   const loginAndSet = async (type) => {
@@ -26,6 +27,9 @@ const WalletModal = () => {
       return
     } else if (type === 'ic' && !isWalletDetected(type)) {
       setSelectedNetwork(type)
+      return
+    } else if(type === 'ic' && isWalletDetected(type)) {
+      icWalletDisclosure.onOpen()
       return
     }
     await login(type)
@@ -54,6 +58,7 @@ const WalletModal = () => {
                 <Box mb="12px">
                   <Text mb="12px">Get an Internet Computer wallet </Text>
                   <Link ml="8px" href="https://plugwallet.ooo/" isExternal style={{textDecoration: 'none'}}><Button leftIcon={<Image src={PlugLogo} width={5} />}>Plug Wallet</Button></Link>
+                  <Link ml="8px" href="https://wallet.bitfinity.network/" isExternal style={{textDecoration: 'none'}}><Button leftIcon={<Image src={BitfinityLogo} width={3} />}>Bitfinity Wallet</Button></Link>
                 </Box>}
             </Box> : 
             <Box>

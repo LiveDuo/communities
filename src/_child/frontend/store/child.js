@@ -212,16 +212,16 @@ const ChildProvider = ({ children }) => {
     }
 	}, [toast, updateIdentity, createActor, getWallet])
 
-  const loginWithIc = useCallback(async () => {
+  const loginWithIc = useCallback(async (wallet) => {
     try {
-			await connectWallet('ic')
+			await connectWallet('ic', wallet)
 			
-      const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, type: 'ic'})
+      const _childActor = await createActor({interfaceFactory: idlFactory, canisterId: CHILD_CANISTER_ID, type: 'ic', wallet})
       const response = await _childActor.create_profile({Ic: null});
       const profile = response.Ok
 			setProfile(profile)
 
-			updateIdentity('Ic', undefined)
+			updateIdentity('Ic', undefined, wallet)
       
       toast({ title: 'Signed in with Internet Computer', status: 'success', duration: 4000, isClosable: true })
     } catch (error) {
@@ -230,13 +230,13 @@ const ChildProvider = ({ children }) => {
     }
 	}, [toast, createActor, updateIdentity, connectWallet])
 
-	const login = async (type) => {
+	const login = async (type, wallet) => {
     if(type === 'evm') {
       return await loginWithEvm()
     } else if(type === 'svm') {
       return await loginWithSvm()
     } else if(type === 'ic'){
-      return await loginWithIc()
+      return await loginWithIc(wallet)
     }
   }
 

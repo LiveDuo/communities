@@ -15,7 +15,7 @@ const Header = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected } = useContext(IdentityContext)
+  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure, getWallet } = useContext(IdentityContext)
   const { getProfileByAuth, login } = useContext(ChildContext)
 
   useEffect(() => {
@@ -35,6 +35,9 @@ const Header = () => {
     } else if (type === 'ic' && !isWalletDetected(type)) {
       onWalletModalOpen()
       setSelectedNetwork(type)
+      return
+    } else if (type === 'ic' && isWalletDetected(type)){
+      icWalletDisclosure.onOpen()
       return
     }
     await login(type)

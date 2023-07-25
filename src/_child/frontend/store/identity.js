@@ -13,9 +13,6 @@ import { isLocal} from '../utils/url'
 
 import { ethers } from 'ethers'
 
-const walletIcName = 'infinityWallet' // or 'plug'
-const walletIcObject = window.ic?.[walletIcName]
-
 const IdentityContext = createContext()
 
 const IdentityProvider = ({children}) => {
@@ -24,29 +21,47 @@ const IdentityProvider = ({children}) => {
   const [identity, setIdentity] = useState()
   const [principal, setPrincipal] = useState()
   const [selectedNetwork, setSelectedNetwork] = useState()
+  const [walletIcName, setWalletIcName] = useState(null)
 
   const { isOpen: isWalletModalOpen, onOpen: onWalletModalOpen, onClose: onWalletModalClose } = useDisclosure()
   const { isOpen: isUpgradeModalOpen, onOpen: onUpgradeModalOpen, onClose: onUpgradeModalClose } = useDisclosure()
+  const icWalletDisclosure = useDisclosure()
 
   const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
   
-  const updatePrincipal = async (account, identity) => {
+  const updatePrincipal = useCallback(async (account, identity) => {
     if (!account)
       setPrincipal(null)
     else if (account.type ==='Evm' || account.type ==='Svm')
       setPrincipal(identity.getPrincipal())
     else if(account.type === 'Ic') 
-      setPrincipal(await walletIcObject.getPrincipal())
-  }
+      setPrincipal(await window.ic[walletIcName]?.getPrincipal())
+  },[walletIcName])
+
+
+  const loadWallet = useCallback(async ()=>{
+		const isConnectedWithInfinity = await window?.ic?.infinityWallet?.isConnected()
+		const isConnectedWithPlug = await window?.ic?.plug?.isConnected()
+		if(isConnectedWithInfinity) {
+      setWalletIcName('infinityWallet')
+			return 'infinityWallet'
+		} else if(isConnectedWithPlug) {
+      setWalletIcName('plug')
+			return 'plug'
+		} else {
+			return
+		}
+  },[])
   
   useEffect(() => {
     const data = loadAccount()
+    loadWallet()
     updatePrincipal(data?.account, data?.identity)
     setAccount(data?.account)
     setIdentity(data?.identity)
-  }, [])
+  }, [loadWallet, updatePrincipal])
 
-  const updateIdentity = useCallback(async (type, identity) => {
+  const updateIdentity = useCallback(async (type, identity, walletIcName) => {
     let _account, _principal
     if(type === 'Evm') {
       const provider = new ethers.providers.Web3Provider(window.ethereum)
@@ -60,7 +75,7 @@ const IdentityProvider = ({children}) => {
       _account = {type: 'Svm', address: address}
       _principal = identity.getPrincipal()
     } else if (type === 'Ic') {
-      _principal = await walletIcObject.getPrincipal()
+      _principal = await window.ic[walletIcName].getPrincipal()
       _account = {address: _principal.toString(), type: 'Ic'}
     }
     setAccount(_account)
@@ -75,48 +90,48 @@ const IdentityProvider = ({children}) => {
     else if(type === 'svm')
       return window?.solana
     else if(type === 'ic')
-      return window.ic?.[walletIcName]
+      return window.ic?.infinityWallet ?? window.ic?.plug
   }, [])
 
   const isWalletDetected = useCallback((type) => {
     return !!getWallet(type)
   }, [getWallet])
 
-  const connectWallet = useCallback(async (type) => {
+  const connectWallet = useCallback(async (type, wallet) => {
     if (type === 'ic') {
-      
       // check connected
-      const isConnected = await walletIcObject.isConnected()
+      const isConnected = await window.ic[wallet]?.isConnected()
       if(isConnected) return
-
+      
       // request connect
       const whitelist = [CHILD_CANISTER_ID, MANAGEMENT_CANISTER_ID]
-      await walletIcObject.requestConnect({whitelist, host});
+      await window.ic[wallet]?.requestConnect({whitelist, host});
     }
   }, [host])
   
   const createActor = useCallback(async(options) => {
+    console.log(options)
     if (options.type === 'ic') {
       const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
-	    return await walletIcObject.createActor(actorOptions)
+	    return await window.ic[options.wallet ?? walletIcName]?.createActor(actorOptions)
     } else {
       const actorOptions = { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity}
       return Actor.createActor(options.interfaceFactory, actorOptions)
     }
-	}, [host])
+	}, [host, walletIcName])
 
 
 
   const disconnect = async () => {
     if (account.type === 'Ic') {
-      const isConnected = await walletIcObject.isConnected()
+      const isConnected = await window.ic?.[walletIcName].isConnected()
       if (!isConnected) return
-      await walletIcObject.disconnect() // not resolving
+      await window.ic?.[walletIcName].disconnect() // not resolving
     }
     clearAccount()
   }
 
-  const value = { identity, account, principal, updateIdentity, disconnect, setAccount, createActor, isWalletDetected, getWallet, connectWallet, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
+  const value = { identity, account, principal, updateIdentity, disconnect, setAccount, createActor, isWalletDetected, getWallet, connectWallet, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork, icWalletDisclosure, setWalletIcName }
   
   return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
   
