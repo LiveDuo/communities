@@ -52,5 +52,5 @@ service : () -> {
   get_upgrades : () -> (vec Upgrade) query;
   get_user_canisters : () -> (vec CanisterData);
   http_request : (HttpRequest) -> (HttpResponse) query;
-  remove_upgrade : (text) -> (Result_1);
+  remove_upgrade : (text, text) -> (Result_1);
 }

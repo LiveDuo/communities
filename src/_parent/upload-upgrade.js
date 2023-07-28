@@ -43,6 +43,6 @@ const track = argv.track ?? 'stable'
 	// create upgrade
 	const wasmVersionFrom = await fs.readFile(`./build/child/${versionFrom}/child.wasm`)
 	const upgradeFromBuffer = Buffer.from(sha256(wasmVersionFrom), 'hex')
-	const res = await actorParent.create_upgrade(`${version}`, Array.from(upgradeFromBuffer), assets.map(a => `/upgrade/${version}/${a}`), track)
+	const res = await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assets.map(a => `/upgrade/${version}/${a}`), track)
 	console.log(res)
 })()

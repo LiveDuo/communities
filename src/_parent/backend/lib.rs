@@ -196,12 +196,6 @@ fn get_children() ->  Vec<Principal>{
 fn get_next_upgrades(wasm_hash: Vec<u8>) -> Vec<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
-
-        // let upgrade_id_opt = state.indexes.upgrade_from.get(&Some(wasm_hash.to_owned()));
-        // if upgrade_id_opt == None {
-        //     return  None;
-        // }
-        // state.upgrades.get(upgrade_id_opt.unwrap()).cloned();
         state.upgrades.iter().filter(|&(_, u)| u.upgrade_from == Some(wasm_hash.to_owned())).map(|(_, u)|u.to_owned()).collect::<Vec<_>>()
     })
 }
@@ -274,7 +268,7 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
         state.indexes.wasm_hash.insert(wasm_hash, upgrade_id);
         state.indexes.upgrade_from.insert(upgrade_from, upgrade_id);
         
-        // relations track with upgrade
+        // add track relation
         let track_id = state.indexes.track.get(&track).unwrap().to_owned();
         state.relations.track_id_to_upgrade_id.insert(track_id, upgrade_id);
     });

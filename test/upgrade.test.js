@@ -49,8 +49,8 @@ describe.only('Testing with done', () => {
 		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1', '--track', 'stable' ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
-		const resNextUpgrade = await actorChild.get_next_upgrades()
-		const [ upgrade ] = resNextUpgrade.Ok
+		const resNextUpgrades = await actorChild.get_next_upgrades()
+		const [ upgrade ] = resNextUpgrades.Ok
 		expect(upgrade).toBeDefined()
 		
 		// upgrade child (0.0.2)
@@ -60,8 +60,8 @@ describe.only('Testing with done', () => {
 		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--versionFrom', '0.0.2', '--track', 'stable'] ,{cwd: process.cwd(), stdio: 'inherit'})
 
 		// get child upgrade
-		const resNextUpgrade1 = await actorChild.get_next_upgrades()
-		const [ upgrade1 ] = resNextUpgrade1.Ok
+		const resNextUpgrades1 = await actorChild.get_next_upgrades()
+		const [ upgrade1 ] = resNextUpgrades1.Ok
 		expect(upgrade1).toBeDefined()
 
 		// upgrade child (0.0.2b)

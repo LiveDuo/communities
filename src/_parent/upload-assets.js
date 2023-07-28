@@ -16,7 +16,7 @@ const id = argv.identity ?? 'default'
 const version = argv.version ?? '0.0.1'
 const track = argv.track ?? 'stable'
 
-//` node src/_parent/upload-assets.js` --network https://ic0.app --identity with-wallet
+// node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
 ; (async () => {
 
 	const canisters = await getCanisters(host)
@@ -25,16 +25,16 @@ const track = argv.track ?? 'stable'
 	const actorAsset = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 	const actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisters.parent[hostType(host)] })
 
-	// // upload domain file
-	// const domains = await fs.readFile('./build/domains/index.txt')
-	// await uploadFile(actorAsset, '/.well-known/ic-domains', domains)
+	// upload domain file
+	const domains = await fs.readFile('./build/domains/index.txt')
+	await uploadFile(actorAsset, '/.well-known/ic-domains', domains)
 
-	// // upload parent assets
-	// const assetsParent = await getFiles('./build/parent')
-	// for (let asset of assetsParent) {
-	// 	const assetBuf = await fs.readFile(`build/parent/${asset}`)
-	// 	await uploadFile(actorAsset, `/${asset}`, assetBuf)
-	// }
+	// upload parent assets
+	const assetsParent = await getFiles('./build/parent')
+	for (let asset of assetsParent) {
+		const assetBuf = await fs.readFile(`build/parent/${asset}`)
+		await uploadFile(actorAsset, `/${asset}`, assetBuf)
+	}
 
 	// upload child assets
 	const assetsChild = await getFiles(`./build/child/${version}`)
@@ -45,7 +45,7 @@ const track = argv.track ?? 'stable'
 
 	// create upgrade
 	const assetsWithPath =  assetsChild.map(a => `/upgrade/${version}/${a}`)
-	const res = await actorParent.create_upgrade(`${version}`, [], assetsWithPath, track)
+	const res = await actorParent.create_upgrade(version, [], assetsWithPath, track)
 	if (res.Err) {
 		console.log('This version already exist')
 	}
