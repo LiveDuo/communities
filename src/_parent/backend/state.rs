@@ -128,6 +128,10 @@ pub struct Upgrade {
     pub wasm_hash: Vec<u8>,
     pub assets: Vec<String>,
 }
+#[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
+pub struct Track {
+    pub name: String,
+}
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relation<X: Ord, Y: Ord> {
@@ -150,11 +154,29 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
                 .insert(y, BTreeMap::from_iter([(x.clone(), ())]));
         }
     }
+
+    pub fn remove(&mut self, x: X, y: Y) {
+
+        let forward_x = self.forward.get_mut(&x).unwrap();
+        forward_x.remove(&y.clone());
+        if forward_x.is_empty() {
+            self.forward.remove(&x);
+        }
+
+        let backward_y = self.backward.get_mut(&y).unwrap();
+        backward_y.remove(&x.clone());
+        if backward_y.is_empty() {
+            self.backward.remove(&y);
+        }
+        
+    }
 }
+    
 
 #[derive(Default,CandidType, Clone, Deserialize, Debug)]
 pub struct Relations {
     pub profile_id_to_canister_id: Relation<u64, u64>,
+    pub track_id_to_upgrade_id: Relation<u64, u64>,
 }
 
 #[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
@@ -173,11 +195,13 @@ pub struct Indexes {
     pub wasm_hash: HashMap<Vec<u8>, u64>,
     pub upgrade_from: HashMap<Option<Vec<u8>>, u64>,
     pub version: HashMap<String, u64>,
+    pub track: HashMap<String, u64> 
 }
 #[derive(Default, Clone, CandidType, Deserialize)]
 pub struct State {
     pub profiles: BTreeMap<u64, Profile>,
     pub upgrades: BTreeMap<u64, Upgrade>,
+    pub tracks: BTreeMap<u64, Track>,
     pub canister_data: BTreeMap<u64, CanisterData>,
     pub indexes: Indexes,
     pub relations: Relations,

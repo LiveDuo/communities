@@ -24,17 +24,17 @@ describe.only('Testing with done', () => {
     	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
 		// remove upgrades
-		const versions = ['0.0.2-beta']
+		const versions = ['0.0.2', '0.0.2b']
 		const upgrades = await actorParent.get_upgrades()
 		const upgradesExist = upgrades.filter(u => versions.includes(u.version))
 		for (const upgrade of upgradesExist) {
-			await actorParent.remove_upgrade(upgrade.version)
+			await actorParent.remove_upgrade(upgrade.version, 'stable')
 		}
 	})
 
 	jest.setTimeout(120000)
 	
-	test.skip('Should create a new community', async () => {
+	test('Should create a new community', async () => {
 		
 		// create child
 		if (canisterIds.ledger) {
@@ -46,10 +46,10 @@ describe.only('Testing with done', () => {
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 
 		// upload upgrade (0.0.2)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1'] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1', '--track', 'stable' ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
-		const resNextUpgrade = await actorChild.get_next_upgrade()
+		const resNextUpgrade = await actorChild.get_next_upgrades()
 		const [ upgrade ] = resNextUpgrade.Ok
 		expect(upgrade).toBeDefined()
 		
@@ -57,10 +57,10 @@ describe.only('Testing with done', () => {
 		await actorChild.upgrade_canister(upgrade.wasm_hash)
 		
 		// upload version (0.0.2b)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--versionFrom', '0.0.2'] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--versionFrom', '0.0.2', '--track', 'stable'] ,{cwd: process.cwd(), stdio: 'inherit'})
 
 		// get child upgrade
-		const resNextUpgrade1 = await actorChild.get_next_upgrade()
+		const resNextUpgrade1 = await actorChild.get_next_upgrades()
 		const [ upgrade1 ] = resNextUpgrade1.Ok
 		expect(upgrade1).toBeDefined()
 
@@ -72,31 +72,4 @@ describe.only('Testing with done', () => {
 		expect(posts.length).toBe(0)
 		
 	})
-	test('Tracks', async () => {
-		
-		// create child
-		if (canisterIds.ledger) {
-			const accountId = getAccountId(canisterIds.parent.local, principal)
-			await transferIcpToAccount(accountId)
-		}
-		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
-		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
-		console.log(`http://${childPrincipalId}.localhost:8000/`)
-
-		// upload upgrade (0.0.2-beta)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1', '--track', 'beta'] ,{cwd: process.cwd(), stdio: 'inherit'})
-		
-		// get child upgrade
-		const resNextUpgrades = await actorChild.get_next_upgrades()
-		const [ upgrade ] = resNextUpgrades.Ok
-		expect(upgrade).toBeDefined()
-		
-		// upgrade child (0.0.2)
-		await actorChild.upgrade_canister(upgrade.wasm_hash)
-
-		// check canister
-		const posts = await actorChild.get_posts()
-		expect(posts.length).toBe(0)
-	})
-
 })

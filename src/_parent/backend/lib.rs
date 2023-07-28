@@ -11,11 +11,34 @@ use utils::*;
 use create_child::*;
 use crate::state::{STATE, *};
 
+fn create_default_tracks() {
+
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let caller = ic_cdk::caller();
+
+        //  added stable track
+        let stable_tract_id = uuid(&caller.to_text());
+        let stable_track  = Track {name: "stable".to_owned()};
+        state.tracks.insert(stable_tract_id, stable_track.to_owned());
+        state.indexes.track.insert("stable".to_string(), stable_tract_id);
+        
+        //  added stable beta
+        let beta_tract_id = uuid(&caller.to_text());
+        let beta_track  = Track {name: "beta".to_owned()};
+        state.tracks.insert(beta_tract_id, beta_track);
+        state.indexes.track.insert("beta".to_string(), beta_tract_id);
+    })
+}
+
 #[init]
 #[candid_method(init)]
 fn init() {
     ic_certified_assets::init();
+    create_default_tracks();
 }
+
+
 
 #[update]
 #[candid_method(update)]
@@ -49,12 +72,12 @@ async fn create_child() -> Result<Principal, String> {
     // get latest version
     let version = STATE.with(|s| {
         let state = s.borrow();
-        let mut upgrades = state.upgrades.iter().filter(|&(_, u)| u.version.ends_with("stable")).map(|(_, u)| u.to_owned()).collect::<Vec<_>>();
+        let stable_track_id = state.indexes.track.get(&"stable".to_owned()).unwrap();
+        let upgrades_id = state.relations.track_id_to_upgrade_id.forward.get(stable_track_id);
+        let mut upgrades = upgrades_id.unwrap().iter().map(|(upgrade_id, _)| state.upgrades.get(upgrade_id).unwrap().to_owned()).collect::<Vec<_>>();
         upgrades.sort_by(|a, b| b.version.cmp(&a.version));
         upgrades.first().unwrap().to_owned()
     });
-
-    ic_cdk::println!("version {:?}", version);
 
     // install wasm code
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Installing,)).await.unwrap().0.unwrap();});
@@ -209,7 +232,7 @@ fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
 
 #[update]
 #[candid_method(update)]
-async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>,) -> Result<(), String> {
+async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>, track: String) -> Result<(), String> {
     // authorize
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
@@ -249,7 +272,11 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
         state.upgrades.insert(upgrade_id, upgrade);
         state.indexes.version.insert(version, upgrade_id);
         state.indexes.wasm_hash.insert(wasm_hash, upgrade_id);
-        state.indexes.upgrade_from.insert(upgrade_from, upgrade_id)
+        state.indexes.upgrade_from.insert(upgrade_from, upgrade_id);
+        
+        // relations track with upgrade
+        let track_id = state.indexes.track.get(&track).unwrap().to_owned();
+        state.relations.track_id_to_upgrade_id.insert(track_id, upgrade_id);
     });
 
     Ok(())
@@ -258,7 +285,7 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
 
 #[update]
 #[candid_method(update)]
-async fn remove_upgrade(version: String) -> Result<(), String> {
+async fn remove_upgrade(version: String, track: String) -> Result<(), String> {
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
@@ -275,6 +302,8 @@ async fn remove_upgrade(version: String) -> Result<(), String> {
         state.indexes.wasm_hash.remove(&upgrade.wasm_hash);
         state.indexes.upgrade_from.remove(&upgrade.upgrade_from);
         state.upgrades.remove(&upgrade_id);
+        let track_id = state.indexes.track.get(&track).unwrap().to_owned();
+        state.relations.track_id_to_upgrade_id.remove(track_id, upgrade_id);
 
         Ok(())
     })

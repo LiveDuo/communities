@@ -40,12 +40,12 @@ const track = argv.track ?? 'stable'
 	const assetsChild = await getFiles(`./build/child/${version}`)
 	for (let asset of assetsChild) {
 		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
-		await uploadFile(actorAsset, `/upgrade/${version}-${track}/${asset}`, assetBuf)
+		await uploadFile(actorAsset, `/upgrade/${version}/${asset}`, assetBuf)
 	}
 
 	// create upgrade
-	const assetsWithPath =  assetsChild.map(a => `/upgrade/${version}-${track}/${a}`)
-	const res = await actorParent.create_upgrade(`${version}-${track}`, [], assetsWithPath)
+	const assetsWithPath =  assetsChild.map(a => `/upgrade/${version}/${a}`)
+	const res = await actorParent.create_upgrade(`${version}`, [], assetsWithPath, track)
 	if (res.Err) {
 		console.log('This version already exist')
 	}
