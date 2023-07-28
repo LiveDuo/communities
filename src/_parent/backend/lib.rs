@@ -49,10 +49,12 @@ async fn create_child() -> Result<Principal, String> {
     // get latest version
     let version = STATE.with(|s| {
         let state = s.borrow();
-        let mut upgrades = state.upgrades.iter().map(|(_, u)| u.to_owned()).collect::<Vec<_>>();
+        let mut upgrades = state.upgrades.iter().filter(|&(_, u)| u.version.ends_with("stable")).map(|(_, u)| u.to_owned()).collect::<Vec<_>>();
         upgrades.sort_by(|a, b| b.version.cmp(&a.version));
         upgrades.first().unwrap().to_owned()
     });
+
+    ic_cdk::println!("version {:?}", version);
 
     // install wasm code
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Installing,)).await.unwrap().0.unwrap();});
@@ -168,14 +170,16 @@ fn get_children() ->  Vec<Principal>{
 
 #[query]
 #[candid_method(query)]
-fn get_next_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
+fn get_next_upgrades(wasm_hash: Vec<u8>) -> Vec<Upgrade> {
     STATE.with(|s| {
         let state = s.borrow();
-        let upgrade_id_opt = state.indexes.upgrade_from.get(&Some(wasm_hash.to_owned()));
-        if upgrade_id_opt == None {
-            return  None;
-        }
-        state.upgrades.get(upgrade_id_opt.unwrap()).cloned()
+
+        // let upgrade_id_opt = state.indexes.upgrade_from.get(&Some(wasm_hash.to_owned()));
+        // if upgrade_id_opt == None {
+        //     return  None;
+        // }
+        // state.upgrades.get(upgrade_id_opt.unwrap()).cloned();
+        state.upgrades.iter().filter(|&(_, u)| u.upgrade_from == Some(wasm_hash.to_owned())).map(|(_, u)|u.to_owned()).collect::<Vec<_>>()
     })
 }
 

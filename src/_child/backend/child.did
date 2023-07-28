@@ -82,7 +82,7 @@ service : (opt principal, opt vec nat8) -> {
   create_post : (title: text, description: text) -> (variant { Ok : PostSummary; Err : text });
   create_profile : (auth: AuthenticationWith) -> (variant { Ok : Profile; Err : text });
   create_reply : (post_id: nat64, context: text) -> (variant { Ok : ReplyResponse; Err : text });
-  get_next_upgrade : () -> (variant { Ok : opt Upgrade; Err : text }) query;
+  get_next_upgrades : () -> (variant { Ok : vec Upgrade; Err : text }) query;
   get_post : (post_id: nat64) -> (variant { Ok : PostResponse; Err : text }) query;
   get_posts : () -> (vec PostSummary) query;
   get_posts_by_user : (authentication: Authentication) -> (variant { Ok : vec PostSummary; Err : text }) query;

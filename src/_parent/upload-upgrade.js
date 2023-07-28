@@ -16,6 +16,7 @@ const id = argv.identity ?? 'default'
 
 const version = argv.version ?? '0.0.2'
 const versionFrom = argv.versionFrom ?? '0.0.1'
+const track = argv.track ?? 'stable'
 
 // node src/_parent/upload-upgrade.js --network https://ic0.app --identity with-wallet
 ; (async () => {
@@ -36,12 +37,12 @@ const versionFrom = argv.versionFrom ?? '0.0.1'
 	const assets = await getFiles(`./build/child/${version}`)
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
-		await uploadFile(actorAsset, `/upgrade/${version}/${asset}`, assetBuf)
+		await uploadFile(actorAsset, `/upgrade/${version}-${track}/${asset}`, assetBuf)
 	}
 
 	// create upgrade
 	const wasmVersionFrom = await fs.readFile(`./build/child/${versionFrom}/child.wasm`)
 	const upgradeFromBuffer = Buffer.from(sha256(wasmVersionFrom), 'hex')
-	const res = await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assets.map(a => `/upgrade/${version}/${a}`))
+	const res = await actorParent.create_upgrade(`${version}-${track}`, Array.from(upgradeFromBuffer), assets.map(a => `/upgrade/${version}-${track}/${a}`))
 	console.log(res)
 })()

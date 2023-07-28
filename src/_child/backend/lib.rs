@@ -458,7 +458,7 @@ fn http_request(
 
 #[query]
 #[candid_method(query)]
-async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
+async fn get_next_upgrades() -> Result<Vec<Upgrade>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
     let parent  = parent_opt.unwrap();
@@ -466,9 +466,9 @@ async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
     if current_version_opt == None { return  Err("Current version not found".to_owned()); }
     let current_version = current_version_opt.unwrap();
     
-    let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
+    let (next_versions,) = ic_cdk::call::<_, (Vec<Upgrade>,)>(parent, "get_next_upgrades", (current_version,),).await.unwrap();
     
-    Ok(next_version_opt)
+    Ok(next_versions)
 }
 
 
@@ -498,6 +498,20 @@ async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
     ic_cdk::spawn(upgrade_canister_cb(wasm));
 
     Ok(())
+}
+#[query]
+fn test_xx () {
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
+    ic_cdk::println!("sad");
 }
 
 
