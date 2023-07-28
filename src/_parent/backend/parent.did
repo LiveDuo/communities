@@ -47,7 +47,7 @@ type Upgrade = record {
 };
 
 service : () -> {
-  create_child : () -> (Result);
+  create_child : () -> (CreateChildResult);
   create_upgrade : (text, opt vec nat8, vec text, text) -> (CreateUpgradeResult);
   get_next_upgrades : (vec nat8) -> (vec Upgrade) query;
   get_upgrade : (vec nat8) -> (opt Upgrade) query;
@@ -55,8 +55,5 @@ service : () -> {
   get_upgrades : () -> (vec Upgrade) query;
   remove_upgrade : (text, text) -> (RemoveUpgradeResult);
 
-  create_child : () -> (CreateChildResult);
-  get_user_canisters : () -> (vec CanisterData) query;
-
-  http_request : (HttpRequest) -> (HttpResponse) query;
+  get_user_canisters : () -> (vec CanisterData) query
 }

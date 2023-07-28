@@ -17,13 +17,13 @@ fn create_default_tracks() {
         let mut state = s.borrow_mut();
         let caller = ic_cdk::caller();
 
-        //  added stable track
+        // add stable track
         let stable_tract_id = uuid(&caller.to_text());
         let stable_track  = Track {name: "stable".to_owned()};
         state.tracks.insert(stable_tract_id, stable_track.to_owned());
         state.indexes.track.insert("stable".to_string(), stable_tract_id);
         
-        //  added stable beta
+        // add beta track
         let beta_tract_id = uuid(&caller.to_text());
         let beta_track  = Track {name: "beta".to_owned()};
         state.tracks.insert(beta_tract_id, beta_track);
