@@ -130,7 +130,7 @@ fn create_canister_data_callback(caller: Principal) -> Result<u64, String> {
 
 
 #[query]
-#[candid_method(update)]
+#[candid_method(query)]
 fn get_user_canisters() -> Vec<CanisterData> {
     let caller = ic_cdk::caller();
     STATE.with(|s| {

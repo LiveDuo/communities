@@ -1,14 +1,8 @@
 import { HttpAgent } from '@dfinity/agent'
-import { isLocalhost } from '../utils'
-
-const isLocal = isLocalhost(window.location.hostname)
-export { isLocal }
+import { isLocal } from './url'
 
 const icHost = isLocal ? '127.0.0.1:8000' : 'ic0.app'
 export { icHost }
-
-const icUrl = isLocal ? `http://${icHost}/` : `https://${icHost}`
-export { icUrl }
 
 const getAgent = (identity) => {
   const agent = new HttpAgent({ host: icHost, identity })

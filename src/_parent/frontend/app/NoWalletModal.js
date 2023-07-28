@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
 import { IdentityContext } from '../store/identity'
 import { Modal, ModalFooter, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Box,} from '@chakra-ui/react'
 import { Text, Button, Link } from '@chakra-ui/react'
@@ -7,23 +7,18 @@ import { ReactComponent as ChromeLogo } from '../logos/chrome.svg'
 import { ReactComponent as BraveLogo } from '../logos/brave.svg'
 import { ReactComponent as FirefoxLogo } from '../logos/firefox.svg'
 
-const WalletModal = () =>  {
+const NoWalletModal = () =>  {
   
-  const {modalDisclosure, connect} = useContext(IdentityContext)
-  const [plugInstalled, setPlugInstalled] = useState()
-
-  useEffect(() => {
-    setPlugInstalled(!!window?.ic?.plug)
-  }, [])
+  const {connect, walletDetected, noWalletDisclosure} = useContext(IdentityContext)
 
   return (
-    <Modal isOpen={modalDisclosure.isOpen} onClose={modalDisclosure.onClose} isCentered>
+    <Modal isOpen={noWalletDisclosure.isOpen} onClose={noWalletDisclosure.onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{plugInstalled ? 'Connect Plug Wallet' : 'You\'d need a wallet'}</ModalHeader>
+        <ModalHeader>{walletDetected ? 'Connect Plug Wallet' : 'You\'d need a wallet'}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {!plugInstalled ? 
+          {!walletDetected ? 
             <Box m='8px' mb='20px'>
               <Text mb='20px'>
                 Get the Plug Wallet extension for your browser.
@@ -45,7 +40,7 @@ const WalletModal = () =>  {
             </Box>
             }
         </ModalBody>
-        {plugInstalled && 
+          {walletDetected && 
           <ModalFooter>
           <Button variant='solid' onClick={connect}>Connect</Button>
         </ModalFooter>}
@@ -54,4 +49,4 @@ const WalletModal = () =>  {
   )
 }
 
-export default WalletModal
+export default NoWalletModal

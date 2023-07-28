@@ -8,9 +8,13 @@ import { timeSince } from '../utils/time'
 import { getPrincipalUrl } from '../utils/principal'
 
 import { IdentityContext } from '../store/identity'
+import { ParentContext } from '../store/parent'
 
 
-const UserCommunities = ({ childPrincipals, createChildBatch }) => {
+const UserCommunities = () => {
+
+	const { userPrincipal } = useContext(IdentityContext)
+	const { createUserCommunity, userCommunities } = useContext(ParentContext)
 
 	const getStateColor = (state) => {
 		if (state === 'Preparing') return 'green'
@@ -20,16 +24,13 @@ const UserCommunities = ({ childPrincipals, createChildBatch }) => {
 		else if (state === 'Ready') return 'purple'
 	}
 
-	const { walletConnected, userPrincipal } = useContext(IdentityContext)
 	return (
 		<Box  p="20px 0px">
-			{!walletConnected ?
-			<Text>Wallet not connected</Text> :
-			childPrincipals ? 
-				childPrincipals?.length > 0 ?
+			{userCommunities ? 
+				userCommunities?.length > 0 ?
 					<>
 						<Flex marginBottom="10px">
-							<Button marginRight="20px" colorScheme={'green'} onClick={createChildBatch}>Deploy Community</Button>
+							<Button marginLeft="auto" marginRight="20px" colorScheme="green" size="sm" onClick={createUserCommunity}>Deploy Community</Button>
 						</Flex>
 						<TableContainer>
 							<Table variant='simple'>
@@ -42,7 +43,7 @@ const UserCommunities = ({ childPrincipals, createChildBatch }) => {
 									</Tr>
 								</Thead>
 								<Tbody>
-								{childPrincipals?.map((canister, i) => 
+								{userCommunities?.map((canister, i) => 
 									<Tr key={i}>
 										<Td><Tag colorScheme={getStateColor(canister.state)}>{canister.state}</Tag></Td>
 										<Td><Link href={getPrincipalUrl(canister.id)} isExternal>
