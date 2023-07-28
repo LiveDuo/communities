@@ -15,8 +15,8 @@ const Header = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { principal, login, logout, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen } = useContext(IdentityContext)
-  const { setProfile, getProfileByAuth } = useContext(ChildContext)
+  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure, getWallet } = useContext(IdentityContext)
+  const { getProfileByAuth, login } = useContext(ChildContext)
 
   useEffect(() => {
     if (account)
@@ -24,21 +24,23 @@ const Header = () => {
   }, [account, getProfileByAuth])
 
   const loginAndSet = async (type) => {
-    if (type === 'evm' && !window?.ethereum) {
+    if (type === 'evm' && !isWalletDetected(type)) {
       onWalletModalOpen()
       setSelectedNetwork(type)
       return
-    } else if (type === 'svm' && !window?.solana) {
+    } else if (type === 'svm' && !isWalletDetected(type)) {
       onWalletModalOpen()
       setSelectedNetwork(type)
       return
-    } else if (type === 'ic' && !window?.ic?.plug) {
+    } else if (type === 'ic' && !isWalletDetected(type)) {
       onWalletModalOpen()
       setSelectedNetwork(type)
+      return
+    } else if (type === 'ic' && isWalletDetected(type)){
+      icWalletDisclosure.onOpen()
       return
     }
-    const profile = await login(type)
-    setProfile(profile)
+    await login(type)
   }
 
   return (
@@ -73,7 +75,7 @@ const Header = () => {
         </Box>}
         {(account && principal) && 
         <Box display="inline-block" ml="8px">
-          <Button onClick={logout}>Logout</Button>
+          <Button onClick={disconnect}>Logout</Button>
         </Box>}
     </Flex>
   )

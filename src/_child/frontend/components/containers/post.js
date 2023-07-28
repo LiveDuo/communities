@@ -16,8 +16,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 
 const PostContainer = () => {
-  const { childActor, account, principal, setSelectedNetwork, onWalletModalOpen } = useContext(IdentityContext)
-  const { getPost, createReply } = useContext(ChildContext)
+  const { account, principal, setSelectedNetwork, onWalletModalOpen } = useContext(IdentityContext)
+  const { getPost, createReply, childActor } = useContext(ChildContext)
   
 	const [replyText, setReplyText] = useState('')
 	const [post, setPost] = useState()

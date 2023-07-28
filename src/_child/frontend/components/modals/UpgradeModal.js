@@ -1,14 +1,18 @@
 import { useContext, useEffect, useState, useCallback } from 'react'
 import { IdentityContext } from '../../store/identity'
+import { ManagementContext } from '../../store/management'
+import { ChildContext } from '../../store/child'
 import { Principal } from "@dfinity/principal";
-import { CHILD_CANISTER_ID } from '../../agents/child'
+import { CHILD_CANISTER_ID } from '../../store/child'
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton } from '@chakra-ui/react'
 import { Button, Text, Box } from '@chakra-ui/react'
 
 const UpgradeModal = () => {
 	const [isController, setIsController] = useState()
 	const [upgrade, setUpgrade] = useState()
-  	const {isUpgradeModalOpen, onUpgradeModalClose, managementActor, childActor, principal} = useContext(IdentityContext)
+	const {isUpgradeModalOpen, onUpgradeModalClose, principal} = useContext(IdentityContext)
+	const { managementActor } = useContext(ManagementContext)
+	const { childActor } = useContext(ChildContext)
 
 	const checkForUpgrade = useCallback(async () => {
 		const canisterId = Principal.fromText(CHILD_CANISTER_ID)

@@ -1,184 +1,140 @@
-import { createContext, useState, useEffect } from 'react'
-import { useToast, useDisclosure } from '@chakra-ui/react'
-import { utils , ethers} from 'ethers'
-import bs58 from 'bs58'
+import { createContext, useState, useEffect, useCallback } from 'react'
+import { useDisclosure } from '@chakra-ui/react'
 
-import { createChildActor, createChildActorFromPlug } from '../agents/child'
-import { createManagementActor, createManagementActorFromPlug } from '../agents/management'
+import {loadAccount, clearAccount, saveAccount } from '../utils/stoge'
 
-import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
-import { saveAccount, loadAccount, clearAccount } from '../utils/stoge'
+import { Actor } from '@dfinity/agent'
+
+import { CHILD_CANISTER_ID } from './child'
+import { MANAGEMENT_CANISTER_ID } from './management'
+
+import { getAgent, icHost } from '../utils/agent'
+import { isLocal} from '../utils/url'
+
+import { ethers } from 'ethers'
 
 const IdentityContext = createContext()
 
 const IdentityProvider = ({children}) => {
+  
   const [account, setAccount] = useState()
+  const [identity, setIdentity] = useState()
   const [principal, setPrincipal] = useState()
-
   const [selectedNetwork, setSelectedNetwork] = useState()
-  const [childActor, setChildActor] = useState()
-  const [managementActor, setManagementActor] = useState()
+  const [walletIcName, setWalletIcName] = useState(null)
 
   const { isOpen: isWalletModalOpen, onOpen: onWalletModalOpen, onClose: onWalletModalClose } = useDisclosure()
   const { isOpen: isUpgradeModalOpen, onOpen: onUpgradeModalOpen, onClose: onUpgradeModalClose } = useDisclosure()
+  const icWalletDisclosure = useDisclosure()
 
-  const toast = useToast()
+  const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
+  
+  const getIcWalletName = useCallback(async () => {
+    // bitfinity wallet
+		const isConnectedWithInfinity = await window?.ic?.infinityWallet?.isConnected()
+		if (isConnectedWithInfinity) return 'infinityWallet'
 
-  const loadActor = async (account, identity) => {
-    let _childActor, _principal, _managementActor
-    if(!account) {
-      _childActor = createChildActor(null)
-      _managementActor = createManagementActor(null)
-    } else if (account.type ==='Evm' || account.type ==='Svm') {
-      _childActor = createChildActor(identity)
-      _managementActor = createManagementActor(identity)
-      _principal = identity.getPrincipal()
-    } else if(account.type === 'Ic') {
-      _childActor = await createChildActorFromPlug()
-      _managementActor = await createManagementActorFromPlug()
-      _principal = await window.ic.plug.getPrincipal()
+    // plug wallet
+		const isConnectedWithPlug = await window?.ic?.plug?.isConnected()
+    if (isConnectedWithPlug) return 'plug'
+		
+  },[])
+
+  const loadWallet = useCallback(async (account, identity) => {
+    if (!account){
+      setPrincipal(null)
+    } else if (account.type ==='Evm') {
+      setPrincipal(identity.getPrincipal())
+    } else if (account.type ==='Svm') {
+      setPrincipal(identity.getPrincipal())
+    } else if (account.type === 'Ic') {
+      const IcWalletName = getIcWalletName()
+      setWalletIcName(IcWalletName)
+      
+      const _principal = await window.ic[IcWalletName]?.getPrincipal()
+      setPrincipal(_principal)
     }
-    setChildActor(_childActor)
-    setManagementActor(_managementActor)
-    setPrincipal(_principal)
-
-  }
+  }, [getIcWalletName])
   
   useEffect(() => {
     const data = loadAccount()
+    loadWallet(data?.account, data?.identity)
     setAccount(data?.account)
-    loadActor(data?.account, data?.identity)
-  }, [])
+    setIdentity(data?.identity)
+  }, [getIcWalletName, loadWallet])
 
-  const loginWithEvm = async () => {
-    try {
-      // get identity
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
+  const updateIdentity = useCallback(async (type, identity, walletIcName) => {
+    let _account, _principal
+    if(type === 'Evm') {
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
       const signer = await provider.getSigner()
       const address = await signer.getAddress()
-      const identity = getIdentityFromSignature() // generate Ed25519 identity
-      const loginMessage = getLoginMessage(identity.getPrincipal().toString())
-      const signature = await signer.signMessage(loginMessage)// sign with metamask
-      
-      // save identity
-      const account = {address, type: 'Evm'}
-      saveAccount(identity, account)
-      setPrincipal(identity.getPrincipal())
-      setAccount(account)
-
-      // set actors
-      const _childActor = createChildActor(identity)
-      const _managementActor = createManagementActor(identity)
-      setChildActor(_childActor)
-      setManagementActor(_managementActor)
-
-      // link address
-      const auth = {Evm: { message: utils.hashMessage(loginMessage), signature} }
-      const response = await _childActor.create_profile(auth)
-      const profile = response.Ok
-
-      toast({ title: 'Signed in with Ethereum', status: 'success', duration: 4000, isClosable: true })
-
-      return profile
-    } catch (error) {
-      toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
-    }
-	}
-
-  const loginWithSvm = async () => {
-    try {
-
+      _account = {type: 'Evm', address: address}
+      _principal = identity.getPrincipal()
+    } else if( type === 'Svm') {
       const phantom = window.solana
-      await phantom.connect()
       const address = phantom.publicKey.toString()
-      const identity = getIdentityFromSignature() // generate Ed25519 identity
-      const loginMessage = getLoginMessage(identity.getPrincipal().toString())
-      
-      // get identity
-      const encodedMessage = new TextEncoder().encode(loginMessage)
-      const signedMessage = await phantom.request({ method: 'signMessage', params: { message: encodedMessage } })
-
-      // set actors
-      const _childActor = createChildActor(identity)
-      const _managementActor = createManagementActor(identity)
-      setChildActor(_childActor)
-      setManagementActor(_managementActor)
-      // save identity
-      const account = {address, type: 'Svm'}
-      saveAccount(identity, account)
-      setPrincipal(identity.getPrincipal())
-      setAccount(account)
-
-      // link address
-      const publicKey = Buffer.from(bs58.decode(signedMessage.publicKey)).toString('hex')
-      const signature = Buffer.from(bs58.decode(signedMessage.signature)).toString('hex')
-      const message = Buffer.from(encodedMessage).toString('hex')
-      const response = await _childActor.create_profile({Svm: { public_key: publicKey, signature, message }});
-      const profile = response.Ok
-      
-      toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
-
-      return profile
-    } catch (error) {
-      console.log(error)
-      toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
+      _account = {type: 'Svm', address: address}
+      _principal = identity.getPrincipal()
+    } else if (type === 'Ic') {
+      _principal = await window.ic[walletIcName].getPrincipal()
+      _account = {address: _principal.toString(), type: 'Ic'}
     }
-	}
+    setAccount(_account)
+    setPrincipal(_principal)
+    setIdentity(identity)
+    saveAccount(identity, _account)
+  }, [])
 
-  const loginWithIc = async () => {
-    try {
-      const _childActor = await createChildActorFromPlug()
-      const _managementActor = await createManagementActorFromPlug()
-      setChildActor(_childActor)
-      setManagementActor(_managementActor)
+  const getWallet = useCallback((type) => {
+    if (type === 'evm') 
+      return window?.ethereum
+    else if(type === 'svm')
+      return window?.solana
+    else if(type === 'ic')
+      return window.ic?.infinityWallet ?? window.ic?.plug
+  }, [])
+
+  const isWalletDetected = useCallback((type) => {
+    return !!getWallet(type)
+  }, [getWallet])
+
+  const connectWallet = useCallback(async (type, wallet) => {
+    if (type === 'ic') {
+      // check connected
+      const isConnected = await window.ic[wallet]?.isConnected()
+      if(isConnected) return
       
-      const principal = await window.ic.plug.getPrincipal()
-      const account = {address: principal.toString(), type: 'Ic'}
-      saveAccount(undefined, account)
-      setPrincipal(principal)
-      setAccount(account)
-
-      const response = await _childActor.create_profile({Ic: null});
-      const profile = response.Ok
-      
-      toast({ title: 'Signed in with Internet Computer', status: 'success', duration: 4000, isClosable: true })
-
-      return profile
-    } catch (error) {
-      console.log(error)
-      toast({ title: error.message, status: 'error', duration: 4000, isClosable: true })
+      // request connect
+      const whitelist = [CHILD_CANISTER_ID, MANAGEMENT_CANISTER_ID]
+      await window.ic[wallet]?.requestConnect({whitelist, host});
     }
-	}
+  }, [host])
+  
+  const createActor = useCallback(async(options) => {
+    if (options.type === 'ic') {
+      const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
+	    return await window.ic[options.wallet ?? walletIcName]?.createActor(actorOptions)
+    } else {
+      const actorOptions = { agent: getAgent(options.identity), canisterId: options.canisterId, host: icHost, identity: options.identity}
+      return Actor.createActor(options.interfaceFactory, actorOptions)
+    }
+	}, [host, walletIcName])
 
-  const logout = async () => {
+
+
+  const disconnect = async () => {
     if (account.type === 'Ic') {
-      const isConnected = await window.ic.plug.isConnected()
-      if(isConnected) {
-        const p1 = new Promise((r) => setTimeout(() => r(), 1000))
-        const p2 = window.ic.plug.disconnect() // not resolving
-        await Promise.race([p1, p2]) // hacky fix
-      }
+      const isConnected = await window.ic?.[walletIcName].isConnected()
+      if (!isConnected) return
+      await window.ic?.[walletIcName].disconnect() // not resolving
     }
     clearAccount()
   }
 
-  const login = async (type) => {
-    if(type === 'evm') {
-      return await loginWithEvm()
-    } else if(type === 'svm') {
-      return await loginWithSvm()
-    } else if(type === 'ic'){
-      return await loginWithIc()
-    }
-  }
-
-  const value = { account, principal, childActor, managementActor, login, logout, setAccount, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork }
+  const value = { identity, account, principal, updateIdentity, disconnect, setAccount, createActor, isWalletDetected, getWallet, connectWallet, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork, icWalletDisclosure, setWalletIcName }
   
-  return (
-    <IdentityContext.Provider value={value}>
-      {children}
-    </IdentityContext.Provider>
-  )
+  return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
+  
 }
 export { IdentityContext, IdentityProvider }

@@ -12,32 +12,30 @@ import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 import { ReactComponent as MetamaskLogo } from '../../logos/metamask.svg'
 import PhantomLogo from '../../logos/phantom.svg'
 import PlugLogo from '../../logos/plug.png'
+import BitfinityLogo from '../../logos/bitfinity.png'
 
 const WalletModal = () => {
-  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, setSelectedNetwork, login} = useContext(IdentityContext)
-  const { setProfile } = useContext(ChildContext)
+  const { isWalletModalOpen, onWalletModalClose, selectedNetwork, isWalletDetected, icWalletDisclosure} = useContext(IdentityContext)
+  const { login } = useContext(ChildContext)
 
   const loginAndSet = async (type) => {
-    if (type === 'evm' && !window?.ethereum) {
-      setSelectedNetwork(type)
-      return
-    } else if (type === 'svm' && !window?.solana) {
-      setSelectedNetwork(type)
-      return
-    } else if (type === 'ic' && !window?.ic?.plug) {
-      setSelectedNetwork(type)
-      return
+    if(type === 'evm') {
+      onWalletModalClose()
+      await login(type)
+    } else if(type === 'svm') {
+      onWalletModalClose()
+      await login(type)
+    } else if(type === 'ic') {
+      onWalletModalClose()
+      icWalletDisclosure.onOpen()
     }
-    const profile = await login(type)
-    setProfile(profile)
-    onWalletModalClose()
   }
 
 	return (
 		<Modal isOpen={isWalletModalOpen} onClose={onWalletModalClose} isCentered>
 			<ModalOverlay />
-			<ModalContent minW="480px">
-				<ModalHeader>{!selectedNetwork && (window?.ethereum || window?.solana ||  window?.ic?.plug) ? 'Select a network' : 'You\'d need a wallet'} </ModalHeader>
+			<ModalContent minW="520px">
+				<ModalHeader>{!selectedNetwork && (isWalletDetected('evm') || isWalletDetected('svm') ||  isWalletDetected('ic')) ? 'Select a network' : 'You\'d need a wallet'} </ModalHeader>
 				<ModalCloseButton />
 				<ModalBody>
           {selectedNetwork ? 
@@ -55,18 +53,19 @@ const WalletModal = () => {
                 <Box mb="12px">
                   <Text mb="12px">Get an Internet Computer wallet </Text>
                   <Link ml="8px" href="https://plugwallet.ooo/" isExternal style={{textDecoration: 'none'}}><Button leftIcon={<Image src={PlugLogo} width={5} />}>Plug Wallet</Button></Link>
+                  <Link ml="8px" href="https://wallet.bitfinity.network/" isExternal style={{textDecoration: 'none'}}><Button leftIcon={<Image src={BitfinityLogo} width={3} />}>Bitfinity Wallet</Button></Link>
                 </Box>}
             </Box> : 
             <Box>
-              {(window?.ethereum || window?.solana || window?.ic?.plug) ?
+              {(isWalletDetected('evm') || isWalletDetected('svm') ||  isWalletDetected('ic')) ?
               <Box mb="20px">
                 <Text mb="20px">
                   Sign in with your wallet. Available wallets:
                 </Text>
                 <Box>
-                  {window?.ethereum && <Button ml="8px" leftIcon={<Icon as={EthereumLogo}/>} onClick={() => loginAndSet('evm')}>Ethereum</Button>}
-                  {window?.solana && <Button ml="8px" leftIcon={<Icon as={SolanaLogo}/>} onClick={() => loginAndSet('svm')}>Solana</Button>}
-                  { window?.ic?.plug && <Button ml="8px" leftIcon={<Icon as={DfinityLogo}/>} onClick={() => loginAndSet('ic')}>Internet Computer</Button>}
+                  {isWalletDetected('evm') && <Button ml="8px" leftIcon={<Icon as={EthereumLogo}/>} onClick={() => loginAndSet('evm')}>Ethereum</Button>}
+                  {isWalletDetected('svm') && <Button ml="8px" leftIcon={<Icon as={SolanaLogo}/>} onClick={() => loginAndSet('svm')}>Solana</Button>}
+                  {isWalletDetected('ic') && <Button ml="8px" leftIcon={<Icon as={DfinityLogo}/>} onClick={() => loginAndSet('ic')}>Internet Computer</Button>}
                 </Box>
               </Box> :
                 <Box mb="20px">

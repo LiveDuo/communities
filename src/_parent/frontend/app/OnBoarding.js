@@ -5,7 +5,8 @@ import { Flex, Box, Heading, Text, Button, Link } from '@chakra-ui/react'
 import { IdentityContext } from '../store/identity'
 import { LedgerContext } from '../store/ledger'
 
-import { isLocal } from '../agents/'
+import { isLocal } from '../utils/url'
+import { ParentContext } from '../store/parent'
 
 const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm'
 const transakUrl = 'https://global.transak.com/'
@@ -17,25 +18,25 @@ const BlobBackground = ({fill}) => (
   </svg>
 )
 
-const OnBoarding = ({ createChildBatch }) => {
+const OnBoarding = () => {
 
   const [userFlowStep, setUserFlowStep] = useState()
 
-  const { walletConnected, connect } = useContext(IdentityContext)
-  const { balance } = useContext(LedgerContext)
-
+  const { walletConnected, walletDetected, icWalletDisclosure } = useContext(IdentityContext)
+  const { userBalance } = useContext(LedgerContext)
+  const { createUserCommunity } = useContext(ParentContext)
 
   useEffect(() => {
-		if(!window.ic?.plug) {
+		if(!walletDetected) {
 			setUserFlowStep('download-wallet')
 		} else if(!walletConnected) {
 			setUserFlowStep('connect-wallet')
-		} else if (!isLocal && (balance / 1e8) <= 0) {
+		} else if (!isLocal && (userBalance / 1e8) <= 0) {
 			setUserFlowStep('top-up-wallet')	
-		} else if(isLocal || balance > 0) {
+		} else if(isLocal || userBalance > 0) {
       setUserFlowStep('deploy-community')
     }
-	},[walletConnected, balance])
+	},[walletConnected, walletDetected, userBalance])
 
   return (
     <Box p="120px 60px">
@@ -54,7 +55,7 @@ const OnBoarding = ({ createChildBatch }) => {
           <Flex flex={1} flexDir="column" justifyContent="center" alignItems="center" mb="12px">
             <Heading size="lg" mb="32px">Download a wallet</Heading>
             <Text mb="16px" >You will need a wallet for the Internet Computer</Text>
-            <Text mb="32px"> Our recommendation is <Link href="https://plugwallet.ooo/" target="_blank"><b>Plug Wallet</b></Link></Text>
+            <Text mb="32px"> Our recommendation is <Link href="https://wallet.bitfinity.network/" target="_blank"><b>Bitfinity Wallet</b></Link></Text>
             <Button mb="24px" onClick={() =>  window.open(chromeStoreUrl, '_blank')}>Get it now</Button>
             <Text fontSize="sm" color='gray'> Refresh the page after installing</Text>
           </Flex>
@@ -76,7 +77,7 @@ const OnBoarding = ({ createChildBatch }) => {
             <Heading size="lg" mb="32px">Connect your wallet</Heading>
             <Text mb="16px" >Your community is about to be deployed</Text>
             <Text mb="32px"> Ownership will be transferred to your wallet</Text>
-            <Button mb="24px" onClick={connect}>Connect wallet</Button>
+            <Button mb="24px" onClick={() => icWalletDisclosure.onOpen()}>Connect wallet</Button>
             <Text fontSize="sm" color='gray'> <b>Note:</b> You can change the owner wallet later</Text>
           </Flex>
         </Flex>
@@ -122,7 +123,7 @@ const OnBoarding = ({ createChildBatch }) => {
             <Heading size="lg" mb="32px">Deploy a community</Heading>
             <Text mb="16px" >You will deploy a virtual server on the Internet Computer</Text>
             <Text mb="24px">The ownership of this server will be transferred to your wallet</Text>
-            <Button mb="24px" onClick={() => createChildBatch()}>Deploy community</Button>
+            <Button mb="24px" onClick={() => createUserCommunity()}>Deploy community</Button>
             <Text fontSize="sm" color='gray'> <b>Note:</b> New communities take about 1 min to deploy</Text>
           </Flex>
         </Flex>

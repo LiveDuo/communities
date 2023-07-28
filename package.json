@@ -14,6 +14,7 @@
     "test:upgrade": "jest -i test/upgrade.test.js",
     "upload:child": "CRA_MODE=production npm run build:child && node ./src/_child/upload-assets.js",
     "upload:parent": "npm run build:parent && node ./src/_parent/upload-assets.js",
+    "upload:parent-minimal": "node ./src/_parent/upload-minimal.js",
     "upload:upgrade": "node ./src/_parent/upload-upgrade.js",
     "build": "npm run dev:parent",
     "build:wasm": "./build/build-child.sh",

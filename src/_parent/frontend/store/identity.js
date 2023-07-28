@@ -1,54 +1,74 @@
-import { createContext, useState, useEffect, useCallback } from 'react'
-
-import { createParentActor } from '../agents/parent'
+import { createContext, useState, useCallback, useEffect } from 'react'
 
 import { useToast, useDisclosure } from '@chakra-ui/react'
 
-import { ledgerCanisterId, createLedgerActorPlug } from '../agents/ledger'
-import { parentCanisterId, createParentActorPlug } from '../agents/parent'
+import { parentCanisterId } from './parent'
+import { ledgerCanisterId } from './ledger'
 
-import { isLocal } from '../agents'
+import { isLocal } from '../utils/url'
 
 const IdentityContext = createContext()
 
 const IdentityProvider = ({ children }) => {
 
-	const [parentActor, setParentActor] = useState()
-	const [parentActorPlug, setParentActorPlug] = useState()
-	const [ledgerActorPlug, setLedgerActorPlug] = useState()
-
 	const [walletConnected, setWalletConnected] = useState(false)
-	const [userPrincipal, setUserPrincipal] = useState('')
-	const [host, setHost] = useState('')
+	const [walletDetected, setWalletDetected] = useState(false)
+	const [userPrincipal, setUserPrincipal] = useState(null)
+	const [walletName, setWalletName] = useState(null)
+	
+	const noWalletDisclosure = useDisclosure()
+	const icWalletDisclosure = useDisclosure()
+
 	const toast = useToast()
 
-	const modalDisclosure = useDisclosure()
+	const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
 
-	const loadPlug = useCallback(async () => {
-		// setIsLocalhost(window.location.hostname.endsWith('localhost'))
-		const connected = await window.ic.plug.isConnected()
-		if (!connected) return
-		const principal = await window.ic?.plug.getPrincipal()
+	const loadWallet = useCallback(async () => {
+		// check wallet connected
+		let _walletName
+		const isConnectedWithInfinity = await window?.ic?.infinityWallet?.isConnected()
+		const isConnectedWithPlug = await window?.ic?.plug?.isConnected()
+		if(isConnectedWithInfinity) {
+			_walletName = 'infinityWallet'
+		} else if(isConnectedWithPlug) {
+			_walletName = 'plug'
+		} else {
+			return
+		}
+
+		// load params
+		const principal = await window?.ic[_walletName].getPrincipal()
 		setUserPrincipal(principal.toString())
-		setHost(window.ic?.plug.sessionManager.host)
 		setWalletConnected(true)
-	
+		setWalletName(_walletName)
+	}, [])
+
+	useEffect(() => {
+		setWalletDetected(!!(window?.ic?.plug || window?.ic?.infinityWallet))
 	}, [])
 
 
-	const connect = async () => {
-		const host = isLocal === 'localhost' ? 'http://127.0.0.1:8000/' : 'https://mainnet.dfinity.network'
+	const isWalletDetected = useCallback((type) => !!window.ic[type], [])
+	
+	const createActor = (options) => {
+		options.host = host
+		return window?.ic[walletName].createActor(options)
+	}
+
+	const batchTransactions = (txs) => {
+		const options = { host }
+		return window?.ic[walletName].batchTransactions(txs, options)
+	}
+
+	const connect = async (wallet) => {
 		const whitelist = ledgerCanisterId ? [ledgerCanisterId, parentCanisterId] : [parentCanisterId]
 		try {
-			const hasAllowed = await window.ic?.plug?.requestConnect({ host, whitelist })
-			const principal = await window.ic?.plug.getPrincipal()
-			await loadActors()
+			const hasAllowed = await window?.ic[wallet]?.requestConnect({ host, whitelist })
+			const principal = await window?.ic[wallet]?.getPrincipal()
 			setUserPrincipal(principal.toString())
 			setWalletConnected(!!hasAllowed)
-			setHost(window.ic?.plug.sessionManager.host)
 			toast({ description: 'Connected' })
 		} catch (error) {
-			console.log(error.message)
 			if (error.message === 'The agent creation was rejected.') {
 				toast({ description: 'Wallet connection declined', status: 'info' })
 			} else {
@@ -58,43 +78,23 @@ const IdentityProvider = ({ children }) => {
 	}
 
 	const disconnect = async () => {
-		const p1 = new Promise((r) => setTimeout(() => r(), 1000))
-		const p2 = window.ic.plug.disconnect() // not resolving
-		await Promise.race([p1, p2]) // hacky fix
+		await window?.ic[walletName].disconnect() // not resolving with plug wallet
 
-		setUserPrincipal('')
+		setUserPrincipal()
 		setWalletConnected(false)
-		setHost('')
 
 		toast({ description: 'Disconnected' })
 	}
 
-	const loadActors = useCallback(async () => {
-		const _parentActor = createParentActor(null)
-		setParentActor(_parentActor)
-
-		const connected = await window.ic.plug.isConnected()
-		if (connected) {
-			const _parentActorPlug = await createParentActorPlug()
-			setParentActorPlug(_parentActorPlug)
-			
-			if (ledgerCanisterId) {
-				const _ledgerActorPlug = await createLedgerActorPlug()
-				setLedgerActorPlug(_ledgerActorPlug)
-			}
+	useEffect(()=>{
+		if (walletDetected) {
+			loadWallet()
 		}
-	}, [])
+	},[loadWallet, walletDetected])
+
+	const value = { noWalletDisclosure, icWalletDisclosure, setWalletName, createActor, isWalletDetected, userPrincipal, connect, disconnect, loadWallet, walletConnected, walletDetected, batchTransactions }
+
+	return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
 	
-	useEffect(() => {
-		loadActors()
-	}, [loadActors])
-
-	const value = { parentActor, walletConnected, userPrincipal, parentActorPlug, ledgerActorPlug, host, connect, disconnect, loadPlug, modalDisclosure }
-
-	return (
-		<IdentityContext.Provider value={value}>
-			{children}
-		</IdentityContext.Provider>
-	)
 }
 export { IdentityContext, IdentityProvider }
