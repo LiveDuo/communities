@@ -302,10 +302,21 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
     let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
 
     // check if version exists
-    // let index_wasm_hash = STATE.with(|s| s.borrow().indexes.wasm_hash.to_owned());
-    // if index_wasm_hash.contains_key(&wasm_hash) {
-    //     return Err("Version already exists".to_owned());
-    // }
+    let is_version_exists = STATE.with(|s| {
+        let state = s.borrow();
+
+        let track_id = state.indexes.track.get(&track).unwrap().to_owned();
+        let track_upgrade_ids_opt =  state.relations.track_id_to_upgrade_id.forward.get(&track_id);
+        if track_upgrade_ids_opt.is_none() {
+            return false;
+        }
+        let track_upgrades_ids = track_upgrade_ids_opt.unwrap();
+        track_upgrades_ids.iter().map(|(id, _)| state.upgrades.get(id).unwrap().to_owned()).any(|s|s.wasm_hash == wasm_hash )
+    });
+
+    if is_version_exists {
+        return Err("Version already exists".to_owned());
+    }
 
     // check if assets exists
     for asset in &assets {
