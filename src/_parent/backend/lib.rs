@@ -71,16 +71,27 @@ async fn create_child() -> Result<Principal, String> {
     // get latest version
     let version = STATE.with(|s| {
         let state = s.borrow();
-        let stable_track_id = state.indexes.track.get(&"stable".to_owned()).unwrap();
+        let track_name = "stable";
+        let stable_track_id = state.indexes.track.get(&track_name.to_owned()).unwrap();
         let upgrades_id = state.relations.track_id_to_upgrade_id.forward.get(stable_track_id);
-        let mut upgrades = upgrades_id.unwrap().iter().map(|(upgrade_id, _)| state.upgrades.get(upgrade_id).unwrap().to_owned()).collect::<Vec<_>>();
+        let mut upgrades = upgrades_id.unwrap().iter().map(|(upgrade_id, _)| {
+            let upgrade = state.upgrades.get(upgrade_id).unwrap();
+            UpgradeWithTrack { 
+                version: upgrade.version.to_owned(),
+                upgrade_from: upgrade.upgrade_from.to_owned(),
+                timestamp: upgrade.timestamp,
+                wasm_hash: upgrade.wasm_hash.to_owned(),
+                assets: upgrade.assets.to_owned(),
+                track: track_name.to_owned()
+            }
+        }).collect::<Vec<_>>();
         upgrades.sort_by(|a, b| b.version.cmp(&a.version));
         upgrades.first().unwrap().to_owned()
     });
 
     // install wasm code
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Installing,)).await.unwrap().0.unwrap();});
-    install_code(canister_id, &version.version, &caller).await.unwrap();
+    install_code(canister_id, &version.track, &version.version, &caller).await.unwrap();
 
     // upload frontend assets
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Uploading,)).await.unwrap().0.unwrap();});
@@ -202,13 +213,13 @@ fn get_next_upgrades(wasm_hash: Vec<u8>) -> Vec<Upgrade> {
 
 #[query]
 #[candid_method(query)]
-fn get_upgrades() -> Vec<UpgradeResponse> {
+fn get_upgrades() -> Vec<UpgradeWithTrack> {
     STATE.with(|s| {
         let state = s.borrow();
         state.upgrades.iter().map(|(id, u)|{
 					let (track_id,_) = state.relations.track_id_to_upgrade_id.backward.get(id).unwrap().first_key_value().unwrap();
-					let track  = state.tracks.get(track_id).unwrap();
-					UpgradeResponse {
+					let track: &Track  = state.tracks.get(track_id).unwrap();
+					UpgradeWithTrack {
 						version: u.version.to_owned(),
 						upgrade_from: u.upgrade_from.to_owned(),
 						timestamp: u.timestamp,
@@ -251,7 +262,7 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
     authorize(&caller).await?;
 
     // get wasm
-    let wasm_key = format!("/upgrade/{}/child.wasm", version);
+    let wasm_key = format!("/upgrade/{track}/{version}/child.wasm");
     let wasm = get_asset(wasm_key);
 
     // get wasm hash

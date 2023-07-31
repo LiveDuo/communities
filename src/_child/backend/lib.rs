@@ -474,7 +474,7 @@ async fn get_next_upgrades() -> Result<Vec<Upgrade>, String> {
 
 
 #[update]
-#[candid_method(update)]
+// #[candid_method(update)]
 async fn upgrade_canister(wasm_hash: Vec<u8>, track: String) -> Result<(), String> {
     
     let caller = ic_cdk::caller();
@@ -486,12 +486,12 @@ async fn upgrade_canister(wasm_hash: Vec<u8>, track: String) -> Result<(), Strin
     
     // get upgrade from parent
     let parent_canister = parent_canister_opt.unwrap();
-    let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, track)).await.unwrap();
+    let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, track.to_owned())).await.unwrap();
     if upgrade_opt.is_none() { return Err("Version not found".to_owned()); }
     let upgrade = upgrade_opt.unwrap();
 
     // store assets to temp
-    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version).await.unwrap();
+    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version, &track).await.unwrap();
 
     // upgrade wasm
     let wasm = get_asset("/temp/child.wasm".to_owned());	
@@ -499,20 +499,20 @@ async fn upgrade_canister(wasm_hash: Vec<u8>, track: String) -> Result<(), Strin
 
     Ok(())
 }
-#[query]
-fn test_xx () {
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-    ic_cdk::println!("sad");
-}
+// #[query]
+// fn test_xx () {
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+//     ic_cdk::println!("sad");
+// }
 
 
 

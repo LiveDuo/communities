@@ -14,9 +14,9 @@ pub const TRANSFER_FEE: u64 = 10_000;
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 // static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
 
-pub async fn install_code(canister_id: Principal, version: &String, caller: &Principal) -> Result<(), String> {
+pub async fn install_code(canister_id: Principal, track: &String, version: &String, caller: &Principal) -> Result<(), String> {
     // get wasm
-    let wasm_bytes: Vec<u8> = get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
+    let wasm_bytes: Vec<u8> = get_asset(format!("/upgrade/{track}/{version}/child.wasm").to_string());
     if wasm_bytes.is_empty() {
         return Err(format!("WASM not found"));
     }
