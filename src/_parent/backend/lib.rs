@@ -138,6 +138,7 @@ async fn remove_track(track_name: String) -> Result<(), String> {
         Ok(())
     })
 }
+
 #[ic_cdk_macros::update]
 fn update_canister_state_callback(canister_data_id: u64, canister_state: CanisterState) -> Result<(), String> {
     if ic_cdk::caller() != ic_cdk::id() {
