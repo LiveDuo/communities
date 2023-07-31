@@ -475,19 +475,19 @@ async fn get_next_upgrades() -> Result<Vec<Upgrade>, String> {
 
 #[update]
 #[candid_method(update)]
-async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
+async fn upgrade_canister(wasm_hash: Vec<u8>, track: String) -> Result<(), String> {
     
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
     // get parent canister
     let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
-    if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
+    if parent_canister_opt.is_none() { return Err("Parent canister not found".to_owned()); }
     
     // get upgrade from parent
     let parent_canister = parent_canister_opt.unwrap();
-    let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, )).await.unwrap();
-    if upgrade_opt == None { return Err("Version not found".to_owned()); }
+    let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, track)).await.unwrap();
+    if upgrade_opt.is_none() { return Err("Version not found".to_owned()); }
     let upgrade = upgrade_opt.unwrap();
 
     // store assets to temp

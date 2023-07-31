@@ -15,7 +15,7 @@ const host = argv.network ?? 'http://127.0.0.1:8000'
 const id = argv.identity ?? 'default'
 const version = argv.version ?? '0.0.1'
 const track = argv.track ?? 'stable'
-// node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
+// node src/_parent/upload-minimal.js --network https://ic0.app --identity with-wallet
 ; (async () => {
 
 	const canisters = await getCanisters(host)

@@ -129,6 +129,15 @@ pub struct Upgrade {
     pub assets: Vec<String>,
 }
 #[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
+pub struct UpgradeResponse {
+    pub version: String,
+    pub upgrade_from: Option<Vec<u8>>,
+    pub timestamp: u64,
+    pub wasm_hash: Vec<u8>,
+    pub assets: Vec<String>,
+    pub track: String
+}
+#[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
 pub struct Track {
     pub name: String,
 }

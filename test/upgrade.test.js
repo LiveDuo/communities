@@ -21,14 +21,14 @@ describe.only('Testing with done', () => {
 		const identity = await getIdentity("default")
 		principal = identity.getPrincipal().toString()
 		agent = getAgent('http://127.0.0.1:8000', identity)
-    	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
+    actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 
 		// remove upgrades
 		const versions = ['0.0.2', '0.0.2b']
 		const upgrades = await actorParent.get_upgrades()
 		const upgradesExist = upgrades.filter(u => versions.includes(u.version))
 		for (const upgrade of upgradesExist) {
-			await actorParent.remove_upgrade(upgrade.version, 'stable')
+			await actorParent.remove_upgrade(upgrade.version, upgrade.track)
 		}
 	})
 
@@ -46,7 +46,8 @@ describe.only('Testing with done', () => {
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 
 		// upload upgrade (0.0.2)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1', '--track', 'stable' ] ,{cwd: process.cwd(), stdio: 'inherit'})
+		const tractUpgrade = 'stable'
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
 		const resNextUpgrades = await actorChild.get_next_upgrades()
@@ -54,10 +55,11 @@ describe.only('Testing with done', () => {
 		expect(upgrade).toBeDefined()
 		
 		// upgrade child (0.0.2)
-		await actorChild.upgrade_canister(upgrade.wasm_hash)
+		await actorChild.upgrade_canister(upgrade.wasm_hash, tractUpgrade)
 		
 		// upload version (0.0.2b)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--versionFrom', '0.0.2', '--track', 'stable'] ,{cwd: process.cwd(), stdio: 'inherit'})
+		const tractUpgrade1 = 'stable'
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--versionFrom', '0.0.2', '--track', tractUpgrade1] ,{cwd: process.cwd(), stdio: 'inherit'})
 
 		// get child upgrade
 		const resNextUpgrades1 = await actorChild.get_next_upgrades()
@@ -65,7 +67,7 @@ describe.only('Testing with done', () => {
 		expect(upgrade1).toBeDefined()
 
 		// upgrade child (0.0.2b)
-		await actorChild.upgrade_canister(upgrade1.wasm_hash)
+		await actorChild.upgrade_canister(upgrade1.wasm_hash, tractUpgrade1)
 
 		// check canister
 		const posts = await actorChild.get_posts()

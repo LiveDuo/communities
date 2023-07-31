@@ -16,7 +16,6 @@ fn create_default_tracks() {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
         let caller = ic_cdk::caller();
-
         // add stable track
         let stable_tract_id = uuid(&caller.to_text());
         let stable_track  = Track {name: "stable".to_owned()};
@@ -203,24 +202,44 @@ fn get_next_upgrades(wasm_hash: Vec<u8>) -> Vec<Upgrade> {
 
 #[query]
 #[candid_method(query)]
-fn get_upgrades() -> Vec<Upgrade> {
+fn get_upgrades() -> Vec<UpgradeResponse> {
     STATE.with(|s| {
         let state = s.borrow();
-        state.upgrades.iter().map(|(_, u)|u.to_owned()).collect::<Vec<_>>()
+        state.upgrades.iter().map(|(id, u)|{
+					let (track_id,_) = state.relations.track_id_to_upgrade_id.backward.get(id).unwrap().first_key_value().unwrap();
+					let track  = state.tracks.get(track_id).unwrap();
+					UpgradeResponse {
+						version: u.version.to_owned(),
+						upgrade_from: u.upgrade_from.to_owned(),
+						timestamp: u.timestamp,
+						wasm_hash: u.wasm_hash.to_owned(),
+						assets: u.assets.to_owned(),
+						track: track.name.to_owned()
+					}
+				}).collect::<Vec<_>>()
     })
 }
 
 #[query]
 #[candid_method(query)]
-fn get_upgrade(wasm_hash: Vec<u8>) -> Option<Upgrade> {
-    STATE.with(|s| {
-        let state = s.borrow();
-        let upgrade_id_opt = state.indexes.wasm_hash.get(&wasm_hash);
-        if upgrade_id_opt == None {
-            return None;
-        }
-        state.upgrades.get(upgrade_id_opt.unwrap()).cloned()
-    })
+fn get_upgrade(wasm_hash: Vec<u8>, track: String) -> Option<Upgrade> {
+	STATE.with(|s| {
+		let state = s.borrow();
+
+		// get track upgrade by ids
+		let track_id: &u64 = state.indexes.track.get(&track).unwrap();
+		let track_upgrade_ids_opt = state.relations.track_id_to_upgrade_id.forward.get(track_id);
+		if track_upgrade_ids_opt.is_none() {
+			return None;
+		}
+
+		// get upgrades 
+		let upgrade_opt = track_upgrade_ids_opt.unwrap().iter()
+			.map(|(id, _)| state.upgrades.get(id).unwrap().to_owned())
+			.find(|u|u.wasm_hash == wasm_hash);
+
+		upgrade_opt
+	})
 }
 
 
