@@ -9,7 +9,7 @@ import { Button, Text, Box } from '@chakra-ui/react'
 
 const UpgradeModal = () => {
 	const [isController, setIsController] = useState()
-	const [upgrade, setUpgrade] = useState()
+	const [upgrades, setUpgrades] = useState()
 	const {isUpgradeModalOpen, onUpgradeModalClose, principal} = useContext(IdentityContext)
 	const { managementActor } = useContext(ManagementContext)
 	const { childActor } = useContext(ChildContext)
@@ -24,20 +24,19 @@ const UpgradeModal = () => {
 			if (!_isController) return
 
 			// get next upgrade
-			const NextUpgrade = await childActor.get_next_upgrade()
-			const [ _upgrade ] = NextUpgrade.Ok
-			if (!_upgrade) return
-			setUpgrade(_upgrade)
+			const NextUpgrades = await childActor.get_next_upgrades()
+			if (!NextUpgrades.Ok) return
+			setUpgrades(NextUpgrades.Ok)
 		} catch (err) {
 			console.log(err)
 		}
 	}, [managementActor, principal, childActor])
 
 
-	const upgradeCanister = useCallback(async () => {
-		await childActor.upgrade_canister(upgrade.wasm_hash)
+	const upgradeCanister = useCallback(async (wasm_hash, track) => {
+		await childActor.upgrade_canister(wasm_hash, track)
 		onUpgradeModalClose()
-	}, [childActor, upgrade, onUpgradeModalClose])
+	}, [childActor, onUpgradeModalClose])
 	
 	useEffect(()=> {
 		if (managementActor)
@@ -54,12 +53,14 @@ const UpgradeModal = () => {
           		{!isController ? 
 					<Text>Only controllers can view/update community settings</Text> :
 					<Box>
-					{!upgrade ? 
+					{upgrades?.length  === 0 ? 
 						<Text>The canister is up to date</Text> : 
-						<Box>
-							<Text>Upgrade to {upgrade.version}</Text>
-							<Button onClick={upgradeCanister}>Upgrade</Button>
-						</Box>}
+						upgrades?.map(u => (
+							<Box>
+								<Text>Upgrade to {u.version}</Text>
+								<Button onClick={() => upgradeCanister(u.wasm_hash, u.track)}>Upgrade</Button>
+						</Box>
+						))}
 				</Box>}
 				</ModalBody>
 			</ModalContent>

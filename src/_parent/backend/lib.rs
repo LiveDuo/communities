@@ -235,10 +235,23 @@ fn get_children() ->  Vec<Principal>{
 
 #[query]
 #[candid_method(query)]
-fn get_next_upgrades(wasm_hash: Vec<u8>) -> Vec<Upgrade> {
+fn get_next_upgrades(wasm_hash: Vec<u8>) -> Vec<UpgradeWithTrack> {
     STATE.with(|s| {
         let state = s.borrow();
-        state.upgrades.iter().filter(|&(_, u)| u.upgrade_from == Some(wasm_hash.to_owned())).map(|(_, u)|u.to_owned()).collect::<Vec<_>>()
+        state.upgrades.iter()
+        .filter(|&(_, u)| u.upgrade_from == Some(wasm_hash.to_owned())
+        ).map(|(id, u)|{
+            let (track_id, _) = state.relations.track_id_to_upgrade_id.backward.get(id).unwrap().first_key_value().unwrap();
+            let track = state.tracks.get(track_id).unwrap();
+            UpgradeWithTrack{
+                version: u.version.to_owned(),
+                upgrade_from: u.upgrade_from.to_owned(),
+                timestamp: u.timestamp,
+                wasm_hash: u.wasm_hash.to_owned(),
+                assets: u.assets.to_owned(),
+                track: track.name.to_owned()
+            }
+        }).collect::<Vec<_>>()
     })
 }
 

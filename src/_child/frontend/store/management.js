@@ -39,11 +39,11 @@ const ManagementProvider = ({ children }) => {
   const loadActor = useCallback(async ()=>{
     let _actor
     if (!account) {
-      _actor = createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, identity: null})
+      _actor = await createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, identity: null})
     } else if (account.type ==='Evm' || account.type ==='Svm') {
-      _actor = createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, identity: identity})
+      _actor = await createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, identity: identity})
     } else if (account.type === 'Ic') {
-      _actor = createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, type: 'ic'})
+      _actor = await createActor({interfaceFactory: idlFactory, canisterId: MANAGEMENT_CANISTER_ID, type: 'ic'})
     }
     setManagementActor(_actor)
   },[account, identity, createActor])

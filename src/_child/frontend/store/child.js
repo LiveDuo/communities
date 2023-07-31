@@ -63,12 +63,13 @@ const idlFactory = ({ IDL }) => {
 		Ic: IDL.Null,
 	});
 
-	const Upgrade = IDL.Record({
+	const UpgradeWithTrack = IDL.Record({
 		version: IDL.Text,
 		upgrade_from: IDL.Opt(IDL.Vec(IDL.Nat8)),
 		timestamp: IDL.Nat64,
 	 	wasm_hash: IDL.Vec(IDL.Nat8), 
-		assets: IDL.Vec(IDL.Text)
+		assets: IDL.Vec(IDL.Text),
+		track: IDL.Text
 	})
 
 	return IDL.Service({
@@ -80,8 +81,8 @@ const idlFactory = ({ IDL }) => {
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
 		get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
 		get_profile_by_user: IDL.Func([authentication], [IDL.Opt(Profile)], ["query"]),
-		upgrade_canister: IDL.Func([IDL.Vec(IDL.Nat8)], [], ["update"]),
-		get_next_upgrade: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Opt(Upgrade), 'Err': IDL.Text })], ["query"])
+		upgrade_canister: IDL.Func([IDL.Vec(IDL.Nat8), IDL.Text], [], ["update"]),
+		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["query"])
 	});
 };
 

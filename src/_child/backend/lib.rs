@@ -13,7 +13,7 @@ use std::borrow::Borrow;
 use crate::state::{*, STATE};
 
 use upgrade::{update_wasm_hash, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
-use upgrade::Upgrade;
+use upgrade::{UpgradeWithTrack, Upgrade};
 use utils::{uuid, get_asset};
 
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
@@ -458,7 +458,7 @@ fn http_request(
 
 #[query]
 #[candid_method(query)]
-async fn get_next_upgrades() -> Result<Vec<Upgrade>, String> {
+async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
     let parent  = parent_opt.unwrap();
@@ -466,7 +466,7 @@ async fn get_next_upgrades() -> Result<Vec<Upgrade>, String> {
     if current_version_opt == None { return  Err("Current version not found".to_owned()); }
     let current_version = current_version_opt.unwrap();
     
-    let (next_versions,) = ic_cdk::call::<_, (Vec<Upgrade>,)>(parent, "get_next_upgrades", (current_version,),).await.unwrap();
+    let (next_versions,) = ic_cdk::call::<_, (Vec<UpgradeWithTrack>,)>(parent, "get_next_upgrades", (current_version,),).await.unwrap();
     
     Ok(next_versions)
 }

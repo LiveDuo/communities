@@ -18,6 +18,15 @@ pub struct Upgrade {
     pub assets: Vec<String>
 }
 
+#[derive(Clone, Debug, CandidType, Deserialize)]
+pub struct UpgradeWithTrack {
+    pub version: String,
+    pub upgrade_from: Option<Vec<u8>>,
+    pub timestamp: u64,
+    pub wasm_hash: Vec<u8>,
+    pub assets: Vec<String>,
+    pub track: String
+}
 
 pub fn update_wasm_hash() { 
   let wasm_bytes = get_asset("/temp/child.wasm".to_owned());
