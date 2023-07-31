@@ -15,7 +15,7 @@ use crate::state::{STATE, *};
 #[candid_method(init)]
 fn init() {
     ic_certified_assets::init();
-    create_track("stable".to_owned()).unwrap();
+    add_track("stable".to_owned(), ic_cdk::caller()).unwrap();
 }
 
 #[update]
@@ -88,28 +88,24 @@ async fn create_child() -> Result<Principal, String> {
 
 #[update]
 #[candid_method(update)]
-fn create_track(track_name: String) -> Result<(), String> {
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
+async fn create_track(track_name: String) -> Result<(), String> {
+    // authorize
+    let caller = ic_cdk::caller();
+    authorize(&caller).await?;
 
-        // check if the track exists 
-        if state.indexes.track.contains_key(&track_name) {
-            return Err("Track already exists".to_owned()); 
-        }
+    // create track 
+    add_track(track_name, caller).unwrap();
 
-        // add track
-        let track_id = uuid(&ic_cdk::caller().to_string());
-        let track =  Track { name:  track_name.to_owned()};
-        state.tracks.insert(track_id, track);
-        state.indexes.track.insert(track_name, track_id);
-        
-        Ok(())
-    })
+    Ok(())
 }
 
 #[update]
 #[candid_method(update)]
-fn remove_track(track_name: String) -> Result<(), String> {
+async fn remove_track(track_name: String) -> Result<(), String> {
+    // authorize
+    let caller = ic_cdk::caller();
+    authorize(&caller).await?;
+
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 

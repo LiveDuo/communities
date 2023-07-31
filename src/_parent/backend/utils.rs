@@ -120,3 +120,22 @@ pub async fn authorize(caller: &Principal) -> Result<(), String> {
       Err("Caller is not a controller".to_owned())
   }
 }
+
+pub fn add_track(name: String, caller: Principal) -> Result<(), String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        // check if the track exists 
+        if state.indexes.track.contains_key(&name) {
+            return Err("Track already exists".to_owned()); 
+        }
+
+        // add track
+        let track_id = uuid(&caller.to_string());
+        let track =  Track { name:  name.to_owned()};
+        state.tracks.insert(track_id, track);
+        state.indexes.track.insert(name, track_id);
+        
+        Ok(())
+    })
+}
