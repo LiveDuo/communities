@@ -73,7 +73,7 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
 
       // replace env car
   let content;
-  if asset == &format!("/upgrade/{track}/{version}/static/js/bundle.js") {
+  if asset == &format!("/upgrades/{track}/{version}/static/js/bundle.js") {
     let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
     let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
     content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
@@ -82,7 +82,7 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
   }
 
   // upload asset
-  let key = asset.replace(&format!("/upgrade/{track}/{version}"), "/temp");
+  let key = asset.replace(&format!("/upgrades/{track}/{version}"), "/temp");
   let store_args = StoreArg {
           key: key.to_owned(),
           content_type: get_content_type(&key),

@@ -11,33 +11,12 @@ use utils::*;
 use create_child::*;
 use crate::state::{STATE, *};
 
-fn create_default_tracks() {
-
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
-        let caller = ic_cdk::caller();
-        // add stable track
-        let stable_tract_id = uuid(&caller.to_text());
-        let stable_track  = Track {name: "stable".to_owned()};
-        state.tracks.insert(stable_tract_id, stable_track.to_owned());
-        state.indexes.track.insert("stable".to_string(), stable_tract_id);
-        
-        // add beta track
-        let beta_tract_id = uuid(&caller.to_text());
-        let beta_track  = Track {name: "beta".to_owned()};
-        state.tracks.insert(beta_tract_id, beta_track);
-        state.indexes.track.insert("beta".to_string(), beta_tract_id);
-    })
-}
-
 #[init]
 #[candid_method(init)]
 fn init() {
     ic_certified_assets::init();
-    create_default_tracks();
+    create_track("stable".to_owned()).unwrap();
 }
-
-
 
 #[update]
 #[candid_method(update)]
@@ -95,7 +74,7 @@ async fn create_child() -> Result<Principal, String> {
 
     // upload frontend assets
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Uploading,)).await.unwrap().0.unwrap();});
-    store_assets(canister_id, &version.assets, &version.version).await.unwrap();
+    store_assets(canister_id, &version.assets, &version.version, &version.track).await.unwrap();
 
     // set controllers
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Authorizing, )).await.unwrap().0.unwrap();});
@@ -107,6 +86,62 @@ async fn create_child() -> Result<Principal, String> {
     Ok(canister_id)
 }
 
+#[update]
+#[candid_method(update)]
+fn create_track(track_name: String) -> Result<(), String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        // check if the track exists 
+        if state.indexes.track.contains_key(&track_name) {
+            return Err("Track already exists".to_owned()); 
+        }
+
+        // add track
+        let track_id = uuid(&ic_cdk::caller().to_string());
+        let track =  Track { name:  track_name.to_owned()};
+        state.tracks.insert(track_id, track);
+        state.indexes.track.insert(track_name, track_id);
+        
+        Ok(())
+    })
+}
+
+#[update]
+#[candid_method(update)]
+fn remove_track(track_name: String) -> Result<(), String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        // check if the track exists 
+        let track_id_opt = state.indexes.track.get(&track_name);
+        if track_id_opt.is_none() {
+            return Err("Track does not exists".to_owned()); 
+        }
+
+        // remove related upgrades
+        let track_id = track_id_opt.unwrap().to_owned();
+        let upgrade_ids_opt = state.relations.track_id_to_upgrade_id.forward.get(&track_id);
+        if upgrade_ids_opt.is_some() {
+            let upgrade_ids = upgrade_ids_opt.unwrap().to_owned();
+            upgrade_ids.iter().for_each(|(upgrade_id, _)| {
+                let upgrade = state.upgrades.get(upgrade_id).unwrap().to_owned();
+                state.indexes.version.remove(&upgrade.version);
+                state.indexes.wasm_hash.remove(&upgrade.wasm_hash);
+                state.indexes.upgrade_from.remove(&upgrade.upgrade_from);
+    
+                state.upgrades.remove(upgrade_id);
+                state.relations.track_id_to_upgrade_id.remove(track_id, upgrade_id.to_owned());
+            });
+        }
+        
+        // remove track
+        state.tracks.remove(&track_id);
+        state.indexes.track.remove(&track_name);
+        
+        Ok(())
+    })
+}
 #[ic_cdk_macros::update]
 fn update_canister_state_callback(canister_data_id: u64, canister_state: CanisterState) -> Result<(), String> {
     if ic_cdk::caller() != ic_cdk::id() {
@@ -262,7 +297,7 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
     authorize(&caller).await?;
 
     // get wasm
-    let wasm_key = format!("/upgrade/{track}/{version}/child.wasm");
+    let wasm_key = format!("/upgrades/{track}/{version}/child.wasm");
     let wasm = get_asset(wasm_key);
 
     // get wasm hash
@@ -271,10 +306,10 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
     let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
 
     // check if version exists
-    let index_wasm_hash = STATE.with(|s| s.borrow().indexes.wasm_hash.to_owned());
-    if index_wasm_hash.contains_key(&wasm_hash) {
-        return Err("Version already exists".to_owned());
-    }
+    // let index_wasm_hash = STATE.with(|s| s.borrow().indexes.wasm_hash.to_owned());
+    // if index_wasm_hash.contains_key(&wasm_hash) {
+    //     return Err("Version already exists".to_owned());
+    // }
 
     // check if assets exists
     for asset in &assets {

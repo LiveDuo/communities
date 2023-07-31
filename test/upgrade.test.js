@@ -22,7 +22,9 @@ describe.only('Testing with done', () => {
 		principal = identity.getPrincipal().toString()
 		agent = getAgent('http://127.0.0.1:8000', identity)
     actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
+	})
 
+	beforeEach(async()=>{
 		// remove upgrades
 		const versions = ['0.0.2', '0.0.2b']
 		const upgrades = await actorParent.get_upgrades()
@@ -72,6 +74,41 @@ describe.only('Testing with done', () => {
 		// check canister
 		const posts = await actorChild.get_posts()
 		expect(posts.length).toBe(0)
+	})
+
+	test('Should create a new community and upgrade in bete track', async () => {
 		
+		// create child
+		if (canisterIds.ledger) {
+			const accountId = getAccountId(canisterIds.parent.local, principal)
+			await transferIcpToAccount(accountId)
+		}
+		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
+		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
+		console.log(`http://${childPrincipalId}.localhost:8000/`)
+
+		// create track (beta)
+		const tractUpgrade = 'beta'
+		const resCreateTrack = await actorParent.create_track(tractUpgrade)
+		expect(resCreateTrack.Ok).toBeDefined()
+
+		// upload upgrade (0.0.2-beta)
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
+		
+		// get child upgrade
+		const resNextUpgrades = await actorChild.get_next_upgrades()
+		const [ upgrade ] = resNextUpgrades.Ok
+		expect(upgrade).toBeDefined()
+		
+		// upgrade child (0.0.2-beta)
+		await actorChild.upgrade_canister(upgrade.wasm_hash, tractUpgrade)
+		
+		// check canister
+		const posts = await actorChild.get_posts()
+		expect(posts.length).toBe(0)
+
+		// remove track (beta)
+		const resRemoveTrack = await actorParent.remove_track(tractUpgrade)
+		expect(resRemoveTrack.Ok).toBeDefined()
 	})
 })

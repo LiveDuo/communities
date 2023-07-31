@@ -499,6 +499,7 @@ async fn upgrade_canister(wasm_hash: Vec<u8>, track: String) -> Result<(), Strin
 
     Ok(())
 }
+
 // #[query]
 // fn test_xx () {
 //     ic_cdk::println!("sad");

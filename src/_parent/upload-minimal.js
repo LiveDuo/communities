@@ -26,10 +26,10 @@ const track = argv.track ?? 'stable'
 
 	// upload child assets
 	const assetBuf = await fs.readFile(`./build/child/${version}/child.wasm`)
-	await uploadFile(actorAsset, `/upgrade/${track}/${version}/child.wasm`, assetBuf)
+	await uploadFile(actorAsset, `/upgrades/${track}/${version}/child.wasm`, assetBuf)
 
 	// create upgrade
-	const assetsWithPath =  [`/upgrade/${track}/${version}/child.wasm`]
+	const assetsWithPath =  [`/upgrades/${track}/${version}/child.wasm`]
 	const res = await actorParent.create_upgrade(version, [], assetsWithPath, track)
 	if (res.Err) {
 		console.log('This version already exist')

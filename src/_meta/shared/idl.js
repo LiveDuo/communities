@@ -75,9 +75,11 @@ const parentFactory = ({ IDL }) => {
 	return IDL.Service({
 		'create_child': IDL.Func([], [IDL.Variant({ 'Ok': IDL.Principal, 'Err': IDL.Text })], []),
 		'create_upgrade':  IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8), IDL.Vec(IDL.Text), IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
+		'create_track': IDL.Func([IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
 		'get_next_upgrade':  IDL.Func([IDL.Vec(IDL.Nat8)], [IDL.Opt(Upgrade)], []),
 		'get_upgrades':  IDL.Func([], [IDL.Vec(UpgradeResponse)], []),
 		'remove_upgrade':  IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
+		'remove_track':  IDL.Func([ IDL.Text ], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
 	})
 }
 exports.parentFactory = parentFactory

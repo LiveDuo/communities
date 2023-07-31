@@ -52,17 +52,17 @@ fn get_content_type(name: &str) -> String {
   }
 }
 
-pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String) -> Result<(), String> {
+pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String, track: &String) -> Result<(), String> {
   for asset in assets {
       // skip unnecessary files
-      if asset == &format!("/upgrade/{}/child.wasm", version) {
+      if asset == &format!("/upgrades/{track}/{version}/child.wasm") {
           continue;
       }
 
       // get asset content
       let asset_bytes: Vec<u8> = get_asset(asset.to_owned());
       let content;
-      if asset == &format!("/upgrade/{}/static/js/bundle.js", version) {
+      if asset == &format!("/upgrades/{track}/{version}/static/js/bundle.js") {
           let bundle_str = String::from_utf8(asset_bytes).expect("Invalid JS bundle");
           let bundle_with_env =
               bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
@@ -72,7 +72,7 @@ pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version:
       }
 
       // upload asset
-      let key = asset.replace(&format!("/upgrade/{}", version), "");
+      let key = asset.replace(&format!("/upgrades/{track}/{version}"), "");
       let store_args = StoreAssetArgs {
           key: key.to_owned(),
           content_type: get_content_type(&key),

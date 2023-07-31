@@ -37,12 +37,12 @@ const track = argv.track ?? 'stable'
 	const assets = await getFiles(`./build/child/${version}`)
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
-		await uploadFile(actorAsset, `/upgrade/${track}/${version}/${asset}`, assetBuf)
+		await uploadFile(actorAsset, `/upgrades/${track}/${version}/${asset}`, assetBuf)
 	}
 
 	// create upgrade
 	const wasmVersionFrom = await fs.readFile(`./build/child/${versionFrom}/child.wasm`)
 	const upgradeFromBuffer = Buffer.from(sha256(wasmVersionFrom), 'hex')
-	const res = await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assets.map(a => `/upgrade/${track}/${version}/${a}`), track)
+	const res = await actorParent.create_upgrade(version, Array.from(upgradeFromBuffer), assets.map(a => `/upgrades/${track}/${version}/${a}`), track)
 	console.log(res)
 })()
