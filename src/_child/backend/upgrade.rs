@@ -18,7 +18,6 @@ pub struct UpgradeWithTrack {
     pub version: String,
     pub upgrade_from: Option<UpgradeFrom>,
     pub timestamp: u64,
-    pub wasm_hash: Vec<u8>,
     pub assets: Vec<String>,
     pub track: String
 }

@@ -2,8 +2,6 @@ mod state;
 mod utils;
 mod create_child;
 
-use sha2::{Digest, Sha256};
-
 use candid::{CandidType, Deserialize, Principal, candid_method};
 use ic_cdk_macros::{query, update, init};
 
@@ -59,7 +57,6 @@ async fn create_child() -> Result<Principal, String> {
                 version: upgrade.version.to_owned(),
                 upgrade_from: upgrade.upgrade_from.to_owned(),
                 timestamp: upgrade.timestamp,
-                wasm_hash: upgrade.wasm_hash.to_owned(),
                 assets: upgrade.assets.to_owned(),
                 track: STABLE_TRACK.to_owned()
             }
@@ -123,7 +120,6 @@ async fn remove_track(track_name: String) -> Result<(), String> {
             upgrade_ids.iter().for_each(|(upgrade_id, _)| {
                 let upgrade = state.upgrades.get(upgrade_id).unwrap().to_owned();
                 state.indexes.version.remove(&(track_name.to_owned(),upgrade.version));
-                state.indexes.wasm_hash.remove(&upgrade.wasm_hash);
 
                 if upgrade.upgrade_from.is_some() {
                     let upgrade_from =  upgrade.upgrade_from.unwrap();
@@ -258,7 +254,6 @@ fn get_next_upgrades(version: String, track: String) -> Vec<UpgradeWithTrack> {
                 version: u.version.to_owned(),
                 upgrade_from: u.upgrade_from.to_owned(),
                 timestamp: u.timestamp,
-                wasm_hash: u.wasm_hash.to_owned(),
                 assets: u.assets.to_owned(),
                 track: track.name.to_owned()
             }
@@ -279,7 +274,6 @@ fn get_upgrades() -> Vec<UpgradeWithTrack> {
 						version: u.version.to_owned(),
 						upgrade_from: u.upgrade_from.to_owned(),
 						timestamp: u.timestamp,
-						wasm_hash: u.wasm_hash.to_owned(),
 						assets: u.assets.to_owned(),
 						track: track.name.to_owned()
 					}
@@ -309,7 +303,6 @@ fn get_upgrade(version: String, track: String) -> Option<UpgradeWithTrack> {
             version: upgrade.version.to_owned(),
             upgrade_from: upgrade.upgrade_from.to_owned(),
             timestamp: upgrade.timestamp,
-            wasm_hash: upgrade.wasm_hash.to_owned(),
             assets: upgrade.assets.to_owned(),
             track: track.name.to_owned()
         })
@@ -323,15 +316,6 @@ async fn create_upgrade(version: String, upgrade_from_opt: Option<UpgradeFrom>, 
     // authorize
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
-
-    // get wasm
-    let wasm_key = format!("/upgrades/{track}/{version}/child.wasm");
-    let wasm = get_asset(wasm_key);
-
-    // get wasm hash
-    let mut wasm_hash_hasher = Sha256::new();
-    wasm_hash_hasher.update(wasm.clone());
-    let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
 
     // check if version exists
     let index_version = STATE.with(|s| s.borrow().indexes.version.to_owned());
@@ -351,7 +335,6 @@ async fn create_upgrade(version: String, upgrade_from_opt: Option<UpgradeFrom>, 
         version: version.to_owned(),
         upgrade_from: upgrade_from_opt.to_owned(),
         timestamp: ic_cdk::api::time(),
-        wasm_hash: wasm_hash.to_owned(),
         assets: assets.clone(),
     };
     let upgrade_id = uuid(&caller.to_text());
@@ -359,7 +342,6 @@ async fn create_upgrade(version: String, upgrade_from_opt: Option<UpgradeFrom>, 
         let mut state = s.borrow_mut();
         state.upgrades.insert(upgrade_id, upgrade);
         state.indexes.version.insert((track.to_owned(), version), upgrade_id);
-        state.indexes.wasm_hash.insert(wasm_hash, upgrade_id);
 
         if upgrade_from_opt.is_some() {
             let upgrade_from = upgrade_from_opt.unwrap();
@@ -392,7 +374,6 @@ async fn remove_upgrade(version: String, track: String) -> Result<(), String> {
         let upgrade = state.upgrades.get(&upgrade_id).cloned().unwrap();
 
         state.indexes.version.remove(&(track.to_owned(), upgrade.version));
-        state.indexes.wasm_hash.remove(&upgrade.wasm_hash);
         if upgrade.upgrade_from.is_some() {
             let upgrade_from = upgrade.upgrade_from.unwrap();
             state.indexes.upgrade_from.remove(&(upgrade_from.track, upgrade_from.version));

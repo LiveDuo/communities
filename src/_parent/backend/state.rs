@@ -132,7 +132,6 @@ pub struct Upgrade {
     pub version: String,
     pub upgrade_from: Option<UpgradeFrom>,
     pub timestamp: u64,
-    pub wasm_hash: Vec<u8>,
     pub assets: Vec<String>,
 }
 #[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
@@ -140,7 +139,6 @@ pub struct UpgradeWithTrack {
     pub version: String,
     pub upgrade_from: Option<UpgradeFrom>,
     pub timestamp: u64,
-    pub wasm_hash: Vec<u8>,
     pub assets: Vec<String>,
     pub track: String
 }
@@ -208,7 +206,6 @@ pub struct Profile {
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Indexes {
     pub active_principal: HashMap<Principal, u64>,
-    pub wasm_hash: HashMap<Vec<u8>, u64>,
     pub upgrade_from: HashMap<(String, String), u64>,
     pub version: HashMap<(String, String), u64>,
     pub track: HashMap<String, u64> 

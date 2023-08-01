@@ -51,7 +51,6 @@ type Upgrade = record {
   assets : vec text;
   version : text;
   timestamp : nat64;
-  wasm_hash : vec nat8;
   upgrade_from : opt UpgradeFrom;
 };
 type UpgradeWithTrack = record {
@@ -59,7 +58,6 @@ type UpgradeWithTrack = record {
   assets : vec text;
   version : text;
   timestamp : nat64;
-  wasm_hash : vec nat8;
   upgrade_from : opt UpgradeFrom;
 };
 service : () -> {
