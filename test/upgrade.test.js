@@ -26,9 +26,9 @@ describe.only('Testing with done', () => {
 
 	beforeEach(async()=>{
 		// remove upgrades
-		const versions = ['0.0.2', '0.0.2b']
+		const versions = [{version: '0.0.2', track: 'stable'}, {version: '0.0.2b', track: 'stable'}, {version: '0.0.2', track: 'beta'}]
 		const upgrades = await actorParent.get_upgrades()
-		const upgradesExist = upgrades.filter(u => versions.includes(u.version))
+		const upgradesExist = upgrades.filter(u => versions.some(v => v.version === u.version && v.track === u.track))
 		for (const upgrade of upgradesExist) {
 			await actorParent.remove_upgrade(upgrade.version, upgrade.track)
 		}
@@ -49,7 +49,7 @@ describe.only('Testing with done', () => {
 
 		// upload upgrade (0.0.2)
 		const tractUpgrade = 'stable'
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'stable', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
 		const resNextUpgrades = await actorChild.get_next_upgrades()
@@ -57,11 +57,11 @@ describe.only('Testing with done', () => {
 		expect(upgrade).toBeDefined()
 		
 		// upgrade child (0.0.2)
-		await actorChild.upgrade_canister(upgrade.wasm_hash, tractUpgrade)
+		await actorChild.upgrade_canister(upgrade.version, upgrade.track)
 		
 		// upload version (0.0.2b)
 		const tractUpgrade1 = 'stable'
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--versionFrom', '0.0.2', '--track', tractUpgrade1] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--upgradeFromVersion', '0.0.2', '--upgradeFromTrack', 'stable', '--track', tractUpgrade1] ,{cwd: process.cwd(), stdio: 'inherit'})
 
 		// get child upgrade
 		const resNextUpgrades1 = await actorChild.get_next_upgrades()
@@ -69,14 +69,14 @@ describe.only('Testing with done', () => {
 		expect(upgrade1).toBeDefined()
 
 		// upgrade child (0.0.2b)
-		await actorChild.upgrade_canister(upgrade1.wasm_hash, tractUpgrade1)
+		await actorChild.upgrade_canister(upgrade1.version, upgrade1.track)
 
 		// check canister
 		const posts = await actorChild.get_posts()
 		expect(posts.length).toBe(0)
 	})
 
-	test('Should create a new community and upgrade in bete track', async () => {
+	test('Should create a new community and upgrade in beta track', async () => {
 		
 		// create child
 		if (canisterIds.ledger) {
@@ -93,7 +93,7 @@ describe.only('Testing with done', () => {
 		expect(resCreateTrack.Ok).toBeDefined()
 
 		// upload upgrade (0.0.2-beta)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--versionFrom', '0.0.1', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'stable', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
 		const resNextUpgrades = await actorChild.get_next_upgrades()
@@ -101,7 +101,7 @@ describe.only('Testing with done', () => {
 		expect(upgrade).toBeDefined()
 		
 		// upgrade child (0.0.2-beta)
-		await actorChild.upgrade_canister(upgrade.wasm_hash, tractUpgrade)
+		await actorChild.upgrade_canister(upgrade.version, upgrade.track)
 		
 		// check canister
 		const posts = await actorChild.get_posts()
