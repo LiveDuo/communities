@@ -1,7 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
-use sha2::{Sha256, Digest};
 use crate::utils::{get_asset, get_content_type};
-use crate::state::STATE;
+use crate::state::{STATE, Version};
 use ic_cdk::api::management_canister::main::*;
 use serde_bytes::ByteBuf;
 use ic_cdk::api::call::CallResult;
@@ -9,31 +8,27 @@ use ic_certified_assets::rc_bytes::RcBytes;
 use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
 
 
-#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
-pub struct Upgrade { 
-    pub version: String,
-    pub upgrade_from: Option<Vec<u8>>,
-    pub timestamp: u64,
-    pub wasm_hash: Vec<u8>,
-    pub assets: Vec<String>
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct UpgradeFrom {
+    pub track: String,
+    pub version: String
 }
-
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct UpgradeWithTrack {
     pub version: String,
-    pub upgrade_from: Option<Vec<u8>>,
+    pub upgrade_from: Option<UpgradeFrom>,
     pub timestamp: u64,
     pub wasm_hash: Vec<u8>,
     pub assets: Vec<String>,
     pub track: String
 }
 
-pub fn update_wasm_hash() { 
-  let wasm_bytes = get_asset("/temp/child.wasm".to_owned());
-  let mut hasher = Sha256::new();
-  hasher.update(wasm_bytes.clone());
-  let wasm_hash = hasher.finalize()[..].to_vec();
-  STATE.with(|s| s.borrow_mut().wasm_hash = Some(wasm_hash));
+pub fn update_track_and_version() { 
+  let metadata_vec = get_asset("/temp/metadata.txt".to_owned());
+  let metadata_content =  String::from_utf8(metadata_vec).unwrap();
+  let metadata_content_splitted =  metadata_content.split('-').collect::<Vec<_>>();
+  let version = Version {track: metadata_content_splitted[0].to_owned(), version: metadata_content_splitted[1].to_owned()};
+  STATE.with(|s| s.borrow_mut().version = Some(version));
 }
 
 
@@ -101,6 +96,19 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
       };
       ic_certified_assets::store(store_args);
   }
+
+  // store metadata
+  let metadata = format!("{}-{}", track, version);
+  let content = ByteBuf::from(metadata.as_bytes().to_vec());
+  let key = format!("/temp/metadata.txt");
+  let store_args = StoreArg {
+      key: key.to_owned(),
+      content_type: get_content_type(&key),
+      content_encoding: "identity".to_owned(),
+      content,
+      sha256: None
+  };
+  ic_certified_assets::store(store_args);
 
 Ok(())
 }

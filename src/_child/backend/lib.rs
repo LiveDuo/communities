@@ -12,21 +12,24 @@ use std::borrow::Borrow;
 
 use crate::state::{*, STATE};
 
-use upgrade::{update_wasm_hash, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
-use upgrade::{UpgradeWithTrack, Upgrade};
+use upgrade::{update_track_and_version, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
+use upgrade::UpgradeWithTrack;
 use utils::{uuid, get_asset};
 
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 
 #[init]
 #[candid_method(init)]
-fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
+fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Option<String>) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
-        state.wasm_hash = wasm_hash;
+        if version_opt.is_some() && track_opt.is_some() {
+            let version =  Version { version: version_opt.unwrap(), track: track_opt.unwrap() };
+            state.version = Some(version);
+        }
         
 	});
     
@@ -444,7 +447,7 @@ fn post_upgrade() {
     STATE.with(|s| *s.borrow_mut() = s_prev.state);
 
     // finalize upgrade
-    update_wasm_hash();
+    update_track_and_version();
     replace_assets_from_temp();
 }
 
@@ -462,20 +465,18 @@ async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
     let parent  = parent_opt.unwrap();
-    let current_version_opt = STATE.with(|s| s.borrow().wasm_hash.to_owned());
-    if current_version_opt == None { return  Err("Current version not found".to_owned()); }
+    let current_version_opt = STATE.with(|s| s.borrow().version.to_owned());
+    if current_version_opt.is_none() { return  Err("Current version not found".to_owned()); }
     let current_version = current_version_opt.unwrap();
     
-    let (next_versions,) = ic_cdk::call::<_, (Vec<UpgradeWithTrack>,)>(parent, "get_next_upgrades", (current_version,),).await.unwrap();
+    let (next_versions,) = ic_cdk::call::<_, (Vec<UpgradeWithTrack>,)>(parent, "get_next_upgrades", (current_version.version, current_version.track,),).await.unwrap();
     
     Ok(next_versions)
 }
 
-
-
 #[update]
-// #[candid_method(update)]
-async fn upgrade_canister(wasm_hash: Vec<u8>, track: String) -> Result<(), String> {
+#[candid_method(update)]
+async fn upgrade_canister(version: String, track: String) -> Result<(), String> {
     
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
@@ -486,12 +487,12 @@ async fn upgrade_canister(wasm_hash: Vec<u8>, track: String) -> Result<(), Strin
     
     // get upgrade from parent
     let parent_canister = parent_canister_opt.unwrap();
-    let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, track.to_owned())).await.unwrap();
+    let (upgrade_opt,) = ic_cdk::call::<_, (Option<UpgradeWithTrack>,)>(parent_canister, "get_upgrade", (version, track)).await.unwrap();
     if upgrade_opt.is_none() { return Err("Version not found".to_owned()); }
     let upgrade = upgrade_opt.unwrap();
 
     // store assets to temp
-    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version, &track).await.unwrap();
+    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version, &upgrade.track).await.unwrap();
 
     // upgrade wasm
     let wasm = get_asset("/temp/child.wasm".to_owned());	
@@ -499,25 +500,6 @@ async fn upgrade_canister(wasm_hash: Vec<u8>, track: String) -> Result<(), Strin
 
     Ok(())
 }
-
-// #[query]
-// fn test_xx () {
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-//     ic_cdk::println!("sad");
-// }
-
-
-
-
 
 #[test]
 fn candid_interface_compatibility() {
