@@ -8,6 +8,7 @@ use ic_cdk_macros::{query, update, init};
 use utils::*;
 use create_child::*;
 use crate::state::{STATE, *};
+use candid::{Decode, Encode};
 
 const STABLE_TRACK: &str = "stable";
 #[init]
@@ -243,7 +244,7 @@ fn get_next_upgrades(version: String, track: String) -> Vec<UpgradeWithTrack> {
             if u.upgrade_from.is_none() {
                 return false;
             } else {
-                let upgrade_from= u.upgrade_from.as_ref().unwrap();
+                let upgrade_from = u.upgrade_from.as_ref().unwrap();
                 return upgrade_from.version == version && upgrade_from.track == track;
             }
         })
@@ -387,6 +388,25 @@ async fn remove_upgrade(version: String, track: String) -> Result<(), String> {
     })
 }
 
+
+#[query]
+fn handle_interface(version_interface: String, function_name: String, payload: Vec<u8>) -> Result<Vec<u8>, String> {
+    if version_interface == "v1".to_owned() {
+        if function_name == "get_next_upgrades".to_owned() {
+            let (version, track) = candid::Decode!(&payload, (String, String)).unwrap();
+            let res = get_next_upgrades(version, track);
+            Ok(candid::Encode!(&res).unwrap())
+        } else if function_name == "get_upgrade"{
+            let (version, track) = candid::Decode!(&payload, (String, String)).unwrap();
+            let res = get_upgrade(version, track);
+            Ok(candid::Encode!(&res).unwrap())
+        }else {
+            Err("Invalid function name".to_owned())
+        }
+    } else {
+        Err("Invalid version".to_owned())
+    }
+}
 #[derive(CandidType, Deserialize)]
 pub struct UpgradeState {
     pub lib: State,

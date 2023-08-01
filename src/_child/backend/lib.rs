@@ -18,6 +18,8 @@ use utils::{uuid, get_asset};
 
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 
+use candid::{Encode, Decode};
+
 #[init]
 #[candid_method(init)]
 fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Option<String>) {
@@ -469,8 +471,11 @@ async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
     if current_version_opt.is_none() { return  Err("Current version not found".to_owned()); }
     let current_version = current_version_opt.unwrap();
     
-    let (next_versions,) = ic_cdk::call::<_, (Vec<UpgradeWithTrack>,)>(parent, "get_next_upgrades", (current_version.version, current_version.track,),).await.unwrap();
-    
+    let payload = candid::Encode!(&(current_version.version, current_version.track)).unwrap();
+    let args = ("v1".to_owned(), "get_next_upgrades".to_owned() ,payload,);
+    let (res,) = ic_cdk::call::<_, (Result<Vec<u8>, String>,)>(parent, "handle_interface", args,).await.unwrap();
+    let next_versions = candid::Decode!(&res.unwrap(), Vec<UpgradeWithTrack>).unwrap();
+
     Ok(next_versions)
 }
 
@@ -487,7 +492,10 @@ async fn upgrade_canister(version: String, track: String) -> Result<(), String> 
     
     // get upgrade from parent
     let parent_canister = parent_canister_opt.unwrap();
-    let (upgrade_opt,) = ic_cdk::call::<_, (Option<UpgradeWithTrack>,)>(parent_canister, "get_upgrade", (version, track)).await.unwrap();
+    let payload = candid::Encode!(&(version, track)).unwrap();
+    let args = ("v1".to_owned(), "get_upgrade".to_owned(), payload);
+    let (res,) = ic_cdk::call::<_, (Result<Vec<u8>, String>,)>(parent_canister, "handle_interface", args).await.unwrap();
+    let upgrade_opt = candid::Decode!(&res.unwrap(), Option<UpgradeWithTrack>).unwrap();
     if upgrade_opt.is_none() { return Err("Version not found".to_owned()); }
     let upgrade = upgrade_opt.unwrap();
 
