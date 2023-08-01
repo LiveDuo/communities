@@ -11,11 +11,12 @@ use utils::*;
 use create_child::*;
 use crate::state::{STATE, *};
 
+const STABLE_TRACK: &str = "stable";
 #[init]
 #[candid_method(init)]
 fn init() {
     ic_certified_assets::init();
-    add_track("stable".to_owned(), ic_cdk::caller()).unwrap();
+    add_track(STABLE_TRACK.to_owned(), ic_cdk::caller()).unwrap();
 }
 
 #[update]
@@ -50,18 +51,17 @@ async fn create_child() -> Result<Principal, String> {
     // get latest version
     let version = STATE.with(|s| {
         let state = s.borrow();
-        let track_name = "stable";
-        let stable_track_id = state.indexes.track.get(&track_name.to_owned()).unwrap();
-        let upgrades_id = state.relations.track_id_to_upgrade_id.forward.get(stable_track_id);
-        let mut upgrades = upgrades_id.unwrap().iter().map(|(upgrade_id, _)| {
+        let stable_track_id = state.indexes.track.get(&STABLE_TRACK.to_owned()).unwrap();
+        let upgrades_ids = state.relations.track_id_to_upgrade_id.forward.get(stable_track_id);
+        let mut upgrades = upgrades_ids.unwrap().iter().map(|(upgrade_id, _)| {
             let upgrade = state.upgrades.get(upgrade_id).unwrap();
-            UpgradeWithTrack { 
+            UpgradeWithTrack {
                 version: upgrade.version.to_owned(),
                 upgrade_from: upgrade.upgrade_from.to_owned(),
                 timestamp: upgrade.timestamp,
                 wasm_hash: upgrade.wasm_hash.to_owned(),
                 assets: upgrade.assets.to_owned(),
-                track: track_name.to_owned()
+                track: STABLE_TRACK.to_owned()
             }
         }).collect::<Vec<_>>();
         upgrades.sort_by(|a, b| b.version.cmp(&a.version));
@@ -122,9 +122,13 @@ async fn remove_track(track_name: String) -> Result<(), String> {
             let upgrade_ids = upgrade_ids_opt.unwrap().to_owned();
             upgrade_ids.iter().for_each(|(upgrade_id, _)| {
                 let upgrade = state.upgrades.get(upgrade_id).unwrap().to_owned();
-                state.indexes.version.remove(&upgrade.version);
+                state.indexes.version.remove(&(track_name.to_owned(),upgrade.version));
                 state.indexes.wasm_hash.remove(&upgrade.wasm_hash);
-                state.indexes.upgrade_from.remove(&upgrade.upgrade_from);
+
+                if upgrade.upgrade_from.is_some() {
+                    let upgrade_from =  upgrade.upgrade_from.unwrap();
+                    state.indexes.upgrade_from.remove(&(upgrade_from.track, upgrade_from.version));
+                }
     
                 state.upgrades.remove(upgrade_id);
                 state.relations.track_id_to_upgrade_id.remove(track_id, upgrade_id.to_owned());
@@ -235,12 +239,19 @@ fn get_children() ->  Vec<Principal>{
 
 #[query]
 #[candid_method(query)]
-fn get_next_upgrades(wasm_hash: Vec<u8>) -> Vec<UpgradeWithTrack> {
+fn get_next_upgrades(version: String, track: String) -> Vec<UpgradeWithTrack> {
     STATE.with(|s| {
         let state = s.borrow();
         state.upgrades.iter()
-        .filter(|&(_, u)| u.upgrade_from == Some(wasm_hash.to_owned())
-        ).map(|(id, u)|{
+        .filter(|&(_, u)| {
+            if u.upgrade_from.is_none() {
+                return false;
+            } else {
+                let upgrade_from= u.upgrade_from.as_ref().unwrap();
+                return upgrade_from.version == version && upgrade_from.track == track;
+            }
+        })
+        .map(|(id, u)|{
             let (track_id, _) = state.relations.track_id_to_upgrade_id.backward.get(id).unwrap().first_key_value().unwrap();
             let track = state.tracks.get(track_id).unwrap();
             UpgradeWithTrack{
@@ -261,7 +272,7 @@ fn get_next_upgrades(wasm_hash: Vec<u8>) -> Vec<UpgradeWithTrack> {
 fn get_upgrades() -> Vec<UpgradeWithTrack> {
     STATE.with(|s| {
         let state = s.borrow();
-        state.upgrades.iter().map(|(id, u)|{
+        state.upgrades.iter().map(|(id, u)| {
 					let (track_id,_) = state.relations.track_id_to_upgrade_id.backward.get(id).unwrap().first_key_value().unwrap();
 					let track: &Track  = state.tracks.get(track_id).unwrap();
 					UpgradeWithTrack {
@@ -278,30 +289,37 @@ fn get_upgrades() -> Vec<UpgradeWithTrack> {
 
 #[query]
 #[candid_method(query)]
-fn get_upgrade(wasm_hash: Vec<u8>, track: String) -> Option<Upgrade> {
+fn get_upgrade(version: String, track: String) -> Option<UpgradeWithTrack> {
 	STATE.with(|s| {
 		let state = s.borrow();
 
-		// get track upgrade by ids
-		let track_id: &u64 = state.indexes.track.get(&track).unwrap();
-		let track_upgrade_ids_opt = state.relations.track_id_to_upgrade_id.forward.get(track_id);
-		if track_upgrade_ids_opt.is_none() {
-			return None;
-		}
+        // get upgrade id 
+        let upgrade_id_opt = state.indexes.version.get(&(track, version));
+        if upgrade_id_opt.is_none() {
+            return None;
+        }
 
 		// get upgrades 
-		let upgrade_opt = track_upgrade_ids_opt.unwrap().iter()
-			.map(|(id, _)| state.upgrades.get(id).unwrap().to_owned())
-			.find(|u|u.wasm_hash == wasm_hash);
+        let upgrade_id = upgrade_id_opt.unwrap();
+		let upgrade = state.upgrades.get(upgrade_id).unwrap();
+        let (track_id, _) = state.relations.track_id_to_upgrade_id.backward.get(upgrade_id).unwrap().first_key_value().unwrap();
+        let track = state.tracks.get(track_id).unwrap();
 
-		upgrade_opt
+        Some(UpgradeWithTrack{
+            version: upgrade.version.to_owned(),
+            upgrade_from: upgrade.upgrade_from.to_owned(),
+            timestamp: upgrade.timestamp,
+            wasm_hash: upgrade.wasm_hash.to_owned(),
+            assets: upgrade.assets.to_owned(),
+            track: track.name.to_owned()
+        })
 	})
 }
 
 
 #[update]
 #[candid_method(update)]
-async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: Vec<String>, track: String) -> Result<(), String> {
+async fn create_upgrade(version: String, upgrade_from_opt: Option<UpgradeFrom>, assets: Vec<String>, track: String) -> Result<(), String> {
     // authorize
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
@@ -316,19 +334,9 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
     let wasm_hash = wasm_hash_hasher.finalize()[..].to_vec();
 
     // check if version exists
-    let is_version_exists = STATE.with(|s| {
-        let state = s.borrow();
+    let index_version = STATE.with(|s| s.borrow().indexes.version.to_owned());
 
-        let track_id = state.indexes.track.get(&track).unwrap().to_owned();
-        let track_upgrade_ids_opt =  state.relations.track_id_to_upgrade_id.forward.get(&track_id);
-        if track_upgrade_ids_opt.is_none() {
-            return false;
-        }
-        let track_upgrades_ids = track_upgrade_ids_opt.unwrap();
-        track_upgrades_ids.iter().map(|(id, _)| state.upgrades.get(id).unwrap().to_owned()).any(|s|s.wasm_hash == wasm_hash )
-    });
-
-    if is_version_exists {
+    if index_version.contains_key(&(track.to_owned(), version.to_owned())) {
         return Err("Version already exists".to_owned());
     }
 
@@ -341,7 +349,7 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
     // insert to state
     let upgrade = Upgrade {
         version: version.to_owned(),
-        upgrade_from: upgrade_from.to_owned(),
+        upgrade_from: upgrade_from_opt.to_owned(),
         timestamp: ic_cdk::api::time(),
         wasm_hash: wasm_hash.to_owned(),
         assets: assets.clone(),
@@ -350,9 +358,13 @@ async fn create_upgrade(version: String, upgrade_from: Option<Vec<u8>>, assets: 
     STATE.with(|s| {
         let mut state = s.borrow_mut();
         state.upgrades.insert(upgrade_id, upgrade);
-        state.indexes.version.insert(version, upgrade_id);
+        state.indexes.version.insert((track.to_owned(), version), upgrade_id);
         state.indexes.wasm_hash.insert(wasm_hash, upgrade_id);
-        state.indexes.upgrade_from.insert(upgrade_from, upgrade_id);
+
+        if upgrade_from_opt.is_some() {
+            let upgrade_from = upgrade_from_opt.unwrap();
+            state.indexes.upgrade_from.insert((upgrade_from.track, upgrade_from.version), upgrade_id);
+        }
         
         // add track relation
         let track_id = state.indexes.track.get(&track).unwrap().to_owned();
@@ -371,16 +383,21 @@ async fn remove_upgrade(version: String, track: String) -> Result<(), String> {
 
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        let upgrade_id_opt = state.indexes.version.get(&version).cloned();
+        let upgrade_id_opt = state.indexes.version.get(&(track.to_owned(), version.to_owned())).cloned();
         if upgrade_id_opt == None {
             return Err("Version does not exist".to_owned()); 
         }
 
         let upgrade_id= upgrade_id_opt.unwrap();
         let upgrade = state.upgrades.get(&upgrade_id).cloned().unwrap();
-        state.indexes.version.remove(&upgrade.version);
+
+        state.indexes.version.remove(&(track.to_owned(), upgrade.version));
         state.indexes.wasm_hash.remove(&upgrade.wasm_hash);
-        state.indexes.upgrade_from.remove(&upgrade.upgrade_from);
+        if upgrade.upgrade_from.is_some() {
+            let upgrade_from = upgrade.upgrade_from.unwrap();
+            state.indexes.upgrade_from.remove(&(upgrade_from.track, upgrade_from.version));
+        }
+
         state.upgrades.remove(&upgrade_id);
         let track_id = state.indexes.track.get(&track).unwrap().to_owned();
         state.relations.track_id_to_upgrade_id.remove(track_id, upgrade_id);

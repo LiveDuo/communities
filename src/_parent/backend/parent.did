@@ -42,12 +42,17 @@ type StreamingStrategy = variant {
     callback : func () -> ();
   };
 };
+
+type UpgradeFrom = record {
+  version : text;
+  track : text;
+};
 type Upgrade = record {
   assets : vec text;
   version : text;
   timestamp : nat64;
   wasm_hash : vec nat8;
-  upgrade_from : opt vec nat8;
+  upgrade_from : opt UpgradeFrom;
 };
 type UpgradeWithTrack = record {
   track : text;
@@ -55,14 +60,14 @@ type UpgradeWithTrack = record {
   version : text;
   timestamp : nat64;
   wasm_hash : vec nat8;
-  upgrade_from : opt vec nat8;
+  upgrade_from : opt UpgradeFrom;
 };
 service : () -> {
   create_child : () -> (CreateChildResult);
   create_track : (text) -> (CreateTrackResult);
-  create_upgrade : (text, opt vec nat8, vec text, text) -> (CreateUpgreadeResult);
-  get_next_upgrades : (vec nat8) -> (vec Upgrade) query;
-  get_upgrade : (vec nat8, text) -> (opt Upgrade) query;
+  create_upgrade : (text, opt UpgradeFrom, vec text, text) -> (CreateUpgreadeResult);
+  get_next_upgrades : (text, text) -> (vec UpgradeWithTrack) query;
+  get_upgrade : (text, text) -> (opt UpgradeWithTrack) query;
   get_upgrades : () -> (vec UpgradeWithTrack) query;
   get_user_canisters : () -> (vec CanisterData) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
