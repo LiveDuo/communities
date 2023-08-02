@@ -147,6 +147,9 @@ const ChildProvider = ({ children }) => {
 	}, [profile, childActor])
 
 	const getProfileByAuth = useCallback(async (account) => {
+
+		if(!childActor) return
+		
 		const auth = {}
 		if (account.type === 'Evm' ||  account.type === 'Svm') {
 			auth[account.type] = {address: account.address}
