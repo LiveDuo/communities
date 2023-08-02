@@ -131,6 +131,7 @@ pub struct UpgradeFrom {
 pub struct Upgrade {
     pub version: String,
     pub upgrade_from: Option<UpgradeFrom>,
+    pub description: String,
     pub timestamp: u64,
     pub assets: Vec<String>,
 }
@@ -138,6 +139,7 @@ pub struct Upgrade {
 pub struct UpgradeWithTrack {
     pub version: String,
     pub upgrade_from: Option<UpgradeFrom>,
+    pub description: String,
     pub timestamp: u64,
     pub assets: Vec<String>,
     pub track: String

@@ -19,6 +19,7 @@ pub struct UpgradeWithTrack {
     pub upgrade_from: Option<UpgradeFrom>,
     pub timestamp: u64,
     pub assets: Vec<String>,
+    pub description: String,
     pub track: String
 }
 

@@ -49,7 +49,7 @@ describe.only('Testing with done', () => {
 
 		// upload upgrade (0.0.2)
 		const tractUpgrade = 'stable'
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'stable', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2' ,'--description', 'description for 0.0.2', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'stable', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
 		const resNextUpgrades = await actorChild.get_next_upgrades()
@@ -61,7 +61,7 @@ describe.only('Testing with done', () => {
 		
 		// upload version (0.0.2b)
 		const tractUpgrade1 = 'stable'
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b', '--upgradeFromVersion', '0.0.2', '--upgradeFromTrack', 'stable', '--track', tractUpgrade1] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b','--description', 'description for 0.0.2b', '--upgradeFromVersion', '0.0.2', '--upgradeFromTrack', 'stable', '--track', tractUpgrade1] ,{cwd: process.cwd(), stdio: 'inherit'})
 
 		// get child upgrade
 		const resNextUpgrades1 = await actorChild.get_next_upgrades()
@@ -93,7 +93,7 @@ describe.only('Testing with done', () => {
 		expect(resCreateTrack.Ok).toBeDefined()
 
 		// upload upgrade (0.0.2-beta)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'stable', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2','--description', 'description for 0.0.2 beta', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'stable', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
 		const resNextUpgrades = await actorChild.get_next_upgrades()

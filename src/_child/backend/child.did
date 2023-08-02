@@ -88,9 +88,10 @@ type UpgradeWithTrack = record {
   version : text;
   timestamp : nat64;
   upgrade_from : opt UpgradeFrom;
+  description: text;
 };
 type UserRole = variant { Admin };
-service : (opt principal, opt vec nat8) -> {
+service : (opt principal, opt text, opt text ) -> {
   create_post : (text, text) -> (CratePostResult);
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
   create_reply : (nat64, text) -> (CreateReplyResult);

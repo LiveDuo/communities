@@ -51,6 +51,7 @@ type Upgrade = record {
   assets : vec text;
   version : text;
   timestamp : nat64;
+  description: text;
   upgrade_from : opt UpgradeFrom;
 };
 type UpgradeWithTrack = record {
@@ -58,12 +59,13 @@ type UpgradeWithTrack = record {
   assets : vec text;
   version : text;
   timestamp : nat64;
+  description: text;
   upgrade_from : opt UpgradeFrom;
 };
 service : () -> {
   create_child : () -> (CreateChildResult);
   create_track : (text) -> (CreateTrackResult);
-  create_upgrade : (text, opt UpgradeFrom, vec text, text) -> (CreateUpgreadeResult);
+  create_upgrade : (text, opt UpgradeFrom, vec text, text, text) -> (CreateUpgreadeResult);
   get_next_upgrades : (text, text) -> (vec UpgradeWithTrack) query;
   get_upgrade : (text, text) -> (opt UpgradeWithTrack) query;
   get_upgrades : () -> (vec UpgradeWithTrack) query;

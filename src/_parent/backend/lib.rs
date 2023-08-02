@@ -59,7 +59,8 @@ async fn create_child() -> Result<Principal, String> {
                 upgrade_from: upgrade.upgrade_from.to_owned(),
                 timestamp: upgrade.timestamp,
                 assets: upgrade.assets.to_owned(),
-                track: STABLE_TRACK.to_owned()
+                track: STABLE_TRACK.to_owned(),
+                description: upgrade.description.to_owned()
             }
         }).collect::<Vec<_>>();
         upgrades.sort_by(|a, b| b.version.cmp(&a.version));
@@ -256,7 +257,8 @@ fn get_next_upgrades(version: String, track: String) -> Vec<UpgradeWithTrack> {
                 upgrade_from: u.upgrade_from.to_owned(),
                 timestamp: u.timestamp,
                 assets: u.assets.to_owned(),
-                track: track.name.to_owned()
+                track: track.name.to_owned(),
+                description: u.description.to_owned()
             }
         }).collect::<Vec<_>>()
     })
@@ -276,7 +278,8 @@ fn get_upgrades() -> Vec<UpgradeWithTrack> {
 						upgrade_from: u.upgrade_from.to_owned(),
 						timestamp: u.timestamp,
 						assets: u.assets.to_owned(),
-						track: track.name.to_owned()
+						track: track.name.to_owned(),
+                        description: u.description.to_owned()
 					}
 				}).collect::<Vec<_>>()
     })
@@ -305,7 +308,8 @@ fn get_upgrade(version: String, track: String) -> Option<UpgradeWithTrack> {
             upgrade_from: upgrade.upgrade_from.to_owned(),
             timestamp: upgrade.timestamp,
             assets: upgrade.assets.to_owned(),
-            track: track.name.to_owned()
+            track: track.name.to_owned(),
+            description: upgrade.description.to_owned()
         })
 	})
 }
@@ -313,7 +317,7 @@ fn get_upgrade(version: String, track: String) -> Option<UpgradeWithTrack> {
 
 #[update]
 #[candid_method(update)]
-async fn create_upgrade(version: String, upgrade_from_opt: Option<UpgradeFrom>, assets: Vec<String>, track: String) -> Result<(), String> {
+async fn create_upgrade(version: String, upgrade_from_opt: Option<UpgradeFrom>, assets: Vec<String>, track: String, description: String ) -> Result<(), String> {
     // authorize
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
@@ -337,6 +341,7 @@ async fn create_upgrade(version: String, upgrade_from_opt: Option<UpgradeFrom>, 
         upgrade_from: upgrade_from_opt.to_owned(),
         timestamp: ic_cdk::api::time(),
         assets: assets.clone(),
+        description: description.to_owned()
     };
     let upgrade_id = uuid(&caller.to_text());
     STATE.with(|s| {

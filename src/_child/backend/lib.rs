@@ -405,6 +405,19 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
         Ok(user_post)
     })
 }
+
+#[query]
+#[candid_method(query)]
+fn get_current_version() -> Result<Version, String>{
+    STATE.with(|s| {
+        let state = s.borrow();
+        if state.version.is_none() {
+            return Err("Version not set".to_owned());
+        }
+
+        Ok(state.version.clone().unwrap())
+    })
+}
 #[query]
 #[candid_method(query)]
 fn get_user_roles() -> Vec<Role>{

@@ -52,7 +52,8 @@ const childFactory = ({ IDL }) => {
 		upgrade_from: IDL.Opt(UpgradeFrom),
 		timestamp: IDL.Nat64,
 		assets: IDL.Vec(IDL.Text),
-		track: IDL.Text
+		track: IDL.Text,
+		description: IDL.Text
 	})
 
 	return IDL.Service({
@@ -71,11 +72,11 @@ exports.childFactory = childFactory
 
 const parentFactory = ({ IDL }) => {
 	const UpgradeFrom = IDL.Record({'version': IDL.Text, 'track': IDL.Text})
-	const UpgradeWithTrack = IDL.Record({'version': IDL.Text, "upgrade_from": IDL.Opt(UpgradeFrom), 'timestamp': IDL.Nat64, 'assets': IDL.Vec(IDL.Text), 'track': IDL.Text})
+	const UpgradeWithTrack = IDL.Record({'version': IDL.Text, "upgrade_from": IDL.Opt(UpgradeFrom), 'timestamp': IDL.Nat64, 'assets': IDL.Vec(IDL.Text), 'track': IDL.Text, 'description': IDL.Text})
 
 	return IDL.Service({
 		'create_child': IDL.Func([], [IDL.Variant({ 'Ok': IDL.Principal, 'Err': IDL.Text })], []),
-		'create_upgrade':  IDL.Func([IDL.Text, IDL.Opt(UpgradeFrom), IDL.Vec(IDL.Text), IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
+		'create_upgrade':  IDL.Func([IDL.Text, IDL.Opt(UpgradeFrom), IDL.Vec(IDL.Text), IDL.Text, IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
 		'create_track': IDL.Func([IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
 		'get_next_upgrade':  IDL.Func([ IDL.Text, IDL.Text ], [IDL.Opt(UpgradeWithTrack)], []),
 		'get_upgrades':  IDL.Func([], [IDL.Vec(UpgradeWithTrack)], []),

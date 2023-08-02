@@ -71,6 +71,7 @@ const idlFactory = ({ IDL }) => {
 		assets: IDL.Vec(IDL.Text),
 		track: IDL.Text
 	})
+	const CurrentVersion = IDL.Record({version: IDL.Text, track: IDL.Text})
 
 	return IDL.Service({
 		create_profile: IDL.Func([authenticationWith], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["update"]),
@@ -82,7 +83,8 @@ const idlFactory = ({ IDL }) => {
 		get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
 		get_profile_by_user: IDL.Func([authentication], [IDL.Opt(Profile)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
-		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["query"])
+		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["query"]),
+		get_current_version: IDL.Func([],[IDL.Variant({ 'Ok': CurrentVersion, 'Err': IDL.Text })], ["query"]),
 	});
 };
 
@@ -149,7 +151,7 @@ const ChildProvider = ({ children }) => {
 	const getProfileByAuth = useCallback(async (account) => {
 
 		if(!childActor) return
-		
+
 		const auth = {}
 		if (account.type === 'Evm' ||  account.type === 'Svm') {
 			auth[account.type] = {address: account.address}

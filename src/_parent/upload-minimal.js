@@ -15,6 +15,7 @@ const host = argv.network ?? 'http://127.0.0.1:8000'
 const id = argv.identity ?? 'default'
 const version = argv.version ?? '0.0.1'
 const track = argv.track ?? 'stable'
+const description = argv.description ?? 'upgrade for 0.0.1'
 // node src/_parent/upload-minimal.js --network https://ic0.app --identity with-wallet
 ; (async () => {
 
@@ -30,7 +31,7 @@ const track = argv.track ?? 'stable'
 
 	// create upgrade
 	const assetsWithPath =  [`/upgrades/${track}/${version}/child.wasm`]
-	const res = await actorParent.create_upgrade(version, [], assetsWithPath, track)
+	const res = await actorParent.create_upgrade(version, [], assetsWithPath, track, description)
 	if (res.Err) {
 		console.log('This version already exist')
 	}
