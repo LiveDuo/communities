@@ -33,8 +33,8 @@ const UpgradeModal = () => {
 	}, [managementActor, principal, childActor])
 
 
-	const upgradeCanister = useCallback(async (wasm_hash, track) => {
-		await childActor.upgrade_canister(wasm_hash, track)
+	const upgradeCanister = useCallback(async (version, track) => {
+		await childActor.upgrade_canister(version, track)
 		onUpgradeModalClose()
 	}, [childActor, onUpgradeModalClose])
 	
@@ -55,10 +55,10 @@ const UpgradeModal = () => {
 					<Box>
 					{upgrades?.length  === 0 ? 
 						<Text>The canister is up to date</Text> : 
-						upgrades?.map(u => (
-							<Box>
+						upgrades?.map((u, i) => (
+							<Box key={i}>
 								<Text>Upgrade to {u.version}</Text>
-								<Button onClick={() => upgradeCanister(u.wasm_hash, u.track)}>Upgrade</Button>
+								<Button onClick={() => upgradeCanister(u.version, u.track)}>Upgrade</Button>
 						</Box>
 						))}
 				</Box>}
