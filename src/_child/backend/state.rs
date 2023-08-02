@@ -162,7 +162,8 @@ pub struct State {
     pub relations: Relations,
     pub indexes: Indexes,
     pub parent: Option<Principal>,
-    pub metadata: Option<Metadata>,
+    pub version: Option<String>,
+    pub track: Option<String>
 }
 
 thread_local! {

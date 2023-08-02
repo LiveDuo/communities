@@ -10,7 +10,7 @@ use create_child::*;
 use crate::state::{STATE, *};
 use candid::{Decode, Encode};
 
-const DEFAULT_TRACK: &str = "stable";
+const DEFAULT_TRACK: &str = "default";
 #[init]
 #[candid_method(init)]
 fn init() {
@@ -50,8 +50,8 @@ async fn create_child() -> Result<Principal, String> {
     // get latest version
     let version = STATE.with(|s| {
         let state = s.borrow();
-        let stable_track_id = state.indexes.track.get(&DEFAULT_TRACK.to_owned()).unwrap();
-        let upgrades_ids = state.relations.track_id_to_upgrade_id.forward.get(stable_track_id);
+        let default_track_id = state.indexes.track.get(&DEFAULT_TRACK.to_owned()).unwrap();
+        let upgrades_ids = state.relations.track_id_to_upgrade_id.forward.get(default_track_id);
         let mut upgrades = upgrades_ids.unwrap().iter().map(|(upgrade_id, _)| {
             let upgrade = state.upgrades.get(upgrade_id).unwrap();
             UpgradeWithTrack {

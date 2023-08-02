@@ -26,7 +26,7 @@ describe.only('Testing with done', () => {
 
 	beforeEach(async()=>{
 		// remove upgrades
-		const versions = [{version: '0.0.2', track: 'stable'}, {version: '0.0.2b', track: 'stable'}, {version: '0.0.2', track: 'beta'}]
+		const versions = [{version: '0.0.2', track: 'default'}, {version: '0.0.2b', track: 'default'}, {version: '0.0.2', track: 'beta'}]
 		const upgrades = await actorParent.get_upgrades()
 		const upgradesExist = upgrades.filter(u => versions.some(v => v.version === u.version && v.track === u.track))
 		for (const upgrade of upgradesExist) {
@@ -48,8 +48,8 @@ describe.only('Testing with done', () => {
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 
 		// upload upgrade (0.0.2)
-		const tractUpgrade = 'stable'
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2' ,'--description', 'description for 0.0.2', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'stable', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
+		const tractUpgrade = 'default'
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2' ,'--description', 'description for 0.0.2', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'default', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
 		const resNextUpgrades = await actorChild.get_next_upgrades()
@@ -60,8 +60,8 @@ describe.only('Testing with done', () => {
 		await actorChild.upgrade_canister(upgrade.version, upgrade.track)
 		
 		// upload version (0.0.2b)
-		const tractUpgrade1 = 'stable'
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b','--description', 'description for 0.0.2b', '--upgradeFromVersion', '0.0.2', '--upgradeFromTrack', 'stable', '--track', tractUpgrade1] ,{cwd: process.cwd(), stdio: 'inherit'})
+		const tractUpgrade1 = 'default'
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b','--description', 'description for 0.0.2b', '--upgradeFromVersion', '0.0.2', '--upgradeFromTrack', 'default', '--track', tractUpgrade1] ,{cwd: process.cwd(), stdio: 'inherit'})
 
 		// get child upgrade
 		const resNextUpgrades1 = await actorChild.get_next_upgrades()
@@ -93,7 +93,7 @@ describe.only('Testing with done', () => {
 		expect(resCreateTrack.Ok).toBeDefined()
 
 		// upload upgrade (0.0.2-beta)
-		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2','--description', 'description for 0.0.2 beta', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'stable', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
+		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2','--description', 'description for 0.0.2 beta', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'default', '--track', tractUpgrade ] ,{cwd: process.cwd(), stdio: 'inherit'})
 		
 		// get child upgrade
 		const resNextUpgrades = await actorChild.get_next_upgrades()

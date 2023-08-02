@@ -16,8 +16,8 @@ const id = argv.identity ?? 'default'
 
 const version = argv.version ?? '0.0.2'
 const upgradeFromVersion = argv.upgradeFromVersion ?? '0.0.1'
-const upgradeFromTrack = argv.upgradeFromTrack ?? 'stable'
-const track = argv.track ?? 'stable'
+const upgradeFromTrack = argv.upgradeFromTrack ?? 'default'
+const track = argv.track ?? 'default'
 const description = argv.description ?? 'upgrade to 0.0.2'
 
 // node src/_parent/upload-upgrade.js --network https://ic0.app --identity with-wallet

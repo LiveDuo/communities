@@ -14,7 +14,7 @@ const argv = minimist(process.argv.slice(2))
 const host = argv.network ?? 'http://127.0.0.1:8000'
 const id = argv.identity ?? 'default'
 const version = argv.version ?? '0.0.1'
-const track = argv.track ?? 'stable'
+const track = argv.track ?? 'default'
 const description = argv.description ?? 'upgrade to 0.0.1'
 // node src/_parent/upload-minimal.js --network https://ic0.app --identity with-wallet
 ; (async () => {

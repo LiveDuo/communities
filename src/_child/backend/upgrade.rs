@@ -28,7 +28,11 @@ pub fn update_metadata() {
   let metadata_content =  String::from_utf8(metadata_vec).unwrap();
   let metadata_content_splitted =  metadata_content.split('-').collect::<Vec<_>>();
   let metadata = Metadata {track: metadata_content_splitted[0].to_owned(), version: metadata_content_splitted[1].to_owned()};
-  STATE.with(|s| s.borrow_mut().metadata = Some(metadata));
+  STATE.with(|s| {
+    let mut state =  s.borrow_mut();
+    state.version = Some(metadata_content_splitted[1].to_owned());
+    state.track = Some(metadata_content_splitted[0].to_owned());
+  });
 }
 
 
