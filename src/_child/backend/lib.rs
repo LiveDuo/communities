@@ -12,7 +12,7 @@ use std::borrow::Borrow;
 
 use crate::state::{*, STATE};
 
-use upgrade::{update_track_and_version, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
+use upgrade::{update_metadata, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::UpgradeWithTrack;
 use utils::{uuid, get_asset};
 
@@ -21,7 +21,7 @@ use auth::{get_authentication_with_address, login_message_hex_svm, login_message
 use candid::{Encode, Decode};
 
 #[init]
-#[candid_method(init)]
+// #[candid_method(init)]
 fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Option<String>) {
     ic_certified_assets::init();
 
@@ -29,8 +29,8 @@ fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Op
         let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
         if version_opt.is_some() && track_opt.is_some() {
-            let version =  Version { version: version_opt.unwrap(), track: track_opt.unwrap() };
-            state.version = Some(version);
+            let metadata =  Metadata { version: version_opt.unwrap(), track: track_opt.unwrap() };
+            state.metadata = Some(metadata);
         }
         
 	});
@@ -408,14 +408,14 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
 
 #[query]
 #[candid_method(query)]
-fn get_current_version() -> Result<Version, String>{
+fn get_metadata() -> Result<Metadata, String>{
     STATE.with(|s| {
         let state = s.borrow();
-        if state.version.is_none() {
-            return Err("Version not set".to_owned());
+        if state.metadata.is_none() {
+            return Err("Metadata not set".to_owned());
         }
 
-        Ok(state.version.clone().unwrap())
+        Ok(state.metadata.clone().unwrap())
     })
 }
 #[query]
@@ -462,7 +462,7 @@ fn post_upgrade() {
     STATE.with(|s| *s.borrow_mut() = s_prev.state);
 
     // finalize upgrade
-    update_track_and_version();
+    update_metadata();
     replace_assets_from_temp();
 }
 
@@ -475,12 +475,12 @@ fn http_request(
 }
 
 #[query]
-#[candid_method(query)]
+// #[candid_method(query)]
 async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
     let parent  = parent_opt.unwrap();
-    let current_version_opt = STATE.with(|s| s.borrow().version.to_owned());
+    let current_version_opt = STATE.with(|s| s.borrow().metadata.to_owned());
     if current_version_opt.is_none() { return  Err("Current version not found".to_owned()); }
     let current_version = current_version_opt.unwrap();
     

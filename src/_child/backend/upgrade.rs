@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 use crate::utils::{get_asset, get_content_type};
-use crate::state::{STATE, Version};
+use crate::state::{STATE, Metadata};
 use ic_cdk::api::management_canister::main::*;
 use serde_bytes::ByteBuf;
 use ic_cdk::api::call::CallResult;
@@ -23,12 +23,12 @@ pub struct UpgradeWithTrack {
     pub track: String
 }
 
-pub fn update_track_and_version() { 
+pub fn update_metadata() { 
   let metadata_vec = get_asset("/temp/metadata.txt".to_owned());
   let metadata_content =  String::from_utf8(metadata_vec).unwrap();
   let metadata_content_splitted =  metadata_content.split('-').collect::<Vec<_>>();
-  let version = Version {track: metadata_content_splitted[0].to_owned(), version: metadata_content_splitted[1].to_owned()};
-  STATE.with(|s| s.borrow_mut().version = Some(version));
+  let metadata = Metadata {track: metadata_content_splitted[0].to_owned(), version: metadata_content_splitted[1].to_owned()};
+  STATE.with(|s| s.borrow_mut().metadata = Some(metadata));
 }
 
 

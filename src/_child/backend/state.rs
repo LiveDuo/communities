@@ -148,7 +148,7 @@ pub struct Indexes {
     pub active_principal: HashMap<Principal, u64>
 }
 #[derive(CandidType, Clone, Deserialize, Debug)]
-pub struct Version {
+pub struct Metadata {
     pub version: String,
     pub track: String
 }
@@ -162,7 +162,7 @@ pub struct State {
     pub relations: Relations,
     pub indexes: Indexes,
     pub parent: Option<Principal>,
-    pub version: Option<Version>,
+    pub metadata: Option<Metadata>,
 }
 
 thread_local! {

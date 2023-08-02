@@ -103,5 +103,6 @@ service : (opt principal, opt text, opt text ) -> {
   get_profile : () -> (GetProfileResult) query;
   get_profile_by_user : (Authentication) -> (opt Profile) query;
   get_user_roles : () -> (vec Role) query;
+  get_metadata: () -> () query;
   http_request : (HttpRequest) -> (HttpResponse) query;
 }

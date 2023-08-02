@@ -10,12 +10,12 @@ use create_child::*;
 use crate::state::{STATE, *};
 use candid::{Decode, Encode};
 
-const STABLE_TRACK: &str = "stable";
+const DEFAULT_TRACK: &str = "stable";
 #[init]
 #[candid_method(init)]
 fn init() {
     ic_certified_assets::init();
-    add_track(STABLE_TRACK.to_owned(), ic_cdk::caller()).unwrap();
+    add_track(DEFAULT_TRACK.to_owned(), ic_cdk::caller()).unwrap();
 }
 
 #[update]
@@ -50,7 +50,7 @@ async fn create_child() -> Result<Principal, String> {
     // get latest version
     let version = STATE.with(|s| {
         let state = s.borrow();
-        let stable_track_id = state.indexes.track.get(&STABLE_TRACK.to_owned()).unwrap();
+        let stable_track_id = state.indexes.track.get(&DEFAULT_TRACK.to_owned()).unwrap();
         let upgrades_ids = state.relations.track_id_to_upgrade_id.forward.get(stable_track_id);
         let mut upgrades = upgrades_ids.unwrap().iter().map(|(upgrade_id, _)| {
             let upgrade = state.upgrades.get(upgrade_id).unwrap();
@@ -59,7 +59,7 @@ async fn create_child() -> Result<Principal, String> {
                 upgrade_from: upgrade.upgrade_from.to_owned(),
                 timestamp: upgrade.timestamp,
                 assets: upgrade.assets.to_owned(),
-                track: STABLE_TRACK.to_owned(),
+                track: DEFAULT_TRACK.to_owned(),
                 description: upgrade.description.to_owned()
             }
         }).collect::<Vec<_>>();
@@ -395,8 +395,8 @@ async fn remove_upgrade(version: String, track: String) -> Result<(), String> {
 
 
 #[query]
-fn handle_interface(version_interface: String, function_name: String, payload: Vec<u8>) -> Result<Vec<u8>, String> {
-    if version_interface == "v1".to_owned() {
+fn handle_interface(interface_version: String, function_name: String, payload: Vec<u8>) -> Result<Vec<u8>, String> {
+    if interface_version == "v1".to_owned() {
         if function_name == "get_next_upgrades".to_owned() {
             let (version, track) = candid::Decode!(&payload, (String, String)).unwrap();
             let res = get_next_upgrades(version, track);
