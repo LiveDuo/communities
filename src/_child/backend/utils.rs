@@ -1,4 +1,4 @@
-use candid::{Nat};
+use candid::Nat;
 use ic_certified_assets::types::{GetArg, GetChunkArg};
 use num_traits::ToPrimitive;
 use std::collections::hash_map;

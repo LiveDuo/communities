@@ -279,7 +279,7 @@ impl State {
     }
 
     pub fn create_chunk(&mut self, arg: CreateChunkArg, now: u64) -> Result<ChunkId, String> {
-        let mut batch = self
+        let batch = self
             .batches
             .get_mut(&arg.batch_id)
             .ok_or_else(|| "batch not found".to_string())?;

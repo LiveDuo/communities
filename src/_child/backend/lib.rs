@@ -410,7 +410,7 @@ fn get_metadata() -> Result<Metadata, String> {
         let state = s.borrow();
         if state.version.is_none() {
             return Err("Version not set".to_owned());
-        } else if state.track.is_none(){
+        } else if state.track.is_none() {
             return Err("Track not set".to_owned());
         }
 

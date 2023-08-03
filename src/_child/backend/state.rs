@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 
-use std::hash::{Hash};
+use std::hash::Hash;
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
