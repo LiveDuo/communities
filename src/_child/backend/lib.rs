@@ -21,7 +21,7 @@ use auth::{get_authentication_with_address, login_message_hex_svm, login_message
 use candid::{Encode, Decode};
 
 #[init]
-// #[candid_method(init)]
+#[candid_method(init)]
 fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Option<String>) {
     ic_certified_assets::init();
 
@@ -404,13 +404,13 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
 }
 
 #[query]
-// #[candid_method(query)]
+#[candid_method(query)]
 fn get_metadata() -> Result<Metadata, String>{
     STATE.with(|s| {
         let state = s.borrow();
         if state.version.is_none() {
             return Err("Version not set".to_owned());
-        } else {
+        } else if state.track.is_none(){
             return Err("Track not set".to_owned());
         }
 
@@ -474,7 +474,7 @@ fn http_request(
 }
 
 #[query]
-// #[candid_method(query)]
+#[candid_method(query)]
 async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
