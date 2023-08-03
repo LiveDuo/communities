@@ -405,7 +405,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
 
 #[query]
 #[candid_method(query)]
-fn get_metadata() -> Result<Metadata, String>{
+fn get_metadata() -> Result<Metadata, String> {
     STATE.with(|s| {
         let state = s.borrow();
         if state.version.is_none() {

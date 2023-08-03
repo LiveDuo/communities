@@ -71,6 +71,7 @@ service : () -> {
   get_upgrades : () -> (vec UpgradeWithTrack) query;
   get_user_canisters : () -> (vec CanisterData) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
+  handle_interface: (text, text, vec nat8) -> (variant { Ok: vec nat8; Err : text }) query;
   remove_track : (text) -> (RemoveTrackResult);
   remove_upgrade : (text, text) -> (RemoveUpgreadeResult);
 }

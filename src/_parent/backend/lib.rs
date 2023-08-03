@@ -395,6 +395,7 @@ async fn remove_upgrade(version: String, track: String) -> Result<(), String> {
 
 
 #[query]
+#[candid_method(query)]
 fn handle_interface(interface_version: String, function_name: String, payload: Vec<u8>) -> Result<Vec<u8>, String> {
     if interface_version == "v1".to_owned() {
         if function_name == "get_next_upgrades".to_owned() {
@@ -446,13 +447,14 @@ fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_as
 #[test]
 fn candid_interface_compatibility() {
     
-    use candid::utils::*;
+    use candid::utils::{service_compatible, CandidSource};
     use std::path::PathBuf;
     use ic_cdk::export::candid::export_service;
     
+    
     export_service!();
-
     let new_interface = __export_service();
+
     let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("parent.did");
     service_compatible(CandidSource::Text(&new_interface), CandidSource::File(old_interface.as_path())).unwrap();
 }
