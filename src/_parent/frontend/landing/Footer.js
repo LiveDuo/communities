@@ -1,5 +1,5 @@
-import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, Heading } from '@chakra-ui/react';
-import { FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa';
+import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, Heading } from '@chakra-ui/react'
+import { FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa'
 
 const SocialButton = ({ children, href,}) => {
   return (
@@ -7,12 +7,12 @@ const SocialButton = ({ children, href,}) => {
       target='_blank' display={'inline-flex'} alignItems={'center'} justifyContent={'center'} _hover={{ bg:'whiteAlpha.300', }}>
       {children}
     </chakra.button>
-  );
-};
+  )
+}
 
 const ListHeader = ({ children }) => {
   return <Text fontWeight={'500'} fontSize={'lg'} mb={2}>{children}</Text>
-};
+}
 
 const Footer = () => {
   return (
@@ -53,7 +53,7 @@ const Footer = () => {
         </SimpleGrid>
       </Container>
     </Box>
-  );
+  )
 }
 
 export default Footer
