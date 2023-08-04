@@ -59,6 +59,7 @@ type GetPostResult = variant { Ok : PostResponse; Err : text };
 type GetPostsByUserResult = variant { Ok : vec PostSummary; Err : text };
 type GetProfileResult = variant { Ok : Profile; Err : text };
 type UpgradeCanisterResult = variant { Ok : null; Err : text };
+type GetMetadataResult = variant { Ok : Metadata; Err : text };
 
 type Role = record { role : UserRole; timestamp : nat64 };
 type StreamingCallbackToken = record {
@@ -77,6 +78,10 @@ type SvmAuthenticationWithParams = record {
   signature : text;
   public_key : text;
   message : text;
+};
+type Metadata = record {
+  version : text;
+  track : text;
 };
 type UpgradeFrom = record {
   version : text;
@@ -103,6 +108,6 @@ service : (opt principal, opt text, opt text ) -> {
   get_profile : () -> (GetProfileResult) query;
   get_profile_by_user : (Authentication) -> (opt Profile) query;
   get_user_roles : () -> (vec Role) query;
-  get_metadata: () -> () query;
+  get_metadata: () -> (GetMetadataResult) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
 }
