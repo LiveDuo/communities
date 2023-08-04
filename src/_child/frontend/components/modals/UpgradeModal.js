@@ -60,7 +60,6 @@ const UpgradeModal = () => {
 		}
 	},[managementActor, checkForUpgrade, getCurrentVersion])
 
-	console.log(metadata)
 	return (
 		<Modal isOpen={isUpgradeModalOpen} onClose={onUpgradeModalClose} isCentered>
 			<ModalOverlay />
