@@ -19,7 +19,7 @@ const Header = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure, getWallet } = useContext(IdentityContext)
+  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure } = useContext(IdentityContext)
   const { getProfileByAuth, login } = useContext(ChildContext)
 
   useEffect(() => {
