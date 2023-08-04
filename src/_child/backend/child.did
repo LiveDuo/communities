@@ -51,6 +51,16 @@ type ReplyResponse = record {
   "text" : text;
   timestamp : nat64;
 };
+type CratePostResult = variant { Ok : PostSummary; Err : text };
+type CreateProfileResult = variant { Ok : Profile; Err : text };
+type CreateReplyResult = variant { Ok : ReplyResponse; Err : text };
+type GetNextUpgradesResult = variant { Ok : vec UpgradeWithTrack; Err : text };
+type GetPostResult = variant { Ok : PostResponse; Err : text };
+type GetPostsByUserResult = variant { Ok : vec PostSummary; Err : text };
+type GetProfileResult = variant { Ok : Profile; Err : text };
+type UpgradeCanisterResult = variant { Ok : null; Err : text };
+type GetMetadataResult = variant { Ok : Metadata; Err : text };
+
 type Role = record { role : UserRole; timestamp : nat64 };
 type StreamingCallbackToken = record {
   key : text;
@@ -69,26 +79,35 @@ type SvmAuthenticationWithParams = record {
   public_key : text;
   message : text;
 };
-type Upgrade = record {
+type Metadata = record {
+  version : text;
+  track : text;
+};
+type UpgradeFrom = record {
+  version : text;
+  track : text;
+};
+type UpgradeWithTrack = record {
+  track : text;
   assets : vec text;
   version : text;
   timestamp : nat64;
-  wasm_hash : vec nat8;
-  upgrade_from : opt vec nat8;
+  upgrade_from : opt UpgradeFrom;
+  description: text;
 };
 type UserRole = variant { Admin };
-
-service : (opt principal, opt vec nat8) -> {
-  create_post : (title: text, description: text) -> (variant { Ok : PostSummary; Err : text });
-  create_profile : (auth: AuthenticationWith) -> (variant { Ok : Profile; Err : text });
-  create_reply : (post_id: nat64, context: text) -> (variant { Ok : ReplyResponse; Err : text });
-  get_next_upgrade : () -> (variant { Ok : opt Upgrade; Err : text }) query;
-  get_post : (post_id: nat64) -> (variant { Ok : PostResponse; Err : text }) query;
+service : (opt principal, opt text, opt text ) -> {
+  create_post : (text, text) -> (CratePostResult);
+  create_profile : (AuthenticationWith) -> (CreateProfileResult);
+  create_reply : (nat64, text) -> (CreateReplyResult);
+  upgrade_canister : (text, text) -> (UpgradeCanisterResult);
+  get_next_upgrades : () -> (GetNextUpgradesResult) query;
+  get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
-  get_posts_by_user : (authentication: Authentication) -> (variant { Ok : vec PostSummary; Err : text }) query;
-  get_profile : () -> (variant { Ok : Profile; Err : text }) query;
+  get_posts_by_user : (Authentication) -> (GetPostsByUserResult) query;
+  get_profile : () -> (GetProfileResult) query;
   get_profile_by_user : (Authentication) -> (opt Profile) query;
   get_user_roles : () -> (vec Role) query;
+  get_metadata: () -> (GetMetadataResult) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
-  upgrade_canister : (wasm: vec nat8) -> ( variant { Ok; Err : text });
 }

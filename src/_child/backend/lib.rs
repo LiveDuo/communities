@@ -12,22 +12,24 @@ use std::borrow::Borrow;
 
 use crate::state::{*, STATE};
 
-use upgrade::{update_wasm_hash, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
-use upgrade::Upgrade;
+use upgrade::{update_metadata, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
+use upgrade::UpgradeWithTrack;
 use utils::{uuid, get_asset};
 
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 
+use candid::{Encode, Decode};
+
 #[init]
 #[candid_method(init)]
-fn init(admin_opt: Option<Principal>, wasm_hash: Option<Vec<u8>>) {
+fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Option<String>) {
     ic_certified_assets::init();
 
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 		state.parent = Some(ic_cdk::caller());
-        state.wasm_hash = wasm_hash;
-        
+        state.version = version_opt;
+        state.track = track_opt;
 	});
     
     if let Some(admin) = admin_opt { 
@@ -400,6 +402,21 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
         Ok(user_post)
     })
 }
+
+#[query]
+#[candid_method(query)]
+fn get_metadata() -> Result<Metadata, String> {
+    STATE.with(|s| {
+        let state = s.borrow();
+        if state.version.is_none() {
+            return Err("Version not set".to_owned());
+        } else if state.track.is_none() {
+            return Err("Track not set".to_owned());
+        }
+
+        Ok(Metadata{track: state.track.clone().unwrap(), version: state.version.clone().unwrap()})
+    })
+}
 #[query]
 #[candid_method(query)]
 fn get_user_roles() -> Vec<Role>{
@@ -444,7 +461,7 @@ fn post_upgrade() {
     STATE.with(|s| *s.borrow_mut() = s_prev.state);
 
     // finalize upgrade
-    update_wasm_hash();
+    update_metadata();
     replace_assets_from_temp();
 }
 
@@ -458,40 +475,51 @@ fn http_request(
 
 #[query]
 #[candid_method(query)]
-async fn get_next_upgrade() -> Result<Option<Upgrade>, String> {
+async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
     let parent  = parent_opt.unwrap();
-    let current_version_opt = STATE.with(|s| s.borrow().wasm_hash.to_owned());
-    if current_version_opt == None { return  Err("Current version not found".to_owned()); }
+
+    let current_version_opt = STATE.with(|s| s.borrow().version.to_owned());
+    if current_version_opt.is_none() { return  Err("Current version not found".to_owned()); }
     let current_version = current_version_opt.unwrap();
+
+    let track_opt = STATE.with(|s| s.borrow().track.to_owned());
+    if track_opt.is_none() { return  Err("Current version not found".to_owned()); }
+    let track = track_opt.unwrap();
+
+
     
-    let (next_version_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent, "get_next_upgrade", (current_version,),).await.unwrap();
-    
-    Ok(next_version_opt)
+    let payload = candid::Encode!(&(current_version, track)).unwrap();
+    let args = ("v1".to_owned(), "get_next_upgrades".to_owned() ,payload,);
+    let (res,) = ic_cdk::call::<_, (Result<Vec<u8>, String>,)>(parent, "handle_interface", args,).await.unwrap();
+    let next_versions = candid::Decode!(&res.unwrap(), Vec<UpgradeWithTrack>).unwrap();
+
+    Ok(next_versions)
 }
-
-
 
 #[update]
 #[candid_method(update)]
-async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
+async fn upgrade_canister(version: String, track: String) -> Result<(), String> {
     
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
     // get parent canister
     let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
-    if parent_canister_opt == None { return Err("Parent canister not found".to_owned()); }
+    if parent_canister_opt.is_none() { return Err("Parent canister not found".to_owned()); }
     
     // get upgrade from parent
     let parent_canister = parent_canister_opt.unwrap();
-    let (upgrade_opt,) = ic_cdk::call::<_, (Option<Upgrade>,)>(parent_canister, "get_upgrade", (wasm_hash, )).await.unwrap();
-    if upgrade_opt == None { return Err("Version not found".to_owned()); }
+    let payload = candid::Encode!(&(version, track)).unwrap();
+    let args = ("v1".to_owned(), "get_upgrade".to_owned(), payload);
+    let (res,) = ic_cdk::call::<_, (Result<Vec<u8>, String>,)>(parent_canister, "handle_interface", args).await.unwrap();
+    let upgrade_opt = candid::Decode!(&res.unwrap(), Option<UpgradeWithTrack>).unwrap();
+    if upgrade_opt.is_none() { return Err("Version not found".to_owned()); }
     let upgrade = upgrade_opt.unwrap();
 
     // store assets to temp
-    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version).await.unwrap();
+    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version, &upgrade.track).await.unwrap();
 
     // upgrade wasm
     let wasm = get_asset("/temp/child.wasm".to_owned());	
@@ -499,10 +527,6 @@ async fn upgrade_canister(wasm_hash: Vec<u8>) -> Result<(), String> {
 
     Ok(())
 }
-
-
-
-
 
 #[test]
 fn candid_interface_compatibility() {

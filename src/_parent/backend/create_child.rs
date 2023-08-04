@@ -6,32 +6,26 @@ use include_macros::get_canister;
 use crate::state::*;
 use crate::utils::*;
 
-use sha2::{Digest, Sha256};
-
 pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
 pub const TRANSFER_FEE: u64 = 10_000;
 
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 // static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
 
-pub async fn install_code(canister_id: Principal, version: &String, caller: &Principal) -> Result<(), String> {
+pub async fn install_code(canister_id: Principal, track: &String, version: &String, caller: &Principal) -> Result<(), String> {
     // get wasm
-    let wasm_bytes: Vec<u8> = get_asset(format!("/upgrade/{}/child.wasm", version).to_string());
+    let wasm_bytes: Vec<u8> = get_asset(format!("/upgrades/{track}/{version}/child.wasm").to_string());
     if wasm_bytes.is_empty() {
         return Err(format!("WASM not found"));
     }
 
-    // get wasm hash
-    let mut hasher = Sha256::new();
-    hasher.update(wasm_bytes.clone());
-    let wasm_hash = hasher.finalize()[..].to_vec();
 
     // install canister code
     let install_args = InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id: canister_id,
         wasm_module: wasm_bytes,
-        arg: Encode!(&Some(caller.to_owned()), &Some(wasm_hash)).unwrap(),
+        arg: Encode!(&Some(caller.to_owned()), &Some(version), &Some(track)).unwrap(),
     };
 
     let (result,) = ic_cdk::call::<_, ((),)>(Principal::management_canister(),"install_code",(install_args,),).await.map_err(|(code, msg)| format!("Install code error: {}: {}", code as u8, msg)).unwrap();

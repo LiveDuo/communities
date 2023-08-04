@@ -14,6 +14,8 @@ const argv = minimist(process.argv.slice(2))
 const host = argv.network ?? 'http://127.0.0.1:8000'
 const id = argv.identity ?? 'default'
 const version = argv.version ?? '0.0.1'
+const track = argv.track ?? 'default'
+const description = argv.description ?? 'upgrade to 0.0.1'
 
 // node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
 ; (async () => {
@@ -39,12 +41,12 @@ const version = argv.version ?? '0.0.1'
 	const assetsChild = await getFiles(`./build/child/${version}`)
 	for (let asset of assetsChild) {
 		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
-		await uploadFile(actorAsset, `/upgrade/${version}/${asset}`, assetBuf)
+		await uploadFile(actorAsset, `/upgrades/${track}/${version}/${asset}`, assetBuf)
 	}
 
 	// create upgrade
-	const assetsWithPath =  assetsChild.map(a => `/upgrade/${version}/${a}`)
-	const res = await actorParent.create_upgrade(version, [], assetsWithPath)
+	const assetsWithPath = assetsChild.map(a => `/upgrades/${track}/${version}/${a}`)
+	const res = await actorParent.create_upgrade(version, [], assetsWithPath, track, description)
 	if (res.Err) {
 		console.log('This version already exist')
 	}

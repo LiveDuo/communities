@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 
-use std::hash::{Hash};
+use std::hash::Hash;
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
@@ -147,6 +147,11 @@ pub struct Indexes {
     pub profile: HashMap<AuthenticationWithAddress, u64>,
     pub active_principal: HashMap<Principal, u64>
 }
+#[derive(CandidType, Clone, Deserialize, Debug)]
+pub struct Metadata {
+    pub version: String,
+    pub track: String
+}
 
 #[derive(Default, CandidType, Deserialize, Clone, Debug)]
 pub struct State {
@@ -157,7 +162,8 @@ pub struct State {
     pub relations: Relations,
     pub indexes: Indexes,
     pub parent: Option<Principal>,
-    pub wasm_hash: Option<Vec<u8>>,
+    pub version: Option<String>,
+    pub track: Option<String>
 }
 
 thread_local! {

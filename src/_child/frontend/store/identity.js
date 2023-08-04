@@ -48,7 +48,7 @@ const IdentityProvider = ({children}) => {
     } else if (account.type ==='Svm') {
       setPrincipal(identity.getPrincipal())
     } else if (account.type === 'Ic') {
-      const IcWalletName = getIcWalletName()
+      const IcWalletName = await getIcWalletName()
       setWalletIcName(IcWalletName)
       
       const _principal = await window.ic[IcWalletName]?.getPrincipal()

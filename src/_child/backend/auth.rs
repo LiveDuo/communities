@@ -1,4 +1,4 @@
-use candid::{Principal};
+use candid::Principal;
 use crate::state::{Authentication, AuthenticationWithAddress, IcParams};
 
 pub fn get_authentication_with_address(authentication: &Authentication, caller: &Principal) -> AuthenticationWithAddress {

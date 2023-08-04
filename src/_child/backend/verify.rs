@@ -1,7 +1,7 @@
 
 use ed25519_dalek::{PublicKey, Signature, Verifier};
 
-use crate::state::{*};
+use crate::state::*;
 
 fn checksum_evm_address (address: String) -> String {
     let hash =  easy_hasher::easy_hasher::keccak256(&address.trim_start_matches("0x").to_lowercase());
