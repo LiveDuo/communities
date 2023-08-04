@@ -5,7 +5,7 @@ import { ChildContext } from '../../store/child'
 import { Principal } from "@dfinity/principal";
 import { CHILD_CANISTER_ID } from '../../store/child'
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton } from '@chakra-ui/react'
-import { Button, Text, Box, useToast } from '@chakra-ui/react'
+import { Button, Text, Box, Tag, Heading, useToast } from '@chakra-ui/react'
 
 const UpgradeModal = () => {
 	const [isController, setIsController] = useState()
@@ -60,31 +60,37 @@ const UpgradeModal = () => {
 		}
 	},[managementActor, checkForUpgrade, getCurrentVersion])
 
+	console.log(metadata)
 	return (
 		<Modal isOpen={isUpgradeModalOpen} onClose={onUpgradeModalClose} isCentered>
 			<ModalOverlay />
-			<ModalContent minW="480px">
+			<ModalContent minW="520px">
 				<ModalHeader>Admin Dashboard</ModalHeader>
 				<ModalCloseButton />
-				<ModalBody>
+				<ModalBody p="24px">
           		{!isController ? 
-					<Text>Only controllers can view/update community settings</Text> :
+					<Text>Only controllers can view/update community settings.</Text> :
 					<Box>
-					{upgrades?.length  === 0 ? 
-						<Text>The current version of the canister is {metadata ? metadata.version : "" }-{metadata ? metadata.track : ""} is up to date</Text> : 
-						<>
-							<Text>The current version is {metadata?.version}-{metadata?.track}</Text>
-							<Text>You can upgrade to:</Text>
-							{upgrades?.map((u, i) => (
-								<Box key={i}>
-									<Text>Upgrade to {u.version}-{u.track}</Text>
-									<Text>{u.description}</Text>
-									<Button onClick={() => upgradeCanister(u.version, u.track)}>Upgrade</Button>
+						<Heading size="sm" mb="16px">Current info:</Heading>
+						<Box mb="16px">
+							<Text ml="4px" as="span">Track: <Tag>{metadata?.track ?? 'n/a'}</Tag></Text>
+							<Text ml="4px" as="span">Version: <Tag>{metadata?.version ?? 'n/a'}</Tag></Text>
+						</Box>
+						<br/>
+						<Heading size="sm" mb="16px">Available upgrades:</Heading>
+						{upgrades?.length  > 0 ? 
+							upgrades?.map((u, i) => (
+								<Box key={i} borderWidth='1px' borderRadius='lg' p="20px" mb="8px">
+									<Box mb="16px">
+										<Text ml="4px" as="span">Track: <Tag>{u.track}</Tag></Text>
+										<Text ml="4px" as="span">Version: <Tag>{u.version}</Tag></Text>
+									</Box>
+									<Text mb="16px">{u.description ?? 'No description'}</Text>
+									<Button size="sm" onClick={() => upgradeCanister(u.version, u.track)}>Upgrade</Button>
 								</Box>
-							))}
-						</>
-					}
-				</Box>}
+							)) :
+							<Text>No available upgrades</Text>}
+					</Box>}
 				</ModalBody>
 			</ModalContent>
 		</Modal>
