@@ -1,21 +1,26 @@
 import { useContext, useEffect, useState, useCallback } from 'react'
+
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton } from '@chakra-ui/react'
+import { Button, Text, Box, Tag, Flex, Heading, Spinner, useToast } from '@chakra-ui/react'
+
 import { IdentityContext } from '../../store/identity'
 import { ManagementContext } from '../../store/management'
 import { ChildContext } from '../../store/child'
-import { Principal } from "@dfinity/principal";
 import { CHILD_CANISTER_ID } from '../../store/child'
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton } from '@chakra-ui/react'
-import { Button, Text, Box, Tag, Heading, useToast } from '@chakra-ui/react'
+
+import { Principal } from "@dfinity/principal"
 
 const UpgradeModal = () => {
-	const [isController, setIsController] = useState()
-	const [upgrades, setUpgrades] = useState([])
-	const [metadata, setMetadata] = useState()
+	
+	const toast = useToast()
+
+	const [isController, setIsController] = useState(null)
+	const [upgrades, setUpgrades] = useState(null)
+	const [metadata, setMetadata] = useState(null)
+
 	const {isUpgradeModalOpen, onUpgradeModalClose, principal} = useContext(IdentityContext)
 	const { managementActor } = useContext(ManagementContext)
 	const { childActor } = useContext(ChildContext)
-
-	const toast = useToast()
 
 	const checkForUpgrade = useCallback(async () => {
 		const canisterId = Principal.fromText(CHILD_CANISTER_ID)
@@ -28,7 +33,7 @@ const UpgradeModal = () => {
 
 			// get next upgrade
 			const NextUpgrades = await childActor.get_next_upgrades()
-			if(NextUpgrades.Ok) {
+			if (NextUpgrades.Ok) {
 				setUpgrades(NextUpgrades.Ok)
 			} else {
 				toast({ description: NextUpgrades.Err, status: 'error' })
@@ -43,9 +48,10 @@ const UpgradeModal = () => {
 		if(metadata.Ok) {
 			setMetadata(metadata.Ok)
 		} else {
+			setMetadata({})
 			toast({ description: metadata.Err, status: 'error' })
 		}
-	},[childActor, toast])
+	}, [childActor, toast])
 
 
 	const upgradeCanister = useCallback(async (version, track) => {
@@ -53,12 +59,12 @@ const UpgradeModal = () => {
 		onUpgradeModalClose()
 	}, [childActor, onUpgradeModalClose])
 	
-	useEffect(()=> {
-		if (managementActor) {
+	useEffect(() => {
+		if (managementActor && isUpgradeModalOpen) {
 			checkForUpgrade()
 			getCurrentVersion()
 		}
-	},[managementActor, checkForUpgrade, getCurrentVersion])
+	},[managementActor, checkForUpgrade, getCurrentVersion, isUpgradeModalOpen])
 
 	return (
 		<Modal isOpen={isUpgradeModalOpen} onClose={onUpgradeModalClose} isCentered>
@@ -66,30 +72,32 @@ const UpgradeModal = () => {
 			<ModalContent minW="520px">
 				<ModalHeader>Admin Dashboard</ModalHeader>
 				<ModalCloseButton />
-				<ModalBody p="24px">
-          		{!isController ? 
-					<Text>Only controllers can view/update community settings.</Text> :
-					<Box>
-						<Heading size="sm" mb="16px">Current info:</Heading>
-						<Box mb="16px">
-							<Text ml="4px" as="span">Track: <Tag>{metadata?.track ?? 'n/a'}</Tag></Text>
-							<Text ml="4px" as="span">Version: <Tag>{metadata?.version ?? 'n/a'}</Tag></Text>
-						</Box>
-						<br/>
-						<Heading size="sm" mb="16px">Available upgrades:</Heading>
-						{upgrades?.length  > 0 ? 
-							upgrades?.map((u, i) => (
-								<Box key={i} borderWidth='1px' borderRadius='lg' p="20px" mb="8px">
-									<Box mb="16px">
-										<Text ml="4px" as="span">Track: <Tag>{u.track}</Tag></Text>
-										<Text ml="4px" as="span">Version: <Tag>{u.version}</Tag></Text>
+				<ModalBody>
+					<Flex p="24px">
+					{(isController === null || metadata === null) && <Spinner m="0 auto"/>}
+					{isController === false && <Text>Only controllers can view/update community settings.</Text>}
+					{isController === true && <Box>
+							<Heading size="sm" mb="16px">Current info:</Heading>
+							<Box mb="16px">
+								<Text ml="4px" as="span">Track: <Tag>{metadata?.track ?? 'n/a'}</Tag></Text>
+								<Text ml="4px" as="span">Version: <Tag>{metadata?.version ?? 'n/a'}</Tag></Text>
+							</Box>
+							<br/>
+							<Heading size="sm" mb="16px">Available upgrades:</Heading>
+							{upgrades?.length  > 0 ? 
+								upgrades?.map((u, i) => (
+									<Box key={i} borderWidth='1px' borderRadius='lg' p="20px" mb="8px">
+										<Box mb="16px">
+											<Text ml="4px" as="span">Track: <Tag>{u.track}</Tag></Text>
+											<Text ml="4px" as="span">Version: <Tag>{u.version}</Tag></Text>
+										</Box>
+										<Text mb="16px">{u.description ?? 'No description'}</Text>
+										<Button size="sm" onClick={() => upgradeCanister(u.version, u.track)}>Upgrade</Button>
 									</Box>
-									<Text mb="16px">{u.description ?? 'No description'}</Text>
-									<Button size="sm" onClick={() => upgradeCanister(u.version, u.track)}>Upgrade</Button>
-								</Box>
-							)) :
-							<Text>No available upgrades</Text>}
-					</Box>}
+								)) :
+								<Text>No available upgrades</Text>}
+						</Box>}
+					</Flex>
 				</ModalBody>
 			</ModalContent>
 		</Modal>
