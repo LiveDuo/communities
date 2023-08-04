@@ -1,7 +1,10 @@
 import { useContext, useEffect } from 'react'
-import { Button, Box, Flex, Link, Menu, MenuButton, MenuList, MenuItem, IconButton } from '@chakra-ui/react'
+
+import { Button, Box, Flex, Link, Menu, MenuButton, MenuList, MenuItem, IconButton, Icon } from '@chakra-ui/react'
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
+
 import Jazzicon from 'react-jazzicon'
+
 import { IdentityContext } from '../../store/identity'
 import { ChildContext } from '../../store/child'
 import { addressShort } from '../../utils/address'
@@ -10,8 +13,7 @@ import { ReactComponent as EthereumLogo } from '../../logos/ethereum.svg'
 import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
 import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 
-import { BiHome, BiDotsHorizontalRounded } from "react-icons/bi";
-
+import { BiHome, BiDotsHorizontalRounded, BiCog, BiLogOut } from "react-icons/bi"
 
 
 const Header = () => {
@@ -24,7 +26,7 @@ const Header = () => {
 
   useEffect(() => {
     if (account)
-    getProfileByAuth(account)
+      getProfileByAuth(account)
   }, [account, getProfileByAuth])
 
   const loginAndSet = async (type) => {
@@ -51,7 +53,7 @@ const Header = () => {
     <Flex m="20px" alignItems="center">
       {location.pathname !== '/' && 
         <Box ml="20px">
-          <IconButton icon={<BiHome/>} onClick={() => navigate('/')}/>
+          <IconButton size="md" icon={<BiHome/>} onClick={() => navigate('/')}/>
         </Box>
       }
       {!(account && principal) &&
@@ -63,7 +65,7 @@ const Header = () => {
             <MenuList>
               <MenuItem onClick={()=> loginAndSet('evm')}><EthereumLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>Ethereum</MenuItem>
               <MenuItem onClick={()=> loginAndSet('svm')}><SolanaLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>Solana</MenuItem>
-              <MenuItem  onClick={()=> loginAndSet('ic')}><DfinityLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>Internet Computer</MenuItem>
+              <MenuItem onClick={()=> loginAndSet('ic')}><DfinityLogo width={12} style={{marginRight: "16px", marginLeft: "8px"}}/>Internet Computer</MenuItem>
             </MenuList>
           </Menu>
         </Box>)}
@@ -85,8 +87,8 @@ const Header = () => {
               Sign in with...
             </MenuButton>
             <MenuList>
-              <MenuItem onClick={()=> onUpgradeModalOpen()}>Admin</MenuItem>
-              <MenuItem onClick={()=> disconnect()}>Logout</MenuItem>
+              <MenuItem icon={<Icon fontSize="md" as={BiCog} />} onClick={()=> onUpgradeModalOpen()}>Admin</MenuItem>
+              <MenuItem icon={<Icon fontSize="md" as={BiLogOut} />} onClick={()=> disconnect()}>Logout</MenuItem>
             </MenuList>
           </Menu>
         </Box>}
