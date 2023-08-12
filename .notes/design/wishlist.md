@@ -1,0 +1,24 @@
+### Tasks
+
+- [ ] Moderation (Admin)
+- [ ] Canister upgrades
+- [ ] Search
+- [ ] IC communities
+- [ ] Airdrops
+- [ ] Domain name
+- [ ] Polls
+- [ ] Statistics (Admin)
+- [ ] Crypto Discords
+- [ ] Page filtering
+- [ ] Personal Messages
+- [ ] Business model
+- [ ] Custom domains
+- [ ] Posts SEO
+- [ ] Mobile support
+- [ ] File Uploads
+- [ ] Markdown
+- [ ] Reddit
+- [ ] Sign in with x
+- [ ] Notifications
+- [ ] Likes / Replies
+- [ ] Canister backlinks
