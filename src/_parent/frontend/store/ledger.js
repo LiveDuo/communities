@@ -68,8 +68,7 @@ const LedgerProvider = ({ children }) => {
 	})
 
 	const getUserBalance = useCallback(async () => {
-		
-		const accountId = getAccountId(parentCanisterId, userPrincipal)
+		const accountId = getAccountId(userPrincipal)
 		try {
 			const response = await ledgerActor.account_balance_dfx({ account: accountId })
 			setUserBalance(Number(response.e8s))
