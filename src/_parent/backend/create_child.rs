@@ -6,12 +6,12 @@ use include_macros::get_canister;
 use crate::state::*;
 use crate::utils::*;
 
-pub const PAYMENT_AMOUNT: u64 = 100_000_000; // 1 ICP
-pub const TRANSFER_FEE: u64 = 10_000;
-pub const PAYMENT_CYCLES: u64 = 200_000_000_000; // 200b cycles
-pub const DEFAULT_SUBACCOUNT: Subaccount = Subaccount([0; 32]);
+pub const TOPUP_AMOUNT_ICP: u64 = 100_000_000; // 1 icp
+pub const TOPUP_CYCLES: u64 = 200_000_000_000; // 200b cycles
 
+pub const TRANSFER_FEE: u64 = 10_000;
 pub const MINT_MEMO: u64 = 1347768404;
+pub const DEFAULT_SUBACCOUNT: Subaccount = Subaccount([0; 32]);
 
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 // static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
@@ -32,14 +32,14 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
 
     // check balance
     let (tokens, ) = balance_result;
-    if tokens.e8s < PAYMENT_AMOUNT {
+    if tokens.e8s < TOPUP_AMOUNT_ICP {
         return Err(format!("Insufficient balance"));
     }
 
     // mint cycles
     let transfer_args = TransferArgs {
         memo: Memo(MINT_MEMO),
-        amount: Tokens { e8s: PAYMENT_AMOUNT, },
+        amount: Tokens { e8s: TOPUP_AMOUNT_ICP, },
         fee: Tokens { e8s: TRANSFER_FEE },
         from_subaccount: Some(principal_to_subaccount(&caller)),
         to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
@@ -67,7 +67,7 @@ pub async fn create_canister(canister_id: Principal) -> Result<Principal, String
         Principal::management_canister(),
         "create_canister",
         (CreateCanisterArgument { settings: Some(canister_setting), },),
-        PAYMENT_CYCLES,
+        TOPUP_CYCLES,
     ).await
     .map_err(|(code, msg)|
         format!("Create canister error: {}: {}", code as u8, msg)
