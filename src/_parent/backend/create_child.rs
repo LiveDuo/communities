@@ -11,6 +11,8 @@ pub const TRANSFER_FEE: u64 = 10_000;
 pub const PAYMENT_CYCLES: u64 = 200_000_000_000; // 200b cycles
 pub const DEFAULT_SUBACCOUNT: Subaccount = Subaccount([0; 32]);
 
+pub const MINT_MEMO: u64 = 1347768404;
+
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 // static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
 
@@ -36,7 +38,7 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
 
     // transfer icp
     let transfer_args = TransferArgs {
-        memo: Memo(1347768404),
+        memo: Memo(MINT_MEMO),
         amount: Tokens { e8s: PAYMENT_AMOUNT, },
         fee: Tokens { e8s: TRANSFER_FEE },
         from_subaccount: Some(principal_to_subaccount(&caller)),
