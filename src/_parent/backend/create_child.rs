@@ -36,7 +36,7 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
         return Err(format!("Insufficient balance"));
     }
 
-    // transfer icp
+    // mint cycles
     let transfer_args = TransferArgs {
         memo: Memo(MINT_MEMO),
         amount: Tokens { e8s: PAYMENT_AMOUNT, },
