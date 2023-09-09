@@ -4,13 +4,15 @@ import { useToast } from '@chakra-ui/react'
 
 import { IdentityContext } from './identity'
 import { LedgerContext, ledgerCanisterId } from './ledger'
+import { CmcContext, cmcCanisterId } from './cmc'
 
 import { getAccountId } from '../utils/account'
 import { isLocal } from '../utils/url'
 
 export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
 
-const CREATE_CHILD_COST = 1 * 1e8
+const ALLOWANCE_RATE = 0.1 // a bit of margin in case the price of icp changes quickly
+const CREATE_CHILD_CYCLES = 200n * BigInt(1e12) * (1 - ALLOWANCE_RATE)
 
 /* global BigInt */
 
@@ -32,7 +34,8 @@ const ParentProvider = ({ children }) => {
 	const toast = useToast()
 
 	const { walletConnected, walletDetected, createActor, userPrincipal, batchTransactions, noWalletDisclosure } = useContext(IdentityContext)
-	const { userBalance, getTransferIcpTx } = useContext(LedgerContext)
+	const { getTransferIcpTx } = useContext(LedgerContext)
+	const { getCyclesRate } = useContext(CmcContext)
 
 	const [parentActor, setParentActor] = useState(null)
 	const [userCommunities, setUserCommunities] = useState(null)
@@ -91,16 +94,23 @@ const ParentProvider = ({ children }) => {
 			return
 		}
 
+		let createChildCost = 0n
+		if (cmcCanisterId) {
+			const rate = await getCyclesRate()
+			console.log('createUserCommunity', rate)
+			createChildCost = rate * CREATE_CHILD_CYCLES / BigInt(1e8)
+		}
+
 		const interval = setInterval(() => getUserCommunities(), !isLocal ? 5000 : 1000)
 
 		const onTransfer = () => toast({ description: `Transfer success` })
 		const onCreate = () => toast({ description: `Created canister` })
 
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		const transferTx = getTransferIcpTx({accountId, amount: BigInt(CREATE_CHILD_COST)}, onTransfer)
+		const transferTx = getTransferIcpTx({accountId, amount: BigInt(createChildCost)}, onTransfer)
 		const createChildTx = getCreateChildTx(null, onCreate)
 		try {
-			const txs = ledgerCanisterId ? [...userBalance < CREATE_CHILD_COST ? [transferTx] : [], createChildTx] : [createChildTx]
+			const txs = ledgerCanisterId ? [...createChildCost > 0 ? [transferTx] : [], createChildTx] : [createChildTx]
 			await batchTransactions(txs)
 		} catch (error) {
 			const description = error.message ?? 'Transaction failed'
@@ -108,6 +118,7 @@ const ParentProvider = ({ children }) => {
 		}
 
 		clearInterval(interval)
+		getUserCommunities() // get the latest canister state
 	}
 
 	const getUserCommunities = useCallback(async () => {
