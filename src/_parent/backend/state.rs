@@ -90,7 +90,6 @@ pub enum TransferError {
 }
 
 pub type BlockIndex = u64;
-pub type TransferResult = Result<BlockIndex, TransferError>;
 
 #[derive(CandidType, Deserialize, Default, Clone, PartialEq, Debug)]
 pub enum CanisterState {
