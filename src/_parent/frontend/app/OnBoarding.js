@@ -27,13 +27,13 @@ const OnBoarding = () => {
   const { createUserCommunity } = useContext(ParentContext)
 
   useEffect(() => {
-		if(!walletDetected) {
+		if (!walletDetected) {
 			setUserFlowStep('download-wallet')
-		} else if(!walletConnected) {
+		} else if (!walletConnected) {
 			setUserFlowStep('connect-wallet')
-		} else if (!isLocal && (userBalance / 1e8) <= 0) {
+		} else if (!isLocal && userBalance <= 0) {
 			setUserFlowStep('top-up-wallet')	
-		} else if(isLocal || userBalance > 0) {
+		} else if (isLocal || userBalance > 0) {
       setUserFlowStep('deploy-community')
     }
 	},[walletConnected, walletDetected, userBalance])
