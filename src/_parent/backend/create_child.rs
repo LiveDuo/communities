@@ -14,52 +14,6 @@ pub const DEFAULT_SUBACCOUNT: Subaccount = Subaccount([0; 32]);
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 // static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
 
-pub async fn install_code(canister_id: Principal, track: &String, version: &String, caller: &Principal) -> Result<(), String> {
-    // get wasm
-    let wasm_bytes: Vec<u8> = get_asset(format!("/upgrades/{track}/{version}/child.wasm").to_string());
-    if wasm_bytes.is_empty() {
-        return Err(format!("WASM not found"));
-    }
-
-    // install canister code
-    let install_args = Encode!(&Some(caller.to_owned()), &Some(version), &Some(track)).unwrap();
-    let install_code_args = InstallCodeArgument {
-        mode: CanisterInstallMode::Install,
-        canister_id: canister_id,
-        wasm_module: wasm_bytes,
-        arg: install_args,
-    };
-    let (result,) = ic_cdk::call::<_, ((),)>(
-        Principal::management_canister(),
-        "install_code",
-        (install_code_args,),)
-        .await
-        .map_err(|(code, msg)| 
-            format!("Install code error: {}: {}", code as u8, msg)
-        ).unwrap();
-
-    Ok(result)
-}
-
-pub async fn create_canister(canister_id: Principal) -> Result<Principal, String> {
-    let canister_setting = CanisterSettings {
-        controllers: Some(vec![canister_id]),
-        compute_allocation: None,
-        memory_allocation: None,
-        freezing_threshold: None,
-    };
-    let (create_result,) = ic_cdk::api::call::call_with_payment::<_, (CanisterIdRecord,)>(
-        Principal::management_canister(),
-        "create_canister",
-        (CreateCanisterArgument { settings: Some(canister_setting), },),
-        PAYMENT_CYCLES,
-    ).await
-    .map_err(|(code, msg)|
-        format!("Create canister error: {}: {}", code as u8, msg)
-    ).unwrap();
-    Ok(create_result.canister_id)
-}
-
 pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), String> {
 
     // get icp balance
@@ -98,6 +52,52 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
     ).unwrap();
 
     Ok(())
+}
+
+pub async fn create_canister(canister_id: Principal) -> Result<Principal, String> {
+    let canister_setting = CanisterSettings {
+        controllers: Some(vec![canister_id]),
+        compute_allocation: None,
+        memory_allocation: None,
+        freezing_threshold: None,
+    };
+    let (create_result,) = ic_cdk::api::call::call_with_payment::<_, (CanisterIdRecord,)>(
+        Principal::management_canister(),
+        "create_canister",
+        (CreateCanisterArgument { settings: Some(canister_setting), },),
+        PAYMENT_CYCLES,
+    ).await
+    .map_err(|(code, msg)|
+        format!("Create canister error: {}: {}", code as u8, msg)
+    ).unwrap();
+    Ok(create_result.canister_id)
+}
+
+pub async fn install_code(canister_id: Principal, track: &String, version: &String, caller: &Principal) -> Result<(), String> {
+    // get wasm
+    let wasm_bytes: Vec<u8> = get_asset(format!("/upgrades/{track}/{version}/child.wasm").to_string());
+    if wasm_bytes.is_empty() {
+        return Err(format!("WASM not found"));
+    }
+
+    // install canister code
+    let install_args = Encode!(&Some(caller.to_owned()), &Some(version), &Some(track)).unwrap();
+    let install_code_args = InstallCodeArgument {
+        mode: CanisterInstallMode::Install,
+        canister_id: canister_id,
+        wasm_module: wasm_bytes,
+        arg: install_args,
+    };
+    let (result,) = ic_cdk::call::<_, ((),)>(
+        Principal::management_canister(),
+        "install_code",
+        (install_code_args,),)
+        .await
+        .map_err(|(code, msg)| 
+            format!("Install code error: {}: {}", code as u8, msg)
+        ).unwrap();
+
+    Ok(result)
 }
 
 pub async fn set_canister_controllers( canister_id: Principal,caller: Principal) -> Result<(), String> {
