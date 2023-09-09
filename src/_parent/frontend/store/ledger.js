@@ -2,7 +2,6 @@ import { useState, useContext, createContext, useEffect, useCallback } from 'rea
 import { useToast } from '@chakra-ui/react'
 
 import { IdentityContext } from './identity'
-import { parentCanisterId } from './parent'
 
 import { getAccountId } from '../utils/account'
 
