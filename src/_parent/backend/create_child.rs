@@ -6,7 +6,6 @@ use include_macros::get_canister;
 use crate::state::*;
 use crate::utils::*;
 
-pub const TOPUP_AMOUNT_ICP: u64 = 100_000_000; // 1 icp
 pub const TOPUP_CYCLES: u64 = 200_000_000_000; // 200b cycles
 
 pub const TRANSFER_FEE: u64 = 10_000;
@@ -30,16 +29,11 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
         format!("Account balance error: {}: {}", code as u8, msg)
     ).unwrap();
 
-    // check balance
-    let (tokens, ) = balance_result;
-    if tokens.e8s < TOPUP_AMOUNT_ICP {
-        return Err(format!("Insufficient balance"));
-    }
-
     // mint cycles
+    let (tokens, ) = balance_result;
     let transfer_args = TransferArgs {
         memo: Memo(MINT_MEMO),
-        amount: Tokens { e8s: TOPUP_AMOUNT_ICP, },
+        amount: Tokens { e8s: tokens.e8s, },
         fee: Tokens { e8s: TRANSFER_FEE },
         from_subaccount: Some(principal_to_subaccount(&caller)),
         to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
@@ -56,6 +50,7 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
     Ok(())
 }
 
+// NOTE: we may want to use CMC to transfer any ICP sent to the user subaccount by mistake too
 pub async fn create_canister(canister_id: Principal) -> Result<Principal, String> {
     let canister_setting = CanisterSettings {
         controllers: Some(vec![canister_id]),
