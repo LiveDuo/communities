@@ -21,7 +21,7 @@ const IdentityProvider = ({ children }) => {
 
 	const toast = useToast()
 
-	const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
+	const host = isLocal ? 'http://localhost:8000/' : undefined
 
 	const loadWallet = useCallback(async () => {
 		// check wallet connected
