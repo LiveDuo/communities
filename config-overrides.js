@@ -39,7 +39,6 @@ module.exports = {
 
         // set parent
         if (process.env.CRA_PROJECT === 'parent') {
-            console.log(canisterIds)
             const canisterId = process.env.CRA_MODE === 'production' ? canisterIds.parent?.ic : canisterIds.parent?.local
             if (!canisterId) { console.log('Parent canister not deployed\n'); process.exit(0) }
             updateEnvVar(config, 'REACT_APP_PARENT_CANISTER_ID', canisterId)
