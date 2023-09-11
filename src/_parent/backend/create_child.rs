@@ -48,24 +48,22 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
     ).unwrap();
 
     if let Err(e) = transfer_res {
-        return  Err(format!("error from{:?}", e));
+        return  Err(format!("Error from {:?}", e));
     }
 
     // notify top_up
-    let notify_args = NotifyTopupArgs {
-        block_index: transfer_res.unwrap(),
-        canister_id,
-    };
-    
+    let block_index = transfer_res.unwrap();
     let (notify_res,) = ic_cdk::call::<_, (Result<u128, NotifyError>,)>(
         CMC_CANISTER.unwrap(),
         "notify_top_up",
-        (notify_args,)
+        (NotifyTopupArgs { block_index, canister_id, },)
     ).await
-    .map_err(|(code, msg)| format!("Notify topup  error: {}: {}", code as u8, msg)).unwrap();
+    .map_err(|(code, msg)|
+        format!("Notify topup  error: {}: {}", code as u8, msg)
+    ).unwrap();
 
     if let Err(e) = notify_res {
-        return  Err(format!("error from{:?}", e));
+        return  Err(format!("Error from {:?}", e));
     }
 
     Ok(())
