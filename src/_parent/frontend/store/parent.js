@@ -14,8 +14,6 @@ export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
 
 const CREATE_CHILD_CYCLES = getBigIntAllowance(200, 12, 0.1)
 
-/* global BigInt */
-
 const idlParentFactory = ({ IDL }) => {
 
 	const canisterState = IDL.Variant({ Preparing: IDL.Null, Creating: IDL.Null, Installing: IDL.Null, Uploading: IDL.Null, Authorizing: IDL.Null, Ready: IDL.Null })
@@ -96,8 +94,9 @@ const ParentProvider = ({ children }) => {
 
 		let createChildCost = 0n
 		if (cmcCanisterId) {
-			const rate = await getCyclesRate()
-			createChildCost = ONE_MYRIAD * CREATE_CHILD_CYCLES * ICP_MICP / ONE_TRILLION / rate
+			const icpXdrRate = await getCyclesRate()
+			const micpXdrRate = ONE_MYRIAD * ICP_MICP / icpXdrRate
+			createChildCost = micpXdrRate * CREATE_CHILD_CYCLES / ONE_TRILLION
 		}
 
 		const interval = setInterval(() => getUserCommunities(), !isLocal ? 5000 : 1000)
