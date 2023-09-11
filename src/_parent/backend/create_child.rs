@@ -36,7 +36,7 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
         amount: Tokens { e8s: tokens.e8s - TRANSFER_FEE, },
         fee: Tokens { e8s: TRANSFER_FEE },
         from_subaccount: Some(principal_to_subaccount(&caller)),
-        to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
+        to: AccountIdentifier::new(&CMC_CANISTER.unwrap(), &principal_to_subaccount(canister_id)),
         created_at_time: Some(Timestamp { timestamp_nanos: ic_cdk::api::time() }),
     };
     let (transfer_res, ) = ic_cdk::call::<_, (Result<BlockIndex, TransferError>,)>(
@@ -59,7 +59,7 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
         (NotifyTopupArgs { block_index, canister_id, },)
     ).await
     .map_err(|(code, msg)|
-        format!("Notify topup  error: {}: {}", code as u8, msg)
+        format!("Notify top-up error: {}: {}", code as u8, msg)
     ).unwrap();
 
     if let Err(e) = notify_res {
