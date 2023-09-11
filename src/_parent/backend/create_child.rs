@@ -13,7 +13,7 @@ pub const MINT_MEMO: u64 = 1347768404;
 pub const DEFAULT_SUBACCOUNT: Subaccount = Subaccount([0; 32]);
 
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
-// static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
+pub static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
 
 pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), String> {
 
@@ -33,19 +33,40 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
     let (tokens, ) = balance_result;
     let transfer_args = TransferArgs {
         memo: Memo(MINT_MEMO),
-        amount: Tokens { e8s: tokens.e8s, },
+        amount: Tokens { e8s: tokens.e8s - TRANSFER_FEE, },
         fee: Tokens { e8s: TRANSFER_FEE },
         from_subaccount: Some(principal_to_subaccount(&caller)),
         to: AccountIdentifier::new(&canister_id, &DEFAULT_SUBACCOUNT),
-        created_at_time: None,
+        created_at_time: Some(Timestamp { timestamp_nanos: ic_cdk::api::time() }),
     };
-    ic_cdk::call::<_, (BlockIndex, TransferError)>(
+    let (transfer_res, ) = ic_cdk::call::<_, (Result<BlockIndex, TransferError>,)>(
         LEDGER_CANISTER.unwrap(),
         "transfer", (transfer_args,)
     ).await
     .map_err(|(code, msg)|
         format!("Transfer error: {}: {}", code as u8, msg)
     ).unwrap();
+
+    if let Err(e) = transfer_res {
+        return  Err(format!("error from{:?}", e));
+    }
+
+    // notify top_up
+    let notify_args = NotifyTopupArgs {
+        block_index: transfer_res.unwrap(),
+        canister_id,
+    };
+    
+    let (notify_res,) = ic_cdk::call::<_, (Result<u128, NotifyError>,)>(
+        CMC_CANISTER.unwrap(),
+        "notify_top_up",
+        (notify_args,)
+    ).await
+    .map_err(|(code, msg)| format!("Notify topup  error: {}: {}", code as u8, msg)).unwrap();
+
+    if let Err(e) = notify_res {
+        return  Err(format!("error from{:?}", e));
+    }
 
     Ok(())
 }

@@ -90,6 +90,19 @@ pub enum TransferError {
 }
 
 pub type BlockIndex = u64;
+#[derive(CandidType, Deserialize)]
+pub struct NotifyTopupArgs {
+    pub block_index: BlockIndex,
+    pub canister_id: Principal,
+}
+#[derive(CandidType, Deserialize, Debug)]
+pub enum NotifyError {
+    Refunded {block_index: Option<u64>, reason: String},
+    InvalidTransaction(String),
+    Other { error_message: String, error_code: u64},
+    Processing,
+    TransactionTooOld(u64),
+}
 
 #[derive(CandidType, Deserialize, Default, Clone, PartialEq, Debug)]
 pub enum CanisterState {

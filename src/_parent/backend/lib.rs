@@ -35,7 +35,7 @@ async fn create_child() -> Result<Principal, String> {
     let (canister_data_id_opt,) = result.unwrap();
     let canister_data_id = canister_data_id_opt.unwrap();
 
-    if LEDGER_CANISTER != None {
+    if LEDGER_CANISTER.is_some() && CMC_CANISTER.is_some() {
         mint_cycles(caller, id).await.unwrap();
     }
 
