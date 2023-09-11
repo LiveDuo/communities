@@ -83,7 +83,7 @@ const ParentProvider = ({ children }) => {
 		methodName: 'create_child',
 		args: [],
 		onSuccess: callback,
-		onFail: (error) => toast({ description: error.result?.reject_message ?? 'Something went wrong', status: 'error' })
+		onFail: (error) => toast({ description: error.message ?? 'Something went wrong', status: 'error' })
 	})
 
 	const createUserCommunity = async () => {
@@ -102,7 +102,7 @@ const ParentProvider = ({ children }) => {
 		const interval = setInterval(() => getUserCommunities(), !isLocal ? 5000 : 1000)
 
 		const onTransfer = () => toast({ description: `Transfer success` })
-		const onCreate = () => toast({ description: `Created canister` })
+		const onCreate = (res) => toast({ description: res.Err ? res.Err : `Created canister`,  status: res.Err ? 'error' : 'info'})
 
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
 		const transferTx = getTransferIcpTx({accountId, amount: createChildCost}, onTransfer)

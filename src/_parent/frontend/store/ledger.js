@@ -63,7 +63,7 @@ const LedgerProvider = ({ children }) => {
 			created_at_time: [],
 		}],
 		onSuccess: callback,
-		onFail: (error) => toast({ description: error.result?.reject_message ?? 'Something went wrong', status: 'error' })
+		onFail: (error) => toast({ description: error.message ?? 'Something went wrong', status: 'error' })
 	})
 
 	const getUserBalance = useCallback(async () => {
