@@ -4,6 +4,7 @@ import { useToast, useDisclosure } from '@chakra-ui/react'
 
 import { parentCanisterId } from './parent'
 import { ledgerCanisterId } from './ledger'
+import { cmcCanisterId } from './cmc'
 
 import { isLocal } from '../utils/url'
 
@@ -61,7 +62,7 @@ const IdentityProvider = ({ children }) => {
 	}
 
 	const connect = async (wallet) => {
-		const whitelist = ledgerCanisterId ? [ledgerCanisterId, parentCanisterId] : [parentCanisterId]
+		const whitelist = [...ledgerCanisterId ? [ledgerCanisterId] : [], ...cmcCanisterId ? [cmcCanisterId] : [], parentCanisterId]
 		try {
 			const hasAllowed = await window?.ic[wallet]?.requestConnect({ host, whitelist })
 			const principal = await window?.ic[wallet]?.getPrincipal()
