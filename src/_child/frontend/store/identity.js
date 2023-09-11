@@ -27,7 +27,7 @@ const IdentityProvider = ({children}) => {
   const { isOpen: isUpgradeModalOpen, onOpen: onUpgradeModalOpen, onClose: onUpgradeModalClose } = useDisclosure()
   const icWalletDisclosure = useDisclosure()
 
-  const host = isLocal ? 'http://localhost:8000/' : 'https://mainnet.dfinity.network'
+  const host = isLocal ? 'http://localhost:8000/' : undefined
   
   const getIcWalletName = useCallback(async () => {
     // bitfinity wallet

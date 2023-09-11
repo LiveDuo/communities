@@ -85,7 +85,7 @@ const ParentProvider = ({ children }) => {
 		methodName: 'create_child',
 		args: [],
 		onSuccess: callback,
-		onFail: (_res) => toast({ description: 'Something went wrong', status: 'error' })
+		onFail: (error) => toast({ description: error.result?.reject_message ?? 'Something went wrong', status: 'error' })
 	})
 
 	const createUserCommunity = async () => {

@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const canisterData = fs.readFileSync('.dfx/local/canister_ids.json', 'utf8')
+const canisterData = fs.readFileSync(process.env.CRA_MODE === 'production' ? 'canister_ids.json' :'.dfx/local/canister_ids.json', 'utf8')
 const canisterIds = JSON.parse(canisterData)
 
 // mainnet canisters
@@ -39,8 +39,9 @@ module.exports = {
 
         // set parent
         if (process.env.CRA_PROJECT === 'parent') {
-            if (!canisterIds.parent) { console.log('Parent canister not deployed\n'); process.exit(0) }
-            updateEnvVar(config, 'REACT_APP_PARENT_CANISTER_ID', canisterIds.parent.local)
+            const canisterId = process.env.CRA_MODE === 'production' ? canisterIds.parent?.ic : canisterIds.parent?.local
+            if (!canisterId) { console.log('Parent canister not deployed\n'); process.exit(0) }
+            updateEnvVar(config, 'REACT_APP_PARENT_CANISTER_ID', canisterId)
         }
 
         // set ledger
