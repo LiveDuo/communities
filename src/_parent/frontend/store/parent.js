@@ -95,8 +95,8 @@ const ParentProvider = ({ children }) => {
 		let createChildCost = 0n
 		if (cmcCanisterId) {
 			const icpXdrRate = await getCyclesRate()
-			const micpXdrRate = ONE_MYRIAD * ICP_MICP / icpXdrRate
-			createChildCost = micpXdrRate * CREATE_CHILD_CYCLES / ONE_TRILLION
+			const micpXdrRate = ICP_MICP * ONE_MYRIAD / icpXdrRate
+			createChildCost = CREATE_CHILD_CYCLES * micpXdrRate / ONE_TRILLION
 		}
 
 		const interval = setInterval(() => getUserCommunities(), !isLocal ? 5000 : 1000)
