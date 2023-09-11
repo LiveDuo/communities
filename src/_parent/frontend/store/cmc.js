@@ -103,7 +103,7 @@ const CmcProvider = ({ children }) => {
 
 		try {
 			const response = await cmcActor.get_icp_xdr_conversion_rate()
-			const rate = Number(response.data.xdr_permyriad_per_icp)
+			const rate = response.data.xdr_permyriad_per_icp
 			setCyclesRate(rate)
 			return rate
 		} catch (error) {

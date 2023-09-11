@@ -107,10 +107,10 @@ const ParentProvider = ({ children }) => {
 		const onCreate = () => toast({ description: `Created canister` })
 
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
-		const transferTx = getTransferIcpTx({accountId, amount: BigInt(createChildCost)}, onTransfer)
+		const transferTx = getTransferIcpTx({accountId, amount: createChildCost}, onTransfer)
 		const createChildTx = getCreateChildTx(null, onCreate)
 		try {
-			const txs = ledgerCanisterId ? [...createChildCost > 0 ? [transferTx] : [], createChildTx] : [createChildTx]
+			const txs = ledgerCanisterId ? [...createChildCost > 0n ? [transferTx] : [], createChildTx] : [createChildTx]
 			await batchTransactions(txs)
 		} catch (error) {
 			const description = error.message ?? 'Transaction failed'
