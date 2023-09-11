@@ -8,11 +8,11 @@ import { CmcContext, cmcCanisterId } from './cmc'
 
 import { getAccountId } from '../utils/account'
 import { isLocal } from '../utils/url'
+import { getBigIntAllowance } from '../utils/bigint'
 
 export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
 
-const ALLOWANCE_RATE = 0.1 // a bit of margin in case the price of icp changes quickly
-const CREATE_CHILD_CYCLES = 200n * BigInt(1e12) * (1 - ALLOWANCE_RATE)
+const CREATE_CHILD_CYCLES = getBigIntAllowance(200, 12, 0.1)
 
 /* global BigInt */
 
