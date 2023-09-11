@@ -7,3 +7,12 @@ const getBigIntAllowance = (number, zeros, allowance) => {
 	return BigInt(number) * billion_cycles_with_allowance
 }
 export { getBigIntAllowance }
+
+const ONE_MYRIAD = 10n ** 4n
+export { ONE_MYRIAD }
+
+const ONE_TRILLION = 10n ** 15n
+export { ONE_TRILLION }
+
+const ICP_MICP = 10n ** 8n
+export { ICP_MICP }

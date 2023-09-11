@@ -6,9 +6,9 @@ import { IdentityContext } from './identity'
 import { LedgerContext, ledgerCanisterId } from './ledger'
 import { CmcContext, cmcCanisterId } from './cmc'
 
+import { getBigIntAllowance, ONE_MYRIAD, ONE_TRILLION, ICP_MICP } from '../utils/bigint'
 import { getAccountId } from '../utils/account'
 import { isLocal } from '../utils/url'
-import { getBigIntAllowance } from '../utils/bigint'
 
 export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
 
@@ -97,8 +97,7 @@ const ParentProvider = ({ children }) => {
 		let createChildCost = 0n
 		if (cmcCanisterId) {
 			const rate = await getCyclesRate()
-			console.log('createUserCommunity', rate)
-			createChildCost = rate * CREATE_CHILD_CYCLES / BigInt(1e8)
+			createChildCost = ONE_MYRIAD * CREATE_CHILD_CYCLES * ICP_MICP / ONE_TRILLION / rate
 		}
 
 		const interval = setInterval(() => getUserCommunities(), !isLocal ? 5000 : 1000)
