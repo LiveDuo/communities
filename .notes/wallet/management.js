@@ -16,7 +16,10 @@ const host = 'https://ic0.app'
 	const actor = Actor.createActor(managementFactory, { agent, canisterId: 'aaaaa-aa' })
 
 	const canisterId = Principal.fromText('y3ouo-yaaaa-aaaap-qbafa-cai')
-	const res = await actor.canister_status({canister_id: canisterId })
+	const res = await actor.canister_info({canister_id: canisterId, num_requested_changes: [] })
 	console.log(res)
+	
+	const res2 = await actor.canister_status({canister_id: canisterId })
+	console.log(res2)
 
 })()
