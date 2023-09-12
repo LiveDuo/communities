@@ -1,7 +1,7 @@
 import { HttpAgent } from '@dfinity/agent'
 import { isLocal } from './url'
 
-const icHost = isLocal ? '127.0.0.1:8000' : 'ic0.app'
+const icHost = isLocal ? '127.0.0.1:8000' : 'ic0.app' // ic0.app
 export { icHost }
 
 const getAgent = (identity) => {
