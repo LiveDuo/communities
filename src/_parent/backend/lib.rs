@@ -47,9 +47,8 @@ async fn create_child() -> Result<Principal, String> {
         user_data.id = Some(canister_id)
     });
 
-    // get latest version
-    let version = get_latest_version();
     // install wasm code
+    let version = get_latest_version();
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Installing,)).await.unwrap().0.unwrap();});
     install_code(canister_id, &version.track, &version.version, &caller).await.unwrap();
 
@@ -150,6 +149,7 @@ fn create_canister_data_callback(caller: Principal) -> Result<u64, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
+        // get or create profile
         let user_opt = state.indexes.active_principal.get(&caller);
         let user_id = if user_opt != None {
             *user_opt.unwrap()
@@ -164,6 +164,7 @@ fn create_canister_data_callback(caller: Principal) -> Result<u64, String> {
             user_id
         };
 
+        // create canister entry
         let canister_data_id = uuid(&caller.to_text());
 
         state
