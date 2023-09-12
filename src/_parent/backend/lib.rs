@@ -48,25 +48,7 @@ async fn create_child() -> Result<Principal, String> {
     });
 
     // get latest version
-    let version = STATE.with(|s| {
-        let state = s.borrow();
-        let default_track_id = state.indexes.track.get(&DEFAULT_TRACK.to_owned()).unwrap();
-        let upgrades_ids = state.relations.track_id_to_upgrade_id.forward.get(default_track_id);
-        let mut upgrades = upgrades_ids.unwrap().iter().map(|(upgrade_id, _)| {
-            let upgrade = state.upgrades.get(upgrade_id).unwrap();
-            UpgradeWithTrack {
-                version: upgrade.version.to_owned(),
-                upgrade_from: upgrade.upgrade_from.to_owned(),
-                timestamp: upgrade.timestamp,
-                assets: upgrade.assets.to_owned(),
-                track: DEFAULT_TRACK.to_owned(),
-                description: upgrade.description.to_owned()
-            }
-        }).collect::<Vec<_>>();
-        upgrades.sort_by(|a, b| b.version.cmp(&a.version));
-        upgrades.first().unwrap().to_owned()
-    });
-
+    let version = get_latest_version();
     // install wasm code
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Installing,)).await.unwrap().0.unwrap();});
     install_code(canister_id, &version.track, &version.version, &caller).await.unwrap();
@@ -457,4 +439,28 @@ fn candid_interface_compatibility() {
 
     let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("parent.did");
     service_compatible(CandidSource::Text(&new_interface), CandidSource::File(old_interface.as_path())).unwrap();
+}
+
+
+
+fn get_latest_version() -> UpgradeWithTrack {
+    STATE.with(|s| {
+        let state = s.borrow();
+        let default_track_id = state.indexes.track.get(&DEFAULT_TRACK.to_owned()).unwrap();
+        let upgrades_ids = state.relations.track_id_to_upgrade_id.forward.get(default_track_id);
+        let mut upgrades = upgrades_ids.unwrap().iter().map(|(upgrade_id, _)| {
+            let upgrade = state.upgrades.get(upgrade_id).unwrap();
+            UpgradeWithTrack {
+                version: upgrade.version.to_owned(),
+                upgrade_from: upgrade.upgrade_from.to_owned(),
+                timestamp: upgrade.timestamp,
+                assets: upgrade.assets.to_owned(),
+                track: DEFAULT_TRACK.to_owned(),
+                description: upgrade.description.to_owned()
+            }
+        }).collect::<Vec<_>>();
+        upgrades.sort_by(|a, b| b.version.cmp(&a.version));
+        upgrades.first().unwrap().to_owned()
+    })
+
 }
