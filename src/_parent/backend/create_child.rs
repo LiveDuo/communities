@@ -10,7 +10,6 @@ pub const TOPUP_CYCLES: u64 = 200_000_000_000; // 200b cycles
 
 pub const TRANSFER_FEE: u64 = 10_000;
 pub const MINT_MEMO: u64 = 1347768404;
-pub const DEFAULT_SUBACCOUNT: Subaccount = Subaccount([0; 32]);
 
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 pub static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
@@ -36,7 +35,7 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
         amount: Tokens { e8s: tokens.e8s - TRANSFER_FEE, },
         fee: Tokens { e8s: TRANSFER_FEE },
         from_subaccount: Some(principal_to_subaccount(&caller)),
-        to: AccountIdentifier::new(&CMC_CANISTER.unwrap(), &principal_to_subaccount(canister_id)),
+        to: AccountIdentifier::new(&CMC_CANISTER.unwrap(), &principal_to_subaccount(&canister_id)),
         created_at_time: Some(Timestamp { timestamp_nanos: ic_cdk::api::time() }),
     };
     let (transfer_res, ) = ic_cdk::call::<_, (Result<BlockIndex, TransferError>,)>(
