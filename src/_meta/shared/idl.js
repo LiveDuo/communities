@@ -5,7 +5,7 @@ const childFactory = ({ IDL }) => {
 		Svm: IDL.Record({ address: IDL.Text }),
 	});
 	const authenticationWithAddress = IDL.Variant({
-		Ic: IDL.Record({ principal: IDL.Principal}),
+		Ic: IDL.Record({ principal: IDL.Principal }),
 		Evm: IDL.Record({ address: IDL.Text }),
 		Svm: IDL.Record({ address: IDL.Text }),
 	});
@@ -46,7 +46,7 @@ const childFactory = ({ IDL }) => {
 		Ic: IDL.Null,
 	});
 
-	const UpgradeFrom = IDL.Record({'version': IDL.Text, 'track': IDL.Text})
+	const UpgradeFrom = IDL.Record({ 'version': IDL.Text, 'track': IDL.Text })
 	const UpgradeWithTrack = IDL.Record({
 		version: IDL.Text,
 		upgrade_from: IDL.Opt(UpgradeFrom),
@@ -65,29 +65,29 @@ const childFactory = ({ IDL }) => {
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
 		get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
-		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["query"])
+		get_next_upgrades: IDL.Func([], [IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["query"])
 	});
 };
 exports.childFactory = childFactory
 
 const parentFactory = ({ IDL }) => {
-	const UpgradeFrom = IDL.Record({'version': IDL.Text, 'track': IDL.Text})
-	const UpgradeWithTrack = IDL.Record({'version': IDL.Text, "upgrade_from": IDL.Opt(UpgradeFrom), 'timestamp': IDL.Nat64, 'assets': IDL.Vec(IDL.Text), 'track': IDL.Text, 'description': IDL.Text})
+	const UpgradeFrom = IDL.Record({ 'version': IDL.Text, 'track': IDL.Text })
+	const UpgradeWithTrack = IDL.Record({ 'version': IDL.Text, "upgrade_from": IDL.Opt(UpgradeFrom), 'timestamp': IDL.Nat64, 'assets': IDL.Vec(IDL.Text), 'track': IDL.Text, 'description': IDL.Text })
 
 	return IDL.Service({
 		'create_child': IDL.Func([], [IDL.Variant({ 'Ok': IDL.Principal, 'Err': IDL.Text })], []),
-		'create_upgrade':  IDL.Func([IDL.Text, IDL.Opt(UpgradeFrom), IDL.Vec(IDL.Text), IDL.Text, IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
+		'create_upgrade': IDL.Func([IDL.Text, IDL.Opt(UpgradeFrom), IDL.Vec(IDL.Text), IDL.Text, IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
 		'create_track': IDL.Func([IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
-		'get_next_upgrade':  IDL.Func([ IDL.Text, IDL.Text ], [IDL.Opt(UpgradeWithTrack)], []),
-		'get_upgrades':  IDL.Func([], [IDL.Vec(UpgradeWithTrack)], []),
-		'remove_upgrade':  IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
-		'remove_track':  IDL.Func([ IDL.Text ], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
+		'get_next_upgrade': IDL.Func([IDL.Text, IDL.Text], [IDL.Opt(UpgradeWithTrack)], []),
+		'get_upgrades': IDL.Func([], [IDL.Vec(UpgradeWithTrack)], []),
+		'remove_upgrade': IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
+		'remove_track': IDL.Func([IDL.Text], [IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], []),
 	})
 }
 exports.parentFactory = parentFactory
 
 const assetFactory = ({ IDL }) => {
-	const StoreArgs = IDL.Record({'key': IDL.Text, 'content_type': IDL.Text, 'content_encoding': IDL.Text, 'content': IDL.Vec(IDL.Nat8)})
+	const StoreArgs = IDL.Record({ 'key': IDL.Text, 'content_type': IDL.Text, 'content_encoding': IDL.Text, 'content': IDL.Vec(IDL.Nat8) })
 	return IDL.Service({
 		'create_batch': IDL.Func([IDL.Text], [], []),
 		'append_chunk': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
@@ -97,3 +97,27 @@ const assetFactory = ({ IDL }) => {
 	})
 }
 exports.assetFactory = assetFactory
+
+const managementFactory = ({ IDL }) => {
+	const canisterId = IDL.Principal;
+	const definiteCanisterSettings = IDL.Record({ freezing_threshold: IDL.Nat, controllers: IDL.Vec(IDL.Principal), memory_allocation: IDL.Nat, compute_allocation: IDL.Nat, });
+	const canisterSettings = IDL.Record({ freezing_threshold: IDL.Opt(IDL.Nat), controllers: IDL.Opt(IDL.Vec(IDL.Principal)), memory_allocation: IDL.Opt(IDL.Nat), compute_allocation: IDL.Opt(IDL.Nat), });
+	const wasmModule = IDL.Vec(IDL.Nat8);
+	const status = IDL.Variant({ stopped: IDL.Null, stopping: IDL.Null, running: IDL.Null, })
+	const canisterMode = IDL.Variant({ reinstall: IDL.Null, upgrade: IDL.Null, install: IDL.Null })
+	return IDL.Service({
+		canister_status: IDL.Func([IDL.Record({ canister_id: canisterId })], [IDL.Record({ status: status, memory_size: IDL.Nat, cycles: IDL.Nat, settings: definiteCanisterSettings, module_hash: IDL.Opt(IDL.Vec(IDL.Nat8)), }),], []),
+		create_canister: IDL.Func([IDL.Record({ settings: IDL.Opt(canisterSettings) })], [IDL.Record({ canister_id: canisterId })], []),
+		delete_canister: IDL.Func([IDL.Record({ canister_id: canisterId })], [], []),
+		deposit_cycles: IDL.Func([IDL.Record({ canister_id: canisterId })], [], []),
+		install_code: IDL.Func([IDL.Record({ arg: IDL.Vec(IDL.Nat8), wasm_module: wasmModule, mode: canisterMode, canister_id: canisterId }),], [], []),
+		provisional_create_canister_with_cycles: IDL.Func([IDL.Record({ settings: IDL.Opt(canisterSettings), amount: IDL.Opt(IDL.Nat) }),], [IDL.Record({ canister_id: canisterId })], []),
+		provisional_top_up_canister: IDL.Func([IDL.Record({ canister_id: canisterId, amount: IDL.Nat })], [], []),
+		raw_rand: IDL.Func([], [IDL.Vec(IDL.Nat8)], []),
+		start_canister: IDL.Func([IDL.Record({ canister_id: canisterId })], [], []),
+		stop_canister: IDL.Func([IDL.Record({ canister_id: canisterId })], [], []),
+		uninstall_code: IDL.Func([IDL.Record({ canister_id: canisterId })], [], []),
+		update_settings: IDL.Func([IDL.Record({ canister_id: IDL.Principal, settings: canisterSettings, }),], [], []),
+	})
+}
+exports.managementFactory = managementFactory
