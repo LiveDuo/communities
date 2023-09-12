@@ -477,7 +477,7 @@ fn get_latest_version() -> UpgradeWithTrack {
 
 }
 
-pub async fn authorize(caller: &Principal) -> Result<(), String> {
+async fn authorize(caller: &Principal) -> Result<(), String> {
     let canister_id = ic_cdk::id();
   
     let args = CanisterIdRecord { canister_id };
@@ -499,7 +499,7 @@ pub async fn authorize(caller: &Principal) -> Result<(), String> {
     }
 }
 
-pub fn add_track(name: String, caller: Principal) -> Result<(), String> {
+fn add_track(name: String, caller: Principal) -> Result<(), String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 

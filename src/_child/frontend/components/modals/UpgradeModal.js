@@ -9,6 +9,7 @@ import { ChildContext } from '../../store/child'
 import { CHILD_CANISTER_ID } from '../../store/child'
 
 import { Principal } from "@dfinity/principal"
+import { isLocal } from '../../utils/url'
 
 const UpgradeModal = () => {
 	
@@ -26,8 +27,16 @@ const UpgradeModal = () => {
 		const canisterId = Principal.fromText(CHILD_CANISTER_ID)
 		try {
 			// get canister controllers
-			const res = await managementActor.canister_status({canister_id: canisterId })
-			const _isController = res.settings.controllers.some((c)=> c.toString() === principal.toString())
+			let _isController
+			if (isLocal) {
+				const res = await managementActor.canister_status({canister_id: canisterId })
+				_isController = res.settings.controllers.some((c)=> c.toString() === principal.toString())
+			} else {
+				const response = await fetch(`https://ic-api.internetcomputer.org/api/v3/canisters/${CHILD_CANISTER_ID}`);
+				const data = await response.json();
+				_isController = data.controllers.some((c)=> c.toString() === principal.toString())
+			}
+
 			setIsController(_isController)
 			if (!_isController) return
 

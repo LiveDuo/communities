@@ -473,8 +473,8 @@ fn http_request(
     return ic_certified_assets::http_request_handle(req);
 }
 
-#[query]
-#[candid_method(query)]
+#[update]
+#[candid_method(update)]
 async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
     let parent_opt = STATE.with(|s| { s.borrow().parent });
     if parent_opt == None { return Err("Parent canister not found".to_owned()); }
@@ -488,8 +488,6 @@ async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
     if track_opt.is_none() { return  Err("Current version not found".to_owned()); }
     let track = track_opt.unwrap();
 
-
-    
     let payload = candid::Encode!(&(current_version, track)).unwrap();
     let args = ("v1".to_owned(), "get_next_upgrades".to_owned() ,payload,);
     let (res,) = ic_cdk::call::<_, (Result<Vec<u8>, String>,)>(parent, "handle_interface", args,).await.unwrap();

@@ -20,7 +20,7 @@ const upgradeFromTrack = argv.upgradeFromTrack ?? 'default'
 const track = argv.track ?? 'default'
 const description = argv.description ?? 'upgrade to 0.0.2'
 
-// node src/_parent/upload-upgrade.js --network https://ic0.app --identity with-wallet
+// node src/_parent/upload-upgrade.js --network https://ic0.app --upgradeFromTrack default --identity with-wallet
 ; (async () => {
 
 	const canisters = await getCanisters(host)

@@ -101,7 +101,7 @@ service : (opt principal, opt text, opt text ) -> {
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
   create_reply : (nat64, text) -> (CreateReplyResult);
   upgrade_canister : (text, text) -> (UpgradeCanisterResult);
-  get_next_upgrades : () -> (GetNextUpgradesResult) query;
+  get_next_upgrades : () -> (GetNextUpgradesResult);
   get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
   get_posts_by_user : (Authentication) -> (GetPostsByUserResult) query;
