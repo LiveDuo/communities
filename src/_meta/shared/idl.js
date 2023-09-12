@@ -105,8 +105,22 @@ const managementFactory = ({ IDL }) => {
 	const wasmModule = IDL.Vec(IDL.Nat8);
 	const status = IDL.Variant({ stopped: IDL.Null, stopping: IDL.Null, running: IDL.Null, })
 	const canisterMode = IDL.Variant({ reinstall: IDL.Null, upgrade: IDL.Null, install: IDL.Null })
+
+	const fromCanister = IDL.Record({ canister_version: IDL.Opt(IDL.Nat64), canister_id: IDL.Principal, })
+	const changeOrigin = IDL.Variant({ from_user: IDL.Record({ user_id: IDL.Principal }), from_canister: fromCanister, })
+	const mode = IDL.Variant({ reinstall: IDL.Null, upgrade: IDL.Null, install: IDL.Null, })
+	const changeDetails = IDL.Variant({
+		creation: IDL.Record({ controllers: IDL.Vec(IDL.Principal) }),
+		code_deployment: IDL.Record({ mode: mode, module_hash: IDL.Vec(IDL.Nat8), }),
+		controllers_change: IDL.Record({ controllers: IDL.Vec(IDL.Principal) }),
+		code_uninstall: IDL.Null,
+	})
+	const change = IDL.Record({ timestamp_nanos: IDL.Nat64, canister_version: IDL.Nat64, origin: changeOrigin, details: changeDetails })
+	const canisterInfoResponse = IDL.Record({ controllers: IDL.Vec(IDL.Principal), module_hash: IDL.Opt(IDL.Vec(IDL.Nat8)), recent_changes: IDL.Vec(change), total_num_changes: IDL.Nat64 })
+
 	return IDL.Service({
 		canister_status: IDL.Func([IDL.Record({ canister_id: canisterId })], [IDL.Record({ status: status, memory_size: IDL.Nat, cycles: IDL.Nat, settings: definiteCanisterSettings, module_hash: IDL.Opt(IDL.Vec(IDL.Nat8)), }),], []),
+		canister_info: IDL.Func([IDL.Record({ canister_id: canisterId, num_requested_changes: IDL.Opt(IDL.Nat64) })], [canisterInfoResponse], []),
 		create_canister: IDL.Func([IDL.Record({ settings: IDL.Opt(canisterSettings) })], [IDL.Record({ canister_id: canisterId })], []),
 		delete_canister: IDL.Func([IDL.Record({ canister_id: canisterId })], [], []),
 		deposit_cycles: IDL.Func([IDL.Record({ canister_id: canisterId })], [], []),
