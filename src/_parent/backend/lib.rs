@@ -31,9 +31,8 @@ async fn create_child() -> Result<Principal, String> {
     }
 
     // mint cycles
-    let result = ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "create_canister_data_callback", (caller,)).await;
-    let (canister_data_id_opt,) = result.unwrap();
-    let canister_data_id = canister_data_id_opt.unwrap();
+    let canister_data_id = uuid(&caller.to_text());
+    ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "create_canister_data_callback", (caller, canister_data_id)).await.unwrap().0.unwrap();});
 
     if LEDGER_CANISTER.is_some() && CMC_CANISTER.is_some() {
         mint_cycles(caller, id).await.unwrap();
@@ -41,12 +40,8 @@ async fn create_child() -> Result<Principal, String> {
 
     // create canister
     let canister_id = create_canister(id).await.unwrap();
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
-        let user_data = state.canister_data.get_mut(&canister_data_id).unwrap();
-        user_data.id = Some(canister_id)
-    });
-
+    ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "update_canister_id_callback", (canister_data_id, canister_id)).await.unwrap().0.unwrap();});
+    
     // get latest version
     let version = get_latest_version();
     // install wasm code
@@ -140,9 +135,23 @@ fn update_canister_state_callback(canister_data_id: u64, canister_state: Caniste
 
     Ok(())
 }
+#[ic_cdk_macros::update]
+fn update_canister_id_callback(canister_data_id: u64, canister_id: Principal) -> Result<(), String> {
+    if ic_cdk::caller() != ic_cdk::id() {
+        return Err("Unauthorized".to_owned());
+    };
+    
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let user_data = state.canister_data.get_mut(&canister_data_id).unwrap();
+        user_data.id = Some(canister_id)
+    });
+
+    Ok(())
+}
 
 #[ic_cdk_macros::update]
-fn create_canister_data_callback(caller: Principal) -> Result<u64, String> {
+fn create_canister_data_callback(caller: Principal, canister_data_id: u64) -> Result<u64, String> {
     if ic_cdk::caller() != ic_cdk::id() {
         return Err("Unauthorized".to_owned());
     };
@@ -164,7 +173,7 @@ fn create_canister_data_callback(caller: Principal) -> Result<u64, String> {
             user_id
         };
 
-        let canister_data_id = uuid(&caller.to_text());
+        // let canister_data_id = uuid(&caller.to_text());
 
         state
             .canister_data
