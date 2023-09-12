@@ -134,7 +134,7 @@ const ChildProvider = ({ children }) => {
 
 	const getPosts = useCallback(async () => {
 		const response = await childActor.get_posts()
-		setPosts(response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: 0})))
+		setPosts(response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
 	}, [childActor])
 	
 	const getPost = useCallback(async (index) => {
@@ -145,7 +145,7 @@ const ChildProvider = ({ children }) => {
 
 	const getPostsByUser = useCallback(async () => {
 		const response = await childActor.get_posts_by_user(profile.authentication)
-		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: 0})))
+		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
 	}, [profile, childActor])
 
 	const getProfileByAuth = useCallback(async (account) => {
