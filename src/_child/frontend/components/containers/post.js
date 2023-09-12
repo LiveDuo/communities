@@ -4,7 +4,7 @@ import { Text, Flex, Button, Textarea, IconButton, Divider } from '@chakra-ui/re
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
-import { addressShort, getAddress } from '../../utils/address'
+import { addressShort, getAddress, getSeedFromAuthentication } from '../../utils/address'
 
 
 import { ArrowBackIcon } from '@chakra-ui/icons'
@@ -66,7 +66,7 @@ const PostContainer = () => {
             <Text>{timeSince(post.timestamp)}</Text>
           </Flex>
           <Flex mb="20px" padding="20px 60px" alignItems="center">
-            <Jazzicon diameter={20} seed={getAddress(post.authentication)} />
+            <Jazzicon diameter={20} seed={getSeedFromAuthentication(post.authentication)} />
             <Text ml="20px">{getAddress(post.authentication)}</Text>
           </Flex>
           <Box mb="40px" padding="20px 60px">
@@ -77,7 +77,7 @@ const PostContainer = () => {
             {post.replies.length > 0 ? post.replies.map((r, i) => 
               <Flex key={i} alignItems="center" borderBottom="1px solid #00000010" padding="20px">
                 <Box w="100px">
-                  <Jazzicon diameter={40} seed={getAddress(r?.authentication)} />
+                  <Jazzicon diameter={40} seed={getSeedFromAuthentication(r?.authentication)} />
                 </Box>
                 <Box>
 

@@ -7,7 +7,7 @@ import Jazzicon from 'react-jazzicon'
 
 import { IdentityContext } from '../../store/identity'
 import { ChildContext } from '../../store/child'
-import { addressShort } from '../../utils/address'
+import { addressShort, getSeedFromAccount } from '../../utils/address'
 
 import { ReactComponent as EthereumLogo } from '../../logos/ethereum.svg'
 import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
@@ -74,7 +74,7 @@ const Header = () => {
           <Link as={RouterLink} to={`/user/${account?.address}/${account?.type}`}>
             <Button >
               <Box h="16px" w="16px" mr="8px">
-                <Jazzicon diameter={20} seed={account?.address} />
+                <Jazzicon diameter={20} seed={getSeedFromAccount(account)} />
               </Box>
               {addressShort(account.address)}
             </Button>

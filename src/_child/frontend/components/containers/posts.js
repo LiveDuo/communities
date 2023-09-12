@@ -5,7 +5,7 @@ import Jazzicon from 'react-jazzicon'
 
 import PostModal from '../modals/PostModal'
 import { timeSinceShort } from '../../utils/time'
-import { getAddress, addressShort, getExplorerUrl } from '../../utils/address'
+import { getAddress, addressShort, getExplorerUrl, getSeedFromAuthentication } from '../../utils/address'
 
 import { EditIcon } from '@chakra-ui/icons'
 
@@ -62,7 +62,7 @@ const PostsContainer = ({ posts: _posts }) => {
                 <Tooltip label={addressShort(getAddress(p?.authentication))}>
                   <Link href={getExplorerUrl(p.authentication)} isExternal>
                     <Box width="40px" height="20px" textAlign="center" _hover={{cursor: 'pointer', opacity: 0.7}}>
-                      <Jazzicon diameter={20} seed={getAddress(p?.authentication)} />
+                      <Jazzicon diameter={20} seed={getSeedFromAuthentication(p?.authentication)} />
                     </Box>
                   </Link>
                 </Tooltip>

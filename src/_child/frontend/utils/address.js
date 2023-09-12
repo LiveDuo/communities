@@ -26,3 +26,30 @@ const getExplorerUrl = (address) => {
 }
 
 export { getExplorerUrl }
+
+
+const getSeedFromAuthentication = (authentication) => {
+    if(authentication.Evm) {
+        return Buffer.from(authentication.Evm.address.slice(2)).at(0)
+    } else if(authentication.Svm) {
+        return Buffer.from(authentication.Svm.address).at(0)
+    } else if(authentication.Ic) {
+        return Buffer.from(authentication.Ic.principal.toString()).at(0)
+    }
+}
+
+
+export { getSeedFromAuthentication }
+
+const getSeedFromAccount = (account) => {
+    if(account.type === 'Evm') {
+        return Buffer.from(account.address.slice(2)).at(0)
+    } else if(account.type === 'Svm') {
+        return Buffer.from(account.address).at(0)
+    } else if(account.type === 'Ic') {
+        return Buffer.from(account.address).at(0)
+    }
+}
+
+
+export { getSeedFromAccount }
