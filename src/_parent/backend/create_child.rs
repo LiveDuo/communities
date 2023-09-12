@@ -4,7 +4,7 @@ use candid::{Principal, Encode};
 use include_macros::get_canister;
 
 use crate::state::*;
-use crate::utils::*;
+use crate::assets::*;
 
 pub const TOPUP_CYCLES: u64 = 200_000_000_000; // 200b cycles
 
@@ -113,6 +113,47 @@ pub async fn install_code(canister_id: Principal, track: &String, version: &Stri
         ).unwrap();
 
     Ok(result)
+}
+
+// create_child
+pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String, track: &String) -> Result<(), String> {
+    
+    for asset in assets {
+        // skip unnecessary files
+        if asset == &format!("/upgrades/{track}/{version}/child.wasm") {
+            continue;
+        }
+  
+        // get asset content
+        let asset_bytes: Vec<u8> = get_asset(asset.to_owned());
+        let content;
+        if asset == &format!("/upgrades/{track}/{version}/static/js/bundle.js") {
+            let bundle_str = String::from_utf8(asset_bytes).expect("Invalid JS bundle");
+            let bundle_with_env =
+                bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
+            content = bundle_with_env.as_bytes().to_vec();
+        } else {
+            content = asset_bytes;
+        }
+  
+        // upload asset
+        let key = asset.replace(&format!("/upgrades/{track}/{version}"), "");
+        let store_args = StoreAssetArgs {
+            key: key.to_owned(),
+            content_type: get_content_type(&key),
+            content_encoding: "identity".to_owned(),
+            content,
+        };
+        ic_cdk::call::<_, ()>(
+            canister_id, 
+            "store",
+            (store_args,))
+            .await
+            .map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg))
+            .unwrap();
+    }
+  
+    Ok(())
 }
 
 pub async fn set_canister_controllers( canister_id: Principal,caller: Principal) -> Result<(), String> {

@@ -9,6 +9,8 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryInto;
 
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map;
 #[derive(CandidType, Deserialize)]
 pub struct StoreAssetArgs {
     pub key: String,
@@ -132,8 +134,6 @@ impl Default for CanisterData {
     }
 }
 
-
-
 #[derive(Clone, Debug, CandidType, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UpgradeFrom {
     pub track: String,
@@ -206,6 +206,14 @@ pub struct Relations {
     pub profile_id_to_canister_id: Relation<u64, u64>,
     pub track_id_to_upgrade_id: Relation<u64, u64>,
 }
+
+pub fn uuid(seed: &str) -> u64 {
+    let timestamp: u64 = ic_cdk::api::time() * 1000 * 1000;
+    let str = format!("{}-{}", seed, timestamp);
+    let mut s = hash_map::DefaultHasher::new();
+    str.hash(&mut s);
+    s.finish()
+  }
 
 #[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
 pub enum Authentication {

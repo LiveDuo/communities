@@ -1,11 +1,12 @@
 mod state;
-mod utils;
+mod assets;
 mod create_child;
 
 use candid::{CandidType, Deserialize, Principal, candid_method};
 use ic_cdk_macros::{query, update, init};
+use ic_cdk::api::management_canister::main::{CanisterIdRecord, CanisterStatusResponse};
 
-use utils::*;
+// use assets::*;
 use create_child::*;
 use crate::state::{STATE, *};
 use candid::{Decode, Encode};
@@ -40,11 +41,11 @@ async fn create_child() -> Result<Principal, String> {
 
     // create canister
     let canister_id = create_canister(id).await.unwrap();
-    ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "update_canister_id_callback", (canister_data_id, canister_id)).await.unwrap().0.unwrap();});
+    ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_id_callback", (canister_data_id, canister_id)).await.unwrap().0.unwrap();});
     
     // get latest version
     let version = get_latest_version();
-    
+
     // install wasm code
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Installing,)).await.unwrap().0.unwrap();});
     install_code(canister_id, &version.track, &version.version, &caller).await.unwrap();
@@ -474,4 +475,45 @@ fn get_latest_version() -> UpgradeWithTrack {
         upgrades.first().unwrap().to_owned()
     })
 
+}
+
+pub async fn authorize(caller: &Principal) -> Result<(), String> {
+    let canister_id = ic_cdk::id();
+  
+    let args = CanisterIdRecord { canister_id };
+  
+    let (canister_status,) = ic_cdk::call::<_, (CanisterStatusResponse,)>(
+        Principal::management_canister(),
+        "canister_status",
+        (args,),)
+        .await
+        .map_err(|(code, msg)| format!("Canister status {}: {}", code as u8, msg))
+        .unwrap();
+    
+    let caller_is_controller = canister_status.settings.controllers.iter().any(|c| c == caller);
+
+    if caller_is_controller {
+        Ok(())
+    } else {
+        Err("Caller is not a controller".to_owned())
+    }
+}
+
+pub fn add_track(name: String, caller: Principal) -> Result<(), String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        // check if the track exists 
+        if state.indexes.track.contains_key(&name) {
+            return Err("Track already exists".to_owned()); 
+        }
+
+        // add track
+        let track_id = uuid(&caller.to_string());
+        let track =  Track { name:  name.to_owned()};
+        state.tracks.insert(track_id, track);
+        state.indexes.track.insert(name, track_id);
+        
+        Ok(())
+    })
 }
