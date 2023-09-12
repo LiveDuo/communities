@@ -122,7 +122,11 @@ const ParentProvider = ({ children }) => {
 	const getUserCommunities = useCallback(async () => {
 		try {
 			const response = await parentActor.get_user_canisters()
-			const canisters = response.map((c) => {
+			const canisters = response.sort((a, b) => {
+				if (a.timestamp < b.timestamp) return 1
+				if (a.timestamp > b.timestamp) return -1
+				return 0
+			}).map((c) => {
 				const canisterId = c.id.length > 0 ? c.id[0].toString() : ''
 				return {
 					id: canisterId,
@@ -132,6 +136,7 @@ const ParentProvider = ({ children }) => {
 			})
 			setUserCommunities(canisters)
 		} catch (error) {
+			console.log(error)
 			const description = error.result?.reject_message ?? 'Response failed'
 			toast({ description, status: 'error' })
 		}
