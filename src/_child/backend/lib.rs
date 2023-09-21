@@ -11,8 +11,7 @@ use ic_cdk_macros::{update, query, init};
 use std::borrow::Borrow;
 
 use crate::state::{*, STATE};
-
-use upgrade::{update_metadata, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
+use upgrade::{update_metadata, check_canister_cycles_balance, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::UpgradeWithTrack;
 use utils::{uuid, get_asset};
 
@@ -503,6 +502,9 @@ async fn upgrade_canister(version: String, track: String) -> Result<(), String> 
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
+    // canister_balance
+    check_canister_cycles_balance().await?;
+
     // get parent canister
     let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
     if parent_canister_opt.is_none() { return Err("Parent canister not found".to_owned()); }
@@ -520,8 +522,8 @@ async fn upgrade_canister(version: String, track: String) -> Result<(), String> 
     store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version, &upgrade.track).await.unwrap();
 
     // upgrade wasm
-    let wasm = get_asset("/temp/child.wasm".to_owned());	
-    ic_cdk::spawn(upgrade_canister_cb(wasm));
+    let wasm = get_asset("/temp/child.wasm".to_owned());
+    upgrade_canister_cb(wasm);
 
     Ok(())
 }
