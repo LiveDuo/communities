@@ -17,11 +17,11 @@ const upgradeFromTrack = argv.upgradeFromTrack ?? null
 const track = argv.track ?? 'default'
 const description = argv.description ?? 'upgrade to 0.0.2'
 const path = argv.path ?? './build/child'
-const minimal = argv.minimal ?? null
+const filter = argv.filter ?? null
 
 
 // node src/_parent/upload-upgrade.js --network ic --upgradeFromTrack default --identity with-wallet
-// npm run upload:upgrade --  --path ./build/child-test --minimal child.wasm
+// npm run upload:upgrade --  --path ./build/child-test --filter child.wasm
 ; (async () => {
 
 	const canisters = await getCanisters(network)
@@ -36,7 +36,7 @@ const minimal = argv.minimal ?? null
 	if (upgradeExists) { console.log('Version already exist\n'); return }
 
 	// upload upgrade assets
-	const assets = await getFiles(`${path}/${version}`).then(e => e.filter(f => minimal === f || minimal === null))
+	const assets = await getFiles(`${path}/${version}`).then(e => e.filter(f => filter === f || filter === null))
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(`${path}/${version}/${asset}`)
 		await uploadFile(actorAsset, `/upgrades/${track}/${version}/${asset}`, assetBuf)
