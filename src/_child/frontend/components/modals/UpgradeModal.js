@@ -64,9 +64,10 @@ const UpgradeModal = () => {
 
 
 	const upgradeCanister = useCallback(async (version, track) => {
-		await childActor.upgrade_canister(version, track)
+		const UpgradeCanister = await childActor.upgrade_canister(version, track)
+		toast({ description: !UpgradeCanister.Err ? 'Canister upgraded' : UpgradeCanister.Err  , status: !UpgradeCanister.Err ? 'info' : 'error' })
 		onUpgradeModalClose()
-	}, [childActor, onUpgradeModalClose])
+	}, [childActor, onUpgradeModalClose, toast])
 	
 	useEffect(() => {
 		if (managementActor && isUpgradeModalOpen) {
