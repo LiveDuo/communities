@@ -6,7 +6,6 @@ import {loadAccount, clearAccount, saveAccount } from '../utils/stoge'
 import { Actor } from '@dfinity/agent'
 
 import { CHILD_CANISTER_ID } from './child'
-import { MANAGEMENT_CANISTER_ID } from './management'
 
 import { getAgent, icHost } from '../utils/agent'
 import { isLocal} from '../utils/url'
@@ -106,7 +105,7 @@ const IdentityProvider = ({children}) => {
       if(isConnected) return
       
       // request connect
-      const whitelist = [CHILD_CANISTER_ID, MANAGEMENT_CANISTER_ID]
+      const whitelist = [CHILD_CANISTER_ID]
       await window.ic[wallet]?.requestConnect({whitelist, host});
     }
   }, [host])

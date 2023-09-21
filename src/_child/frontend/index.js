@@ -5,7 +5,6 @@ import { ChakraProvider } from '@chakra-ui/react'
 
 import { IdentityProvider } from './store/identity'
 import { ChildProvider } from './store/child'
-import { ManagementProvider } from './store/management'
 
 import Layout from './components/layout'
 
@@ -17,7 +16,6 @@ const App = () => (
   <StrictMode>
     <ChakraProvider>
       <IdentityProvider>
-        <ManagementProvider>
           <ChildProvider>
             <BrowserRouter>
                 <Routes>
@@ -27,7 +25,6 @@ const App = () => (
                 </Routes>
             </BrowserRouter>
           </ChildProvider>
-        </ManagementProvider>
       </IdentityProvider>
     </ChakraProvider>
   </StrictMode>

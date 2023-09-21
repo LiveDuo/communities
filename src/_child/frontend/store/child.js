@@ -71,12 +71,33 @@ const idlFactory = ({ IDL }) => {
 		assets: IDL.Vec(IDL.Text),
 		track: IDL.Text
 	})
+
 	const Metadata = IDL.Record({version: IDL.Text, track: IDL.Text})
+
+	const definite_canister_settings = IDL.Record({
+    freezing_threshold: IDL.Nat,
+    controllers: IDL.Vec(IDL.Principal),
+    memory_allocation: IDL.Nat,
+    compute_allocation: IDL.Nat,
+  });
+	
+	const canisterStatusResponse = IDL.Record({
+		status: IDL.Variant({
+			stopped: IDL.Null,
+			stopping: IDL.Null,
+			running: IDL.Null,
+		}),
+		memory_size: IDL.Nat,
+		cycles: IDL.Nat,
+		settings: definite_canister_settings,
+		module_hash: IDL.Opt(IDL.Vec(IDL.Nat8)),
+	})
 
 	return IDL.Service({
 		create_profile: IDL.Func([authenticationWith], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["update"]),
 		create_post: IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ Ok: PostSummary, Err: IDL.Text })], ["update"]),
 		create_reply: IDL.Func([IDL.Nat64, IDL.Text], [IDL.Variant({ Ok: ReplyResponse, Err: IDL.Text })], ["update"]),
+		canister_status: IDL.Func([], [canisterStatusResponse], ["update"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),

@@ -6,6 +6,8 @@ mod auth;
 
 use candid::{ CandidType, Deserialize, Principal, candid_method};
 
+use ic_cdk::api::management_canister::main::CanisterStatusResponse;
+use ic_cdk::api::management_canister::provisional::CanisterIdRecord;
 use ic_cdk_macros::{update, query, init};
 
 use std::borrow::Borrow;
@@ -432,6 +434,14 @@ fn get_user_roles() -> Vec<Role>{
             vec![]
         }
     })
+}
+
+#[update]
+#[candid_method(update)]
+async fn canister_status() ->  CanisterStatusResponse {
+    let args = CanisterIdRecord { canister_id: ic_cdk::id() }; 
+    let (canister_status, ) = ic_cdk::call::<_,(CanisterStatusResponse,)>(Principal::management_canister(), "canister_status", (args,)).await.unwrap();
+    canister_status
 }
 
 #[derive(CandidType, Deserialize)]

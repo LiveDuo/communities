@@ -95,13 +95,30 @@ type UpgradeWithTrack = record {
   upgrade_from : opt UpgradeFrom;
   description: text;
 };
+
+type definite_canister_settings = record {
+  freezing_threshold : nat;
+  controllers : vec principal;
+  memory_allocation : nat;
+  compute_allocation : nat;
+};
+
+type CanisterStatusRespose = record {
+  status : variant { stopped; stopping; running };
+  memory_size : nat;
+  cycles : nat;
+  settings : definite_canister_settings;
+  module_hash : opt vec nat8;
+};
 type UserRole = variant { Admin };
+
 service : (opt principal, opt text, opt text ) -> {
   create_post : (text, text) -> (CratePostResult);
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
   create_reply : (nat64, text) -> (CreateReplyResult);
   upgrade_canister : (text, text) -> (UpgradeCanisterResult);
   get_next_upgrades : () -> (GetNextUpgradesResult);
+  canister_status : () -> (CanisterStatusRespose);
   get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
   get_posts_by_user : (Authentication) -> (GetPostsByUserResult) query;

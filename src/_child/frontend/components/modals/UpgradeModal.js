@@ -4,12 +4,7 @@ import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseBu
 import { Button, Text, Box, Tag, Flex, Heading, Spinner, useToast } from '@chakra-ui/react'
 
 import { IdentityContext } from '../../store/identity'
-import { ManagementContext } from '../../store/management'
 import { ChildContext } from '../../store/child'
-import { CHILD_CANISTER_ID } from '../../store/child'
-
-import { Principal } from "@dfinity/principal"
-import { isLocal } from '../../utils/url'
 
 const UpgradeModal = () => {
 	
@@ -20,22 +15,13 @@ const UpgradeModal = () => {
 	const [metadata, setMetadata] = useState(null)
 
 	const {isUpgradeModalOpen, onUpgradeModalClose, principal} = useContext(IdentityContext)
-	const { managementActor } = useContext(ManagementContext)
 	const { childActor } = useContext(ChildContext)
 
 	const checkForUpgrade = useCallback(async () => {
-		const canisterId = Principal.fromText(CHILD_CANISTER_ID)
 		try {
 			// get canister controllers
-			let _isController
-			if (isLocal) {
-				const res = await managementActor.canister_status({canister_id: canisterId })
-				_isController = res.settings.controllers.some((c)=> c.toString() === principal.toString())
-			} else {
-				const response = await fetch(`https://ic-api.internetcomputer.org/api/v3/canisters/${CHILD_CANISTER_ID}`);
-				const data = await response.json();
-				_isController = data.controllers.some((c)=> c.toString() === principal.toString())
-			}
+			const res = await childActor.canister_status()
+			const _isController = res.settings.controllers.some((c)=> c.toString() === principal.toString())
 
 			setIsController(_isController)
 			if (!_isController) return
@@ -50,7 +36,7 @@ const UpgradeModal = () => {
 		} catch (err) {
 			console.log(err)
 		}
-	}, [managementActor, principal, childActor, toast])
+	}, [principal, childActor, toast])
 
 	const getCurrentVersion = useCallback(async ()=>{
 		const metadata = await childActor.get_metadata()
@@ -70,11 +56,11 @@ const UpgradeModal = () => {
 	}, [childActor, onUpgradeModalClose, toast])
 	
 	useEffect(() => {
-		if (managementActor && isUpgradeModalOpen) {
+		if (childActor && isUpgradeModalOpen) {
 			checkForUpgrade()
 			getCurrentVersion()
 		}
-	},[managementActor, checkForUpgrade, getCurrentVersion, isUpgradeModalOpen])
+	},[childActor, checkForUpgrade, getCurrentVersion, isUpgradeModalOpen])
 
 	return (
 		<Modal isOpen={isUpgradeModalOpen} onClose={onUpgradeModalClose} isCentered>
