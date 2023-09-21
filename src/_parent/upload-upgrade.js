@@ -11,13 +11,17 @@ const argv = minimist(process.argv.slice(2))
 const network = argv.network ?? 'local'
 const id = argv.identity ?? 'default'
 
-const version = argv.version ?? '0.0.2'
-const upgradeFromVersion = argv.upgradeFromVersion ?? '0.0.1'
-const upgradeFromTrack = argv.upgradeFromTrack ?? 'default'
+const version = argv.version ?? '0.0.1'
+const upgradeFromVersion = argv.upgradeFromVersion ?? null
+const upgradeFromTrack = argv.upgradeFromTrack ?? null
 const track = argv.track ?? 'default'
 const description = argv.description ?? 'upgrade to 0.0.2'
+const path = argv.path ?? './build/child'
+const minimal = argv.minimal ?? null
 
-// node src/_parent/upload-upgrade.js --network https://ic0.app --upgradeFromTrack default --identity with-wallet
+
+// node src/_parent/upload-upgrade.js --network ic --upgradeFromTrack default --identity with-wallet
+// npm run upload:upgrade --  --path ./build/child-test --minimal child.wasm
 ; (async () => {
 
 	const canisters = await getCanisters(network)
@@ -32,14 +36,14 @@ const description = argv.description ?? 'upgrade to 0.0.2'
 	if (upgradeExists) { console.log('Version already exist\n'); return }
 
 	// upload upgrade assets
-	const assets = await getFiles(`./build/child/${version}`)
+	const assets = await getFiles(`${path}/${version}`).then(e => e.filter(f => minimal === f || minimal === null))
 	for (let asset of assets) {
-		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
+		const assetBuf = await fs.readFile(`${path}/${version}/${asset}`)
 		await uploadFile(actorAsset, `/upgrades/${track}/${version}/${asset}`, assetBuf)
 	}
 
 	// create upgrade
-	const upgradeFrom = {version: upgradeFromVersion, track: upgradeFromTrack}
-	const res = await actorParent.create_upgrade(version, [upgradeFrom], assets.map(a => `/upgrades/${track}/${version}/${a}`), track, description)
+	const upgradeFrom = upgradeFromVersion && upgradeFromTrack ? [ {version: upgradeFromVersion, track: upgradeFromTrack} ] : []
+	const res = await actorParent.create_upgrade(version, upgradeFrom, assets.map(a => `/upgrades/${track}/${version}/${a}`), track, description)
 	console.log(res)
 })()

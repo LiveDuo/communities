@@ -17,7 +17,7 @@ const version = argv.version ?? '0.0.1'
 const track = argv.track ?? 'default'
 const description = argv.description ?? 'upgrade to 0.0.1'
 
-// node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
+// node src/_parent/upload-assets.js --network ic --identity with-wallet
 ; (async () => {
 
 	const canisters = await getCanisters(network)
