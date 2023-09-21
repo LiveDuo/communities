@@ -36,20 +36,20 @@ module.exports = {
             if (!canisterId) { console.log('Child canister not deployed\n'); process.exit(0) }
             updateEnvVar(config, 'REACT_APP_CHILD_CANISTER_ID', canisterId)
         }
-
+        
         // set parent
         if (process.env.CRA_PROJECT === 'parent') {
             const canisterId = process.env.CRA_MODE === 'production' ? canisterIds.parent?.ic : canisterIds.parent?.local
             if (!canisterId) { console.log('Parent canister not deployed\n'); process.exit(0) }
             updateEnvVar(config, 'REACT_APP_PARENT_CANISTER_ID', canisterId)
         }
-
+        
         // set ledger
-        const ledgerCanisterId = process.env.CRA_MODE === 'development' ? canisterIds.ledger?.local : LEDGER_CANISTER_ID
+        const ledgerCanisterId = process.env.CRA_MODE === 'production' ?  LEDGER_CANISTER_ID : canisterIds.ledger?.local 
         if (ledgerCanisterId) updateEnvVar(config, 'REACT_APP_LEDGER_CANISTER_ID', ledgerCanisterId)
-
+        
         // set cmc
-        const cmcCanisterId = process.env.CRA_MODE === 'development' ? canisterIds.cmc?.local : CMC_CANISTER_ID
+        const cmcCanisterId = process.env.CRA_MODE === 'production' ?  CMC_CANISTER_ID : canisterIds.cmc?.local
         if (cmcCanisterId) updateEnvVar(config, 'REACT_APP_CMC_CANISTER_ID', cmcCanisterId)
 
         return config

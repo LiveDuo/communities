@@ -22,12 +22,12 @@ const transferIcpToAccount = async (accountId) => {
 }
 exports.transferIcpToAccount = transferIcpToAccount
 
-const hostType = (h) => h.endsWith('ic0.app') ? 'ic' : 'local'
-exports.hostType = hostType
+const getHost = (network) => network === 'ic' ? 'https://ic0.app' : 'http://127.0.0.1:8000'
+exports.getHost = getHost
 
-const getCanisters = async (host = '') => {
+const getCanisters = async (network) => {
     try {
-        if (host.endsWith('ic0.app')) return require(path.resolve('canister_ids.json'))
+        if (network === 'ic') return require(path.resolve('canister_ids.json'))
 		else return require(path.resolve('.dfx', 'local', 'canister_ids.json'))
     } catch (error) {
         throw new Error('Canister not found') // should deploy first
