@@ -32,7 +32,7 @@ describe('Testing with done', () => {
 		identityIc =Ed25519KeyIdentity.generate()
 		
 		// create child actor
-		canisters = await getCanisters()
+		canisters = await getCanisters('local')
 
 		const agentEvm = getAgent('http://127.0.0.1:8000', identityEvm)
 		actorBackendEvm = Actor.createActor(childFactory, { agent: agentEvm, canisterId: canisters.child.local })

@@ -18,7 +18,7 @@ describe.only('Testing with done', () => {
 		await checkDfxRunning()
 
     	// create parent actor
-		canisterIds = await getCanisters()
+		canisterIds = await getCanisters('local')
 		const identity = await getIdentity("default")
 		principal = identity.getPrincipal().toString()
 		agent = getAgent('http://127.0.0.1:8000', identity)
