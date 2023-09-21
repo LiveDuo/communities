@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.js": "/static/js/bundle.js",
+    "static/media/plug.png": "/static/media/plug.9facca630845ade33efa.png",
+    "static/media/bitfinity.png": "/static/media/bitfinity.edf734fbf685c19caad0.png",
+    "static/media/metamask.svg": "/static/media/metamask.d4924798e9ead2f8db067473e48cc79a.svg",
+    "static/media/dfinity.svg": "/static/media/dfinity.c8606e3075f48161b8e756a97e756a20.svg",
+    "static/media/solana.svg": "/static/media/solana.b612f1402147c92338bed5af1879b175.svg",
+    "static/media/phantom.svg": "/static/media/phantom.c09037522c6184a72f109b6d2856554e.svg",
+    "static/media/ethereum.svg": "/static/media/ethereum.aa4f261cc5b464da83e3568e83fb7906.svg",
+    "index.html": "/index.html"
+  },
+  "entrypoints": [
+    "static/js/bundle.js"
+  ]
+}
