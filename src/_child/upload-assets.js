@@ -10,8 +10,9 @@ const { assetFactory } = require('../_meta/shared/idl')
 const argv = minimist(process.argv.slice(2))
 const network = argv.network ?? 'local'
 const id = argv.identity ?? 'default'
-
-// node src/_child/upload-assets.js --network https://ic0.app --identity with-wallet
+const path = argv.path ?? './build/child'
+const version = argv.version ?? '0.0.1'
+// node src/_child/upload-assets.js --network ic --identity with-wallet
 ; (async () => {
 
 	const canisters = await getCanisters(network)
@@ -20,9 +21,9 @@ const id = argv.identity ?? 'default'
 	const actor = Actor.createActor(assetFactory, { agent, canisterId: canisters.child[network] })
 
 	// upload assets
-	const assetsChild = await getFiles('./build/child')
+	const assetsChild = await getFiles(`${path}/${version}`)
 	for (let asset of assetsChild) {
-		const assetBuf = await fs.readFile(`build/child/${asset}`)
+		const assetBuf = await fs.readFile(`${path}/${version}/${asset}`)
 		await uploadFile(actor, `/${asset}`, assetBuf)
 	}
 
