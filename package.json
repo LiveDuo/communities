@@ -16,7 +16,7 @@
     "upload:parent": "node ./src/_parent/upload-assets.js",
     "upload:parent-minimal": "node ./src/_parent/upload-minimal.js",
     "upload:upgrade": "node ./src/_parent/upload-upgrade.js",
-    "build": "npm run dev:parent",
+    "build": "npm run build:parent",
     "build:wasm": "./build/build-child.sh",
     "build:child": "CRA_PROJECT=child react-app-rewired build",
     "build:parent": "CRA_PROJECT=parent react-app-rewired build",
