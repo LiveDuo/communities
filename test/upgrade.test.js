@@ -1,13 +1,14 @@
 const { Actor } = require('@dfinity/agent')
 const { spawnSync } = require('node:child_process')
 
-const { checkDfxRunning, setupTests, getAgent, getCanisters, transferIcpToAccount } = require('../src/_meta/shared/utils')
+const { checkDfxRunning, setupTests, getAgent, getCanisters, transferIcpToAccount, sleep } = require('../src/_meta/shared/utils')
 const { getAccountId }= require('../src/_meta/shared/account')
 const { getIdentity } = require('../src/_meta/shared/identity')
 const { parentFactory, childFactory } = require('../src/_meta/shared/idl')
 
-setupTests()
+const UPGRADE_DELAY = 2000 // 2 sec
 
+setupTests()
 describe.only('Testing with done', () => {
 
 	let actorParent, agent, principal, canisterIds
@@ -55,10 +56,16 @@ describe.only('Testing with done', () => {
 		const resNextUpgrades = await actorChild.get_next_upgrades()
 		const [ upgrade ] = resNextUpgrades.Ok
 		expect(upgrade).toBeDefined()
-		
-		// upgrade child (0.0.2)
+
 		await actorChild.upgrade_canister(upgrade.version, upgrade.track)
+
+		await sleep(UPGRADE_DELAY)
 		
+		// check metadata
+		const metadata = await actorChild.get_metadata()
+		expect(metadata.Ok.version).toBe(upgrade.version)
+		expect(metadata.Ok.track).toBe(upgrade.track)
+
 		// upload version (0.0.2b)
 		const tractUpgrade1 = 'default'
 		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2b','--description', 'description for 0.0.2b', '--upgradeFromVersion', '0.0.2', '--upgradeFromTrack', 'default', '--track', tractUpgrade1] ,{cwd: process.cwd(), stdio: 'inherit'})
@@ -70,6 +77,13 @@ describe.only('Testing with done', () => {
 
 		// upgrade child (0.0.2b)
 		await actorChild.upgrade_canister(upgrade1.version, upgrade1.track)
+
+		await sleep(UPGRADE_DELAY)
+
+		// check metadata
+		const metadata1 = await actorChild.get_metadata()
+		expect(metadata1.Ok.version).toBe(upgrade.version)
+		expect(metadata1.Ok.track).toBe(upgrade.track)
 
 		// check canister
 		const posts = await actorChild.get_posts()
@@ -102,6 +116,13 @@ describe.only('Testing with done', () => {
 		
 		// upgrade child (0.0.2-beta)
 		await actorChild.upgrade_canister(upgrade.version, upgrade.track)
+
+		await sleep(UPGRADE_DELAY)
+
+		// check metadata
+		const metadata = await actorChild.get_metadata()
+		expect(metadata.Ok.version).toBe(upgrade.version)
+		expect(metadata.Ok.track).toBe(upgrade.track)
 		
 		// check canister
 		const posts = await actorChild.get_posts()
