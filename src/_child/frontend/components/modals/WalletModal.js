@@ -8,9 +8,8 @@ import { ReactComponent as EthereumLogo } from '../../logos/ethereum.svg'
 import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
 import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 
-
 import { ReactComponent as MetamaskLogo } from '../../logos/metamask.svg'
-import PhantomLogo from '../../logos/phantom.svg'
+import { ReactComponent as PhantomLogo } from '../../logos/phantom.svg'
 import PlugLogo from '../../logos/plug.png'
 import BitfinityLogo from '../../logos/bitfinity.png'
 
@@ -47,7 +46,7 @@ const WalletModal = () => {
                 </Box>}
               {selectedNetwork === 'svm' &&  <Box>
                 <Text mb="12px">Get a Solana wallet</Text>
-                <Link ml="8px" href="https://phantom.app/download" isExternal style={{textDecoration: 'none'}}><Button leftIcon={<Image src={PhantomLogo} width={5}/>}>Phantom</Button></Link>
+                <Link ml="8px" href="https://phantom.app/download" isExternal style={{textDecoration: 'none'}}><Button leftIcon={<PhantomLogo width="24px"/>}>Phantom</Button></Link>
               </Box>}
               {selectedNetwork === 'ic' && 
                 <Box mb="12px">
@@ -75,7 +74,7 @@ const WalletModal = () => {
                   </Box>
                   <Box>
                     <Text mb="12px">Get a Solana wallet</Text>
-                    <Link ml="8px" href="https://phantom.app/download" isExternal style={{textDecoration: 'none'}}><Button leftIcon={<Image src={PhantomLogo} width={5}/>}>Phantom</Button></Link>
+                    <Link ml="8px" href="https://phantom.app/download" isExternal style={{textDecoration: 'none'}}><Button leftIcon={<PhantomLogo width="24px"/>}>Phantom</Button></Link>
                   </Box>
                   <Box>
                     <Text mb="12px">Get a Internet Computer wallet</Text>

@@ -51,8 +51,8 @@ const UpgradeModal = () => {
 
 	const upgradeCanister = useCallback(async (version, track) => {
 		const UpgradeCanister = await childActor.upgrade_canister(version, track)
-		toast({ description: !UpgradeCanister.Err ? 'Canister upgraded' : UpgradeCanister.Err  , status: !UpgradeCanister.Err ? 'info' : 'error' })
 		onUpgradeModalClose()
+		toast({ description: !UpgradeCanister.Err ? 'Canister upgraded' : UpgradeCanister.Err  , status: !UpgradeCanister.Err ? 'info' : 'error' })
 	}, [childActor, onUpgradeModalClose, toast])
 	
 	useEffect(() => {
