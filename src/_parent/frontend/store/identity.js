@@ -49,7 +49,7 @@ const IdentityProvider = ({ children }) => {
 	}, [])
 
 
-	const isWalletDetected = useCallback((type) => !!window.ic[type], [])
+	const isWalletDetected = useCallback((type) => !!window?.ic?.hasOwnProperty(type), [])
 	
 	const createActor = (options) => {
 		options.host = host
