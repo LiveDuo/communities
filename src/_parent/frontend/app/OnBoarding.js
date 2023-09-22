@@ -8,7 +8,7 @@ import { LedgerContext } from '../store/ledger'
 import { isLocal } from '../utils/url'
 import { ParentContext } from '../store/parent'
 
-const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm'
+const chromeStoreUrl = 'https://chrome.google.com/webstore/detail/bitfinity-wallet/jnldfbidonfeldmalbflbmlebbipcnle'
 const transakUrl = 'https://global.transak.com/'
 
 // https://www.blobmaker.app/
