@@ -1,8 +1,9 @@
 use std::ops::Sub;
-use candid::{CandidType, Deserialize, Principal, Nat};
-use crate::utils::{get_asset, get_content_type};
+use candid::{CandidType, Deserialize, Principal};
+use crate::utils::{get_asset, get_content_type, format_number};
 use crate::state::STATE;
 use ic_cdk::api::management_canister::main::*;
+use ic_cdk::api::canister_balance;
 use serde_bytes::ByteBuf;
 use ic_certified_assets::rc_bytes::RcBytes;
 use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
@@ -37,16 +38,13 @@ pub async fn authorize(caller: &Principal) -> Result<(), String> {
 }
 
 pub async fn check_canister_cycles_balance() -> Result<(), String> {
-  let args = CanisterIdRecord {
-    canister_id: ic_cdk::id()
-  };
-  let (canister_status,) = ic_cdk::call::<_, (CanisterStatusResponse,)>(Principal::management_canister(), "canister_status", (args,)).await.unwrap();
-  let upgrade_cycles = Nat::from(UPGRADE_THRESHOLD_CYCLES);
 
-  if canister_status.cycles.to_owned().ge(&upgrade_cycles) {
+  let canister_balance = canister_balance();
+
+  if canister_balance.ge(&UPGRADE_THRESHOLD_CYCLES) {
     Ok(())
   } else  {
-    Err(format!("Not enough cycles to upgrade. Top up the canister with {} additional cycles.", upgrade_cycles.sub(canister_status.cycles)))
+    Err(format!("Not enough cycles to upgrade. Top up the canister with {} additional cycles.", format_number(UPGRADE_THRESHOLD_CYCLES.sub(canister_balance))))
   }
 }
 

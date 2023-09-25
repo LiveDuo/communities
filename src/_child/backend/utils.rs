@@ -3,6 +3,7 @@ use ic_certified_assets::types::{GetArg, GetChunkArg};
 use num_traits::ToPrimitive;
 use std::collections::hash_map;
 use std::hash::{Hash, Hasher};
+use std::ops::Div;
 
 pub fn get_asset(key: String) -> Vec<u8> {
     // get asset length
@@ -48,4 +49,17 @@ pub fn get_content_type(name: &str) -> String {
 	else if name.ends_with(".txt") { return "text/plain".to_string() }
 	else if name.ends_with(".md") { return "text/markdown".to_string() }
 	else { return "application/octet-stream".to_string() }
+}
+
+
+pub fn format_number(num: u64) -> String {
+    let convert_num = num as f64;
+    let si = vec![(1.0, ""), (1_000.0, "K"), (1_000_000.0, "M"),(1_000_000_000.0, "B"), (1_000_000_000_000.0,"T")];
+    let mut index = si.len() -1;
+    while convert_num <= si[index].0 {
+        index-=1;
+    }
+    let num1 = convert_num.div(si[index].0);
+    let digits = if num1 > 0.0 {3 - (num1.log10() as usize + 1)} else {3};
+    format!("{:.*}{}", digits, num1, si[index].1)
 }
