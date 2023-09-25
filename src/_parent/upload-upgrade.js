@@ -15,13 +15,13 @@ const version = argv.version ?? '0.0.1'
 const upgradeFromVersion = argv.upgradeFromVersion ?? null
 const upgradeFromTrack = argv.upgradeFromTrack ?? null
 const track = argv.track ?? 'default'
-const description = argv.description ?? 'upgrade to 0.0.2'
+const description = argv.description ?? 'upgrade to 0.0.1'
 const path = argv.path ?? './build/child'
 const filter = argv.filter ?? null
 
 
 // node src/_parent/upload-upgrade.js --network ic --upgradeFromTrack default --identity with-wallet
-// npm run upload:upgrade --  --path ./build/child-test --filter child.wasm
+// npm run upload:upgrade -- --path ./build/child-test --filter child.wasm
 ; (async () => {
 
 	const canisters = await getCanisters(network)
