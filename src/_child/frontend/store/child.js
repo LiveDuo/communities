@@ -69,6 +69,7 @@ const idlFactory = ({ IDL }) => {
 		upgrade_from: IDL.Opt(UpgradeFrom),
 		timestamp: IDL.Nat64,
 		assets: IDL.Vec(IDL.Text),
+		description: IDL.Text,
 		track: IDL.Text
 	})
 

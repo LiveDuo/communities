@@ -51,8 +51,7 @@ const UpgradeModal = () => {
 
 	const upgradeCanister = useCallback(async (version, track) => {
 		const UpgradeCanister = await childActor.upgrade_canister(version, track)
-		console.log(!UpgradeCanister?.Err)
-		toast({ description: !UpgradeCanister?.Err ? 'Canister upgraded' : UpgradeCanister.Err  , status: !UpgradeCanister?.Err ? 'info' : 'error' })
+		toast({ description: !UpgradeCanister?.Err ? 'Upgrade started. Refresh the page after a minute to see the changes.' : UpgradeCanister.Err  , status: !UpgradeCanister?.Err ? 'info' : 'error' })
 		onUpgradeModalClose()
 	}, [childActor, onUpgradeModalClose, toast])
 	
@@ -62,7 +61,7 @@ const UpgradeModal = () => {
 			getCurrentVersion()
 		}
 	},[childActor, checkForUpgrade, getCurrentVersion, isUpgradeModalOpen])
-
+	console.log(upgrades)
 	return (
 		<Modal isOpen={isUpgradeModalOpen} onClose={onUpgradeModalClose} isCentered>
 			<ModalOverlay />
