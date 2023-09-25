@@ -1,5 +1,4 @@
 use std::ops::Sub;
-use std::str::FromStr;
 use candid::{CandidType, Deserialize, Principal, Nat};
 use crate::utils::{get_asset, get_content_type};
 use crate::state::STATE;
@@ -8,7 +7,7 @@ use serde_bytes::ByteBuf;
 use ic_certified_assets::rc_bytes::RcBytes;
 use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
 
-const UPGRADE_THRESHOLD_CYCLES: &str = "100_000_000_000"; // 100b cycles
+const UPGRADE_THRESHOLD_CYCLES: u64 = 100_000_000_000; // 100b cycles
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UpgradeFrom {
@@ -42,13 +41,12 @@ pub async fn check_canister_cycles_balance() -> Result<(), String> {
     canister_id: ic_cdk::id()
   };
   let (canister_status,) = ic_cdk::call::<_, (CanisterStatusResponse,)>(Principal::management_canister(), "canister_status", (args,)).await.unwrap();
-
-  let upgrade_cycles = Nat::from_str(UPGRADE_THRESHOLD_CYCLES).unwrap();
+  let upgrade_cycles = Nat::from(UPGRADE_THRESHOLD_CYCLES);
 
   if canister_status.cycles.to_owned().ge(&upgrade_cycles) {
     Ok(())
   } else  {
-    Err(format!("You have to top up the canister with {}", upgrade_cycles.sub(canister_status.cycles)))
+    Err(format!("Not enough cycles to upgrade. Top up the canister with {} additional cycles.", upgrade_cycles.sub(canister_status.cycles)))
   }
 }
 
