@@ -83,7 +83,7 @@ const LedgerProvider = ({ children }) => {
 		}
 	}, [getUserBalance, ledgerActor])
 
-	const value = { userBalance, getTransferIcpTx, loading, setLoading }
+	const value = { userBalance, setUserBalance, getTransferIcpTx, loading, setLoading }
 
 	return <LedgerContext.Provider value={value}>{children}</LedgerContext.Provider>
 }

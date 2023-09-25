@@ -32,7 +32,7 @@ const ParentProvider = ({ children }) => {
 	const toast = useToast()
 
 	const { walletConnected, walletDetected, createActor, userPrincipal, batchTransactions, noWalletDisclosure } = useContext(IdentityContext)
-	const { getTransferIcpTx } = useContext(LedgerContext)
+	const { getTransferIcpTx, setUserBalance } = useContext(LedgerContext)
 	const { getCyclesRate } = useContext(CmcContext)
 
 	const [parentActor, setParentActor] = useState(null)
@@ -99,9 +99,9 @@ const ParentProvider = ({ children }) => {
 			createChildCost = CREATE_CHILD_CYCLES * micpXdrRate / ONE_TRILLION
 		}
 
-		const interval = setInterval(() => getUserCommunities(), !isLocal ? 5000 : 1000)
+		const interval = setInterval(() => getUserCommunities(), !isLocal ? 2000 : 1000)
 
-		const onTransfer = () => toast({ description: `Transfer success` })
+		const onTransfer = () => { setUserBalance(userBalance => userBalance - Number(createChildCost)); toast({ description: `Transfer success` })}
 		const onCreate = (res) => toast({ description: res.Err ? res.Err : `Created canister`,  status: res.Err ? 'error' : 'info'})
 
 		const accountId = getAccountId(parentCanisterId, userPrincipal)
