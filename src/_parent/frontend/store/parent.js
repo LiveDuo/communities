@@ -99,7 +99,7 @@ const ParentProvider = ({ children }) => {
 			createChildCost = CREATE_CHILD_CYCLES * micpXdrRate / ONE_TRILLION
 		}
 
-		const interval = setInterval(() => getUserCommunities(), !isLocal ? 2000 : 1000)
+		const interval = setInterval(() => getUserCommunities(), !isLocal ? 5000 : 1000)
 
 		const onTransfer = () => { setUserBalance(userBalance => userBalance - Number(createChildCost)); toast({ description: `Transfer success` })}
 		const onCreate = (res) => toast({ description: res.Err ? res.Err : `Created canister`,  status: res.Err ? 'error' : 'info'})
