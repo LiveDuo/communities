@@ -14,7 +14,7 @@
     "test:upgrade": "jest -i test/upgrade.test.js",
     "upload:child": "node ./src/_child/upload-assets.js",
     "upload:parent": "node ./src/_parent/upload-assets.js",
-    "upload:parent-minimal": "node ./src/_parent/upload-minimal.js",
+    "upload:parent-minimal": "node ./src/_parent/upload-upgrade.js --path ./build/child-test --filter child.wasm",
     "upload:upgrade": "node ./src/_parent/upload-upgrade.js",
     "build": "npm run build:parent",
     "build:wasm": "./build/build-child.sh",

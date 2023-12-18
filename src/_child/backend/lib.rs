@@ -10,7 +10,6 @@ use ic_cdk::api::management_canister::main::CanisterStatusResponse;
 use ic_cdk::api::management_canister::provisional::CanisterIdRecord;
 use ic_cdk_macros::{update, query, init};
 
-use std::borrow::Borrow;
 
 use crate::state::{*, STATE};
 use upgrade::{update_metadata, check_canister_cycles_balance, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
@@ -243,7 +242,7 @@ fn get_posts() -> Vec<PostSummary> {
                 let replies_count = if replies_opt == None {
                     0
                 } else {
-                    replies_opt.borrow().unwrap().len()
+                    replies_opt.unwrap().len()
                 };
 
                 let last_activity = if replies_opt == None {
@@ -366,7 +365,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                 let replies_count = if replies_opt == None {
                     0
                 } else {
-                    replies_opt.borrow().unwrap().len()
+                    replies_opt.unwrap().len()
                 };
 
                 let last_activity = if replies_opt == None {

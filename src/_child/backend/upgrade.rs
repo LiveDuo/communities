@@ -81,7 +81,6 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
 
   // store metadata
   let metadata = format!("{}-{}", track, version);
-  ic_cdk::println!("{}", metadata);
   let content = ByteBuf::from(metadata.as_bytes().to_vec());
   let key = format!("/temp/metadata.txt");
   let store_args = StoreArg {
