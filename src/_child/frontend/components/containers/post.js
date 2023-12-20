@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState, useCallback } from 'react'
 import { Spinner, Box, Heading } from '@chakra-ui/react'
-import { Text, Flex, Button, Textarea, IconButton, Divider } from '@chakra-ui/react'
+import { Text, Flex, Button, IconButton, Divider } from '@chakra-ui/react'
+import { Grid, GridItem } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
@@ -80,19 +81,31 @@ const PostContainer = () => {
           <Divider mb="10px"/>
           <Box mb="40px">
             {post.replies.length > 0 ? post.replies.map((r, i) => 
-              <Flex key={i} alignItems="center" borderBottom="1px solid #00000010" padding="20px">
-                <Box w="100px">
-                  <Jazzicon diameter={40} seed={getSeedFromAuthentication(r?.authentication)} />
-                </Box>
-                <Box>
-
-                <Text fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
-                <Box className='markdown-body' textAlign="start">
-                  <Markdown>{r.text}</Markdown>
-                </Box>
-                </Box>
-                <Text ml="auto">{timeSince(r?.timestamp)}</Text>
-              </Flex>
+              <Grid
+                templateAreas={`"Jazzicon address" "Jazzicon content"`}
+                gridTemplateRows={'30px 1fr'}
+                gridTemplateColumns={'50px 1fr'}
+                gap='1'
+                borderBottom="1px solid #00000010" 
+                padding="20px"
+              >
+                <GridItem area={'Jazzicon'}>
+                  <Flex alignItems={'start'} justifyContent={'center'}>
+                    <Jazzicon diameter={40} seed={getSeedFromAuthentication(r?.authentication)} />
+                  </Flex>
+                </GridItem>
+                <GridItem area={'address'}>
+                  <Flex>
+                    <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
+                    <Text ml="auto">{timeSince(r?.timestamp)}</Text>
+                  </Flex>
+                </GridItem>
+                <GridItem area={'content'}>
+                  <Box textAlign={'start'} className="markdown-body">
+                    <Markdown>{r.text}</Markdown>
+                  </Box>
+                </GridItem>
+              </Grid>
             ) : <Text textAlign="center">No replies yet</Text>}
           </Box>
           <ReplyEditor reply={replyText} setReply={setReplyText} isPreview={isPreview}/>
