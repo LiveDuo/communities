@@ -18,7 +18,7 @@ const PostModal = ({isOpen, onClose, createPost}) => {
 				<PostEditor description={description} setDescription={setDescription} isPreview={isPreview}/>
 				</ModalBody>
 				<ModalFooter>
-					<Button variant='ghost' mr="auto" onClick={() => setIsPreview((p) => !p)} >{!isPreview ? 'Priview' : 'Markdown'}</Button>
+					<Button variant='ghost' mr="auto" onClick={() => setIsPreview((p) => !p)} >{!isPreview ? 'Preview' : 'Markdown'}</Button>
 					<Button variant='ghost' mr="12px" onClick={onClose}>Close</Button>
 					<Button variant="solid" onClick={() => {createPost(title, description); onClose()}}>Create</Button>
 				</ModalFooter>
