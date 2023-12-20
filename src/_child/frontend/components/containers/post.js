@@ -81,31 +81,16 @@ const PostContainer = () => {
           <Divider mb="10px"/>
           <Box mb="40px">
             {post.replies.length > 0 ? post.replies.map((r, i) => 
-              <Grid
-                templateAreas={`"Jazzicon address" "Jazzicon content"`}
-                gridTemplateRows={'30px 1fr'}
-                gridTemplateColumns={'50px 1fr'}
-                gap='1'
-                borderBottom="1px solid #00000010" 
-                padding="20px"
-              >
-                <GridItem area={'Jazzicon'}>
-                  <Flex alignItems={'start'} justifyContent={'center'}>
-                    <Jazzicon diameter={40} seed={getSeedFromAuthentication(r?.authentication)} />
-                  </Flex>
-                </GridItem>
-                <GridItem area={'address'}>
-                  <Flex>
-                    <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
-                    <Text ml="auto">{timeSince(r?.timestamp)}</Text>
-                  </Flex>
-                </GridItem>
-                <GridItem area={'content'}>
-                  <Box textAlign={'start'} className="markdown-body">
-                    <Markdown>{r.text}</Markdown>
-                  </Box>
-                </GridItem>
-              </Grid>
+              <Flex flexDirection={'column'}  borderBottom="1px solid #00000010" padding="20px">
+                <Flex flexDirection={'row'} alignItems={'center'} mb="6">
+                  <Jazzicon diameter={20} seed={getSeedFromAuthentication(r?.authentication)} />
+                  <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
+                  <Text ml="auto">{timeSince(r?.timestamp)}</Text>
+                </Flex>
+                <Box textAlign={'start'} className="markdown-body">
+                  <Markdown>{r.text}</Markdown>
+                </Box>
+              </Flex>
             ) : <Text textAlign="center">No replies yet</Text>}
           </Box>
           <ReplyEditor reply={replyText} setReply={setReplyText} isPreview={isPreview}/>
