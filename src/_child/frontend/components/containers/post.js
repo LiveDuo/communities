@@ -13,6 +13,8 @@ import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
 
 import { useNavigate, useParams } from 'react-router-dom'
+import Markdown from 'react-markdown'
+import ReplyEditor from '../Editor/ReplyEditor'
 
 
 const PostContainer = () => {
@@ -20,6 +22,7 @@ const PostContainer = () => {
   const { getPost, createReply, childActor } = useContext(ChildContext)
   
 	const [replyText, setReplyText] = useState('')
+	const [isPreview, setIsPreview] = useState(false)
 	const [post, setPost] = useState()
 
   const navigate = useNavigate()
@@ -70,7 +73,9 @@ const PostContainer = () => {
             <Text ml="20px">{getAddress(post.authentication)}</Text>
           </Flex>
           <Box mb="40px" padding="20px 60px">
-            <Text textAlign="start">{post.description}</Text>
+          <Box textAlign="start" className="markdown-body">
+            <Markdown>{post.description}</Markdown>
+          </Box>
           </Box>
           <Divider mb="10px"/>
           <Box mb="40px">
@@ -82,16 +87,19 @@ const PostContainer = () => {
                 <Box>
 
                 <Text fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
-                <Text textAlign="start">{r.text}</Text>
+                <Box className='markdown-body' textAlign="start">
+                  <Markdown>{r.text}</Markdown>
+                </Box>
                 </Box>
                 <Text ml="auto">{timeSince(r?.timestamp)}</Text>
               </Flex>
             ) : <Text textAlign="center">No replies yet</Text>}
           </Box>
-          <Textarea mb="20px" height="140px" placeholder="Reply to the post" value={replyText} onChange={(e) => setReplyText(e.target.value)}/>
-          <Box textAlign="end">
+          <ReplyEditor reply={replyText} setReply={setReplyText} isPreview={isPreview}/>
+          <Flex textAlign="end">
+            <Button mr="auto" variant="ghost" onClick={() => setIsPreview((p)=>!p)}>{!isPreview ? 'Preview': 'Markdown'}</Button>
             <Button mr="20px" onClick={() => replyToPost(post)}>Submit</Button>
-          </Box>
+          </Flex>
         </Box> :
         <Spinner/>}
     </Box>

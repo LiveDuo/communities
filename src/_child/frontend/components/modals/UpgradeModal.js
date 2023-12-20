@@ -61,7 +61,7 @@ const UpgradeModal = () => {
 			getCurrentVersion()
 		}
 	},[childActor, checkForUpgrade, getCurrentVersion, isUpgradeModalOpen])
-	console.log(upgrades)
+
 	return (
 		<Modal isOpen={isUpgradeModalOpen} onClose={onUpgradeModalClose} isCentered>
 			<ModalOverlay />

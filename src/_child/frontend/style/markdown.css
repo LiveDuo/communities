@@ -1,0 +1,7 @@
+.markdown-body {
+    color: black !important;
+    background-color: #ffffff !important;
+  }
+.no-underline:hover {
+    text-decoration: none;
+}
