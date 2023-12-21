@@ -1,7 +1,6 @@
 import { Box, Textarea, Text } from '@chakra-ui/react'
 import Markdown from 'react-markdown'
-import 'github-markdown-css'
-import '../../style/markdown.css'
+import 'github-markdown-css/github-markdown-light.css'
 
 
 const ReplyEditor = ({reply, setReply, isPreview}) => {
