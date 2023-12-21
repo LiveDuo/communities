@@ -25,7 +25,6 @@
     "start:parent": "serve -s build/parent"
   },
   "dependencies": {
-    "@chakra-ui/icons": "^2.0.4",
     "@chakra-ui/react": "^2.2.4",
     "@dfinity/agent": "^0.11.3",
     "@dfinity/candid": "^0.11.3",
@@ -33,6 +32,9 @@
     "@dfinity/principal": "^0.11.3",
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
+    "@fortawesome/fontawesome-svg-core": "^6.5.1",
+    "@fortawesome/free-solid-svg-icons": "^6.5.1",
+    "@fortawesome/react-fontawesome": "^0.2.0",
     "@solana/web3.js": "^1.75.0",
     "bs58": "^5.0.0",
     "buffer": "^6.0.3",

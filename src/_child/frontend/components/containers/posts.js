@@ -7,7 +7,8 @@ import PostModal from '../modals/PostModal'
 import { timeSinceShort } from '../../utils/time'
 import { getAddress, addressShort, getExplorerUrl, getSeedFromAuthentication } from '../../utils/address'
 
-import { EditIcon } from '@chakra-ui/icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
 
 import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
@@ -40,7 +41,7 @@ const PostsContainer = ({ posts: _posts }) => {
 
   return  <Box mt="32px" textAlign="center" m="auto">
 
-      <Button mt="28px" leftIcon={<EditIcon />} mb="28px" w="200px" onClick={onCreatePost}>New Post</Button>
+      <Button mt="28px" leftIcon={<FontAwesomeIcon icon={faPenToSquare} />} mb="28px" w="200px" onClick={onCreatePost}>New Post</Button>
       <PostModal isOpen={isPostOpen} onClose={onPostClose} createPost={createPost}/>
       
       {posts?.length > 0 ?

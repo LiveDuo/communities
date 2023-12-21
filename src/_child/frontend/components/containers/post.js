@@ -1,14 +1,13 @@
 import { useContext, useEffect, useState, useCallback } from 'react'
 import { Spinner, Box, Heading } from '@chakra-ui/react'
 import { Text, Flex, Button, IconButton, Divider } from '@chakra-ui/react'
-import { Grid, GridItem } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
 import { addressShort, getAddress, getSeedFromAuthentication } from '../../utils/address'
 
-
-import { ArrowBackIcon } from '@chakra-ui/icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeft} from '@fortawesome/free-solid-svg-icons'
 
 import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
@@ -65,7 +64,7 @@ const PostContainer = () => {
       {post ? 
         <Box mt="20px" padding="40px">
           <Flex mt="40px" mb="20px" justifyContent="center" alignItems="center">
-            <IconButton icon={<ArrowBackIcon />} onClick={() =>goToPosts()}/>
+            <IconButton icon={<FontAwesomeIcon icon={faArrowLeft} />} onClick={() =>goToPosts()}/>
             <Heading ml="40px" mr="auto" display="inline-block">{post.title}</Heading>
             <Text>{timeSince(post.timestamp)}</Text>
           </Flex>
