@@ -1,8 +1,8 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { Box, ButtonGroup, IconButton } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeading, faList, faQuoteLeft,faListOl } from '@fortawesome/free-solid-svg-icons'
-import { REGEX_NUMBER_LIST } from '../../utils/editor'
+import { REGEX_NUMBER_LIST, REGEX_BULLET_LIST } from '../../utils/editor'
 
 
 const getSymbol = (type) => {
@@ -17,7 +17,7 @@ const getLineWithSymbol = (lines, type) => {
     let line = `${symbol} ${lines[lines.length - 1]}`
     if((type === 'bullet-list' || type === 'number-list') && lines.length > 1) {
         const lineBefore = lines[lines.length - 2]
-        if(lineBefore.startsWith('- ') || REGEX_NUMBER_LIST.test(lineBefore)) {
+        if(REGEX_BULLET_LIST.test(lineBefore) || REGEX_NUMBER_LIST.test(lineBefore)) {
             line = `\n${line}`
         } 
     }
