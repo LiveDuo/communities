@@ -1,5 +1,5 @@
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Box } from '@chakra-ui/react'
-import { Button, Input } from '@chakra-ui/react'
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from '@chakra-ui/react'
+import { Button, Input, Text, Box } from '@chakra-ui/react'
 import Editor from '../Editor/Editor'
 import ToolBar from '../Editor/ToolBar'
 import Markdown from 'react-markdown'
@@ -16,14 +16,17 @@ const PostModal = ({isOpen, onClose, createPost}) => {
 			<ModalOverlay />
 			<ModalContent minW="600px">
 				<ModalHeader>New Post</ModalHeader>
-				<ModalCloseButton />
+				<ModalCloseButton/>
 				<ModalBody>
 				<Input placeholder="Enter a title" mb="12px" onChange={(e) => setTitle(e.target.value)}/>
 				{isPreview ? 
-					<Box height="200px" className='markdown-body'><Markdown>{description}</Markdown></Box> :
+					<Box minH="200px" className='markdown-body'>
+						{description?.length > 0  ? <Markdown>{description}</Markdown> : <Text>Nothing to preview</Text>}
+					</Box> 
+					:
 					 <Box>
 						<ToolBar setContent={setDescription} textAreaRef={textAreaRef}/>
-					 	<Editor content={description} setContent={setDescription} textAreaRef={textAreaRef} /> 
+					 	<Editor content={description} setContent={setDescription} textAreaRef={textAreaRef} placeholder={"More details about the post"} style={{minHeight: '200px'}}/> 
 					 </Box>
 				}
 				</ModalBody>

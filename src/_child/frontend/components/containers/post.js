@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useCallback } from 'react'
+import { useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { Spinner, Box, Heading } from '@chakra-ui/react'
 import { Text, Flex, Button, IconButton, Divider } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
@@ -14,12 +14,15 @@ import { IdentityContext } from '../../store/identity'
 
 import { useNavigate, useParams } from 'react-router-dom'
 import Markdown from 'react-markdown'
-import ReplyEditor from '../Editor/ReplyEditor'
+import Editor from '../Editor/Editor'
+import ToolBar from '../Editor/ToolBar'
 
 
 const PostContainer = () => {
   const { account, principal, setSelectedNetwork, onWalletModalOpen } = useContext(IdentityContext)
   const { getPost, createReply, childActor } = useContext(ChildContext)
+
+  const textAreaRef = useRef()
   
 	const [replyText, setReplyText] = useState('')
 	const [isPreview, setIsPreview] = useState(false)
@@ -92,8 +95,17 @@ const PostContainer = () => {
               </Flex>
             ) : <Text textAlign="center">No replies yet</Text>}
           </Box>
-          <ReplyEditor reply={replyText} setReply={setReplyText} isPreview={isPreview}/>
-          <Flex textAlign="end">
+          {isPreview ? 
+					  <Box minH="200px" mb="10px" className='markdown-body' textAlign={'start'}>
+              {replyText.length > 0 ? <Markdown>{replyText}</Markdown>: <Text>Nothing to preview</Text>}
+            </Box> 
+            :
+            <Box mb="10px" >
+              <ToolBar setContent={setReplyText} textAreaRef={textAreaRef} style={{display: 'flex', flexDirection: 'row'}}/>
+              <Editor content={replyText} setContent={setReplyText} textAreaRef={textAreaRef} placeholder={"Reply to the post"} style={{minHeight: '200px'}} /> 
+            </Box>
+				  }
+          <Flex textAlign="end" >
             <Button mr="auto" variant="ghost" onClick={() => setIsPreview((p)=>!p)}>{!isPreview ? 'Preview': 'Markdown'}</Button>
             <Button mr="20px" onClick={() => replyToPost(post)}>Submit</Button>
           </Flex>

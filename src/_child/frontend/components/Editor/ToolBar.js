@@ -23,7 +23,7 @@ const getLineWithSymbol = (lines, type) => {
     }
     return line
 }
-const ToolBar = ({ textAreaRef, setContent }) => {
+const ToolBar = ({ textAreaRef, setContent, style }) => {
     const addToBeginningOfLine = useCallback((type) => {
         const selectionStart = textAreaRef.current.selectionStart
         const content = textAreaRef.current.value
@@ -36,7 +36,7 @@ const ToolBar = ({ textAreaRef, setContent }) => {
 
 
     return(
-        <Box bg={'#e9edf5'} mb="2" >
+        <Box bg={'#e9edf5'} mb="2" style={{...style}}>
             <ButtonGroup variant='outline' spacing={'0'} bg={'#e9edf5'}>
                 <IconButton onClick={() => addToBeginningOfLine('heading')} variant={'ghost'} size={'md'} icon={<FontAwesomeIcon icon={faHeading}/>} />
                 <IconButton onClick={() => addToBeginningOfLine('bullet-list')} variant={'ghost'} size={'md'} icon={<FontAwesomeIcon icon={faList} />} />

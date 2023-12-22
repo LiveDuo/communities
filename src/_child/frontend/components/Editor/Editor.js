@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { Textarea } from '@chakra-ui/react'
 import {REGEX_NUMBER_LIST, REGEX_BULLET_LIST, ENTER_KEY_CODE} from '../../utils/editor'
 
-const Editor = ({content, setContent, textAreaRef}) => {
+const Editor = ({content, setContent, textAreaRef, placeholder, style}) => {
 
     const onKeyUp = useCallback((e) => {
         if(e.keyCode === ENTER_KEY_CODE) {
@@ -21,7 +21,7 @@ const Editor = ({content, setContent, textAreaRef}) => {
         }
     }, [setContent])
     return (
-        <Textarea onKeyUp={onKeyUp} ref={textAreaRef} height="200px" value={content} placeholder="More details about the post" onChange={(e) => setContent(e.target.value)}/>
+        <Textarea onKeyUp={onKeyUp} style={{...style}} ref={textAreaRef}  value={content} placeholder={placeholder} onChange={(e) => setContent(e.target.value)}/>
     )
 }
 
