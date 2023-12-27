@@ -146,6 +146,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
             title,
             description,
             timestamp: ic_cdk::api::time(),
+            status: Status::Visible
         };
 
         state.posts.insert(post_id, post.clone());
@@ -186,7 +187,8 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 
         let reply = Reply {
             text: context.to_owned(),
-            timestamp: ic_cdk::api::time()
+            timestamp: ic_cdk::api::time(),
+            status: Status::Visible
         };
 
         let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
