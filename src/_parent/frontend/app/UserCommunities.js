@@ -2,7 +2,8 @@ import { useContext } from 'react'
 import { Box, Text, Spinner, Tag, Link, Button, Flex} from '@chakra-ui/react'
 import { TableContainer, Table, TableCaption, Thead, Tr, Th, Tbody, Td} from '@chakra-ui/react'
 
-import { ExternalLinkIcon } from '@chakra-ui/icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 import { timeSince } from '../utils/time'
 import { getPrincipalUrl } from '../utils/principal'
@@ -47,7 +48,7 @@ const UserCommunities = () => {
 									<Tr key={i}>
 										<Td><Tag colorScheme={getStateColor(canister.state)}>{canister.state}</Tag></Td>
 										<Td><Link href={getPrincipalUrl(canister.id)} isExternal>
-											{canister.id} <ExternalLinkIcon mx='2px' />
+											{canister.id} <FontAwesomeIcon icon={faArrowUpRightFromSquare} size='sm'/>
 										</Link></Td>
 										<Td><Text>{timeSince(canister.timestamp)}</Text></Td>
 									</Tr>)}
