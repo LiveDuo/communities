@@ -170,7 +170,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
 }
 
 #[update]
-// #[candid_method(update)]
+#[candid_method(update)]
 fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
