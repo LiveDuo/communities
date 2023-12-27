@@ -242,7 +242,7 @@ fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String>
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
-        // cheack if the caller is admin
+        // check if the caller is admin
 
         let reply_opt = state.replies.get(&reply_id);
         if reply_opt.is_none() {

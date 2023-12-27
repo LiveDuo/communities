@@ -193,7 +193,7 @@ describe('Testing with done', () => {
 		// create a post
 		const createdPost = await actorBackendEvm.create_post('hello', '')
 		const postId = createdPost.Ok.post_id
-		// craete a reply 
+		// create a reply 
 		const createdReply = await actorBackendEvm.create_reply(postId, 'hello')
 		const replyId = createdReply.Ok.reply_id
 
