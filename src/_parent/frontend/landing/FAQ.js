@@ -1,5 +1,6 @@
 import { Accordion, AccordionItem, AccordionButton, AccordionPanel, Flex, Text, Container} from '@chakra-ui/react'
-import { ChevronDownIcon } from '@chakra-ui/icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 
 const FAQ = () =>  {
   return (
@@ -9,7 +10,7 @@ const FAQ = () =>  {
           <AccordionItem>
             <AccordionButton display="flex" alignItems="center" justifyContent="space-between" p={4} _hover={{ bg: 'gray.100' }}>
               <Text fontSize="md">What does community ownership means?</Text>
-              <ChevronDownIcon fontSize="24px" />
+              <FontAwesomeIcon icon={faChevronDown} size="sm" />
             </AccordionButton>
             <AccordionPanel pb={4}>
               <Text>
@@ -24,7 +25,7 @@ const FAQ = () =>  {
           <AccordionItem>
             <AccordionButton display="flex" alignItems="center" justifyContent="space-between" p={4} _hover={{ bg: 'gray.100' }}>
               <Text fontSize="md">Where are communities hosted if no servers are involved?</Text>
-              <ChevronDownIcon fontSize="24px" />
+              <FontAwesomeIcon icon={faChevronDown} size="sm" />
             </AccordionButton>
             <AccordionPanel pb={4}>
               <Text>
@@ -39,7 +40,7 @@ const FAQ = () =>  {
           <AccordionItem>
             <AccordionButton display="flex" alignItems="center" justifyContent="space-between" p={4} _hover={{ bg: 'gray.100' }}>
               <Text fontSize="md">How do I manage my community?</Text>
-              <ChevronDownIcon fontSize="24px" />
+              <FontAwesomeIcon icon={faChevronDown} size="sm" />
             </AccordionButton>
             <AccordionPanel pb={4}>
               <Text>

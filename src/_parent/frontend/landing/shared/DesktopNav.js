@@ -1,7 +1,7 @@
 import { Box, Flex, Text, Stack, Icon, Link, Popover, PopoverTrigger, PopoverContent } from '@chakra-ui/react';
 import { useColorModeValue } from '@chakra-ui/react';
-import { ChevronRightIcon } from '@chakra-ui/icons';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
 const DesktopSubNav = ({ label, href, subLabel }) => {
   return (
     <Link href={href} role={'group'} display={'block'} p={2} rounded={'md'} _hover={{ bg: useColorModeValue('green.50', 'green.900') }}>
@@ -11,7 +11,7 @@ const DesktopSubNav = ({ label, href, subLabel }) => {
           <Text fontSize={'sm'}>{subLabel}</Text>
         </Box>
         <Flex transition={'all .3s ease'} transform={'translateX(-10px)'} opacity={0} _groupHover={{ opacity: '100%', transform: 'translateX(0)' }} justify={'flex-end'} align={'center'} flex={1}>
-          <Icon color={'green.400'} w={5} h={5} as={ChevronRightIcon} />
+          <FontAwesomeIcon icon={faChevronRight} style={{color: '#48BB78'}} size='sm'/>
         </Flex>
       </Stack>
     </Link>

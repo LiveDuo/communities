@@ -1,25 +1,31 @@
-import { useContext, useEffect, useState, useCallback } from 'react'
+import { useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { Spinner, Box, Heading } from '@chakra-ui/react'
-import { Text, Flex, Button, Textarea, IconButton, Divider } from '@chakra-ui/react'
+import { Text, Flex, Button, IconButton, Divider } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
 import { addressShort, getAddress, getSeedFromAuthentication } from '../../utils/address'
 
-
-import { ArrowBackIcon } from '@chakra-ui/icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeft} from '@fortawesome/free-solid-svg-icons'
 
 import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
 
 import { useNavigate, useParams } from 'react-router-dom'
+import Markdown from 'react-markdown'
+import Editor from '../Editor/Editor'
+import ToolBar from '../Editor/ToolBar'
 
 
 const PostContainer = () => {
   const { account, principal, setSelectedNetwork, onWalletModalOpen } = useContext(IdentityContext)
   const { getPost, createReply, childActor } = useContext(ChildContext)
+
+  const textAreaRef = useRef()
   
 	const [replyText, setReplyText] = useState('')
+	const [isPreview, setIsPreview] = useState(false)
 	const [post, setPost] = useState()
 
   const navigate = useNavigate()
@@ -61,7 +67,7 @@ const PostContainer = () => {
       {post ? 
         <Box mt="20px" padding="40px">
           <Flex mt="40px" mb="20px" justifyContent="center" alignItems="center">
-            <IconButton icon={<ArrowBackIcon />} onClick={() =>goToPosts()}/>
+            <IconButton icon={<FontAwesomeIcon icon={faArrowLeft} />} onClick={() =>goToPosts()}/>
             <Heading ml="40px" mr="auto" display="inline-block">{post.title}</Heading>
             <Text>{timeSince(post.timestamp)}</Text>
           </Flex>
@@ -70,28 +76,39 @@ const PostContainer = () => {
             <Text ml="20px">{getAddress(post.authentication)}</Text>
           </Flex>
           <Box mb="40px" padding="20px 60px">
-            <Text textAlign="start">{post.description}</Text>
+          <Box textAlign="start" className="markdown-body">
+            <Markdown>{post.description}</Markdown>
+          </Box>
           </Box>
           <Divider mb="10px"/>
           <Box mb="40px">
             {post.replies.length > 0 ? post.replies.map((r, i) => 
-              <Flex key={i} alignItems="center" borderBottom="1px solid #00000010" padding="20px">
-                <Box w="100px">
-                  <Jazzicon diameter={40} seed={getSeedFromAuthentication(r?.authentication)} />
+              <Flex flexDirection={'column'}  borderBottom="1px solid #00000010" padding="20px">
+                <Flex flexDirection={'row'} alignItems={'center'} mb="6">
+                  <Jazzicon diameter={20} seed={getSeedFromAuthentication(r?.authentication)} />
+                  <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
+                  <Text ml="auto">{timeSince(r?.timestamp)}</Text>
+                </Flex>
+                <Box textAlign={'start'} className="markdown-body">
+                  <Markdown>{r.text}</Markdown>
                 </Box>
-                <Box>
-
-                <Text fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
-                <Text textAlign="start">{r.text}</Text>
-                </Box>
-                <Text ml="auto">{timeSince(r?.timestamp)}</Text>
               </Flex>
             ) : <Text textAlign="center">No replies yet</Text>}
           </Box>
-          <Textarea mb="20px" height="140px" placeholder="Reply to the post" value={replyText} onChange={(e) => setReplyText(e.target.value)}/>
-          <Box textAlign="end">
+          {isPreview ? 
+					  <Box minH="200px" mb="10px" className='markdown-body' textAlign={'start'}>
+              {replyText.length > 0 ? <Markdown>{replyText}</Markdown>: <Text>Nothing to preview</Text>}
+            </Box> 
+            :
+            <Box mb="10px" >
+              <ToolBar setContent={setReplyText} textAreaRef={textAreaRef} style={{display: 'flex', flexDirection: 'row'}}/>
+              <Editor content={replyText} setContent={setReplyText} textAreaRef={textAreaRef} placeholder={"Reply to the post"} style={{minHeight: '200px'}} /> 
+            </Box>
+				  }
+          <Flex textAlign="end" >
+            <Button mr="auto" variant="ghost" onClick={() => setIsPreview((p)=>!p)}>{!isPreview ? 'Preview': 'Markdown'}</Button>
             <Button mr="20px" onClick={() => replyToPost(post)}>Submit</Button>
-          </Box>
+          </Flex>
         </Box> :
         <Spinner/>}
     </Box>
