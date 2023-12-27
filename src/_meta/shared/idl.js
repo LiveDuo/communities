@@ -13,7 +13,8 @@ const childFactory = ({ IDL }) => {
 	const ReplyResponse = IDL.Record({
 		text: IDL.Text,
 		timestamp: IDL.Nat64,
-		authentication: authenticationWithAddress
+		authentication: authenticationWithAddress,
+		reply_id: IDL.Nat64
 	});
 
 	const PostResponse = IDL.Record({
@@ -39,6 +40,15 @@ const childFactory = ({ IDL }) => {
 		replies_count: IDL.Nat64,
 		last_activity: IDL.Nat64,
 	});
+	const PostStatus = IDL.Variant({
+		Visible: IDL.Null,
+		Hidden: IDL.Null
+	})
+
+	const ReplyStatus = IDL.Variant({
+		Visible: IDL.Null,
+		Hidden: IDL.Null
+	})
 
 	const authenticationWith = IDL.Variant({
 		Evm: IDL.Record({ message: IDL.Text, signature: IDL.Text, }),
@@ -61,6 +71,8 @@ const childFactory = ({ IDL }) => {
 		create_profile: IDL.Func([authenticationWith], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["update"]),
 		create_post: IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ Ok: PostSummary, Err: IDL.Text })], ["update"]),
 		create_reply: IDL.Func([IDL.Nat64, IDL.Text], [IDL.Variant({ Ok: ReplyResponse, Err: IDL.Text })], ["update"]),
+		update_post_status: IDL.Func([IDL.Nat64, PostStatus], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		update_reply_status: IDL.Func([IDL.Nat64, ReplyStatus], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),

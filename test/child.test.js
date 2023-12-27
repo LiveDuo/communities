@@ -20,11 +20,11 @@ describe('Testing with done', () => {
 		// check ic replica
 		await checkDfxRunning()
 
-		// get random identity for emv
+		// get random identity for evm
 		signerEvm = ethers.Wallet.createRandom()
 		identityEvm = Ed25519KeyIdentity.generate()
 
-		// get random identity for emv
+		// get random identity for svm
 		signerSvm = web3.Keypair.generate()
 		identitySvm =Ed25519KeyIdentity.generate()
 
@@ -59,7 +59,6 @@ describe('Testing with done', () => {
 		await actorBackendEvm.create_post('hello', '')
 		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
 		expect(userPosts.Ok.length).toBe(1)
-
 		identityEvm = Ed25519KeyIdentity.generate()
 		const {signature: signature1, loginMessageHash: loginMessageHash1} = await getSignatureAndMessage(signerEvm, identityEvm.getPrincipal())
 		const profile1 = await actorBackendEvm.create_profile({Evm: { signature: signature1,  message: loginMessageHash1 }})
@@ -85,10 +84,10 @@ describe('Testing with done', () => {
 		
 		// link address
 		const {loginMessageHash, signature} = getSignatureAndMessageSvm(signerSvm, identitySvm.getPrincipal())
-    const pubKey = Buffer.from(bs58.decode(signerSvm.publicKey.toString())).toString("hex");
-    const profile = await actorBackendSvm.create_profile({Svm: { public_key: pubKey, signature, message: loginMessageHash }});
-    const address = profile.Ok.authentication.Svm.address;
-    expect(address).toBe(signerSvm.publicKey.toString());
+		const pubKey = Buffer.from(bs58.decode(signerSvm.publicKey.toString())).toString("hex");
+		const profile = await actorBackendSvm.create_profile({Svm: { public_key: pubKey, signature, message: loginMessageHash }});
+		const address = profile.Ok.authentication.Svm.address;
+		expect(address).toBe(signerSvm.publicKey.toString());
 
 		await actorBackendSvm.create_post('hello', '')
 		const userPosts = await actorBackendSvm.get_posts_by_user({Svm: { address: signerSvm.publicKey.toString()}})
@@ -105,19 +104,19 @@ describe('Testing with done', () => {
 		actorBackendSvm = Actor.createActor(childFactory, { agent: agentSvm, canisterId: canisters.child.local })
 		const {loginMessageHash: loginMessageHash2, signature: signature2} = getSignatureAndMessageSvm(signerSvm, identitySvm.getPrincipal())
 		const profile2 = await actorBackendSvm.create_profile({Svm: { public_key: pubKey, signature: signature2, message: loginMessageHash2 }});
-    const address2 = profile2.Ok.authentication.Svm.address;
-    expect(address2).toBe(signerSvm.publicKey.toString());
+		const address2 = profile2.Ok.authentication.Svm.address;
+		expect(address2).toBe(signerSvm.publicKey.toString());
 
 		await actorBackendSvm.create_post('hello', '')
 		const userPosts2 = await actorBackendSvm.get_posts_by_user({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts2.Ok.length).toBe(2)
-  });
+  	});
 	test("Should sign in with internet computer", async () => {
 		
 		// link address
-    const profile = await actorBackendIc.create_profile({Ic: null})
-    const principal = profile.Ok.active_principal
-    expect(principal.toString()).toBe(identityIc.getPrincipal().toString())
+		const profile = await actorBackendIc.create_profile({Ic: null})
+		const principal = profile.Ok.active_principal
+		expect(principal.toString()).toBe(identityIc.getPrincipal().toString())
 
 		await actorBackendIc.create_post('hello', '')
 		const userPosts = await actorBackendIc.get_posts_by_user({Ic: null})
@@ -127,12 +126,13 @@ describe('Testing with done', () => {
 		// logout and login
 		const profile1 = await actorBackendIc.create_profile({Ic: null});
 		const principal1 = profile1.Ok.active_principal
-    expect(principal1.toString()).toBe(identityIc.getPrincipal().toString())
+    	expect(principal1.toString()).toBe(identityIc.getPrincipal().toString())
 
 		await actorBackendIc.create_post('hello', '')
 		const userPosts2 = await actorBackendIc.get_posts_by_user({Ic: null})
 		expect(userPosts2.Ok.length).toBe(2)
-  });
+  	});
+
 	test('Should create and get a post', async () => {
 		
 		// create a post
@@ -150,5 +150,78 @@ describe('Testing with done', () => {
 		expect(userLastPost.title).toBe('hello')
 		expect(userLastPost.replies_count).toBe(1n)
 		expect(userLastPost.authentication.Evm.address).toBe(addressSigner)
+	})
+
+	test('Should create, hide and restore a post', async () => {
+		const signerAddress = await signerEvm.getAddress()
+
+		// create a post
+		const createdPost = await actorBackendEvm.create_post('hello', '')
+		const postId = createdPost.Ok.post_id
+
+		const posts = await actorBackendEvm.get_posts()
+		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		const post = await actorBackendEvm.get_post(postId)
+		expect(posts.some(post => post.post_id === postId)).toBe(true)
+		expect(userPosts.Ok.some(post => post.post_id === postId)).toBe(true)
+		expect(post.Ok).toBeDefined()
+
+		// hide a post 
+		await actorBackendEvm.update_post_status(postId, {Hidden: null})
+
+		const posts1 = await actorBackendEvm.get_posts()
+		const userPosts1 = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		const post1 = await actorBackendEvm.get_post(postId)
+		expect(posts1.some(post => post.post_id === postId)).toBe(false)
+		expect(userPosts1.Ok.some(post => post.post_id === postId)).toBe(false)
+		expect(post1.Err).toBe("This post is hiden")
+		
+		// restore a post
+		await actorBackendEvm.update_post_status(postId, {Visible: null})
+
+		const posts2 = await actorBackendEvm.get_posts()
+		const post2 = await actorBackendEvm.get_post(postId)
+		const userPosts2 = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		expect(userPosts2.Ok.some(post => post.post_id === postId)).toBe(true)
+		expect(posts2.some(post => post.post_id === postId)).toBe(true)
+		expect(post2.Ok).toBeDefined()
+	})
+
+	test('Should create, hide, and restore a reply', async () => {
+		const signerAddress = await signerEvm.getAddress()
+
+		// create a post
+		const createdPost = await actorBackendEvm.create_post('hello', '')
+		const postId = createdPost.Ok.post_id
+		// craete a reply 
+		const createdReply = await actorBackendEvm.create_reply(postId, 'hello')
+		const replyId = createdReply.Ok.reply_id
+
+		const posts = await actorBackendEvm.get_posts()
+		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		const post = await actorBackendEvm.get_post(postId)
+		expect(posts.find(p => p.post_id === postId).replies_count).toBe(1n)
+		expect(userPosts.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)
+		expect(post.Ok.replies.some(r => r.reply_id === replyId)).toBe(true)
+		
+		// hide a reply
+		await actorBackendEvm.update_reply_status(replyId, {Hidden: null})
+
+		const posts1 = await actorBackendEvm.get_posts()
+		const userPosts1 = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		const post1 = await actorBackendEvm.get_post(postId)
+		expect(posts1.find(p => p.post_id === postId).replies_count).toBe(0n)
+		expect(userPosts1.Ok.find(p => p.post_id === postId).replies_count).toBe(0n)
+		expect(post1.Ok.replies.some(r => r.reply_id === replyId)).toBe(false)
+		
+		// restore a reply
+		await actorBackendEvm.update_reply_status(replyId, {Visible: null})
+
+		const posts2 = await actorBackendEvm.get_posts()
+		const userPosts2 = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		const post2 = await actorBackendEvm.get_post(postId)
+		expect(posts2.find(p => p.post_id === postId).replies_count).toBe(1n)
+		expect(userPosts2.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)
+		expect(post2.Ok.replies.some(r => r.reply_id === replyId)).toBe(true)
 	})
 })

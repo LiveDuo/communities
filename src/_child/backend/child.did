@@ -60,6 +60,9 @@ type GetPostsByUserResult = variant { Ok : vec PostSummary; Err : text };
 type GetProfileResult = variant { Ok : Profile; Err : text };
 type UpgradeCanisterResult = variant { Ok : null; Err : text };
 type GetMetadataResult = variant { Ok : Metadata; Err : text };
+type UpdatePostStatusResult = variant { Ok : null; Err : text };
+type UpdateReplyStatusResult = variant { Ok : null; Err : text };
+
 
 type Role = record { role : UserRole; timestamp : nat64 };
 type StreamingCallbackToken = record {
@@ -74,6 +77,7 @@ type StreamingStrategy = variant {
     callback : func () -> ();
   };
 };
+
 type SvmAuthenticationWithParams = record {
   signature : text;
   public_key : text;
@@ -116,6 +120,8 @@ service : (opt principal, opt text, opt text ) -> {
   create_post : (text, text) -> (CratePostResult);
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
   create_reply : (nat64, text) -> (CreateReplyResult);
+  update_post_status : (nat64) -> (UpdatePostStatusResult);
+  update_reply_status : (nat64) -> (UpdateReplyStatusResult);
   upgrade_canister : (text, text) -> (UpgradeCanisterResult);
   get_next_upgrades : () -> (GetNextUpgradesResult);
   canister_status : () -> (CanisterStatusRespose);

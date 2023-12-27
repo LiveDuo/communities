@@ -146,7 +146,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
             title,
             description,
             timestamp: ic_cdk::api::time(),
-            status: Status::Visible
+            status: PostStatus::Visible
         };
 
         state.posts.insert(post_id, post.clone());
@@ -170,7 +170,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
 }
 
 #[update]
-#[candid_method(update)]
+// #[candid_method(update)]
 fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
@@ -188,7 +188,7 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
         let reply = Reply {
             text: context.to_owned(),
             timestamp: ic_cdk::api::time(),
-            status: Status::Visible
+            status: ReplyStatus::Visible
         };
 
         let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
@@ -204,10 +204,11 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
         let profile = state.profiles.get(&profile_id).unwrap();
         let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
-        let reply_response =  ReplyResponse {
+        let reply_response = ReplyResponse {
             text: reply.text,
             timestamp: reply.timestamp,
-            authentication
+            authentication,
+            reply_id: reply_id
         };
 
         Ok(reply_response)
@@ -215,19 +216,19 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 }
 #[update]
 #[candid_method(update)]
-fn hide_post(post_id: u64) -> Result<(), String> {
+fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
     
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
-        // cheack if the caller is admin
+        // check if the caller is admin
 
         let post_opt = state.posts.get(&post_id);
         if post_opt.is_none() {
             return Err("Post does not exist".to_owned());
         }
         let mut post = post_opt.unwrap().to_owned(); 
-        post.status = Status::Hidden;
+        post.status = status;
 
         state.posts.insert(post_id, post);
 
@@ -236,29 +237,7 @@ fn hide_post(post_id: u64) -> Result<(), String> {
 }
 #[update]
 #[candid_method(update)]
-fn restore_post(post_id: u64) -> Result<(), String> {
-    
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
-
-        // cheack if the caller is admin
-
-        let post_opt = state.posts.get(&post_id);
-        if post_opt.is_none() {
-            return Err("Post does not exist".to_owned());
-        }
-        let mut post = post_opt.unwrap().to_owned(); 
-        post.status = Status::Visible;
-
-        state.posts.insert(post_id, post);
-
-        Ok(())
-    })
-}
-
-#[update]
-#[candid_method(update)]
-fn hide_reply(reply_id: u64) -> Result<(), String> {
+fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String> {
     
     STATE.with(|s| {
         let mut state = s.borrow_mut();
@@ -270,28 +249,7 @@ fn hide_reply(reply_id: u64) -> Result<(), String> {
             return Err("Post does not exist".to_owned());
         }
         let mut reply = reply_opt.unwrap().to_owned(); 
-        reply.status = Status::Hidden;
-
-        state.replies.insert(reply_id, reply);
-
-        Ok(())
-    })
-}
-#[update]
-#[candid_method(update)]
-fn restore_reply(reply_id: u64) -> Result<(), String> {
-    
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
-
-        // cheack if the caller is admin
-
-        let reply_opt = state.replies.get(&reply_id);
-        if reply_opt.is_none() {
-            return Err("Post does not exist".to_owned());
-        }
-        let mut reply = reply_opt.unwrap().to_owned(); 
-        reply.status = Status::Visible;
+        reply.status = status;
 
         state.replies.insert(reply_id, reply);
 
@@ -323,13 +281,23 @@ fn get_posts() -> Vec<PostSummary> {
         state
             .posts
             .iter()
-            .map(|(post_id, post)| {
+            .filter_map(|(post_id, post)| {
+                if post.status == PostStatus::Hidden {
+                    return None;
+                }
                 let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
                 let replies_count = if replies_opt == None {
                     0
                 } else {
-                    replies_opt.unwrap().len()
+                    replies_opt.unwrap().iter().filter_map(|(reply_id, _)| { 
+                        let reply = state.replies.get(reply_id).unwrap();
+                        if reply.status == ReplyStatus::Hidden {
+                            return None;
+                        } else {
+                            return Some(reply_id);
+                        }
+                    }).collect::<Vec<_>>().len()
                 };
 
                 let last_activity = if replies_opt == None {
@@ -345,7 +313,7 @@ fn get_posts() -> Vec<PostSummary> {
 
                 let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
-                PostSummary {
+                Some(PostSummary {
                     title: post.title.to_owned(),
                     post_id: post_id.to_owned(),
                     description: post.description.to_owned(),
@@ -353,7 +321,7 @@ fn get_posts() -> Vec<PostSummary> {
                     replies_count: replies_count as u64,
                     last_activity,
                     authentication,
-                }
+                })
             })
             .collect::<Vec<_>>()
     })
@@ -385,21 +353,29 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
             return Err("This post does not exists".to_owned());
         }
 
+        let post = post_opt.unwrap();
+        if post.status == PostStatus::Hidden {
+            return Err("This post is hiden".to_owned());
+        }
+
         let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
         let replies = if replies_opt == None {
             vec![]
         } else {
-             replies_opt.unwrap().iter().map(|(reply_id, _)| {
+             replies_opt.unwrap().iter().filter_map(|(reply_id, _)| {
                 let reply = state.replies.get(reply_id).unwrap();
+                if reply.status == ReplyStatus::Hidden {
+                    return None;
+                }
                 let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
                 let profile = state.profiles.get(&profile_id).unwrap();
                 let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
-                ReplyResponse { text: reply.text.to_owned(), timestamp: reply.timestamp, authentication }
+                Some(ReplyResponse { text: reply.text.to_owned(), timestamp: reply.timestamp, authentication , reply_id: reply_id.to_owned()  })
             }).collect::<Vec<_>>()
         };
 
-        let post = post_opt.unwrap();
+        
 
         let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
@@ -441,18 +417,27 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
             return Ok(vec![]);
         }
 
-        let user_post = post_ids_opt
+        let user_post =  post_ids_opt
             .unwrap()
             .iter()
-            .map(|(post_id, _)| {
+            .filter_map(|(post_id, _)| {
                 let post = state.posts.get(&post_id.to_owned()).unwrap();
-
+                if post.status == PostStatus::Hidden {
+                    return None;
+                }
                 let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
                 let replies_count = if replies_opt == None {
                     0
                 } else {
-                    replies_opt.unwrap().len()
+                    replies_opt.unwrap().iter().filter_map(|(reply_id, _)| { 
+                        let reply = state.replies.get(reply_id).unwrap();
+                        if reply.status == ReplyStatus::Hidden {
+                            return None;
+                        } else {
+                            return Some(reply_id);
+                        }
+                    }).collect::<Vec<_>>().len()
                 };
 
                 let last_activity = if replies_opt == None {
@@ -475,7 +460,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                 let profile = state.profiles.get(&profile_id).unwrap();
                 let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
-                PostSummary {
+                Some(PostSummary {
                     post_id: post_id.to_owned(),
                     title: post.title.to_owned(),
                     description: post.description.to_owned(),
@@ -483,9 +468,8 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                     replies_count: replies_count as u64,
                     last_activity,
                     authentication
-                }
-            })
-            .collect::<Vec<_>>();
+                })
+            }).collect::<Vec<_>>();
         Ok(user_post)
     })
 }

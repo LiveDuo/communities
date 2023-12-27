@@ -61,7 +61,7 @@ pub struct Profile {
     pub active_principal: Principal
 }
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
-pub enum Status {
+pub enum PostStatus {
     Visible,
     Hidden
 }
@@ -70,20 +70,25 @@ pub struct Post {
     pub title: String,
     pub description: String,
     pub timestamp: u64,
-    pub status: Status
+    pub status: PostStatus
 }
-
+#[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
+pub enum ReplyStatus {
+    Visible,
+    Hidden
+}
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Reply {
     pub text: String,
     pub timestamp: u64,
-    pub status: Status
+    pub status: ReplyStatus
 }
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct ReplyResponse {
     pub text: String,
     pub timestamp: u64,
     pub authentication: AuthenticationWithAddress,
+    pub reply_id: u64
 }
 
 #[derive(Clone, CandidType, Deserialize, Debug)]
