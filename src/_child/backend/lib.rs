@@ -213,6 +213,91 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
         Ok(reply_response)
     })
 }
+#[update]
+#[candid_method(update)]
+fn hide_post(post_id: u64) -> Result<(), String> {
+    
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        // cheack if the caller is admin
+
+        let post_opt = state.posts.get(&post_id);
+        if post_opt.is_none() {
+            return Err("Post does not exist".to_owned());
+        }
+        let mut post = post_opt.unwrap().to_owned(); 
+        post.status = Status::Hidden;
+
+        state.posts.insert(post_id, post);
+
+        Ok(())
+    })
+}
+#[update]
+#[candid_method(update)]
+fn restore_post(post_id: u64) -> Result<(), String> {
+    
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        // cheack if the caller is admin
+
+        let post_opt = state.posts.get(&post_id);
+        if post_opt.is_none() {
+            return Err("Post does not exist".to_owned());
+        }
+        let mut post = post_opt.unwrap().to_owned(); 
+        post.status = Status::Visible;
+
+        state.posts.insert(post_id, post);
+
+        Ok(())
+    })
+}
+
+#[update]
+#[candid_method(update)]
+fn hide_reply(reply_id: u64) -> Result<(), String> {
+    
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        // cheack if the caller is admin
+
+        let reply_opt = state.replies.get(&reply_id);
+        if reply_opt.is_none() {
+            return Err("Post does not exist".to_owned());
+        }
+        let mut reply = reply_opt.unwrap().to_owned(); 
+        reply.status = Status::Hidden;
+
+        state.replies.insert(reply_id, reply);
+
+        Ok(())
+    })
+}
+#[update]
+#[candid_method(update)]
+fn restore_reply(reply_id: u64) -> Result<(), String> {
+    
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        // cheack if the caller is admin
+
+        let reply_opt = state.replies.get(&reply_id);
+        if reply_opt.is_none() {
+            return Err("Post does not exist".to_owned());
+        }
+        let mut reply = reply_opt.unwrap().to_owned(); 
+        reply.status = Status::Visible;
+
+        state.replies.insert(reply_id, reply);
+
+        Ok(())
+    })
+}
 
 #[query]
 #[candid_method(query)]
