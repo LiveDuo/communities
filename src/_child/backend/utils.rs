@@ -5,7 +5,7 @@ use std::collections::hash_map;
 use std::hash::{Hash, Hasher};
 use std::ops::Div;
 
-use crate::state::{STATE, Role};
+use crate::state::{STATE, UserRole};
 
 pub fn get_asset(key: String) -> Vec<u8> {
     // get asset length
@@ -66,7 +66,7 @@ pub fn format_number(num: u64) -> String {
     format!("{:.*}{}", digits, num1, si[index].1)
 }
 
-pub fn get_caller_roles(caller: &Principal) -> Vec<Role> {
+pub fn get_caller_roles(caller: &Principal) -> Vec<UserRole> {
     STATE.with(|s| {
         let state = s.borrow();
         let profile_id_opt = state.indexes.active_principal.get(caller);
@@ -82,7 +82,7 @@ pub fn get_caller_roles(caller: &Principal) -> Vec<Role> {
             .get(profile_id_opt.unwrap())
             .unwrap()
             .iter()
-            .map(|(role_id, _)| 	state.roles.get(role_id).unwrap().to_owned())
+            .map(|(role_id, _)| state.roles.get(role_id).unwrap().role.to_owned())
             .collect::<Vec<_>>()
     })
 }

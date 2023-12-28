@@ -101,6 +101,14 @@ pub struct PostResponse {
     pub status: PostStatus,
     pub replies: Vec<ReplyResponse>,
 }
+#[derive(Clone, CandidType, Deserialize, Debug)]
+pub struct ProfileResponse {
+    pub name: String,
+    pub description: String,
+    pub authentication: Authentication,
+    pub active_principal: Principal,
+    pub roles: Vec<UserRole>
+}
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct PostSummary {

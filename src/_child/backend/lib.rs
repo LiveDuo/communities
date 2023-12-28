@@ -257,7 +257,7 @@ fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String>
 
 #[query]
 #[candid_method(query)]
-fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
+fn get_profile_by_user(authentication: Authentication) -> Option<ProfileResponse> {
     STATE.with(|s| {
         let state = s.borrow();
         let caller = ic_cdk::caller();
@@ -266,7 +266,15 @@ fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
         if index_opt == None {
             return None; 
         }
-        state.profiles.get(&index_opt.unwrap()).cloned()
+        let profile  = state.profiles.get(&index_opt.unwrap()).unwrap();
+        let user_roles = get_caller_roles(&caller);
+        Some(ProfileResponse {
+            name: profile.name.to_owned(),
+            description: profile.description.to_owned(),
+            authentication: profile.authentication.to_owned(),
+            active_principal: profile.active_principal.to_owned(),
+            roles: user_roles
+        })
     })
 }
 
@@ -275,7 +283,7 @@ fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
 fn get_posts() -> Vec<PostSummary> {
     let caller = ic_cdk::caller();
     let caller_roles = get_caller_roles(&caller);
-    let caller_is_admin = caller_roles.iter().any(|r| r.role == UserRole::Admin);
+    let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
 
     STATE.with(|s| {
         let state = &mut s.borrow_mut();
@@ -351,7 +359,7 @@ fn get_profile() -> Result<Profile, String> {
 fn get_post(post_id: u64) -> Result<PostResponse, String> {
     let caller = ic_cdk::caller();
     let caller_roles = get_caller_roles(&caller);
-    let caller_is_admin = caller_roles.iter().any(|r| r.role == UserRole::Admin);
+    let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
 
     STATE.with(|s| {
         let state = s.borrow();
@@ -426,9 +434,8 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
         }
 
         let caller_roles = get_caller_roles(&caller);
-        let caller_is_admin = caller_roles.iter().any(|r| r.role == UserRole::Admin);
-        
-
+        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+    
         let user_post =  post_ids_opt
             .unwrap()
             .iter()
