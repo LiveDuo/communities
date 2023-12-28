@@ -66,7 +66,7 @@ pub fn format_number(num: u64) -> String {
     format!("{:.*}{}", digits, num1, si[index].1)
 }
 
-pub fn get_caller_roles(caller: &Principal) -> Vec<UserRole> {
+pub fn get_user_roles(caller: &Principal) -> Vec<UserRole> {
     STATE.with(|s| {
         let state = s.borrow();
         let profile_id_opt = state.indexes.active_principal.get(caller);

@@ -14,7 +14,7 @@ use ic_cdk_macros::{update, query, init};
 use crate::state::{*, STATE};
 use upgrade::{update_metadata, check_canister_cycles_balance, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::UpgradeWithTrack;
-use utils::{uuid, get_asset, get_caller_roles};
+use utils::{uuid, get_asset, get_user_roles};
 
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 
@@ -257,17 +257,17 @@ fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String>
 
 #[query]
 #[candid_method(query)]
-fn get_profile_by_user(authentication: Authentication) -> Option<ProfileResponse> {
+fn get_profile_by_auth(authentication: Authentication) -> Option<ProfileResponse> {
     STATE.with(|s| {
         let state = s.borrow();
         let caller = ic_cdk::caller();
         let auth = get_authentication_with_address(&authentication, &caller);
-        let index_opt = state.indexes.profile.get(&auth);
-        if index_opt == None {
+        let profile_id_opt = state.indexes.profile.get(&auth);
+        if profile_id_opt == None {
             return None; 
         }
-        let profile  = state.profiles.get(&index_opt.unwrap()).unwrap();
-        let user_roles = get_caller_roles(&caller);
+        let profile  = state.profiles.get(&profile_id_opt.unwrap()).unwrap();
+        let user_roles = get_user_roles(&caller);
         Some(ProfileResponse {
             name: profile.name.to_owned(),
             description: profile.description.to_owned(),
@@ -279,10 +279,10 @@ fn get_profile_by_user(authentication: Authentication) -> Option<ProfileResponse
 }
 
 #[query]
-// #[candid_method(query)]
+#[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
     let caller = ic_cdk::caller();
-    let caller_roles = get_caller_roles(&caller);
+    let caller_roles = get_user_roles(&caller);
     let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
 
     STATE.with(|s| {
@@ -358,7 +358,7 @@ fn get_profile() -> Result<Profile, String> {
 #[candid_method(query)]
 fn get_post(post_id: u64) -> Result<PostResponse, String> {
     let caller = ic_cdk::caller();
-    let caller_roles = get_caller_roles(&caller);
+    let caller_roles = get_user_roles(&caller);
     let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
 
     STATE.with(|s| {
@@ -411,7 +411,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
 #[query]
 #[candid_method(query)]
-fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
+fn get_posts_by_auth(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
     STATE.with(|s| {
         let state = s.borrow();
 
@@ -433,7 +433,7 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
             return Ok(vec![]);
         }
 
-        let caller_roles = get_caller_roles(&caller);
+        let caller_roles = get_user_roles(&caller);
         let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
     
         let user_post =  post_ids_opt
@@ -508,23 +508,7 @@ fn get_metadata() -> Result<Metadata, String> {
         Ok(Metadata{track: state.track.clone().unwrap(), version: state.version.clone().unwrap()})
     })
 }
-#[query]
-#[candid_method(query)]
-fn get_user_roles() -> Vec<Role> {
-    let caller = ic_cdk::caller();
-    STATE.with(|s| {
-        let state = s.borrow();
-        if let Some(profile_id) =  state.indexes.active_principal.get(&caller) {
-            state.relations.profile_id_to_role_id.forward.get(profile_id)
-                .unwrap()
-                .iter()
-                .map(|(role_id, _)| state.roles.get(role_id).unwrap().to_owned())
-                .collect::<Vec<_>>()
-        } else {
-            vec![]
-        }
-    })
-}
+
 
 #[update]
 #[candid_method(update)]

@@ -52,6 +52,13 @@ type Profile = record {
   description : text;
   active_principal : principal;
 };
+type ProfileResponse = record {
+  authentication : Authentication;
+  name : text;
+  description : text;
+  active_principal : principal;
+  roles : vec UserRole
+};
 type ReplyStatus = variant {
   Visible;
   Hidden;
@@ -62,12 +69,12 @@ type ReplyResponse = record {
   timestamp : nat64;
   status : ReplyStatus 
 };
-type CratePostResult = variant { Ok : PostSummary; Err : text };
+type CreatePostResult = variant { Ok : PostSummary; Err : text };
 type CreateProfileResult = variant { Ok : Profile; Err : text };
 type CreateReplyResult = variant { Ok : ReplyResponse; Err : text };
 type GetNextUpgradesResult = variant { Ok : vec UpgradeWithTrack; Err : text };
 type GetPostResult = variant { Ok : PostResponse; Err : text };
-type GetPostsByUserResult = variant { Ok : vec PostSummary; Err : text };
+type GetPostsByAuthResult = variant { Ok : vec PostSummary; Err : text };
 type GetProfileResult = variant { Ok : Profile; Err : text };
 type UpgradeCanisterResult = variant { Ok : null; Err : text };
 type GetMetadataResult = variant { Ok : Metadata; Err : text };
@@ -118,7 +125,7 @@ type definite_canister_settings = record {
   compute_allocation : nat;
 };
 
-type CanisterStatusRespose = record {
+type CanisterStatusResponse = record {
   status : variant { stopped; stopping; running };
   memory_size : nat;
   cycles : nat;
@@ -128,20 +135,19 @@ type CanisterStatusRespose = record {
 type UserRole = variant { Admin };
 
 service : (opt principal, opt text, opt text ) -> {
-  create_post : (text, text) -> (CratePostResult);
+  create_post : (text, text) -> (CreatePostResult);
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
   create_reply : (nat64, text) -> (CreateReplyResult);
   update_post_status : (nat64, PostStatus) -> (UpdatePostStatusResult);
   update_reply_status : (nat64, ReplyStatus) -> (UpdateReplyStatusResult);
   upgrade_canister : (text, text) -> (UpgradeCanisterResult);
   get_next_upgrades : () -> (GetNextUpgradesResult);
-  canister_status : () -> (CanisterStatusRespose);
+  canister_status : () -> (CanisterStatusResponse);
   get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
-  get_posts_by_user : (Authentication) -> (GetPostsByUserResult) query;
+  get_posts_by_auth : (Authentication) -> (GetPostsByAuthResult) query;
   get_profile : () -> (GetProfileResult) query;
-  get_profile_by_user : (Authentication) -> (opt Profile) query;
-  get_user_roles : () -> (vec Role) query;
+  get_profile_by_auth : (Authentication) -> (opt ProfileResponse) query;
   get_metadata: () -> (GetMetadataResult) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
 }
