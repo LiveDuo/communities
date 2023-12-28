@@ -1,9 +1,11 @@
-use candid::Nat;
+use candid::{Nat, Principal};
 use ic_certified_assets::types::{GetArg, GetChunkArg};
 use num_traits::ToPrimitive;
 use std::collections::hash_map;
 use std::hash::{Hash, Hasher};
 use std::ops::Div;
+
+use crate::state::{STATE, Role};
 
 pub fn get_asset(key: String) -> Vec<u8> {
     // get asset length
@@ -62,4 +64,25 @@ pub fn format_number(num: u64) -> String {
     let num1 = convert_num.div(si[index].0);
     let digits = if num1 > 0.0 {3 - (num1.log10() as usize + 1)} else {3};
     format!("{:.*}{}", digits, num1, si[index].1)
+}
+
+pub fn get_caller_roles(caller: &Principal) -> Vec<Role> {
+    STATE.with(|s| {
+        let state = s.borrow();
+        let profile_id_opt = state.indexes.active_principal.get(caller);
+
+        if profile_id_opt.is_none() {
+            return vec![];
+        }
+
+        state
+            .relations
+            .profile_id_to_role_id
+            .forward
+            .get(profile_id_opt.unwrap())
+            .unwrap()
+            .iter()
+            .map(|(role_id, _)| 	state.roles.get(role_id).unwrap().to_owned())
+            .collect::<Vec<_>>()
+    })
 }

@@ -88,7 +88,8 @@ pub struct ReplyResponse {
     pub text: String,
     pub timestamp: u64,
     pub authentication: AuthenticationWithAddress,
-    pub reply_id: u64
+    pub reply_id: u64,
+    pub status: ReplyStatus
 }
 
 #[derive(Clone, CandidType, Deserialize, Debug)]
@@ -97,6 +98,7 @@ pub struct PostResponse {
     pub description: String,
     pub authentication: AuthenticationWithAddress,
     pub timestamp: u64,
+    pub status: PostStatus,
     pub replies: Vec<ReplyResponse>,
 }
 
@@ -109,10 +111,11 @@ pub struct PostSummary {
     pub authentication: AuthenticationWithAddress,
     pub replies_count: u64,
     pub last_activity: u64,
+    pub status: PostStatus
 }
 
 
-#[derive(CandidType, Deserialize, Clone, Debug)]
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum UserRole {
     Admin
 }
