@@ -340,7 +340,7 @@ fn get_posts() -> Vec<PostSummary> {
 
 #[query]
 #[candid_method(query)]
-fn get_profile() -> Result<Profile, String> {
+fn get_profile() -> Result<ProfileResponse, String> {
     STATE.with(|s| {
         let state = s.borrow();
 
@@ -349,8 +349,16 @@ fn get_profile() -> Result<Profile, String> {
         if profile_id_opt == None {
             return Err("Profile does not exists".to_owned());
         }
-        let profile = state.profiles.get(profile_id_opt.unwrap()).unwrap();
-        Ok(profile.clone())
+        let profile_id = profile_id_opt.unwrap();
+        let profile = state.profiles.get(profile_id).unwrap();
+        let user_roles = get_user_roles(&caller);
+        Ok(ProfileResponse {
+            name: profile.name.to_owned(),
+            description: profile.description.to_owned(),
+            authentication: profile.authentication.to_owned(),
+            active_principal: profile.active_principal.to_owned(),
+            roles: user_roles
+        })
     })
 }
 

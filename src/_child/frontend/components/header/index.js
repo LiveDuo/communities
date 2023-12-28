@@ -22,12 +22,11 @@ const Header = () => {
   const location = useLocation()
 
   const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure } = useContext(IdentityContext)
-  const { getProfileByAuth, login } = useContext(ChildContext)
+  const { getProfile, login } = useContext(ChildContext)
 
   useEffect(() => {
-    if (account)
-      getProfileByAuth(account)
-  }, [account, getProfileByAuth])
+      getProfile()
+  }, [getProfile])
 
   const loginAndSet = async (type) => {
     if (type === 'evm' && !isWalletDetected(type)) {

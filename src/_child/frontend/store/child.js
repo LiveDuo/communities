@@ -25,22 +25,38 @@ const idlFactory = ({ IDL }) => {
 		Evm: IDL.Record({ address: IDL.Text }),
 		Svm: IDL.Record({ address: IDL.Text }),
 	});
-
+	const ReplyStatus = IDL.Variant({
+		Visible: IDL.Null,
+		Hidden: IDL.Null
+	})
+	
 	const ReplyResponse = IDL.Record({
 		text: IDL.Text,
 		timestamp: IDL.Nat64,
-		authentication: authenticationWithAddress
+		authentication: authenticationWithAddress,
+		status: ReplyStatus
 	});
+	const PostStatus = IDL.Variant({
+		Visible: IDL.Null,
+		Hidden: IDL.Null
+	})
 
 	const PostResponse = IDL.Record({
 		title: IDL.Text,
 		description: IDL.Text,
 		timestamp: IDL.Nat64,
 		replies: IDL.Vec(ReplyResponse),
-    authentication: authenticationWithAddress,
+    	authentication: authenticationWithAddress,
+		status: PostStatus
 	});
 
 	const Profile = IDL.Record({
+		name: IDL.Text,
+		description: IDL.Text,
+		authentication: authentication,
+		active_principal: IDL.Principal
+	});
+	const ProfileResponse = IDL.Record({
 		name: IDL.Text,
 		description: IDL.Text,
 		authentication: authentication,
@@ -99,11 +115,11 @@ const idlFactory = ({ IDL }) => {
 		create_post: IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ Ok: PostSummary, Err: IDL.Text })], ["update"]),
 		create_reply: IDL.Func([IDL.Nat64, IDL.Text], [IDL.Variant({ Ok: ReplyResponse, Err: IDL.Text })], ["update"]),
 		canister_status: IDL.Func([], [canisterStatusResponse], ["update"]),
-		get_profile: IDL.Func([], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["query"]),
+		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-		get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
-		get_profile_by_user: IDL.Func([authentication], [IDL.Opt(Profile)], ["query"]),
+		get_posts_by_auth: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_profile_by_auth: IDL.Func([authentication], [IDL.Opt(ProfileResponse)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),
@@ -166,7 +182,7 @@ const ChildProvider = ({ children }) => {
 	}, [childActor])
 
 	const getPostsByUser = useCallback(async () => {
-		const response = await childActor.get_posts_by_user(profile.authentication)
+		const response = await childActor.get_posts_by_auth(profile.authentication)
 		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
 	}, [profile, childActor])
 
@@ -180,8 +196,15 @@ const ChildProvider = ({ children }) => {
 		} else {
 			auth[account.type] = null
 		}
-		const response = await childActor.get_profile_by_user(auth)
+		const response = await childActor.get_profile_by_auth(auth)
 		setProfile(response[0])
+	}, [childActor])
+
+	const getProfile = useCallback(async () => {
+		if(!childActor) return
+
+		const response = await childActor.get_profile()
+		setProfile(response.Ok)
 	}, [childActor])
 
 	const loginWithEvm = useCallback(async () => {
@@ -268,7 +291,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, setProfile, postsUser , getProfileByAuth, getPostsByUser, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login }
+	const value = {childActor, profile, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByUser, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

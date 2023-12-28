@@ -74,12 +74,12 @@ pub fn get_user_roles(caller: &Principal) -> Vec<UserRole> {
         if profile_id_opt.is_none() {
             return vec![];
         }
+        let role_ids =  state.relations.profile_id_to_role_id.forward.get(profile_id_opt.unwrap());
 
-        state
-            .relations
-            .profile_id_to_role_id
-            .forward
-            .get(profile_id_opt.unwrap())
+        if role_ids.is_none() {
+            return vec![];
+        }
+        role_ids
             .unwrap()
             .iter()
             .map(|(role_id, _)| state.roles.get(role_id).unwrap().role.to_owned())
