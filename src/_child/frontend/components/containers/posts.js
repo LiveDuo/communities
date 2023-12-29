@@ -37,6 +37,7 @@ const PostsContainer = ({ posts: _posts }) => {
     onPostOpen()
   }
 
+
   if (!posts) return <Spinner/>
 
   return  <Box mt="32px" textAlign="center" m="auto">
@@ -52,7 +53,7 @@ const PostsContainer = ({ posts: _posts }) => {
             <Text color="gray.500" mr="40px" width="80px" textAlign="center">Replies</Text>
           </Flex>
           {posts?.map((p, i) => 
-            <Box key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
+            <Box opacity={p?.status?.hasOwnProperty('Hidden') ? '0.4' : '1'} key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
               <Flex alignItems="center">
                 <Box mr="auto" _hover={{cursor: 'pointer', opacity: 0.7}} >
                   <Link href={`/post/${p.post_id.toString()}`} onClick={(e) => {e.preventDefault(); goToPost(p.post_id.toString())}} _hover={{textDecor: 'none'}}>

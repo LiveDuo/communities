@@ -34,7 +34,8 @@ const idlFactory = ({ IDL }) => {
 		text: IDL.Text,
 		timestamp: IDL.Nat64,
 		authentication: authenticationWithAddress,
-		status: ReplyStatus
+		status: ReplyStatus,
+		reply_id: IDL.Nat64 
 	});
 	const PostStatus = IDL.Variant({
 		Visible: IDL.Null,
@@ -49,6 +50,7 @@ const idlFactory = ({ IDL }) => {
     	authentication: authenticationWithAddress,
 		status: PostStatus
 	});
+	const UserRole =IDL.Variant({ Admin: IDL.Null }) 
 
 	const Profile = IDL.Record({
 		name: IDL.Text,
@@ -56,11 +58,13 @@ const idlFactory = ({ IDL }) => {
 		authentication: authentication,
 		active_principal: IDL.Principal
 	});
+
 	const ProfileResponse = IDL.Record({
 		name: IDL.Text,
 		description: IDL.Text,
 		authentication: authentication,
-		active_principal: IDL.Principal
+		active_principal: IDL.Principal,
+		roles: IDL.Vec(UserRole)
 	});
 
 	const PostSummary = IDL.Record({
@@ -71,6 +75,7 @@ const idlFactory = ({ IDL }) => {
 		timestamp: IDL.Nat64,
 		replies_count: IDL.Nat64,
 		last_activity: IDL.Nat64,
+		status: PostStatus
 	});
 
 	const authenticationWith = IDL.Variant({
@@ -123,6 +128,8 @@ const idlFactory = ({ IDL }) => {
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),
+		update_post_status: IDL.Func([IDL.Nat64, PostStatus],[IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], ["update"]),
+		update_reply_status: IDL.Func([IDL.Nat64, ReplyStatus],[IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], ["update"]),
 	});
 };
 
@@ -170,6 +177,14 @@ const ChildProvider = ({ children }) => {
 		const _post = {...response.Ok, last_activity: new Date(Number(response.Ok.timestamp / 1000n / 1000n)), timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
 		setPosts([...posts, _post])
 	},[childActor, posts])
+
+	const updatePostStatus = useCallback(async (postId, status) => {
+		await childActor.update_post_status(BigInt(postId), status)
+	},[childActor])
+
+	const updateReplyStatus = useCallback(async (replyId, status) => {
+		await childActor.update_reply_status(BigInt(replyId), status)
+	},[childActor])
 
 	const getPosts = useCallback(async () => {
 		const response = await childActor.get_posts()
@@ -298,7 +313,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login }
+	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

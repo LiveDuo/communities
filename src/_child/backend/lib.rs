@@ -223,7 +223,12 @@ fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
-        // check if the caller is admin
+        let caller = ic_cdk::caller();
+        let caller_roles = get_user_roles(&caller);
+        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+        if !caller_is_admin {
+            return Err("Caller is not admin".to_owned())
+        }
 
         let post_opt = state.posts.get_mut(&post_id);
         if post_opt.is_none() {
@@ -242,7 +247,12 @@ fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String>
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
-        // check if the caller is admin
+        let caller = ic_cdk::caller();
+        let caller_roles = get_user_roles(&caller);
+        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+        if !caller_is_admin {
+            return Err("Caller is not admin".to_owned())
+        }
 
         let reply_opt = state.replies.get_mut(&reply_id);
         if reply_opt.is_none() {
@@ -386,7 +396,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
         } else {
              replies_opt.unwrap().iter().filter_map(|(reply_id, _)| {
                 let reply = state.replies.get(reply_id).unwrap();
-                if reply.status == ReplyStatus::Hidden {
+                if !caller_is_admin && reply.status == ReplyStatus::Hidden {
                     return None;
                 }
                 let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
