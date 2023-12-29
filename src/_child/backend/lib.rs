@@ -257,17 +257,15 @@ fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String>
 
 #[query]
 #[candid_method(query)]
-fn get_profile_by_auth(authentication: Authentication) -> Option<ProfileResponse> {
+fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<ProfileResponse> {
     STATE.with(|s| {
         let state = s.borrow();
-        let caller = ic_cdk::caller();
-        let auth = get_authentication_with_address(&authentication, &caller);
-        let profile_id_opt = state.indexes.profile.get(&auth);
+        let profile_id_opt = state.indexes.profile.get(&authentication);
         if profile_id_opt == None {
             return None; 
         }
         let profile  = state.profiles.get(&profile_id_opt.unwrap()).unwrap();
-        let user_roles = get_user_roles(&caller);
+        let user_roles = get_user_roles(&profile.active_principal);
         Some(ProfileResponse {
             name: profile.name.to_owned(),
             description: profile.description.to_owned(),
@@ -419,14 +417,10 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
 #[query]
 #[candid_method(query)]
-fn get_posts_by_auth(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
+fn get_posts_by_auth(authentication: AuthenticationWithAddress) -> Result<Vec<PostSummary>, String> {
     STATE.with(|s| {
         let state = s.borrow();
-
-        let caller = ic_cdk::caller();
-        let auth = get_authentication_with_address(&authentication, &caller);
-
-        let profile_id_opt = state.indexes.profile.get(&auth);
+        let profile_id_opt = state.indexes.profile.get(&authentication);
         if profile_id_opt == None {
             return Err("Profile does not exists".to_owned());
         }
@@ -441,7 +435,8 @@ fn get_posts_by_auth(authentication: Authentication) -> Result<Vec<PostSummary>,
             return Ok(vec![]);
         }
 
-        let caller_roles = get_user_roles(&caller);
+        let profile = state.profiles.get(profile_id_opt.unwrap()).unwrap();
+        let caller_roles = get_user_roles(&profile.active_principal);
         let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
     
         let user_post =  post_ids_opt

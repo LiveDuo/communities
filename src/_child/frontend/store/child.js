@@ -1,6 +1,6 @@
 import { useState, useContext, createContext, useCallback, useEffect } from 'react'
 import { IdentityContext } from './identity'
-
+import {Principal} from '@dfinity/principal'
 import { useToast } from '@chakra-ui/react'
 
 import { utils , ethers} from 'ethers'
@@ -118,8 +118,8 @@ const idlFactory = ({ IDL }) => {
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-		get_posts_by_auth: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
-		get_profile_by_auth: IDL.Func([authentication], [IDL.Opt(ProfileResponse)], ["query"]),
+		get_posts_by_auth: IDL.Func([authenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_profile_by_auth: IDL.Func([authenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),
@@ -135,6 +135,7 @@ const ChildProvider = ({ children }) => {
 	const [postsUser, setPostsUser] = useState()
 	const [loading, setLoading] = useState()
 	const [profile, setProfile] = useState()
+	const [profileUser, setProfileUser] = useState()
 
 	const { identity, account, createActor, updateIdentity, getWallet, connectWallet} = useContext(IdentityContext)
 
@@ -181,23 +182,29 @@ const ChildProvider = ({ children }) => {
 		return _post
 	}, [childActor])
 
-	const getPostsByUser = useCallback(async () => {
-		const response = await childActor.get_posts_by_auth(profile.authentication)
+	const getPostsByAuth = useCallback(async (address, type) => {
+		const auth = {}
+		if (type === 'Ic') {
+			auth[type] = {principal: Principal.fromText(address)} 
+		} else if(type === 'Evm' || type === 'Svm') {
+			auth[type] = {address} 
+		}
+		const response = await childActor.get_posts_by_auth(auth)
 		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
-	}, [profile, childActor])
+	}, [childActor])
 
-	const getProfileByAuth = useCallback(async (account) => {
+	const getProfileByAuth = useCallback(async (address, type) => {
 
 		if(!childActor) return
-
+		
 		const auth = {}
-		if (account.type === 'Evm' ||  account.type === 'Svm') {
-			auth[account.type] = {address: account.address}
-		} else {
-			auth[account.type] = null
+		if (type === 'Ic') {
+			auth[type] = { principal: Principal.fromText(address) } 
+		} else if(type === 'Evm' || type === 'Svm') {
+			auth[type] = {address} 
 		}
 		const response = await childActor.get_profile_by_auth(auth)
-		setProfile(response[0])
+		setProfileUser(response[0])
 	}, [childActor])
 
 	const getProfile = useCallback(async () => {
@@ -254,7 +261,7 @@ const ChildProvider = ({ children }) => {
       const profile = response.Ok
       setProfile(profile)
 
-			updateIdentity('Svm', identity)
+		updateIdentity('Svm', identity)
 
       toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
     } catch (error) {
@@ -291,7 +298,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByUser, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login }
+	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 
