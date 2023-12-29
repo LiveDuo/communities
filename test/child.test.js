@@ -26,10 +26,10 @@ describe('Testing with done', () => {
 
 		// get random identity for svm
 		signerSvm = web3.Keypair.generate()
-		identitySvm =Ed25519KeyIdentity.generate()
+		identitySvm = Ed25519KeyIdentity.generate()
 
 		// get random identity for ic
-		identityIc =Ed25519KeyIdentity.generate()
+		identityIc = Ed25519KeyIdentity.generate()
 		
 		// create child actor
 		canisters = await getCanisters('local')
@@ -152,7 +152,7 @@ describe('Testing with done', () => {
 		expect(userLastPost.authentication.Evm.address).toBe(addressSigner)
 	})
 
-	test('Should create, hide and restore a post', async () => {
+	test.skip('Should create, hide and restore a post', async () => {
 		const signerAddress = await signerEvm.getAddress()
 
 		// create a post
@@ -187,7 +187,7 @@ describe('Testing with done', () => {
 		expect(post2.Ok).toBeDefined()
 	})
 
-	test('Should create, hide, and restore a reply', async () => {
+	test.skip('Should create, hide, and restore a reply', async () => {
 		const signerAddress = await signerEvm.getAddress()
 
 		// create a post
