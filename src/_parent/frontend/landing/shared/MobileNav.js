@@ -1,4 +1,4 @@
-import { Stack, Flex, Text, Collapse, Icon, Link } from '@chakra-ui/react'
+import { Stack, Flex, Text, Collapse, Link } from '@chakra-ui/react'
 import { useDisclosure, useColorModeValue } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons'

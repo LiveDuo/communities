@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Stack, Icon, Link, Popover, PopoverTrigger, PopoverContent } from '@chakra-ui/react';
+import { Box, Flex, Text, Stack, Link, Popover, PopoverTrigger, PopoverContent } from '@chakra-ui/react';
 import { useColorModeValue } from '@chakra-ui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
