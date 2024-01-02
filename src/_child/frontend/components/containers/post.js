@@ -12,7 +12,7 @@ import { faArrowLeft, faEyeSlash, faEye } from '@fortawesome/free-solid-svg-icon
 import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
 
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import Markdown from 'react-markdown'
 import Editor from '../Editor/Editor'
 import ToolBar from '../Editor/ToolBar'
@@ -27,13 +27,12 @@ const PostContainer = () => {
 	const [replyText, setReplyText] = useState('')
 	const [isPreview, setIsPreview] = useState(false)
 	const [post, setPost] = useState()
-
+  
+  const location = useLocation()
   const navigate = useNavigate()
   const params = useParams()
 
-  const goToPosts = async () => {
-    navigate(`/`)
-	}
+  const canGoBack = location.key !== 'default'
 
   const getData = useCallback(async () => {
     const post_id = params.index
@@ -64,11 +63,10 @@ const PostContainer = () => {
   const changeReplyVisibility = useCallback(async (replyId, statusType)=>{
     const status = { [statusType]: null }
     const replyIndex = post.replies.findIndex(r => r.reply_id === replyId)
-    console.log(replyIndex)
     post.replies[replyIndex].status = status
     setPost(p => ({...p, replies: [...post.replies]}))
     await updateReplyStatus(replyId, status)
-  },[updatePostStatus, post])
+  },[post, updateReplyStatus])
 
   const isAdmin = useMemo(()=> profile?.roles?.some(r => r.hasOwnProperty('Admin') ),[profile])
 
@@ -77,13 +75,14 @@ const PostContainer = () => {
 			getData()
     }
 	}, [getData, childActor])
+
   if (!post) return <Spinner/>
 
   return <Box>
       {post ? 
         <Box mt="20px" padding="40px">
           <Flex mt="40px" mb="20px" justifyContent="center" alignItems="center">
-            <IconButton icon={<FontAwesomeIcon icon={faArrowLeft} />} onClick={() =>goToPosts()}/>
+            <IconButton icon={<FontAwesomeIcon icon={faArrowLeft} />} onClick={() =>navigate(-1)} disabled={!canGoBack}/>
             <Heading ml="40px" display="inline-block">{post.title}</Heading>
             {isAdmin && post.status.hasOwnProperty("Hidden") && <Tag ml="10px" colorScheme='orange' size={'md'}>Hidden</Tag>}
             <Text ml="auto">{timeSince(post.timestamp)}</Text>
