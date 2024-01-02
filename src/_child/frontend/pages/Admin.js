@@ -48,7 +48,7 @@ const Admin = () => {
               </Flex>
               <Box mb="40px" padding="20px 60px">
                 <Box textAlign="start" className="markdown-body">
-                  <Markdown>{post.description}</Markdown>
+                  <Markdown>{post.description.substring(0, 200)}</Markdown>
                 </Box>
               </Box>
             </Box>)}
