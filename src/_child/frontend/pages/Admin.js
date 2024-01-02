@@ -63,23 +63,23 @@ const Admin = () => {
           {posts?.map(post => 
             <Box key={post.post_id} mt="20px" border="1px" borderColor="gray.300" borderRadius="base">
               <Box _hover={{opacity: 0.7, cursor: 'pointer'}} onClick={() => goToPost(post.post_id)}>
-                <Flex mt="40px" mb="20px" justifyContent="center" alignItems="center">
+                <Flex mt="40px" mb="40px" justifyContent="center" alignItems="center">
                   <Heading ml="40px" display="inline-block">{post.title}</Heading>
                   <Tag ml="10px" colorScheme='orange' size={'md'}>Hidden</Tag>
                   <Text ml="auto" mr="40px">{timeSince(post.timestamp)}</Text>
                 </Flex>
-                <Flex mb="20px" padding="20px 60px" alignItems="center">
+                <Flex mb="40px" ml="60px" alignItems="center">
                   <Jazzicon diameter={20} seed={getSeedFromAuthentication(post.authentication)} />
                   <Text ml="20px">{addressShort(getAddress(post.authentication))}</Text>
                 </Flex>
-                <Box mb="40px" padding="20px 60px">
+                <Box mb="20px" ml="60px" >
                   <Box textAlign="start" className="markdown-body">
                     <Markdown>{post.description.substring(0, 200)}</Markdown>
                   </Box>
                 </Box>
               </Box>
-              <Divider mb="10px"/>
-              <Flex m="8px">
+              <Divider/>
+              <Flex m="10px">
                 <Button leftIcon={<FontAwesomeIcon icon={faEye} />}  onClick={() => changePostVisibility(post.post_id, 'Visible')} variant={'ghost'} ml="auto"> Restore Post</Button>
               </Flex>
             </Box>)}
@@ -99,9 +99,9 @@ const Admin = () => {
                 <Markdown>{reply.text.substring(0, 100)}</Markdown>
               </Box>
             </Box>
-            <Divider mb="10px"/>
+            <Divider/>
             <Box>
-              <Flex m="8px">
+              <Flex m="10px">
                 <Button leftIcon={<FontAwesomeIcon icon={faEye} />}  onClick={() => changeReplyVisibility(reply.reply_id, 'Visible')} variant={'ghost'} ml="auto"> Restore Reply</Button>
               </Flex>
             </Box>
