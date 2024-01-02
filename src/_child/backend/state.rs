@@ -95,6 +95,7 @@ pub struct ReplyResponse {
 #[derive(Clone, CandidType, Deserialize, Debug)]
 pub struct PostResponse {
     pub title: String,
+    pub post_id: u64,
     pub description: String,
     pub authentication: AuthenticationWithAddress,
     pub timestamp: u64,

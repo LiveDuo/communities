@@ -29,6 +29,7 @@ type PostStatus = variant {
   Hidden;
 };
 type PostResponse = record {
+  post_id: nat64;
   authentication : AuthenticationWithAddress;
   title : text;
   description : text;
@@ -43,6 +44,12 @@ type PostSummary = record {
   description : text;
   last_activity : nat64;
   replies_count : nat64;
+  timestamp : nat64;
+  status: PostStatus;
+};
+type Post = record {
+  title : text;
+  description : text;
   timestamp : nat64;
   status: PostStatus;
 };
@@ -67,7 +74,8 @@ type ReplyResponse = record {
   authentication : AuthenticationWithAddress;
   "text" : text;
   timestamp : nat64;
-  status : ReplyStatus 
+  status : ReplyStatus;
+  reply_id: nat64;
 };
 type CreatePostResult = variant { Ok : PostSummary; Err : text };
 type CreateProfileResult = variant { Ok : Profile; Err : text };
@@ -80,6 +88,8 @@ type UpgradeCanisterResult = variant { Ok : null; Err : text };
 type GetMetadataResult = variant { Ok : Metadata; Err : text };
 type UpdatePostStatusResult = variant { Ok : null; Err : text };
 type UpdateReplyStatusResult = variant { Ok : null; Err : text };
+type GetHiddenPostsResult = variant { Ok : vec PostResponse; Err : text };
+type GetHiddenReplyResult = variant { Ok : vec ReplyResponse; Err : text };
 
 type Role = record { role : UserRole; timestamp : nat64 };
 
@@ -145,6 +155,8 @@ service : (opt principal, opt text, opt text ) -> {
   canister_status : () -> (CanisterStatusResponse);
   get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
+  get_hidden_posts : () -> (GetHiddenPostsResult) query;
+  get_hidden_replies : () -> (GetHiddenReplyResult) query;
   get_posts_by_auth : (Authentication) -> (GetPostsByAuthResult) query;
   get_profile : () -> (GetProfileResult) query;
   get_profile_by_auth : (AuthenticationWith) -> (opt ProfileResponse) query;

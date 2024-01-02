@@ -30,7 +30,6 @@ describe('Testing with done', () => {
 
 		// get random identity for ic
 		identityIc = Ed25519KeyIdentity.generate()
-
 		
 		// create child actor
 		canisters = await getCanisters('local')
@@ -58,7 +57,7 @@ describe('Testing with done', () => {
 		expect(identityEvm.getPrincipal().toString()).toBe(principal)
 		
 		await actorBackendEvm.create_post('hello', '')
-		const userPosts = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		const userPosts = await actorBackendEvm.get_posts_by_auth({Evm: { address: signerAddress}})
 		expect(userPosts.Ok.length).toBe(1)
 		identityEvm = Ed25519KeyIdentity.generate()
 		const {signature: signature1, loginMessageHash: loginMessageHash1} = await getSignatureAndMessage(signerEvm, identityEvm.getPrincipal())
@@ -77,7 +76,7 @@ describe('Testing with done', () => {
 		expect(identityEvm.getPrincipal().toString()).toBe(principal2)
 
 		await actorBackendEvm.create_post('hello', '')
-		const userPosts2 = await actorBackendEvm.get_posts_by_user({Evm: { address: signerAddress}})
+		const userPosts2 = await actorBackendEvm.get_posts_by_auth({Evm: { address: signerAddress}})
 		expect(userPosts2.Ok.length).toBe(2)
 		
 	})
@@ -91,7 +90,7 @@ describe('Testing with done', () => {
 		expect(address).toBe(signerSvm.publicKey.toString());
 
 		await actorBackendSvm.create_post('hello', '')
-		const userPosts = await actorBackendSvm.get_posts_by_user({Svm: { address: signerSvm.publicKey.toString()}})
+		const userPosts = await actorBackendSvm.get_posts_by_auth({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts.Ok.length).toBe(1)
 
 		identitySvm = Ed25519KeyIdentity.generate()
@@ -109,18 +108,17 @@ describe('Testing with done', () => {
 		expect(address2).toBe(signerSvm.publicKey.toString());
 
 		await actorBackendSvm.create_post('hello', '')
-		const userPosts2 = await actorBackendSvm.get_posts_by_user({Svm: { address: signerSvm.publicKey.toString()}})
+		const userPosts2 = await actorBackendSvm.get_posts_by_auth({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts2.Ok.length).toBe(2)
   	});
 	test("Should sign in with internet computer", async () => {
-		
 		// link address
 		const profile = await actorBackendIc.create_profile({Ic: null})
 		const principal = profile.Ok.active_principal
 		expect(principal.toString()).toBe(identityIc.getPrincipal().toString())
 
 		await actorBackendIc.create_post('hello', '')
-		const userPosts = await actorBackendIc.get_posts_by_user({Ic: null})
+		const userPosts = await actorBackendIc.get_posts_by_auth({Ic: {principal: principal}})
 		expect(userPosts.Ok.length).toBe(1)
 
 
@@ -130,7 +128,7 @@ describe('Testing with done', () => {
     	expect(principal1.toString()).toBe(identityIc.getPrincipal().toString())
 
 		await actorBackendIc.create_post('hello', '')
-		const userPosts2 = await actorBackendIc.get_posts_by_user({Ic: null})
+		const userPosts2 = await actorBackendIc.get_posts_by_auth({Ic: {principal: principal1}})
 		expect(userPosts2.Ok.length).toBe(2)
   	});
 
@@ -144,16 +142,16 @@ describe('Testing with done', () => {
 		await actorBackendIc.create_reply(postId, 'hello')
 
 		// get user last post
-		const addressSigner = await signerEvm.getAddress()
-		const userPosts = await actorBackendIc.get_posts_by_user({Evm: { address: addressSigner}})
+		const principal = identityIc.getPrincipal()
+		const userPosts = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
 		const userLastPost = userPosts.Ok.sort((a, b) => Number(b.timestamp / 1000n / 1000n) -  Number(a.timestamp / 1000n / 1000n)).at(0)
 
 		expect(userLastPost.title).toBe('hello')
 		expect(userLastPost.replies_count).toBe(1n)
-		expect(userLastPost.authentication.Evm.address).toBe(addressSigner)
+		expect(userLastPost.authentication.Ic.principal.toString()).toBe(principal.toString())
 	})
 
-	test.skip('Should create, hide and restore a post', async () => {
+	test('Should create, hide and restore a post', async () => {
 		const principal = identityIc.getPrincipal()
 
 		// create a post
@@ -161,7 +159,7 @@ describe('Testing with done', () => {
 		const postId = createdPost.Ok.post_id
 
 		const posts = await actorBackendIc.get_posts()
-		const userPosts = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
+		const userPosts = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
 		const post = await actorBackendIc.get_post(postId)
 		expect(posts.some(post => post.post_id === postId)).toBe(true)
 		expect(userPosts.Ok.some(post => post.post_id === postId)).toBe(true)
@@ -171,7 +169,7 @@ describe('Testing with done', () => {
 		await actorBackendIc.update_post_status(postId, {Hidden: null})
 
 		const posts1 = await actorBackendIc.get_posts()
-		const userPosts1 = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
+		const userPosts1 = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
 		const post1 = await actorBackendIc.get_post(postId)
 		expect(posts1.some(post => post.post_id === postId)).toBe(false)
 		expect(userPosts1.Ok.some(post => post.post_id === postId)).toBe(false)
@@ -182,13 +180,13 @@ describe('Testing with done', () => {
 
 		const posts2 = await actorBackendIc.get_posts()
 		const post2 = await actorBackendIc.get_post(postId)
-		const userPosts2 = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
+		const userPosts2 = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
 		expect(userPosts2.Ok.some(post => post.post_id === postId)).toBe(true)
 		expect(posts2.some(post => post.post_id === postId)).toBe(true)
 		expect(post2.Ok).toBeDefined()
 	})
 
-	test.skip('Should create, hide, and restore a reply', async () => {
+	test('Should create, hide, and restore a reply', async () => {
 		const principal = identityIc.getPrincipal()
 
 		// create a post
@@ -199,7 +197,7 @@ describe('Testing with done', () => {
 		const replyId = createdReply.Ok.reply_id
 
 		const posts = await actorBackendIc.get_posts()
-		const userPosts = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
+		const userPosts = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
 		const post = await actorBackendIc.get_post(postId)
 		expect(posts.find(p => p.post_id === postId).replies_count).toBe(1n)
 		expect(userPosts.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)
@@ -209,7 +207,7 @@ describe('Testing with done', () => {
 		await actorBackendIc.update_reply_status(replyId, {Hidden: null})
 
 		const posts1 = await actorBackendIc.get_posts()
-		const userPosts1 = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
+		const userPosts1 = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
 		const post1 = await actorBackendIc.get_post(postId)
 		expect(posts1.find(p => p.post_id === postId).replies_count).toBe(0n)
 		expect(userPosts1.Ok.find(p => p.post_id === postId).replies_count).toBe(0n)
@@ -219,47 +217,42 @@ describe('Testing with done', () => {
 		await actorBackendIc.update_reply_status(replyId, {Visible: null})
 
 		const posts2 = await actorBackendIc.get_posts()
-		const userPosts2 = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
+		const userPosts2 = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
 		const post2 = await actorBackendIc.get_post(postId)
 		expect(posts2.find(p => p.post_id === postId).replies_count).toBe(1n)
 		expect(userPosts2.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)
 		expect(post2.Ok.replies.some(r => r.reply_id === replyId)).toBe(true)
 	})
-	test('Should get hidden posts and replies', async () => {
-		const principal = identityIc.getPrincipal()
-
+	test('Should get hidden posts', async () => {
 		// create a post
 		const createdPost = await actorBackendIc.create_post('hello', '')
 		const postId = createdPost.Ok.post_id
-		// create a reply 
+
+		const hiddenPosts = await actorBackendIc.get_hidden_posts()
+		expect(hiddenPosts.Ok.find(p => p.post_id === postId)).toBeUndefined()
+
+		// hide a post
+		await actorBackendIc.update_post_status(postId, {Hidden: null})
+
+		const hiddenPosts1 = await actorBackendIc.get_hidden_posts()
+		expect(hiddenPosts1.Ok.find(p => p.post_id === postId)).toBeDefined()
+	})
+	test('Should get hidden replies', async () => {
+		// create a post
+		const createdPost = await actorBackendIc.create_post('hello', '')
+		const postId = createdPost.Ok.post_id
+
+		// create a reply
 		const createdReply = await actorBackendIc.create_reply(postId, 'hello')
 		const replyId = createdReply.Ok.reply_id
 
-		const posts = await actorBackendIc.get_posts()
-		const userPosts = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
-		const post = await actorBackendIc.get_post(postId)
-		expect(posts.find(p => p.post_id === postId).replies_count).toBe(1n)
-		expect(userPosts.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)
-		expect(post.Ok.replies.some(r => r.reply_id === replyId)).toBe(true)
-		
+		const hiddenReplies = await actorBackendIc.get_hidden_replies()
+		expect(hiddenReplies.Ok.find(p => p.reply_id === replyId)).toBeUndefined()
+
 		// hide a reply
 		await actorBackendIc.update_reply_status(replyId, {Hidden: null})
 
-		const posts1 = await actorBackendIc.get_posts()
-		const userPosts1 = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
-		const post1 = await actorBackendIc.get_post(postId)
-		expect(posts1.find(p => p.post_id === postId).replies_count).toBe(0n)
-		expect(userPosts1.Ok.find(p => p.post_id === postId).replies_count).toBe(0n)
-		expect(post1.Ok.replies.some(r => r.reply_id === replyId)).toBe(false)
-		
-		// restore a reply
-		await actorBackendIc.update_reply_status(replyId, {Visible: null})
-
-		const posts2 = await actorBackendIc.get_posts()
-		const userPosts2 = await actorBackendIc.get_posts_by_user({Ic: { principal: principal}})
-		const post2 = await actorBackendIc.get_post(postId)
-		expect(posts2.find(p => p.post_id === postId).replies_count).toBe(1n)
-		expect(userPosts2.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)
-		expect(post2.Ok.replies.some(r => r.reply_id === replyId)).toBe(true)
+		const hiddenReplies1 = await actorBackendIc.get_hidden_replies()
+		expect(hiddenReplies1.Ok.find(p => p.reply_id === replyId)).toBeDefined()
 	})
 })

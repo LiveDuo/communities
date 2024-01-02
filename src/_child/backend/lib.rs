@@ -220,15 +220,15 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 #[candid_method(update)]
 fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
     
+    let caller = ic_cdk::caller();
+    let caller_roles = get_user_roles(&caller);
+    let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+    if !caller_is_admin {
+        return Err("Caller is not admin".to_owned())
+    }
+    
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-
-        let caller = ic_cdk::caller();
-        let caller_roles = get_user_roles(&caller);
-        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
-        if !caller_is_admin {
-            return Err("Caller is not admin".to_owned())
-        }
 
         let post_opt = state.posts.get_mut(&post_id);
         if post_opt.is_none() {
@@ -243,17 +243,15 @@ fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
 #[update]
 #[candid_method(update)]
 fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+    let caller_roles = get_user_roles(&caller);
+    let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+    if !caller_is_admin {
+        return Err("Caller is not admin".to_owned())
+    }
     
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-
-        let caller = ic_cdk::caller();
-        let caller_roles = get_user_roles(&caller);
-        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
-        if !caller_is_admin {
-            return Err("Caller is not admin".to_owned())
-        }
-
         let reply_opt = state.replies.get_mut(&reply_id);
         if reply_opt.is_none() {
             return Err("Post does not exist".to_owned());
@@ -419,7 +417,8 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
             timestamp: post.timestamp,
             description: post.description.to_owned(),
             authentication,
-            status: post.status.to_owned()
+            status: post.status.to_owned(),
+            post_id: post_id.to_owned()
         };
         Ok(post_result)
     })
@@ -504,6 +503,78 @@ fn get_posts_by_auth(authentication: AuthenticationWithAddress) -> Result<Vec<Po
                 })
             }).collect::<Vec<_>>();
         Ok(user_post)
+    })
+}
+#[query]
+#[candid_method(query)]
+fn get_hidden_posts() -> Result<Vec<PostResponse>, String> {
+    STATE.with(|s| {
+        let state = s.borrow();
+
+        let caller = ic_cdk::caller();
+        let caller_roles = get_user_roles(&caller);
+        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+        if !caller_is_admin {
+            return Err("Caller is not admin".to_owned())
+        }
+
+        let hidden_post = state.posts
+            .iter()
+            .filter_map(|(post_id, post)| {
+                if post.status == PostStatus::Visible {
+                    return None;
+                }
+                let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(post_id).unwrap().first_key_value().unwrap();
+                let profile = state.profiles.get(profile_id).unwrap();
+                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                let post_response = PostResponse {
+                    title: post.title.to_owned(),
+                    post_id: post_id.to_owned(),
+                    description: post.description.to_owned(),
+                    authentication: authentication,
+                    timestamp: post.timestamp.to_owned(),
+                    status: post.status.to_owned(),
+                    replies: vec![]
+                };
+                Some(post_response)
+            })
+            .collect::<Vec<_>>();
+        Ok(hidden_post)
+    })
+}
+#[query]
+#[candid_method(query)]
+fn get_hidden_replies() -> Result<Vec<ReplyResponse>, String> {
+    STATE.with(|s| {
+        let state = s.borrow();
+
+        let caller = ic_cdk::caller();
+        let caller_roles = get_user_roles(&caller);
+        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+        if !caller_is_admin {
+            return Err("Caller is not admin".to_owned())
+        }
+
+        let replies_post = state.replies
+            .iter()
+            .filter_map(|(reply_id, reply)| {
+                if reply.status == ReplyStatus::Visible {
+                    return None;
+                }
+                let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
+                let profile = state.profiles.get(profile_id).unwrap();
+                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                let post_response = ReplyResponse {
+                    reply_id: reply_id.to_owned(),
+                    text: reply.text.to_owned(),
+                    authentication: authentication,
+                    timestamp: reply.timestamp.to_owned(),
+                    status: reply.status.to_owned(),
+                };
+                Some(post_response)
+            })
+            .collect::<Vec<_>>();
+        Ok(replies_post)
     })
 }
 
