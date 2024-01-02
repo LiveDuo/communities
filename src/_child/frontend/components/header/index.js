@@ -86,7 +86,8 @@ const Header = () => {
               Sign in with...
             </MenuButton>
             <MenuList>
-              <MenuItem icon={<Icon fontSize="md" as={BiCog} />} onClick={()=> onUpgradeModalOpen()}>Admin</MenuItem>
+              <MenuItem icon={<Icon fontSize="md" as={BiCog} />} onClick={()=> onUpgradeModalOpen()}>Upgrades</MenuItem>
+              <MenuItem icon={<Icon fontSize="md" as={BiCog} />} onClick={()=> navigate('/admin')} >Admin</MenuItem>
               <MenuItem icon={<Icon fontSize="md" as={BiLogOut} />} onClick={()=> disconnect()}>Logout</MenuItem>
             </MenuList>
           </Menu>
