@@ -9,15 +9,21 @@ import { timeSince } from '../utils/time'
 import { getAddress, getSeedFromAuthentication } from '../utils/address'
 
 import { ChildContext } from '../store/child'
+import { useNavigate } from 'react-router-dom'
 
 const Admin = () => {
 
   const { getPosts, posts, childActor } = useContext(ChildContext)
+  const navigate = useNavigate()
 
   useEffect(()=>{
     if (childActor)
       getPosts()
   },[getPosts, childActor])
+
+  const goToPost = (postId) => {
+    navigate(`/post/${postId}`)
+  }
 
   return (
     <Tabs>
@@ -29,8 +35,8 @@ const Admin = () => {
       <TabPanels>
         <TabPanel>
 
-          {posts.map(post => 
-            <Box mt="20px" border="1px" borderColor="gray.300" borderRadius="base">
+          {posts?.map(post => 
+            <Box key={post.post_id} mt="20px" border="1px" borderColor="gray.300" borderRadius="base" _hover={{opacity: 0.7, cursor: 'pointer'}} onClick={() => goToPost(post.post_id)}>
               <Flex mt="40px" mb="20px" justifyContent="center" alignItems="center">
                 <Heading ml="40px" display="inline-block">{post.title}</Heading>
                 <Tag ml="10px" colorScheme='orange' size={'md'}>Hidden</Tag>
