@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react'
+import { useContext, useEffect, useMemo } from 'react'
 
 import { Button, Box, Flex, Link, Menu, MenuButton, MenuList, MenuItem, IconButton } from '@chakra-ui/react'
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
@@ -22,7 +22,7 @@ const Header = () => {
   const location = useLocation()
 
   const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure } = useContext(IdentityContext)
-  const { getProfile, login } = useContext(ChildContext)
+  const { getProfile, login, profile } = useContext(ChildContext)
 
   useEffect(() => {
       getProfile()
@@ -47,6 +47,7 @@ const Header = () => {
     }
     await login(type)
   }
+  const isAdmin = useMemo(()=> profile?.roles?.some(r => r.hasOwnProperty('Admin') ),[profile])
 
   return (
     <Flex m="20px" alignItems="center">
@@ -86,8 +87,8 @@ const Header = () => {
               Sign in with...
             </MenuButton>
             <MenuList>
-              <MenuItem icon={<FontAwesomeIcon icon={faUpload} />} onClick={()=> onUpgradeModalOpen()}>Upgrades</MenuItem>
-              <MenuItem icon={<FontAwesomeIcon icon={faGear} />} onClick={()=> navigate('/admin')} >Admin</MenuItem>
+              {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faUpload} />} onClick={()=> onUpgradeModalOpen()}>Upgrades</MenuItem>}
+              {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faGear} />} onClick={()=> navigate('/admin')} >Admin</MenuItem>}
               <MenuItem icon={<FontAwesomeIcon icon={faArrowRightFromBracket} />} onClick={()=> disconnect()}>Logout</MenuItem>
             </MenuList>
           </Menu>

@@ -48,7 +48,8 @@ const idlFactory = ({ IDL }) => {
 		timestamp: IDL.Nat64,
 		replies: IDL.Vec(ReplyResponse),
     	authentication: authenticationWithAddress,
-		status: PostStatus
+		status: PostStatus,
+		post_id: IDL.Nat64
 	});
 	const UserRole =IDL.Variant({ Admin: IDL.Null }) 
 
@@ -124,6 +125,8 @@ const idlFactory = ({ IDL }) => {
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
 		get_posts_by_auth: IDL.Func([authenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
+		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
 		get_profile_by_auth: IDL.Func([authenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
@@ -195,6 +198,18 @@ const ChildProvider = ({ children }) => {
 		const response = await childActor.get_post(BigInt(index)).then(r =>  r.Ok)
 		const _post = {...response, timestamp: new Date(Number(response.timestamp / 1000n / 1000n)), replies: response.replies.map(r => ({...r, timestamp: new Date(Number(r.timestamp / 1000n / 1000n))}))}
 		return _post
+	}, [childActor])
+
+	const getHiddenPosts = useCallback(async () => {
+		const response = await childActor.get_hidden_posts().then(r =>  r.Ok)
+		const _hiddenPost = response.map(p => ({...p, timestamp: new Date(Number(p.timestamp / 1000n / 1000n))}))
+		return _hiddenPost
+	}, [childActor])
+	
+	const getHiddenReplies = useCallback(async () => {
+		const response = await childActor.get_hidden_replies().then(r =>  r.Ok)
+		const _hiddenReplies = response.map(r => ({...r[1], postId: r[0], timestamp: new Date(Number(r[1]?.timestamp / 1000n / 1000n))}))
+		return _hiddenReplies
 	}, [childActor])
 
 	const getPostsByAuth = useCallback(async (address, type) => {
@@ -313,7 +328,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus }
+	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 
