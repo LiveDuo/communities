@@ -544,7 +544,7 @@ fn get_hidden_posts() -> Result<Vec<PostResponse>, String> {
 }
 #[query]
 #[candid_method(query)]
-fn get_hidden_replies() -> Result<Vec<ReplyResponse>, String> {
+fn get_hidden_replies() -> Result<Vec<(u64,ReplyResponse)>, String> {
     STATE.with(|s| {
         let state = s.borrow();
 
@@ -555,26 +555,27 @@ fn get_hidden_replies() -> Result<Vec<ReplyResponse>, String> {
             return Err("Caller is not admin".to_owned())
         }
 
-        let replies_post = state.replies
+        let hidden_replies = state.replies
             .iter()
             .filter_map(|(reply_id, reply)| {
                 if reply.status == ReplyStatus::Visible {
                     return None;
                 }
                 let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
+                let (post_id, _) = state.relations.reply_id_to_post_id.forward.get(reply_id).unwrap().first_key_value().unwrap();
                 let profile = state.profiles.get(profile_id).unwrap();
                 let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
-                let post_response = ReplyResponse {
+                let reply_response = ReplyResponse {
                     reply_id: reply_id.to_owned(),
                     text: reply.text.to_owned(),
                     authentication: authentication,
                     timestamp: reply.timestamp.to_owned(),
                     status: reply.status.to_owned(),
                 };
-                Some(post_response)
+                Some((post_id.to_owned(), reply_response))
             })
             .collect::<Vec<_>>();
-        Ok(replies_post)
+        Ok(hidden_replies)
     })
 }
 

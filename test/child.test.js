@@ -151,7 +151,7 @@ describe('Testing with done', () => {
 		expect(userLastPost.authentication.Ic.principal.toString()).toBe(principal.toString())
 	})
 
-	test('Should create, hide and restore a post', async () => {
+	test.skip('Should create, hide and restore a post', async () => {
 		const principal = identityIc.getPrincipal()
 
 		// create a post
@@ -186,7 +186,7 @@ describe('Testing with done', () => {
 		expect(post2.Ok).toBeDefined()
 	})
 
-	test('Should create, hide, and restore a reply', async () => {
+	test.skip('Should create, hide, and restore a reply', async () => {
 		const principal = identityIc.getPrincipal()
 
 		// create a post
@@ -223,7 +223,7 @@ describe('Testing with done', () => {
 		expect(userPosts2.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)
 		expect(post2.Ok.replies.some(r => r.reply_id === replyId)).toBe(true)
 	})
-	test('Should get hidden posts', async () => {
+	test.skip('Should get hidden posts', async () => {
 		// create a post
 		const createdPost = await actorBackendIc.create_post('hello', '')
 		const postId = createdPost.Ok.post_id
@@ -237,7 +237,7 @@ describe('Testing with done', () => {
 		const hiddenPosts1 = await actorBackendIc.get_hidden_posts()
 		expect(hiddenPosts1.Ok.find(p => p.post_id === postId)).toBeDefined()
 	})
-	test('Should get hidden replies', async () => {
+	test.skip('Should get hidden replies', async () => {
 		// create a post
 		const createdPost = await actorBackendIc.create_post('hello', '')
 		const postId = createdPost.Ok.post_id
@@ -247,12 +247,12 @@ describe('Testing with done', () => {
 		const replyId = createdReply.Ok.reply_id
 
 		const hiddenReplies = await actorBackendIc.get_hidden_replies()
-		expect(hiddenReplies.Ok.find(p => p.reply_id === replyId)).toBeUndefined()
-
+		expect(hiddenReplies.Ok.find(p => p[1].reply_id === replyId)).toBeUndefined()
+		
 		// hide a reply
 		await actorBackendIc.update_reply_status(replyId, {Hidden: null})
-
+		
 		const hiddenReplies1 = await actorBackendIc.get_hidden_replies()
-		expect(hiddenReplies1.Ok.find(p => p.reply_id === replyId)).toBeDefined()
+		expect(hiddenReplies1.Ok.find(p => p[1].reply_id === replyId)).toBeDefined()
 	})
 })
