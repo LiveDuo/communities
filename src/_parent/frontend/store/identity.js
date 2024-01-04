@@ -5,6 +5,7 @@ import { useToast, useDisclosure } from '@chakra-ui/react'
 import { parentCanisterId } from './parent'
 import { ledgerCanisterId } from './ledger'
 import { cmcCanisterId } from './cmc'
+import { Actor } from '@dfinity/agent'
 
 import { isLocal } from '../utils/url'
 
@@ -53,7 +54,12 @@ const IdentityProvider = ({ children }) => {
 	
 	const createActor = (options) => {
 		options.host = host
-		return window?.ic[walletName].createActor(options)
+		if(options.type === 'wallet')  {
+			return window?.ic[walletName].createActor(options)
+		} else if(options.type === 'anonymous') {
+			const { interfaceFactory, ...restOptions } = options;
+			return Actor.createActor(interfaceFactory, restOptions)
+		}
 	}
 
 	const batchTransactions = (txs) => {

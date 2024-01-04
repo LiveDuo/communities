@@ -9,6 +9,7 @@ import { CmcContext, cmcCanisterId } from './cmc'
 import { getBigIntAllowance, ONE_MYRIAD, ONE_TRILLION, ICP_MICP } from '../utils/bigint'
 import { getAccountId } from '../utils/account'
 import { isLocal } from '../utils/url'
+import { getAgent } from '../utils/agent'
 
 export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
 
@@ -18,8 +19,19 @@ const idlParentFactory = ({ IDL }) => {
 
 	const canisterState = IDL.Variant({ Preparing: IDL.Null, Creating: IDL.Null, Installing: IDL.Null, Uploading: IDL.Null, Authorizing: IDL.Null, Ready: IDL.Null })
 	const canisterData = IDL.Record({ id: IDL.Opt(IDL.Principal), timestamp: IDL.Nat64, state: canisterState, })
+	const UpgradeFrom = IDL.Record({ version: IDL.Text, track: IDL.Text })
+	const Track = IDL.Record({ name: IDL.Text, timestamp: IDL.Nat64 })
+	const UpgradeWithTrack = IDL.Record({
+		version: IDL.Text,
+		upgrade_from: IDL.Opt(UpgradeFrom),
+		timestamp: IDL.Nat64,
+		assets: IDL.Vec(IDL.Text),
+		track: Track,
+		description: IDL.Text
+	})
 
 	return IDL.Service({
+		'get_upgrades': IDL.Func([], [IDL.Vec(UpgradeWithTrack)], ['query']),
 		'get_user_canisters': IDL.Func([], [IDL.Vec(canisterData)], ['query']),
 		'create_child': IDL.Func([], [IDL.Variant({ Ok: IDL.Principal, Err: IDL.Text })], []),
 	})
@@ -40,21 +52,20 @@ const ParentProvider = ({ children }) => {
 	const [loading, setLoading] = useState(false)
 	// const [parentActorAnonymous, setParentActorAnonymous] = useState(null)
 
-	const loadActor = useCallback(async () => {
-
-		// const actorOptions = { agent: getAgent(null), canisterId: parentCanisterId, host: icHost }
-		// const actorAnonymous = Actor.createActor(idlParentFactory, actorOptions)
-		// setParentActorAnonymous(actorAnonymous)
-
-		const actorWallet = await createActor({ canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
-		setParentActor(actorWallet)
-	}, [createActor])
+	const loadActor = useCallback(() => {
+		let _actorOptions
+		if (walletConnected) {
+			_actorOptions = {type: 'wallet', canisterId: parentCanisterId, interfaceFactory: idlParentFactory }
+		} else {
+			_actorOptions = {type: 'anonymous',  agent: getAgent(null), canisterId: parentCanisterId, interfaceFactory: idlParentFactory, }
+		}
+		const _actor = createActor(_actorOptions)
+		setParentActor(_actor)
+	}, [createActor, walletConnected])
 	
 	useEffect(() => {
-		if (walletConnected) {
-			loadActor()
-		}
-	}, [loadActor, walletConnected])
+		loadActor()
+	}, [loadActor])
 
 	// const createChild = async () => {
 	// 	setLoading(true)
@@ -142,12 +153,17 @@ const ParentProvider = ({ children }) => {
 		}
 	}, [toast, parentActor])
 
+	const getUpgrades = useCallback(async()=> {
+		const upgrades = await parentActor.get_upgrades()
+		return upgrades
+	},[parentActor])
+
 	useEffect(() => {
 		if (parentActor)
 			getUserCommunities()
 	}, [parentActor, getUserCommunities])
 
-	const value = { createUserCommunity, userCommunities, loading, setLoading }
+	const value = { createUserCommunity, userCommunities, loading, setLoading, parentActor, getUpgrades }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }
