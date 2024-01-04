@@ -84,7 +84,7 @@ const UpgradeModal = () => {
 								upgrades?.map((u, i) => (
 									<Box key={i} borderWidth='1px' borderRadius='lg' p="20px" mb="8px">
 										<Box mb="16px">
-											<Text ml="4px" as="span">Track: <Tag>{u.track}</Tag></Text>
+											<Text ml="4px" as="span">Track: <Tag>{u.track.name}</Tag></Text>
 											<Text ml="4px" as="span">Version: <Tag>{u.version}</Tag></Text>
 										</Box>
 										<Text mb="16px">{u.description ?? 'No description'}</Text>

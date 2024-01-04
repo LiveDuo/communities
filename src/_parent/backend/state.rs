@@ -154,11 +154,12 @@ pub struct UpgradeWithTrack {
     pub description: String,
     pub timestamp: u64,
     pub assets: Vec<String>,
-    pub track: String
+    pub track: Track
 }
 #[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
 pub struct Track {
     pub name: String,
+    pub timestamp: u64
 }
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]

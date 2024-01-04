@@ -64,13 +64,14 @@ const idlFactory = ({ IDL }) => {
 	});
 
 	const UpgradeFrom = IDL.Record({version: IDL.Text, track: IDL.Text})
+	const Track = IDL.Record({name: IDL.Text, timestamp: IDL.Nat64})
 	const UpgradeWithTrack = IDL.Record({
 		version: IDL.Text,
 		upgrade_from: IDL.Opt(UpgradeFrom),
 		timestamp: IDL.Nat64,
 		assets: IDL.Vec(IDL.Text),
 		description: IDL.Text,
-		track: IDL.Text
+		track: Track
 	})
 
 	const Metadata = IDL.Record({version: IDL.Text, track: IDL.Text})

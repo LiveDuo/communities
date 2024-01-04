@@ -20,7 +20,7 @@ fn init() {
 }
 
 #[update]
-#[candid_method(update)]
+// #[candid_method(update)]
 async fn create_child() -> Result<Principal, String> {
     let id = ic_cdk::id();
     let caller = ic_cdk::caller();
@@ -48,11 +48,11 @@ async fn create_child() -> Result<Principal, String> {
 
     // install wasm code
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Installing,)).await.unwrap().0.unwrap();});
-    install_code(canister_id, &version.track, &version.version, &caller).await.unwrap();
+    install_code(canister_id, &version.track.name, &version.version, &caller).await.unwrap();
 
     // upload frontend assets
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Uploading,)).await.unwrap().0.unwrap();});
-    store_assets(canister_id, &version.assets, &version.version, &version.track).await.unwrap();
+    store_assets(canister_id, &version.assets, &version.version, &version.track.name).await.unwrap();
 
     // set controllers
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Authorizing, )).await.unwrap().0.unwrap();});
@@ -251,7 +251,7 @@ fn get_next_upgrades(version: String, track: String) -> Vec<UpgradeWithTrack> {
                 upgrade_from: u.upgrade_from.to_owned(),
                 timestamp: u.timestamp,
                 assets: u.assets.to_owned(),
-                track: track.name.to_owned(),
+                track: track.to_owned(),
                 description: u.description.to_owned()
             }
         }).collect::<Vec<_>>()
@@ -266,13 +266,13 @@ fn get_upgrades() -> Vec<UpgradeWithTrack> {
         let state = s.borrow();
         state.upgrades.iter().map(|(id, u)| {
 					let (track_id,_) = state.relations.track_id_to_upgrade_id.backward.get(id).unwrap().first_key_value().unwrap();
-					let track: &Track  = state.tracks.get(track_id).unwrap();
+					let track  = state.tracks.get(track_id).unwrap();
 					UpgradeWithTrack {
 						version: u.version.to_owned(),
 						upgrade_from: u.upgrade_from.to_owned(),
 						timestamp: u.timestamp,
 						assets: u.assets.to_owned(),
-						track: track.name.to_owned(),
+						track: track.to_owned(),
                         description: u.description.to_owned()
 					}
 				}).collect::<Vec<_>>()
@@ -302,7 +302,7 @@ fn get_upgrade(version: String, track: String) -> Option<UpgradeWithTrack> {
             upgrade_from: upgrade.upgrade_from.to_owned(),
             timestamp: upgrade.timestamp,
             assets: upgrade.assets.to_owned(),
-            track: track.name.to_owned(),
+            track: track.to_owned(),
             description: upgrade.description.to_owned()
         })
 	})
@@ -459,6 +459,7 @@ fn get_latest_version() -> UpgradeWithTrack {
     STATE.with(|s| {
         let state = s.borrow();
         let default_track_id = state.indexes.track.get(&DEFAULT_TRACK.to_owned()).unwrap();
+        let default_track = state.tracks.get(default_track_id).unwrap(); 
         let upgrades_ids = state.relations.track_id_to_upgrade_id.forward.get(default_track_id);
         let mut upgrades = upgrades_ids.unwrap().iter().map(|(upgrade_id, _)| {
             let upgrade = state.upgrades.get(upgrade_id).unwrap();
@@ -467,7 +468,7 @@ fn get_latest_version() -> UpgradeWithTrack {
                 upgrade_from: upgrade.upgrade_from.to_owned(),
                 timestamp: upgrade.timestamp,
                 assets: upgrade.assets.to_owned(),
-                track: DEFAULT_TRACK.to_owned(),
+                track: default_track.to_owned(),
                 description: upgrade.description.to_owned()
             }
         }).collect::<Vec<_>>();
@@ -510,7 +511,7 @@ fn add_track(name: String, caller: Principal) -> Result<(), String> {
 
         // add track
         let track_id = uuid(&caller.to_string());
-        let track =  Track { name:  name.to_owned()};
+        let track =  Track { name:  name.to_owned(), timestamp: ic_cdk::api::time()};
         state.tracks.insert(track_id, track);
         state.indexes.track.insert(name, track_id);
         

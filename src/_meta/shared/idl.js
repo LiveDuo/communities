@@ -74,7 +74,8 @@ exports.childFactory = childFactory
 
 const parentFactory = ({ IDL }) => {
 	const UpgradeFrom = IDL.Record({ 'version': IDL.Text, 'track': IDL.Text })
-	const UpgradeWithTrack = IDL.Record({ 'version': IDL.Text, "upgrade_from": IDL.Opt(UpgradeFrom), 'timestamp': IDL.Nat64, 'assets': IDL.Vec(IDL.Text), 'track': IDL.Text, 'description': IDL.Text })
+	const track = IDL.Record({ 'name': IDL.Text, 'timestamp': IDL.Nat64 })
+	const UpgradeWithTrack = IDL.Record({ 'version': IDL.Text, "upgrade_from": IDL.Opt(UpgradeFrom), 'timestamp': IDL.Nat64, 'assets': IDL.Vec(IDL.Text), 'track': track, 'description': IDL.Text })
 
 	return IDL.Service({
 		'create_child': IDL.Func([], [IDL.Variant({ 'Ok': IDL.Principal, 'Err': IDL.Text })], []),
