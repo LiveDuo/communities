@@ -221,8 +221,12 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
     
     let caller = ic_cdk::caller();
-    let caller_roles = get_user_roles(&caller);
-    let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+    let caller_roles_opt = get_user_roles(&caller);
+    let caller_is_admin = match caller_roles_opt {
+        Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+        None => false
+    };
+
     if !caller_is_admin {
         return Err("Caller is not admin".to_owned())
     }
@@ -244,8 +248,12 @@ fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
 #[candid_method(update)]
 fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String> {
     let caller = ic_cdk::caller();
-    let caller_roles = get_user_roles(&caller);
-    let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+    let caller_roles_opt = get_user_roles(&caller);
+    let caller_is_admin = match caller_roles_opt {
+        Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+        None => false
+    };
+
     if !caller_is_admin {
         return Err("Caller is not admin".to_owned())
     }
@@ -273,7 +281,11 @@ fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<Prof
             return None; 
         }
         let profile  = state.profiles.get(&profile_id_opt.unwrap()).unwrap();
-        let user_roles = get_user_roles(&profile.active_principal);
+        let user_roles_opt = get_user_roles(&profile.active_principal);
+        let user_roles = match user_roles_opt {
+            Some(caller_roles) => caller_roles,
+            None => vec![]
+        };
         Some(ProfileResponse {
             name: profile.name.to_owned(),
             description: profile.description.to_owned(),
@@ -288,8 +300,11 @@ fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<Prof
 #[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
     let caller = ic_cdk::caller();
-    let caller_roles = get_user_roles(&caller);
-    let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+    let caller_roles_opt = get_user_roles(&caller);
+    let caller_is_admin = match caller_roles_opt {
+        Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+        None => false
+    };
 
     STATE.with(|s| {
         let state = &mut s.borrow_mut();
@@ -357,7 +372,11 @@ fn get_profile() -> Result<ProfileResponse, String> {
         }
         let profile_id = profile_id_opt.unwrap();
         let profile = state.profiles.get(profile_id).unwrap();
-        let user_roles = get_user_roles(&caller);
+        let user_roles_opt = get_user_roles(&caller);
+        let user_roles = match user_roles_opt {
+            Some(user_roles) => user_roles,
+            None => vec![] 
+        };
         Ok(ProfileResponse {
             name: profile.name.to_owned(),
             description: profile.description.to_owned(),
@@ -372,8 +391,11 @@ fn get_profile() -> Result<ProfileResponse, String> {
 #[candid_method(query)]
 fn get_post(post_id: u64) -> Result<PostResponse, String> {
     let caller = ic_cdk::caller();
-    let caller_roles = get_user_roles(&caller);
-    let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+    let caller_roles_opt = get_user_roles(&caller);
+    let caller_is_admin = match caller_roles_opt {
+        Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+        None => false
+    };
 
     STATE.with(|s| {
         let state = s.borrow();
@@ -445,8 +467,11 @@ fn get_posts_by_auth(authentication: AuthenticationWithAddress) -> Result<Vec<Po
         }
 
         let profile = state.profiles.get(profile_id_opt.unwrap()).unwrap();
-        let caller_roles = get_user_roles(&profile.active_principal);
-        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+        let caller_roles_opt = get_user_roles(&profile.active_principal);
+        let caller_is_admin = match caller_roles_opt {
+            Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+            None => false
+        };
     
         let user_post =  post_ids_opt
             .unwrap()
@@ -512,8 +537,11 @@ fn get_hidden_posts() -> Result<Vec<PostResponse>, String> {
         let state = s.borrow();
 
         let caller = ic_cdk::caller();
-        let caller_roles = get_user_roles(&caller);
-        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+        let caller_roles_opt = get_user_roles(&caller);
+        let caller_is_admin = match caller_roles_opt {
+            Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+            None => false
+        };
         if !caller_is_admin {
             return Err("Caller is not admin".to_owned())
         }
@@ -549,8 +577,12 @@ fn get_hidden_replies() -> Result<Vec<(u64,ReplyResponse)>, String> {
         let state = s.borrow();
 
         let caller = ic_cdk::caller();
-        let caller_roles = get_user_roles(&caller);
-        let caller_is_admin = caller_roles.iter().any(|r| r == &UserRole::Admin);
+        let caller_roles_opt = get_user_roles(&caller);
+        let caller_is_admin = match caller_roles_opt {
+            Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+            None => false
+        };
+
         if !caller_is_admin {
             return Err("Caller is not admin".to_owned())
         }

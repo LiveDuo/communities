@@ -66,23 +66,24 @@ pub fn format_number(num: u64) -> String {
     format!("{:.*}{}", digits, num1, si[index].1)
 }
 
-pub fn get_user_roles(caller: &Principal) -> Vec<UserRole> {
+pub fn get_user_roles(caller: &Principal) -> Option<Vec<UserRole>> {
     STATE.with(|s| {
         let state = s.borrow();
         let profile_id_opt = state.indexes.active_principal.get(caller);
 
         if profile_id_opt.is_none() {
-            return vec![];
+            return None;
         }
         let role_ids =  state.relations.profile_id_to_role_id.forward.get(profile_id_opt.unwrap());
 
         if role_ids.is_none() {
-            return vec![];
+            return None;
         }
-        role_ids
+        let user_roles = role_ids
             .unwrap()
             .iter()
             .map(|(role_id, _)| state.roles.get(role_id).unwrap().role.to_owned())
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>();
+        Some(user_roles)
     })
 }
