@@ -1,12 +1,17 @@
-import { Box, Tag, Heading, Table, Thead, Tbody, Tr, Th, Td, TableCaption, TableContainer } from '@chakra-ui/react'
+import { Box, Flex, Tag, Heading, Table, Thead, Tbody, Tr, Th, Td, TableCaption, TableContainer, Button, IconButton } from '@chakra-ui/react'
 import { useContext, useEffect, useCallback, useState } from 'react'
 import { ParentContext } from '../store/parent'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHouse } from '@fortawesome/free-solid-svg-icons'
+import { useNavigate } from 'react-router-dom'
 
 const timestampOptions = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }
 
 const Upgrades = () => {
     const { getUpgrades, parentActor } = useContext(ParentContext)
     const [tracks, setTracks] = useState()
+
+    const navigate = useNavigate()
     
     const getUpgradesGrouped = useCallback(async () => {
         const upgrades = await getUpgrades()
@@ -46,34 +51,41 @@ const Upgrades = () => {
     }, [parentActor, getUpgrades])
 
     return (
-        <Box mt="60px">
-            {tracks?.length >= 0 &&
-                tracks.map((track, i) => <Box key={i} m="20px">
-                    <Heading mb="20px">{track.name} track</Heading>
-                    <TableContainer>
-                        <Table variant='simple'>
-                            <Thead>
-                                <Tr>
-                                    <Th>Version</Th>
-                                    <Th>Description</Th>
-                                    <Th>Upgrade from</Th>
-                                    <Th>Timestamp</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {track.upgrades.map((upgrade, i) =>
-                                    <Tr key={i}>
-                                        <Td><Tag>{upgrade.version}</Tag></Td>
-                                        <Td>{upgrade.description}</Td>
-                                        <Td><Tag>{upgrade.upgradeFrom}</Tag></Td>
-                                        <Td>{upgrade.timestamp.toLocaleTimeString([], timestampOptions)}</Td>
-                                    </Tr>)}
-                            </Tbody>
-                            <TableCaption>This track was created on {track.timestamp.toLocaleTimeString([], timestampOptions)}.</TableCaption>
-                        </Table>
-                    </TableContainer>
-                </Box>)}
-        </Box>
+        <>
+            <Flex m="20px">
+                <IconButton size="md" icon={<FontAwesomeIcon icon={faHouse}/>} onClick={() => navigate('/')}/>
+                <Button ml="auto" onClick={() => navigate('/app')}>Dashboard</Button>
+            </Flex>
+            <Box mt="60px">
+                {tracks?.length >= 0 &&
+                    tracks.map((track, i) => <Box key={i} m="20px">
+                        <Heading mb="20px">{track.name} track</Heading>
+                        <TableContainer>
+                            <Table variant='simple'>
+                                <Thead>
+                                    <Tr>
+                                        <Th>Version</Th>
+                                        <Th>Description</Th>
+                                        <Th>Upgrade from</Th>
+                                        <Th>Timestamp</Th>
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    {track.upgrades.map((upgrade, i) =>
+                                        <Tr key={i}>
+                                            <Td><Tag>{upgrade.version}</Tag></Td>
+                                            <Td>{upgrade.description}</Td>
+                                            <Td><Tag>{upgrade.upgradeFrom}</Tag></Td>
+                                            <Td>{upgrade.timestamp.toLocaleTimeString([], timestampOptions)}</Td>
+                                        </Tr>)}
+                                </Tbody>
+                                <TableCaption>This track was created on {track.timestamp.toLocaleTimeString([], timestampOptions)}.</TableCaption>
+                            </Table>
+                        </TableContainer>
+                    </Box>)}
+            </Box>
+        </>
+        
     )
 }
 
