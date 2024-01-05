@@ -14,33 +14,38 @@ import {
 import { useContext, useEffect, useCallback, useState } from 'react'
 import { ParentContext } from '../store/parent'
 
-
-
 const timestampOptions = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+
 const Upgrades = () => {
     const { getUpgrades, parentActor } = useContext(ParentContext)
     const [tracks, setTracks] = useState()
-    // sort track by date
-    const getData = useCallback(async () => {
+    
+    const getUpgradesGrouped = useCallback(async () => {
         const upgrades = await getUpgrades()
-        const initialValue = {};
         const groupByTrack = upgrades.reduce(
-            (accumulator, currentValue) => {
-                const { version, description, upgrade_from, timestamp } = currentValue
-                const formatUpgradeFrom = upgrade_from.length === 0 ? '-' : `${upgrade_from[0].version}:${upgrade_from[0].track}`
-                const upgrade = { version, description, timestamp: new Date(Number(timestamp / 1000n / 1000n)), upgradeFrom: formatUpgradeFrom }
-                if (!accumulator.hasOwnProperty(currentValue.track.name)) {
-                    accumulator[currentValue.track.name] = {
-                        name: currentValue.track.name,
-                        upgrades: [upgrade],
-                        timestamp: new Date(Number(currentValue.track.timestamp / 1000n / 1000n))
-                    }
-                } else {
-                    accumulator[currentValue.track.name].upgrades.push(upgrade)
+            (tracksGrouped, upgradeCurrent) => {
+                
+                const formatUpgradeFrom = upgradeCurrent.upgrade_from.length === 0 ? '-' : `${upgradeCurrent.upgrade_from[0].version}:${upgradeCurrent.upgrade_from[0].track}`
+                const upgrade = {
+                    version: upgradeCurrent.version,
+                    description: upgradeCurrent.description,
+                    timestamp: new Date(Number(upgradeCurrent.timestamp / 1000n / 1000n)),
+                    upgradeFrom: formatUpgradeFrom
                 }
-                return accumulator
+
+                if (!tracksGrouped.hasOwnProperty(upgradeCurrent.track.name)) { // new track
+                    const track = {
+                        name: upgradeCurrent.track.name,
+                        upgrades: [upgrade],
+                        timestamp: new Date(Number(upgradeCurrent.track.timestamp / 1000n / 1000n))
+                    }
+                    tracksGrouped[upgradeCurrent.track.name] = track
+                } else { // existing track
+                    tracksGrouped[upgradeCurrent.track.name].upgrades.push(upgrade)
+                }
+                return tracksGrouped
             },
-            initialValue,
+            {},
         );
         const _tracks = Object.values(groupByTrack)
         setTracks(_tracks)
@@ -48,8 +53,9 @@ const Upgrades = () => {
 
     useEffect(() => {
         if (parentActor)
-            getData()
+            getUpgradesGrouped()
     }, [parentActor, getUpgrades])
+    
     return (
         <Box mt="60px">
             {tracks?.length >= 0 &&
