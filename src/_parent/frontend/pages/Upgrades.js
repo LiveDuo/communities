@@ -46,7 +46,8 @@ const Upgrades = () => {
                 return tracksGrouped
             },
             {},
-        );
+        )
+        
         const _tracks = Object.values(groupByTrack)
         setTracks(_tracks)
     }, [getUpgrades])
@@ -55,7 +56,7 @@ const Upgrades = () => {
         if (parentActor)
             getUpgradesGrouped()
     }, [parentActor, getUpgrades])
-    
+
     return (
         <Box mt="60px">
             {tracks?.length >= 0 &&
