@@ -108,7 +108,7 @@ const PostContainer = () => {
           <Divider mb="10px"/>
           <Box mb="40px">
             {post.replies.length > 0 ? post.replies.map((r, i) => 
-              <Flex opacity={r?.status?.hasOwnProperty('Hidden') ? '0.4' : '1'} key={r.reply_id} flexDirection={'column'}  borderBottom="1px solid #00000010" padding="20px">
+              <Flex opacity={r.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={r.reply_id} flexDirection={'column'}  borderBottom="1px solid #00000010" padding="20px">
                 <Flex flexDirection={'row'} alignItems={'center'} mb="6">
                   <Jazzicon diameter={20} seed={getSeedFromAuthentication(r?.authentication)} />
                   <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
@@ -119,7 +119,7 @@ const PostContainer = () => {
                 </Box>
                 {isAdmin &&
                   <Flex>
-                    {r?.status?.hasOwnProperty('Visible') ? 
+                    {r.status.hasOwnProperty('Visible') ? 
                       <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Hidden')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
                       :
                       <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Visible')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEye}/>} />

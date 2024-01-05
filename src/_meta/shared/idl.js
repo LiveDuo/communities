@@ -53,8 +53,6 @@ const childFactory = ({ IDL }) => {
 		last_activity: IDL.Nat64,
 	});
 
-	
-
 	const authenticationWith = IDL.Variant({
 		Evm: IDL.Record({ message: IDL.Text, signature: IDL.Text, }),
 		Svm: IDL.Record({ public_key: IDL.Text, signature: IDL.Text, message: IDL.Text }),

@@ -26,7 +26,6 @@ const Admin = () => {
     const _posts = await getHiddenPosts()
     setPosts(_posts)
     const _replies = await getHiddenReplies()
-    console.log(_replies)
     setReplies(_replies)
   }, [getHiddenReplies,getHiddenPosts])
 
@@ -64,7 +63,7 @@ const Admin = () => {
 
           {posts?.length > 0  ? 
           <>
-              {posts?.map(post => 
+              {posts.map(post => 
                 <Box key={post.post_id} mt="20px" border="1px" borderColor="gray.300" borderRadius="base">
                   <Box _hover={{opacity: 0.7, cursor: 'pointer'}} onClick={() => goToPost(post.post_id)}>
                     <Flex mt="40px" mb="28px" justifyContent="center" alignItems="center">
@@ -93,7 +92,7 @@ const Admin = () => {
         <TabPanel>
         {replies?.length > 0  ? 
           <>
-            {replies?.map((reply) => 
+            {replies.map((reply) => 
               <Box key={reply.reply_id} mt="20px" border="1px" borderColor="gray.300" borderRadius="base">
                 <Box _hover={{opacity: 0.7, cursor: 'pointer'}} onClick={() => goToPost(reply.postId)}>
                   <Flex flexDirection={'row'} alignItems={'center'} ml="40px" mt="20px" mb="20px">
