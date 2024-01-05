@@ -25,12 +25,12 @@ const Upgrades = () => {
         const groupByTrack = upgrades.reduce(
             (tracksGrouped, upgradeCurrent) => {
                 
-                const formatUpgradeFrom = upgradeCurrent.upgrade_from.length === 0 ? '-' : `${upgradeCurrent.upgrade_from[0].version}:${upgradeCurrent.upgrade_from[0].track}`
+                const upgradeFrom = upgradeCurrent.upgrade_from
                 const upgrade = {
                     version: upgradeCurrent.version,
                     description: upgradeCurrent.description,
                     timestamp: new Date(Number(upgradeCurrent.timestamp / 1000n / 1000n)),
-                    upgradeFrom: formatUpgradeFrom
+                    upgradeFrom: upgradeFrom.length === 0 ? '-' : `${upgradeFrom[0].version}:${upgradeFrom[0].track}`
                 }
 
                 if (!tracksGrouped.hasOwnProperty(upgradeCurrent.track.name)) { // new track
@@ -47,7 +47,7 @@ const Upgrades = () => {
             },
             {},
         )
-        
+
         const _tracks = Object.values(groupByTrack)
         setTracks(_tracks)
     }, [getUpgrades])
