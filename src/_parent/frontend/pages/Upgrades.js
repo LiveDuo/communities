@@ -1,16 +1,4 @@
-import {
-    Box,
-    Tag,
-    Heading,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableCaption,
-    TableContainer,
-} from '@chakra-ui/react'
+import { Box, Tag, Heading, Table, Thead, Tbody, Tr, Th, Td, TableCaption, TableContainer } from '@chakra-ui/react'
 import { useContext, useEffect, useCallback, useState } from 'react'
 import { ParentContext } from '../store/parent'
 
