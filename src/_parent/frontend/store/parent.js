@@ -9,7 +9,7 @@ import { CmcContext, cmcCanisterId } from './cmc'
 import { getBigIntAllowance, ONE_MYRIAD, ONE_TRILLION, ICP_MICP } from '../utils/bigint'
 import { getAccountId } from '../utils/account'
 import { isLocal } from '../utils/url'
-import { getAgent } from '../utils/agent'
+
 
 export const parentCanisterId = process.env.REACT_APP_PARENT_CANISTER_ID
 
@@ -52,14 +52,13 @@ const ParentProvider = ({ children }) => {
 	const [loading, setLoading] = useState(false)
 	// const [parentActorAnonymous, setParentActorAnonymous] = useState(null)
 
-	const loadActor = useCallback(() => {
-		let _actorOptions
+	const loadActor = useCallback(async () => {
+		let _actor
 		if (walletConnected) {
-			_actorOptions = {type: 'wallet', canisterId: parentCanisterId, interfaceFactory: idlParentFactory }
+			_actor = await createActor({type: 'wallet', canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
 		} else {
-			_actorOptions = {type: 'anonymous',  agent: getAgent(null), canisterId: parentCanisterId, interfaceFactory: idlParentFactory, }
+			_actor = await createActor({type: 'anonymous', canisterId: parentCanisterId, interfaceFactory: idlParentFactory })
 		}
-		const _actor = createActor(_actorOptions)
 		setParentActor(_actor)
 	}, [createActor, walletConnected])
 	

@@ -8,6 +8,7 @@ import { cmcCanisterId } from './cmc'
 import { Actor } from '@dfinity/agent'
 
 import { isLocal } from '../utils/url'
+import { getAgent } from '../utils/agent'
 
 const IdentityContext = createContext()
 
@@ -51,16 +52,18 @@ const IdentityProvider = ({ children }) => {
 
 
 	const isWalletDetected = useCallback((type) => !!window?.ic?.hasOwnProperty(type), [])
+	// const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
+	// return await window.ic[options.wallet ?? walletIcName]?.createActor(actorOptions)
 	
-	const createActor = (options) => {
-		options.host = host
+	const createActor = useCallback(async (options) => {
 		if(options.type === 'wallet')  {
-			return window?.ic[walletName].createActor(options)
+			const actorOptions = {canisterId: options.canisterId, interfaceFactory: options.interfaceFactory, host: host}
+			return await window?.ic[walletName].createActor(actorOptions)
 		} else if(options.type === 'anonymous') {
-			const { interfaceFactory, ...restOptions } = options;
-			return Actor.createActor(interfaceFactory, restOptions)
+			const actorOptions = { agent: getAgent(null), canisterId: options.canisterId, host: host, identity: null}
+			return Actor.createActor(options.interfaceFactory, actorOptions)
 		}
-	}
+	},[walletName])
 
 	const batchTransactions = (txs) => {
 		const options = { host }

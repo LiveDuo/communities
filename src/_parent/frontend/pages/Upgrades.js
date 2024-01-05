@@ -50,7 +50,6 @@ const Upgrades = () => {
         if (parentActor)
             getUpgradesGrouped()
     }, [parentActor, getUpgrades])
-    console.log(location)
 
     return (
         <>
