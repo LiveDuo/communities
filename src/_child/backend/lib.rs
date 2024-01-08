@@ -281,11 +281,7 @@ fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<Prof
             return None; 
         }
         let profile  = state.profiles.get(&profile_id_opt.unwrap()).unwrap();
-        let user_roles_opt = get_user_roles(&profile.active_principal);
-        let user_roles = match user_roles_opt {
-            Some(caller_roles) => caller_roles,
-            None => vec![]
-        };
+        let user_roles = get_user_roles(&profile.active_principal).unwrap();
         Some(ProfileResponse {
             name: profile.name.to_owned(),
             description: profile.description.to_owned(),
@@ -372,11 +368,7 @@ fn get_profile() -> Result<ProfileResponse, String> {
         }
         let profile_id = profile_id_opt.unwrap();
         let profile = state.profiles.get(profile_id).unwrap();
-        let user_roles_opt = get_user_roles(&caller);
-        let user_roles = match user_roles_opt {
-            Some(user_roles) => user_roles,
-            None => vec![] 
-        };
+        let user_roles = get_user_roles(&caller).unwrap();
         Ok(ProfileResponse {
             name: profile.name.to_owned(),
             description: profile.description.to_owned(),

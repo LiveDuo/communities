@@ -77,7 +77,7 @@ pub fn get_user_roles(caller: &Principal) -> Option<Vec<UserRole>> {
         let role_ids =  state.relations.profile_id_to_role_id.forward.get(profile_id_opt.unwrap());
 
         if role_ids.is_none() {
-            return None;
+            return Some(vec![]);
         }
         let user_roles = role_ids
             .unwrap()
