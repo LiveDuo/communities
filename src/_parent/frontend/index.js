@@ -10,6 +10,7 @@ import { CmcProvider } from './store/cmc'
 
 import App from './pages/App'
 import Landing from './pages/Landing'
+import Upgrades from './pages/Upgrades'
 
 const Index = () => (
   <StrictMode>
@@ -20,6 +21,7 @@ const Index = () => (
             <ParentProvider>
               <BrowserRouter>
                   <Routes>
+                    <Route exact path="/upgrades" element={<Upgrades />}/>
                     <Route exact path="/app" element={<App />}/>
                     <Route exact path="/" element={<Landing/>}/>
                   </Routes>

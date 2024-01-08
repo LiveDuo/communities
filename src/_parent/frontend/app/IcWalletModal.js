@@ -16,7 +16,7 @@ const IcWalletModal = () =>  {
     await connect(wallet)
     setWalletName(wallet)
     icWalletDisclosure.onClose()
-  },[connect,setWalletName, icWalletDisclosure])
+  },[connect, setWalletName, icWalletDisclosure])
 
   return (
     <Modal isOpen={icWalletDisclosure.isOpen} onClose={icWalletDisclosure.onClose} isCentered>

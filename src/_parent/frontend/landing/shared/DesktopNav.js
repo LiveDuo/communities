@@ -2,6 +2,7 @@ import { Box, Flex, Text, Stack, Link, Popover, PopoverTrigger, PopoverContent }
 import { useColorModeValue } from '@chakra-ui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { useNavigate } from 'react-router-dom'
 const DesktopSubNav = ({ label, href, subLabel }) => {
   return (
     <Link href={href} role={'group'} display={'block'} p={2} rounded={'md'} _hover={{ bg: useColorModeValue('green.50', 'green.900') }}>
@@ -22,6 +23,7 @@ const DesktopNav = ({navItems}) => {
   const linkColor = useColorModeValue('gray.600', 'gray.200');
   const linkHoverColor = useColorModeValue('gray.800', 'white');
   const popoverContentBgColor = useColorModeValue('white', 'gray.800');
+  const navigate = useNavigate()
 
   return (
     <Stack direction={'row'} spacing={4}>
@@ -41,6 +43,7 @@ const DesktopNav = ({navItems}) => {
           </Popover>
         </Box>
       ))}
+      <Link color={linkColor} onClick={() => navigate('/upgrades')} _hover={{ textDecoration: 'none', color: linkHoverColor, }}>Upgrades</Link>
     </Stack>
   );
 };

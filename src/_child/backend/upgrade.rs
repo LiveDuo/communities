@@ -16,13 +16,18 @@ pub struct UpgradeFrom {
     pub version: String
 }
 #[derive(Clone, Debug, CandidType, Deserialize)]
+pub struct Track {
+    pub name: String,
+    pub timestamp: u64
+}
+#[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct UpgradeWithTrack {
     pub version: String,
     pub upgrade_from: Option<UpgradeFrom>,
     pub timestamp: u64,
     pub assets: Vec<String>,
     pub description: String,
-    pub track: String
+    pub track: Track
 }
 
 pub async fn authorize(caller: &Principal) -> Result<(), String> {

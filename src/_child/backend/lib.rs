@@ -712,7 +712,7 @@ async fn upgrade_canister(version: String, track: String) -> Result<(), String> 
     let upgrade = upgrade_opt.unwrap();
 
     // store assets to temp
-    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version, &upgrade.track).await.unwrap();
+    store_assets_to_temp(parent_canister, &upgrade.assets, &upgrade.version, &upgrade.track.name).await.unwrap();
 
     // upgrade wasm
     let wasm = get_asset("/temp/child.wasm".to_owned());
