@@ -119,8 +119,12 @@ type UpgradeFrom = record {
   version : text;
   track : text;
 };
+type Track = record {
+  name: text;
+  timestamp: nat64;
+};
 type UpgradeWithTrack = record {
-  track : text;
+  track : Track;
   assets : vec text;
   version : text;
   timestamp : nat64;
