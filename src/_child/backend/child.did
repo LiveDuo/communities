@@ -157,9 +157,9 @@ service : (opt principal, opt text, opt text ) -> {
   get_posts : () -> (vec PostSummary) query;
   get_hidden_posts : () -> (GetHiddenPostsResult) query;
   get_hidden_replies : () -> (GetHiddenReplyResult) query;
-  get_posts_by_auth : (Authentication) -> (GetPostsByAuthResult) query;
+  get_posts_by_auth : (AuthenticationWithAddress) -> (GetPostsByAuthResult) query;
   get_profile : () -> (GetProfileResult) query;
-  get_profile_by_auth : (AuthenticationWith) -> (opt ProfileResponse) query;
+  get_profile_by_auth : (AuthenticationWithAddress) -> (opt ProfileResponse) query;
   get_metadata: () -> (GetMetadataResult) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
 }
