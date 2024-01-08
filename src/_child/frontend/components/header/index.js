@@ -1,6 +1,6 @@
-import { useContext, useEffect } from 'react'
+import { useContext, useEffect, useMemo } from 'react'
 
-import { Button, Box, Flex, Link, Menu, MenuButton, MenuList, MenuItem, IconButton, Icon } from '@chakra-ui/react'
+import { Button, Box, Flex, Link, Menu, MenuButton, MenuList, MenuItem, IconButton } from '@chakra-ui/react'
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
 
 import Jazzicon from 'react-jazzicon'
@@ -13,8 +13,8 @@ import { ReactComponent as EthereumLogo } from '../../logos/ethereum.svg'
 import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
 import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 
-import { BiHome, BiDotsHorizontalRounded, BiCog, BiLogOut } from "react-icons/bi"
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUpload, faGear, faArrowRightFromBracket, faHouse, faEllipsis } from '@fortawesome/free-solid-svg-icons'
 
 const Header = () => {
 
@@ -22,12 +22,11 @@ const Header = () => {
   const location = useLocation()
 
   const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure } = useContext(IdentityContext)
-  const { getProfileByAuth, login } = useContext(ChildContext)
+  const { getProfile, login, profile } = useContext(ChildContext)
 
   useEffect(() => {
-    if (account)
-      getProfileByAuth(account)
-  }, [account, getProfileByAuth])
+      getProfile()
+  }, [getProfile])
 
   const loginAndSet = async (type) => {
     if (type === 'evm' && !isWalletDetected(type)) {
@@ -48,12 +47,13 @@ const Header = () => {
     }
     await login(type)
   }
+  const isAdmin = useMemo(()=> profile?.roles?.some(r => r.hasOwnProperty('Admin') ),[profile])
 
   return (
     <Flex m="20px" alignItems="center">
       {location.pathname !== '/' && 
         <Box ml="20px">
-          <IconButton size="md" icon={<BiHome/>} onClick={() => navigate('/')}/>
+          <IconButton size="md" icon={<FontAwesomeIcon icon={faHouse}/>} onClick={() => navigate('/')}/>
         </Box>
       }
       {!(account && principal) &&
@@ -83,12 +83,13 @@ const Header = () => {
         {(account && principal) && 
         <Box display="inline-block" ml="8px">
           <Menu>
-            <MenuButton fontSize="25px" as={IconButton} aria-label='Options' icon={<BiDotsHorizontalRounded />}>
+            <MenuButton fontSize="25px" as={IconButton} aria-label='Options' icon={<FontAwesomeIcon icon={faEllipsis} />}>
               Sign in with...
             </MenuButton>
             <MenuList>
-              <MenuItem icon={<Icon fontSize="md" as={BiCog} />} onClick={()=> onUpgradeModalOpen()}>Admin</MenuItem>
-              <MenuItem icon={<Icon fontSize="md" as={BiLogOut} />} onClick={()=> disconnect()}>Logout</MenuItem>
+              {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faUpload} />} onClick={()=> onUpgradeModalOpen()}>Upgrades</MenuItem>}
+              {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faGear} />} onClick={()=> navigate('/admin')} >Admin</MenuItem>}
+              <MenuItem icon={<FontAwesomeIcon icon={faArrowRightFromBracket} />} onClick={()=> disconnect()}>Logout</MenuItem>
             </MenuList>
           </Menu>
         </Box>}

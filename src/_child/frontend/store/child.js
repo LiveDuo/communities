@@ -1,6 +1,6 @@
 import { useState, useContext, createContext, useCallback, useEffect } from 'react'
 import { IdentityContext } from './identity'
-
+import {Principal} from '@dfinity/principal'
 import { useToast } from '@chakra-ui/react'
 
 import { utils , ethers} from 'ethers'
@@ -25,26 +25,47 @@ const idlFactory = ({ IDL }) => {
 		Evm: IDL.Record({ address: IDL.Text }),
 		Svm: IDL.Record({ address: IDL.Text }),
 	});
-
+	const ReplyStatus = IDL.Variant({
+		Visible: IDL.Null,
+		Hidden: IDL.Null
+	})
+	
 	const ReplyResponse = IDL.Record({
 		text: IDL.Text,
 		timestamp: IDL.Nat64,
-		authentication: authenticationWithAddress
+		authentication: authenticationWithAddress,
+		status: ReplyStatus,
+		reply_id: IDL.Nat64 
 	});
+	const PostStatus = IDL.Variant({
+		Visible: IDL.Null,
+		Hidden: IDL.Null
+	})
 
 	const PostResponse = IDL.Record({
 		title: IDL.Text,
 		description: IDL.Text,
 		timestamp: IDL.Nat64,
 		replies: IDL.Vec(ReplyResponse),
-    authentication: authenticationWithAddress,
+    	authentication: authenticationWithAddress,
+		status: PostStatus,
+		post_id: IDL.Nat64
 	});
+	const UserRole =IDL.Variant({ Admin: IDL.Null }) 
 
 	const Profile = IDL.Record({
 		name: IDL.Text,
 		description: IDL.Text,
 		authentication: authentication,
 		active_principal: IDL.Principal
+	});
+
+	const ProfileResponse = IDL.Record({
+		name: IDL.Text,
+		description: IDL.Text,
+		authentication: authentication,
+		active_principal: IDL.Principal,
+		roles: IDL.Vec(UserRole)
 	});
 
 	const PostSummary = IDL.Record({
@@ -55,6 +76,7 @@ const idlFactory = ({ IDL }) => {
 		timestamp: IDL.Nat64,
 		replies_count: IDL.Nat64,
 		last_activity: IDL.Nat64,
+		status: PostStatus
 	});
 
 	const authenticationWith = IDL.Variant({
@@ -99,14 +121,18 @@ const idlFactory = ({ IDL }) => {
 		create_post: IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ Ok: PostSummary, Err: IDL.Text })], ["update"]),
 		create_reply: IDL.Func([IDL.Nat64, IDL.Text], [IDL.Variant({ Ok: ReplyResponse, Err: IDL.Text })], ["update"]),
 		canister_status: IDL.Func([], [canisterStatusResponse], ["update"]),
-		get_profile: IDL.Func([], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["query"]),
+		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-		get_posts_by_user: IDL.Func([authentication], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
-		get_profile_by_user: IDL.Func([authentication], [IDL.Opt(Profile)], ["query"]),
+		get_posts_by_auth: IDL.Func([authenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
+		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
+		get_profile_by_auth: IDL.Func([authenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),
+		update_post_status: IDL.Func([IDL.Nat64, PostStatus],[IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], ["update"]),
+		update_reply_status: IDL.Func([IDL.Nat64, ReplyStatus],[IDL.Variant({ 'Ok': IDL.Null, 'Err': IDL.Text })], ["update"]),
 	});
 };
 
@@ -119,6 +145,7 @@ const ChildProvider = ({ children }) => {
 	const [postsUser, setPostsUser] = useState()
 	const [loading, setLoading] = useState()
 	const [profile, setProfile] = useState()
+	const [profileUser, setProfileUser] = useState()
 
 	const { identity, account, createActor, updateIdentity, getWallet, connectWallet} = useContext(IdentityContext)
 
@@ -154,6 +181,14 @@ const ChildProvider = ({ children }) => {
 		setPosts([...posts, _post])
 	},[childActor, posts])
 
+	const updatePostStatus = useCallback(async (postId, status) => {
+		await childActor.update_post_status(BigInt(postId), status)
+	},[childActor])
+
+	const updateReplyStatus = useCallback(async (replyId, status) => {
+		await childActor.update_reply_status(BigInt(replyId), status)
+	},[childActor])
+
 	const getPosts = useCallback(async () => {
 		const response = await childActor.get_posts()
 		setPosts(response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
@@ -165,23 +200,48 @@ const ChildProvider = ({ children }) => {
 		return _post
 	}, [childActor])
 
-	const getPostsByUser = useCallback(async () => {
-		const response = await childActor.get_posts_by_user(profile.authentication)
-		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
-	}, [profile, childActor])
+	const getHiddenPosts = useCallback(async () => {
+		const response = await childActor.get_hidden_posts().then(r =>  r.Ok)
+		const _hiddenPost = response.map(p => ({...p, timestamp: new Date(Number(p.timestamp / 1000n / 1000n))}))
+		return _hiddenPost
+	}, [childActor])
+	
+	const getHiddenReplies = useCallback(async () => {
+		const response = await childActor.get_hidden_replies().then(r =>  r.Ok)
+		const _hiddenReplies = response.map(r => ({...r[1], postId: r[0], timestamp: new Date(Number(r[1]?.timestamp / 1000n / 1000n))}))
+		return _hiddenReplies
+	}, [childActor])
 
-	const getProfileByAuth = useCallback(async (account) => {
+	const getPostsByAuth = useCallback(async (address, type) => {
+		const auth = {}
+		if (type === 'Ic') {
+			auth[type] = {principal: Principal.fromText(address)} 
+		} else if(type === 'Evm' || type === 'Svm') {
+			auth[type] = {address} 
+		}
+		const response = await childActor.get_posts_by_auth(auth)
+		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
+	}, [childActor])
+
+	const getProfileByAuth = useCallback(async (address, type) => {
 
 		if(!childActor) return
-
+		
 		const auth = {}
-		if (account.type === 'Evm' ||  account.type === 'Svm') {
-			auth[account.type] = {address: account.address}
-		} else {
-			auth[account.type] = null
+		if (type === 'Ic') {
+			auth[type] = { principal: Principal.fromText(address) } 
+		} else if(type === 'Evm' || type === 'Svm') {
+			auth[type] = {address} 
 		}
-		const response = await childActor.get_profile_by_user(auth)
-		setProfile(response[0])
+		const response = await childActor.get_profile_by_auth(auth)
+		setProfileUser(response[0])
+	}, [childActor])
+
+	const getProfile = useCallback(async () => {
+		if(!childActor) return
+
+		const response = await childActor.get_profile()
+		setProfile(response.Ok)
 	}, [childActor])
 
 	const loginWithEvm = useCallback(async () => {
@@ -231,7 +291,7 @@ const ChildProvider = ({ children }) => {
       const profile = response.Ok
       setProfile(profile)
 
-			updateIdentity('Svm', identity)
+		updateIdentity('Svm', identity)
 
       toast({ title: 'Signed in with Solana', status: 'success', duration: 4000, isClosable: true })
     } catch (error) {
@@ -268,7 +328,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, setProfile, postsUser , getProfileByAuth, getPostsByUser, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login }
+	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

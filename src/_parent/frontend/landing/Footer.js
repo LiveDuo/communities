@@ -1,5 +1,7 @@
 import { Box, chakra, Container, Link, SimpleGrid, Stack, Text, Heading } from '@chakra-ui/react'
-import { FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faGithub, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons'
 
 const SocialButton = ({ children, href,}) => {
   return (
@@ -26,13 +28,13 @@ const Footer = () => {
             <Text fontSize={'sm'}>© 2023 Communities.ooo. All rights reserved.</Text>
             <Stack direction={'row'} spacing={6}>
               <SocialButton href={'https://twitter.com/dfinity'}>
-                <FaTwitter />
+                <FontAwesomeIcon icon={faTwitter} />
               </SocialButton>
               <SocialButton href={'https://github.com/dfinity'}>
-                <FaGithub />
+                <FontAwesomeIcon icon={faGithub} />
               </SocialButton>
               <SocialButton href={'https://www.youtube.com/dfinity'}>
-                <FaYoutube />
+                <FontAwesomeIcon icon={faYoutube} />
               </SocialButton>
             </Stack>
           </Stack>

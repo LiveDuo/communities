@@ -14,7 +14,7 @@ use ic_cdk_macros::{update, query, init};
 use crate::state::{*, STATE};
 use upgrade::{update_metadata, check_canister_cycles_balance, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::UpgradeWithTrack;
-use utils::{uuid, get_asset};
+use utils::{uuid, get_asset, get_user_roles};
 
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 
@@ -146,6 +146,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
             title,
             description,
             timestamp: ic_cdk::api::time(),
+            status: PostStatus::Visible
         };
 
         state.posts.insert(post_id, post.clone());
@@ -163,6 +164,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
             replies_count: 0,
             last_activity: post.timestamp,
             authentication,
+            status: post.status
         };
         Ok(post)
     })
@@ -186,7 +188,8 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 
         let reply = Reply {
             text: context.to_owned(),
-            timestamp: ic_cdk::api::time()
+            timestamp: ic_cdk::api::time(),
+            status: ReplyStatus::Visible
         };
 
         let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
@@ -202,47 +205,126 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
         let profile = state.profiles.get(&profile_id).unwrap();
         let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
-        let reply_response =  ReplyResponse {
+        let reply_response = ReplyResponse {
             text: reply.text,
             timestamp: reply.timestamp,
-            authentication
+            authentication,
+            reply_id: reply_id,
+            status: reply.status
         };
 
         Ok(reply_response)
     })
 }
+#[update]
+#[candid_method(update)]
+fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
+    
+    let caller = ic_cdk::caller();
+    let caller_roles_opt = get_user_roles(&caller);
+    let caller_is_admin = match caller_roles_opt {
+        Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+        None => false
+    };
+
+    if !caller_is_admin {
+        return Err("Caller is not admin".to_owned())
+    }
+    
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        let post_opt = state.posts.get_mut(&post_id);
+        if post_opt.is_none() {
+            return Err("Post does not exist".to_owned());
+        }
+        let post  = post_opt.unwrap();
+        post.status = status;
+
+        Ok(())
+    })
+}
+#[update]
+#[candid_method(update)]
+fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+    let caller_roles_opt = get_user_roles(&caller);
+    let caller_is_admin = match caller_roles_opt {
+        Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+        None => false
+    };
+
+    if !caller_is_admin {
+        return Err("Caller is not admin".to_owned())
+    }
+    
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let reply_opt = state.replies.get_mut(&reply_id);
+        if reply_opt.is_none() {
+            return Err("Post does not exist".to_owned());
+        }
+        let reply = reply_opt.unwrap(); 
+        reply.status = status;
+
+        Ok(())
+    })
+}
 
 #[query]
 #[candid_method(query)]
-fn get_profile_by_user(authentication: Authentication) -> Option<Profile> {
+fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<ProfileResponse> {
     STATE.with(|s| {
         let state = s.borrow();
-        let caller = ic_cdk::caller();
-        let auth = get_authentication_with_address(&authentication, &caller);
-        let index_opt = state.indexes.profile.get(&auth);
-        if index_opt == None {
+        let profile_id_opt = state.indexes.profile.get(&authentication);
+        if profile_id_opt == None {
             return None; 
         }
-        state.profiles.get(&index_opt.unwrap()).cloned()
+        let profile  = state.profiles.get(&profile_id_opt.unwrap()).unwrap();
+        let user_roles = get_user_roles(&profile.active_principal).unwrap();
+        Some(ProfileResponse {
+            name: profile.name.to_owned(),
+            description: profile.description.to_owned(),
+            authentication: profile.authentication.to_owned(),
+            active_principal: profile.active_principal.to_owned(),
+            roles: user_roles
+        })
     })
 }
 
 #[query]
 #[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
+    let caller = ic_cdk::caller();
+    let caller_roles_opt = get_user_roles(&caller);
+    let caller_is_admin = match caller_roles_opt {
+        Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+        None => false
+    };
+
     STATE.with(|s| {
         let state = &mut s.borrow_mut();
 
         state
             .posts
             .iter()
-            .map(|(post_id, post)| {
+            .filter_map(|(post_id, post)| {
+                if !caller_is_admin && post.status == PostStatus::Hidden {
+                    return None;
+                }
                 let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
                 let replies_count = if replies_opt == None {
                     0
                 } else {
-                    replies_opt.unwrap().len()
+                    replies_opt.unwrap().iter().filter_map(|(reply_id, _)| { 
+                        let reply = state.replies.get(reply_id).unwrap();
+                        if reply.status == ReplyStatus::Hidden {
+                            return None;
+                        } else {
+                            return Some(reply_id);
+                        }
+                    }).collect::<Vec<_>>().len()
                 };
 
                 let last_activity = if replies_opt == None {
@@ -258,7 +340,7 @@ fn get_posts() -> Vec<PostSummary> {
 
                 let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
-                PostSummary {
+                Some(PostSummary {
                     title: post.title.to_owned(),
                     post_id: post_id.to_owned(),
                     description: post.description.to_owned(),
@@ -266,7 +348,8 @@ fn get_posts() -> Vec<PostSummary> {
                     replies_count: replies_count as u64,
                     last_activity,
                     authentication,
-                }
+                    status: post.status.to_owned()
+                })
             })
             .collect::<Vec<_>>()
     })
@@ -274,7 +357,7 @@ fn get_posts() -> Vec<PostSummary> {
 
 #[query]
 #[candid_method(query)]
-fn get_profile() -> Result<Profile, String> {
+fn get_profile() -> Result<ProfileResponse, String> {
     STATE.with(|s| {
         let state = s.borrow();
 
@@ -283,14 +366,29 @@ fn get_profile() -> Result<Profile, String> {
         if profile_id_opt == None {
             return Err("Profile does not exists".to_owned());
         }
-        let profile = state.profiles.get(profile_id_opt.unwrap()).unwrap();
-        Ok(profile.clone())
+        let profile_id = profile_id_opt.unwrap();
+        let profile = state.profiles.get(profile_id).unwrap();
+        let user_roles = get_user_roles(&caller).unwrap();
+        Ok(ProfileResponse {
+            name: profile.name.to_owned(),
+            description: profile.description.to_owned(),
+            authentication: profile.authentication.to_owned(),
+            active_principal: profile.active_principal.to_owned(),
+            roles: user_roles
+        })
     })
 }
 
 #[query]
 #[candid_method(query)]
 fn get_post(post_id: u64) -> Result<PostResponse, String> {
+    let caller = ic_cdk::caller();
+    let caller_roles_opt = get_user_roles(&caller);
+    let caller_is_admin = match caller_roles_opt {
+        Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+        None => false
+    };
+
     STATE.with(|s| {
         let state = s.borrow();
         let post_opt = state.posts.get(&post_id);
@@ -298,21 +396,29 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
             return Err("This post does not exists".to_owned());
         }
 
+        let post = post_opt.unwrap();
+        if !caller_is_admin && post.status == PostStatus::Hidden {
+            return Err("This post is hiden".to_owned());
+        }
+
         let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
         let replies = if replies_opt == None {
             vec![]
         } else {
-             replies_opt.unwrap().iter().map(|(reply_id, _)| {
+             replies_opt.unwrap().iter().filter_map(|(reply_id, _)| {
                 let reply = state.replies.get(reply_id).unwrap();
+                if !caller_is_admin && reply.status == ReplyStatus::Hidden {
+                    return None;
+                }
                 let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
                 let profile = state.profiles.get(&profile_id).unwrap();
                 let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
-                ReplyResponse { text: reply.text.to_owned(), timestamp: reply.timestamp, authentication }
+                Some(ReplyResponse { text: reply.text.to_owned(), timestamp: reply.timestamp, authentication , reply_id: reply_id.to_owned(), status: reply.status.to_owned() })
             }).collect::<Vec<_>>()
         };
 
-        let post = post_opt.unwrap();
+        
 
         let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
@@ -324,7 +430,9 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
             title: post.title.to_owned(),
             timestamp: post.timestamp,
             description: post.description.to_owned(),
-            authentication
+            authentication,
+            status: post.status.to_owned(),
+            post_id: post_id.to_owned()
         };
         Ok(post_result)
     })
@@ -332,14 +440,10 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
 #[query]
 #[candid_method(query)]
-fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>, String> {
+fn get_posts_by_auth(authentication: AuthenticationWithAddress) -> Result<Vec<PostSummary>, String> {
     STATE.with(|s| {
         let state = s.borrow();
-
-        let caller = ic_cdk::caller();
-        let auth = get_authentication_with_address(&authentication, &caller);
-
-        let profile_id_opt = state.indexes.profile.get(&auth);
+        let profile_id_opt = state.indexes.profile.get(&authentication);
         if profile_id_opt == None {
             return Err("Profile does not exists".to_owned());
         }
@@ -354,18 +458,34 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
             return Ok(vec![]);
         }
 
-        let user_post = post_ids_opt
+        let profile = state.profiles.get(profile_id_opt.unwrap()).unwrap();
+        let caller_roles_opt = get_user_roles(&profile.active_principal);
+        let caller_is_admin = match caller_roles_opt {
+            Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+            None => false
+        };
+    
+        let user_post =  post_ids_opt
             .unwrap()
             .iter()
-            .map(|(post_id, _)| {
+            .filter_map(|(post_id, _)| {
                 let post = state.posts.get(&post_id.to_owned()).unwrap();
-
+                if !caller_is_admin && post.status == PostStatus::Hidden {
+                    return None;
+                }
                 let replies_opt = state.relations.reply_id_to_post_id.backward.get(&post_id);
 
                 let replies_count = if replies_opt == None {
                     0
                 } else {
-                    replies_opt.unwrap().len()
+                    replies_opt.unwrap().iter().filter_map(|(reply_id, _)| { 
+                        let reply = state.replies.get(reply_id).unwrap();
+                        if reply.status == ReplyStatus::Hidden {
+                            return None;
+                        } else {
+                            return Some(reply_id);
+                        }
+                    }).collect::<Vec<_>>().len()
                 };
 
                 let last_activity = if replies_opt == None {
@@ -388,18 +508,98 @@ fn get_posts_by_user(authentication: Authentication) -> Result<Vec<PostSummary>,
                 let profile = state.profiles.get(&profile_id).unwrap();
                 let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
-                PostSummary {
+                Some(PostSummary {
                     post_id: post_id.to_owned(),
                     title: post.title.to_owned(),
                     description: post.description.to_owned(),
                     timestamp: post.timestamp.to_owned(),
                     replies_count: replies_count as u64,
                     last_activity,
-                    authentication
+                    authentication,
+                    status: post.status.to_owned()
+                })
+            }).collect::<Vec<_>>();
+        Ok(user_post)
+    })
+}
+#[query]
+#[candid_method(query)]
+fn get_hidden_posts() -> Result<Vec<PostResponse>, String> {
+    STATE.with(|s| {
+        let state = s.borrow();
+
+        let caller = ic_cdk::caller();
+        let caller_roles_opt = get_user_roles(&caller);
+        let caller_is_admin = match caller_roles_opt {
+            Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+            None => false
+        };
+        if !caller_is_admin {
+            return Err("Caller is not admin".to_owned())
+        }
+
+        let hidden_post = state.posts
+            .iter()
+            .filter_map(|(post_id, post)| {
+                if post.status == PostStatus::Visible {
+                    return None;
                 }
+                let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(post_id).unwrap().first_key_value().unwrap();
+                let profile = state.profiles.get(profile_id).unwrap();
+                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                let post_response = PostResponse {
+                    title: post.title.to_owned(),
+                    post_id: post_id.to_owned(),
+                    description: post.description.to_owned(),
+                    authentication: authentication,
+                    timestamp: post.timestamp.to_owned(),
+                    status: post.status.to_owned(),
+                    replies: vec![]
+                };
+                Some(post_response)
             })
             .collect::<Vec<_>>();
-        Ok(user_post)
+        Ok(hidden_post)
+    })
+}
+#[query]
+#[candid_method(query)]
+fn get_hidden_replies() -> Result<Vec<(u64,ReplyResponse)>, String> {
+    STATE.with(|s| {
+        let state = s.borrow();
+
+        let caller = ic_cdk::caller();
+        let caller_roles_opt = get_user_roles(&caller);
+        let caller_is_admin = match caller_roles_opt {
+            Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
+            None => false
+        };
+
+        if !caller_is_admin {
+            return Err("Caller is not admin".to_owned())
+        }
+
+        let hidden_replies = state.replies
+            .iter()
+            .filter_map(|(reply_id, reply)| {
+                if reply.status == ReplyStatus::Visible {
+                    return None;
+                }
+                let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
+                let (post_id, _) = state.relations.reply_id_to_post_id.forward.get(reply_id).unwrap().first_key_value().unwrap();
+                let profile = state.profiles.get(profile_id).unwrap();
+                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                let reply_response = ReplyResponse {
+                    reply_id: reply_id.to_owned(),
+                    text: reply.text.to_owned(),
+                    authentication: authentication,
+                    timestamp: reply.timestamp.to_owned(),
+                    status: reply.status.to_owned(),
+                };
+                Some((post_id.to_owned(), reply_response))
+            })
+            .collect::<Vec<_>>();
+        Ok(hidden_replies)
     })
 }
 
@@ -417,23 +617,7 @@ fn get_metadata() -> Result<Metadata, String> {
         Ok(Metadata{track: state.track.clone().unwrap(), version: state.version.clone().unwrap()})
     })
 }
-#[query]
-#[candid_method(query)]
-fn get_user_roles() -> Vec<Role>{
-    let caller = ic_cdk::caller();
-    STATE.with(|s| {
-        let state = s.borrow();
-        if let Some(profile_id) =  state.indexes.active_principal.get(&caller) {
-            state.relations.profile_id_to_role_id.forward.get(profile_id)
-                .unwrap()
-                .iter()
-                .map(|(role_id, _)| state.roles.get(role_id).unwrap().to_owned())
-                .collect::<Vec<_>>()
-        } else {
-            vec![]
-        }
-    })
-}
+
 
 #[update]
 #[candid_method(update)]
