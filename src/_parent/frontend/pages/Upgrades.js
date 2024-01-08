@@ -6,7 +6,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const timestampOptions = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }
-const BACK = -1
+const NAVIGATE_BACK = -1
 const Upgrades = () => {
     const { getUpgrades, parentActor } = useContext(ParentContext)
     const [tracks, setTracks] = useState()
@@ -54,7 +54,7 @@ const Upgrades = () => {
     return (
         <>
             <Flex m="20px">
-                {location.key !== "default" && <IconButton size="md" icon={<FontAwesomeIcon icon={faArrowLeft}/>} onClick={() => navigate(BACK)}/>}
+                {location.key !== "default" && <IconButton size="md" icon={<FontAwesomeIcon icon={faArrowLeft}/>} onClick={() => navigate(NAVIGATE_BACK)}/>}
                 <Button display={{ base: 'none', md: 'inline-flex' }} fontSize={'sm'} fontWeight={600} color={'white'} bg={'green.400'} _hover={{bg: 'green.300'}} onClick={() => navigate('/app')} ml="auto">Dashboard</Button>
             </Flex>
             <Box mt="60px">

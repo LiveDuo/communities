@@ -50,7 +50,6 @@ const ParentProvider = ({ children }) => {
 	const [parentActor, setParentActor] = useState(null)
 	const [userCommunities, setUserCommunities] = useState(null)
 	const [loading, setLoading] = useState(false)
-	// const [parentActorAnonymous, setParentActorAnonymous] = useState(null)
 
 	const loadActor = useCallback(async () => {
 		let _actor
@@ -66,26 +65,6 @@ const ParentProvider = ({ children }) => {
 		loadActor()
 	}, [loadActor])
 
-	// const createChild = async () => {
-	// 	setLoading(true)
-	// 	const {Ok: childPrincipal} = await parentActorAnonymous.create_child()
-	// 	setLoading(false)
-	// 	return childPrincipal
-	// }
-
-	// const callCreateCanister = async () => {
-	// 	try {
-	// 		const response = await parentActor.create_child()
-	// 		if (response.Ok) {
-	// 			toast({ description: `Response: ${response.Ok}` })
-	// 		} else {
-	// 			toast({ description: `Response: ${response.Err}`, status: 'error' })
-	// 		}
-	// 	} catch (error) {
-	// 		const description = error.result?.reject_message ?? 'Response failed'
-	// 		toast({ description, status: 'error' })
-	// 	}
-	// }
 
 	const getCreateChildTx = (_params, callback = () => {}) => ({
 		idl: idlParentFactory,
