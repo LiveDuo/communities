@@ -20,7 +20,7 @@ fn init() {
 }
 
 #[update]
-// #[candid_method(update)]
+#[candid_method(update)]
 async fn create_child() -> Result<Principal, String> {
     let id = ic_cdk::id();
     let caller = ic_cdk::caller();
@@ -176,7 +176,7 @@ fn create_canister_data_callback(caller: Principal, canister_data_id: u64) -> Re
             user_id
         };
 
-        // let canister_data_id = uuid(&caller.to_text());
+
 
         state
             .canister_data
