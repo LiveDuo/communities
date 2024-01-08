@@ -24,12 +24,18 @@ type HttpResponse = record {
   status_code : nat16;
 };
 type IcParams = record { "principal" : principal };
+type PostStatus = variant { 
+  Visible;
+  Hidden;
+};
 type PostResponse = record {
+  post_id: nat64;
   authentication : AuthenticationWithAddress;
   title : text;
   description : text;
   timestamp : nat64;
   replies : vec ReplyResponse;
+  status: PostStatus;
 };
 type PostSummary = record {
   authentication : AuthenticationWithAddress;
@@ -39,6 +45,13 @@ type PostSummary = record {
   last_activity : nat64;
   replies_count : nat64;
   timestamp : nat64;
+  status: PostStatus;
+};
+type Post = record {
+  title : text;
+  description : text;
+  timestamp : nat64;
+  status: PostStatus;
 };
 type Profile = record {
   authentication : Authentication;
@@ -46,22 +59,40 @@ type Profile = record {
   description : text;
   active_principal : principal;
 };
+type ProfileResponse = record {
+  authentication : Authentication;
+  name : text;
+  description : text;
+  active_principal : principal;
+  roles : vec UserRole
+};
+type ReplyStatus = variant {
+  Visible;
+  Hidden;
+};
 type ReplyResponse = record {
   authentication : AuthenticationWithAddress;
   "text" : text;
   timestamp : nat64;
+  status : ReplyStatus;
+  reply_id: nat64;
 };
-type CratePostResult = variant { Ok : PostSummary; Err : text };
+type CreatePostResult = variant { Ok : PostSummary; Err : text };
 type CreateProfileResult = variant { Ok : Profile; Err : text };
 type CreateReplyResult = variant { Ok : ReplyResponse; Err : text };
 type GetNextUpgradesResult = variant { Ok : vec UpgradeWithTrack; Err : text };
 type GetPostResult = variant { Ok : PostResponse; Err : text };
-type GetPostsByUserResult = variant { Ok : vec PostSummary; Err : text };
-type GetProfileResult = variant { Ok : Profile; Err : text };
+type GetPostsByAuthResult = variant { Ok : vec PostSummary; Err : text };
+type GetProfileResult = variant { Ok : ProfileResponse; Err : text };
 type UpgradeCanisterResult = variant { Ok : null; Err : text };
 type GetMetadataResult = variant { Ok : Metadata; Err : text };
+type UpdatePostStatusResult = variant { Ok : null; Err : text };
+type UpdateReplyStatusResult = variant { Ok : null; Err : text };
+type GetHiddenPostsResult = variant { Ok : vec PostResponse; Err : text };
+type GetHiddenReplyResult = variant { Ok : vec record { nat64; ReplyResponse; }; Err : text };
 
 type Role = record { role : UserRole; timestamp : nat64 };
+
 type StreamingCallbackToken = record {
   key : text;
   sha256 : opt vec nat8;
@@ -74,6 +105,7 @@ type StreamingStrategy = variant {
     callback : func () -> ();
   };
 };
+
 type SvmAuthenticationWithParams = record {
   signature : text;
   public_key : text;
@@ -103,7 +135,7 @@ type definite_canister_settings = record {
   compute_allocation : nat;
 };
 
-type CanisterStatusRespose = record {
+type CanisterStatusResponse = record {
   status : variant { stopped; stopping; running };
   memory_size : nat;
   cycles : nat;
@@ -113,18 +145,21 @@ type CanisterStatusRespose = record {
 type UserRole = variant { Admin };
 
 service : (opt principal, opt text, opt text ) -> {
-  create_post : (text, text) -> (CratePostResult);
+  create_post : (text, text) -> (CreatePostResult);
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
   create_reply : (nat64, text) -> (CreateReplyResult);
+  update_post_status : (nat64, PostStatus) -> (UpdatePostStatusResult);
+  update_reply_status : (nat64, ReplyStatus) -> (UpdateReplyStatusResult);
   upgrade_canister : (text, text) -> (UpgradeCanisterResult);
   get_next_upgrades : () -> (GetNextUpgradesResult);
-  canister_status : () -> (CanisterStatusRespose);
+  canister_status : () -> (CanisterStatusResponse);
   get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
-  get_posts_by_user : (Authentication) -> (GetPostsByUserResult) query;
+  get_hidden_posts : () -> (GetHiddenPostsResult) query;
+  get_hidden_replies : () -> (GetHiddenReplyResult) query;
+  get_posts_by_auth : (Authentication) -> (GetPostsByAuthResult) query;
   get_profile : () -> (GetProfileResult) query;
-  get_profile_by_user : (Authentication) -> (opt Profile) query;
-  get_user_roles : () -> (vec Role) query;
+  get_profile_by_auth : (AuthenticationWith) -> (opt ProfileResponse) query;
   get_metadata: () -> (GetMetadataResult) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
 }

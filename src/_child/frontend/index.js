@@ -11,6 +11,7 @@ import Layout from './components/layout'
 import UserPosts from './pages/UserPosts'
 import Post from './pages/Post'
 import Posts from './pages/Posts'
+import Admin from './pages/Admin'
 
 const App = () => (
   <StrictMode>
@@ -22,6 +23,7 @@ const App = () => (
                   <Route exact path="/" element={<Layout><Posts /></Layout>}/>
                   <Route path="/user/:address/:type" element={<Layout><UserPosts /></Layout>}/>
                   <Route path="/post/:index" element={<Layout><Post /></Layout>}/>
+                  <Route path="/admin" element={<Layout><Admin /></Layout>}/>
                 </Routes>
             </BrowserRouter>
           </ChildProvider>

@@ -60,33 +60,55 @@ pub struct Profile {
     pub authentication: Authentication,
     pub active_principal: Principal
 }
-
+#[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
+pub enum PostStatus {
+    Visible,
+    Hidden
+}
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
 pub struct Post {
     pub title: String,
     pub description: String,
     pub timestamp: u64,
+    pub status: PostStatus
 }
-
+#[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
+pub enum ReplyStatus {
+    Visible,
+    Hidden
+}
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Reply {
     pub text: String,
     pub timestamp: u64,
+    pub status: ReplyStatus
 }
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct ReplyResponse {
     pub text: String,
     pub timestamp: u64,
     pub authentication: AuthenticationWithAddress,
+    pub reply_id: u64,
+    pub status: ReplyStatus
 }
 
 #[derive(Clone, CandidType, Deserialize, Debug)]
 pub struct PostResponse {
     pub title: String,
+    pub post_id: u64,
     pub description: String,
     pub authentication: AuthenticationWithAddress,
     pub timestamp: u64,
+    pub status: PostStatus,
     pub replies: Vec<ReplyResponse>,
+}
+#[derive(Clone, CandidType, Deserialize, Debug)]
+pub struct ProfileResponse {
+    pub name: String,
+    pub description: String,
+    pub authentication: Authentication,
+    pub active_principal: Principal,
+    pub roles: Vec<UserRole>
 }
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -98,10 +120,11 @@ pub struct PostSummary {
     pub authentication: AuthenticationWithAddress,
     pub replies_count: u64,
     pub last_activity: u64,
+    pub status: PostStatus
 }
 
 
-#[derive(CandidType, Deserialize, Clone, Debug)]
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum UserRole {
     Admin
 }
