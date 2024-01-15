@@ -120,9 +120,7 @@ pub async fn install_code(canister_id: Principal, track: &String, version: &Stri
 
 // create_child
 pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String, track: &String) -> Result<(), String> {
-    let mut batches = vec![vec![]];
-    let mut batch_index = 0;
-    let mut batch_size = 0;
+    let mut batches: Vec<(u32, Vec<BatchOperation>)> = vec![(0, vec![])];
     for asset in assets {
         // skip unnecessary files
         if asset == &format!("/upgrades/{track}/{version}/child.wasm") {
@@ -152,18 +150,23 @@ pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version:
             sha256: None
         };
 
-        if batch_size + content.len() as u32 <= BATCH_SIZE  {
-            batch_size+= content.len() as u32;
-        } else {
-            batch_index+= 1;
-            batch_size = content.len() as u32;
-            batches.push(vec![]);
+        let mut is_stored = false;
+        for (batch_size, batch) in batches.iter_mut() {
+            if *batch_size + content.len() as u32 <= BATCH_SIZE  {
+                *batch_size+= content.len() as u32;
+                batch.push(BatchOperation::StoreAsset(store_args.to_owned()));
+                is_stored = true;
+                break;
+            }
         }
-        batches[batch_index].push(BatchOperation::StoreAsset(store_args));
 
+        if !is_stored  {
+            batches.push((content.len() as u32, vec![BatchOperation::StoreAsset(store_args.to_owned())]));
+        }
     }
 
-    for batch_operations  in batches {
+
+    for (_, batch_operations)  in batches {
         let (create_batch_response, ) = ic_cdk::call::<_, (CreateBatchResponse,)>(
             canister_id, 
             "create_batch",
@@ -181,7 +184,7 @@ pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version:
             "commit_batch",
             (commit_batch,))
             .await
-            .map_err(|(code, msg)| format!("commit batch: {}", msg))
+            .map_err(|(_, msg)| format!("commit batch: {}", msg))
             .unwrap();
     }
   
