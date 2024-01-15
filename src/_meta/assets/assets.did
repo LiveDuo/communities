@@ -32,9 +32,18 @@ type DeleteAssetArguments = record {
 // Reset everything
 type ClearArguments = record {};
 
+type StoreArg = record {
+  key: Key;
+  content_type: text;
+  content_encoding: text;
+  content: blob;
+  sha256: opt blob
+};
+
 type BatchOperationKind = variant {
   CreateAsset: CreateAssetArguments;
   SetAssetContent: SetAssetContentArguments;
+  StoreAsset: StoreArg;
 
   UnsetAssetContent: UnsetAssetContentArguments;
   DeleteAsset: DeleteAssetArguments;
@@ -127,13 +136,7 @@ service: {
 
   // Single call to create an asset with content for a single content encoding that
   // fits within the message ingress limit.
-  store: (record {
-    key: Key;
-    content_type: text;
-    content_encoding: text;
-    content: blob;
-    sha256: opt blob
-  }) -> ();
+  store: (StoreArg) -> ();
 
   authorize: (principal) -> ();
 }
