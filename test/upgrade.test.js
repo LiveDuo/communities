@@ -22,16 +22,16 @@ describe.only('Testing with done', () => {
 		const identity = await getIdentity("default")
 		principal = identity.getPrincipal().toString()
 		agent = getAgent('http://127.0.0.1:8000', identity)
-    actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
+    	actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisterIds.parent.local })
 	})
 
 	beforeEach(async()=>{
 		// remove upgrades
 		const versions = [{version: '0.0.2', track: 'default'}, {version: '0.0.2b', track: 'default'}, {version: '0.0.2', track: 'beta'}]
 		const upgrades = await actorParent.get_upgrades()
-		const upgradesExist = upgrades.filter(u => versions.some(v => v.version === u.version && v.track === u.track))
+		const upgradesExist = upgrades.filter(u => versions.some(v => v.version === u.version && v.track === u.track.name))
 		for (const upgrade of upgradesExist) {
-			await actorParent.remove_upgrade(upgrade.version, upgrade.track)
+			await actorParent.remove_upgrade(upgrade.version, upgrade.track.name)
 		}
 	})
 
@@ -47,6 +47,7 @@ describe.only('Testing with done', () => {
 		const childPrincipalId = await actorParent.create_child().then(p => p.Ok.toString())
 		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
+		
 
 		// upload upgrade (0.0.2)
 		const tractUpgrade = 'default'
@@ -57,14 +58,14 @@ describe.only('Testing with done', () => {
 		const [ upgrade ] = resNextUpgrades.Ok
 		expect(upgrade).toBeDefined()
 
-		await actorChild.upgrade_canister(upgrade.version, upgrade.track)
+		await actorChild.upgrade_canister(upgrade.version, upgrade.track.name)
 
 		await sleep(UPGRADE_DELAY)
 		
 		// check metadata
 		const metadata = await actorChild.get_metadata()
 		expect(metadata.Ok.version).toBe(upgrade.version)
-		expect(metadata.Ok.track).toBe(upgrade.track)
+		expect(metadata.Ok.track).toBe(upgrade.track.name)
 
 		// upload version (0.0.2b)
 		const tractUpgrade1 = 'default'
@@ -76,14 +77,14 @@ describe.only('Testing with done', () => {
 		expect(upgrade1).toBeDefined()
 
 		// upgrade child (0.0.2b)
-		await actorChild.upgrade_canister(upgrade1.version, upgrade1.track)
+		await actorChild.upgrade_canister(upgrade1.version, upgrade1.track.name)
 
 		await sleep(UPGRADE_DELAY)
 
 		// check metadata
 		const metadata1 = await actorChild.get_metadata()
 		expect(metadata1.Ok.version).toBe(upgrade.version)
-		expect(metadata1.Ok.track).toBe(upgrade.track)
+		expect(metadata1.Ok.track).toBe(upgrade.track.name)
 
 		// check canister
 		const posts = await actorChild.get_posts()
@@ -115,14 +116,14 @@ describe.only('Testing with done', () => {
 		expect(upgrade).toBeDefined()
 		
 		// upgrade child (0.0.2-beta)
-		await actorChild.upgrade_canister(upgrade.version, upgrade.track)
+		await actorChild.upgrade_canister(upgrade.version, upgrade.track.name)
 
 		await sleep(UPGRADE_DELAY)
 
 		// check metadata
 		const metadata = await actorChild.get_metadata()
 		expect(metadata.Ok.version).toBe(upgrade.version)
-		expect(metadata.Ok.track).toBe(upgrade.track)
+		expect(metadata.Ok.track).toBe(upgrade.track.name)
 		
 		// check canister
 		const posts = await actorChild.get_posts()
