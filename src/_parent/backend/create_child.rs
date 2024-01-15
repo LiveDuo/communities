@@ -2,6 +2,8 @@ use ic_cdk::api::management_canister::main::*;
 use candid::{Principal, Encode};
 
 use include_macros::get_canister;
+use ic_certified_assets::types::{StoreArg, CommitBatchArguments, CreateBatchResponse, BatchOperation};
+use serde_bytes::ByteBuf;
 
 use crate::state::*;
 use crate::assets::*;
@@ -10,6 +12,7 @@ pub const TOPUP_CYCLES: u64 = 200_000_000_000; // 200b cycles
 
 pub const TRANSFER_FEE: u64 = 10_000;
 pub const MINT_MEMO: u64 = 1347768404;
+pub const BATCH_SIZE: u32 = 2097152;
 
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 pub static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
@@ -117,7 +120,9 @@ pub async fn install_code(canister_id: Principal, track: &String, version: &Stri
 
 // create_child
 pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version: &String, track: &String) -> Result<(), String> {
-    
+    let mut batches = vec![vec![]];
+    let mut batch_index = 0;
+    let mut batch_size = 0;
     for asset in assets {
         // skip unnecessary files
         if asset == &format!("/upgrades/{track}/{version}/child.wasm") {
@@ -138,18 +143,45 @@ pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version:
   
         // upload asset
         let key = asset.replace(&format!("/upgrades/{track}/{version}"), "");
-        let store_args = StoreAssetArgs {
+
+        let store_args = StoreArg {
             key: key.to_owned(),
             content_type: get_content_type(&key),
             content_encoding: "identity".to_owned(),
-            content,
+            content: ByteBuf::from(content.to_owned()),
+            sha256: None
+        };
+
+        if batch_size + content.len() as u32 <= BATCH_SIZE  {
+            batch_size+= content.len() as u32;
+        } else {
+            batch_index+= 1;
+            batch_size = content.len() as u32;
+            batches.push(vec![]);
+        }
+        batches[batch_index].push(BatchOperation::StoreAsset(store_args));
+
+    }
+
+    for batch_operations  in batches {
+        let (create_batch_response, ) = ic_cdk::call::<_, (CreateBatchResponse,)>(
+            canister_id, 
+            "create_batch",
+            ())
+            .await
+            .map_err(|(code, msg)| format!("create batch: {}: {}", code as u8, msg))
+            .unwrap();
+
+        let commit_batch = CommitBatchArguments { 
+            batch_id: create_batch_response.batch_id, 
+            operations: batch_operations 
         };
         ic_cdk::call::<_, ()>(
             canister_id, 
-            "store",
-            (store_args,))
+            "commit_batch",
+            (commit_batch,))
             .await
-            .map_err(|(code, msg)| format!("Update settings: {}: {}", code as u8, msg))
+            .map_err(|(code, msg)| format!("commit batch: {}", msg))
             .unwrap();
     }
   
