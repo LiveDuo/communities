@@ -2,7 +2,7 @@ use ic_cdk::api::management_canister::main::*;
 use candid::{Principal, Encode};
 
 use include_macros::get_canister;
-use ic_certified_assets::types::{StoreArg, CommitBatchArguments, CreateBatchResponse, BatchOperation};
+use ic_certified_assets::types::{StoreArg, BatchOperation};
 use serde_bytes::ByteBuf;
 
 use crate::state::*;
@@ -167,22 +167,10 @@ pub async fn store_assets(canister_id: Principal, assets: &Vec<String>, version:
 
 
     for (_, batch_operations)  in batches {
-        let (create_batch_response, ) = ic_cdk::call::<_, (CreateBatchResponse,)>(
-            canister_id, 
-            "create_batch",
-            ())
-            .await
-            .map_err(|(code, msg)| format!("create batch: {}: {}", code as u8, msg))
-            .unwrap();
-
-        let commit_batch = CommitBatchArguments { 
-            batch_id: create_batch_response.batch_id, 
-            operations: batch_operations 
-        };
         ic_cdk::call::<_, ()>(
             canister_id, 
-            "commit_batch",
-            (commit_batch,))
+            "execute_batch",
+            (batch_operations,))
             .await
             .map_err(|(_, msg)| format!("commit batch: {}", msg))
             .unwrap();

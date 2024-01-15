@@ -132,6 +132,22 @@ pub fn commit_batch(arg: CommitBatchArguments) {
     });
 }
 
+
+#[update(guard = "is_authorized")]
+#[candid_method(update)]
+pub fn execute_batch(arg: Vec<BatchOperation>) {
+    STATE.with(|s| {
+        let now = time();
+        let mut state = s.borrow_mut();
+        let batch_id = state.create_batch(now);
+        let commit_batch = CommitBatchArguments {batch_id, operations: arg};
+        if let Err(msg) = state.commit_batch(commit_batch, now) {
+            trap(&msg);
+        }
+        set_certified_data(&state.root_hash());
+    });
+}
+
 #[query]
 #[candid_method(query)]
 pub fn get(arg: GetArg) -> EncodedAsset {

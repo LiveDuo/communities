@@ -139,4 +139,5 @@ service: {
   store: (StoreArg) -> ();
 
   authorize: (principal) -> ();
+  execute_batch: (vec BatchOperationKind) -> ();
 }
