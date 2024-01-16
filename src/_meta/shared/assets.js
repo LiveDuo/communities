@@ -4,6 +4,7 @@ const path = require('path')
 global.fetch = require('node-fetch')
 
 const SIZE_CHUNK = 1024000 // one megabyte
+const BATCH_SIZE = 2097152 // two megabyte
 
 const getContentType = (k) => {
 	if (k.endsWith('.html')) return 'text/html'
@@ -71,3 +72,33 @@ const uploadFile = async (actor, key, assetBuffer) => {
 	console.log(key)
 }
 exports.uploadFile = uploadFile
+
+const addToBatch= (batches, item, key) => {
+	let isStored = false
+	for (const batch of batches) {
+		if(batch.batchSize + item.length <= BATCH_SIZE) {
+			const storeAsset = { StoreAsset: {key, content_type: getContentType(key), content_encoding: 'identity', content: Array.from(item), sha256: []}}
+			batch.items.push(storeAsset)
+			isStored = true
+			batch.batchSize = batch.batchSize + item.length
+			break
+		}
+	}
+	if(!isStored) {
+		const storeAsset = {StoreAsset:{key, content_type: getContentType(key), content_encoding: 'identity', content: Array.from(item), sha256: []}}
+		batches.push({batchSize: item.length, items: [storeAsset]})
+	}
+}
+
+exports.addToBatch = addToBatch
+
+const executeBatch = async (actorAsset, batches) => {
+	for (const [index, batch] of batches.entries()) {
+		await actorAsset.execute_batch(batch.items)
+		console.log("executed batch", index + 1)
+	}
+}
+
+exports.executeBatch = executeBatch
+
+

@@ -108,7 +108,7 @@ service: {
     sha256: opt blob;  // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
   }) -> (record { content: blob }) query;
 
-  list : (record {}) -> (vec record {
+  list : () -> (vec record {
     key: Key;
     content_type: text;
     encodings: vec record {

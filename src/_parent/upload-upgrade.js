@@ -3,7 +3,7 @@ const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')	
 
 const { getCanisters, getAgent, getHost } = require('../_meta/shared/utils')
-const { getFiles, uploadFile } = require('../_meta/shared/assets')
+const { getFiles, addToBatch, executeBatch } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { parentFactory, assetFactory } = require('../_meta/shared/idl')
 
@@ -32,15 +32,19 @@ const filter = argv.filter ?? null
 
 	// check upgrade version
 	const upgrades = await actorParent.get_upgrades()
-	const upgradeExists = upgrades.find(u => u.version === version && u.track === track)
+	const upgradeExists = upgrades.find(u => u.version === version && u.track.name === track)
 	if (upgradeExists) { console.log('Version already exist\n'); return }
+
+	const batches = [{batchSize: 0, items: []}]
 
 	// upload upgrade assets
 	const assets = await getFiles(`${path}/${version}`).then(e => e.filter(f => filter === f || filter === null))
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(`${path}/${version}/${asset}`)
-		await uploadFile(actorAsset, `/upgrades/${track}/${version}/${asset}`, assetBuf)
+		addToBatch(batches, assetBuf,`/upgrades/${track}/${version}/${asset}`)
 	}
+
+	await executeBatch(actorAsset, batches)
 
 	// create upgrade
 	const upgradeFrom = upgradeFromVersion && upgradeFromTrack ? [ {version: upgradeFromVersion, track: upgradeFromTrack} ] : []

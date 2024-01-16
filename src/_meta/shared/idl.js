@@ -109,12 +109,20 @@ exports.parentFactory = parentFactory
 
 const assetFactory = ({ IDL }) => {
 	const StoreArgs = IDL.Record({ 'key': IDL.Text, 'content_type': IDL.Text, 'content_encoding': IDL.Text, 'content': IDL.Vec(IDL.Nat8) })
+	const ClearArguments = IDL.Record({});
+	const Key = IDL.Text;
+	const HeaderField = IDL.Tuple(IDL.Text, IDL.Text);
+	const CreateAssetArguments = IDL.Record({ 'key' : Key, 'content_type' : IDL.Text, 'headers' : IDL.Opt(IDL.Vec(HeaderField)), 'max_age' : IDL.Opt(IDL.Nat64), });
+	const StoreArg = IDL.Record({ 'key' : Key, 'content' : IDL.Vec(IDL.Nat8), 'sha256' : IDL.Opt(IDL.Vec(IDL.Nat8)), 'content_type' : IDL.Text, 'content_encoding' : IDL.Text, });
+	const UnsetAssetContentArguments = IDL.Record({ 'key' : Key, 'content_encoding' : IDL.Text, });
+	const DeleteAssetArguments = IDL.Record({ 'key' : Key });
+	const ChunkId = IDL.Nat;
+	const SetAssetContentArguments = IDL.Record({'key' : Key, 'sha256' : IDL.Opt(IDL.Vec(IDL.Nat8)), 'chunk_ids' : IDL.Vec(ChunkId), 'content_encoding' : IDL.Text, });
+	const BatchOperationKind = IDL.Variant({ 'CreateAsset' : CreateAssetArguments, 'StoreAsset' : StoreArg, 'UnsetAssetContent' : UnsetAssetContentArguments, 'DeleteAsset' : DeleteAssetArguments, 'SetAssetContent' : SetAssetContentArguments, 'Clear' : ClearArguments, });
 	return IDL.Service({
-		'create_batch': IDL.Func([IDL.Text], [], []),
-		'append_chunk': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
-		'commit_batch': IDL.Func([IDL.Text], [], []),
-		'store_batch': IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [], []),
+		'execute_batch': IDL.Func([IDL.Vec(BatchOperationKind)], [], []),
 		'store': IDL.Func([StoreArgs], [], []),
+		'list' : IDL.Func([],[IDL.Vec( IDL.Record({'key' : Key, 'encodings' : IDL.Vec( IDL.Record({ 'modified' : IDL.Int, 'sha256' : IDL.Opt(IDL.Vec(IDL.Nat8)), 'length' : IDL.Nat, 'content_encoding' : IDL.Text, }) ), 'content_type' : IDL.Text, }) ),], ['query'], ),
 	})
 }
 exports.assetFactory = assetFactory
