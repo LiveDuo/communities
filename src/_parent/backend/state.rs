@@ -11,14 +11,6 @@ use std::convert::TryInto;
 
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map;
-#[derive(CandidType, Deserialize)]
-pub struct StoreAssetArgs {
-    pub key: String,
-    pub content_type: String,
-    pub content_encoding: String,
-    pub content: Vec<u8>,
-}
-
 #[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct AccountIdentifier(pub [u8; 32]);
 impl AccountIdentifier {
