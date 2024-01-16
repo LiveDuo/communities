@@ -59,29 +59,29 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
 
   for asset in assets {
   
-      // get asset content
-      let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister, "retrieve", (asset.to_owned(),),).await.unwrap();
+    // get asset content
+    let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister, "retrieve", (asset.to_owned(),),).await.unwrap();
 
       // replace env car
-  let content;
-  if asset == &format!("/upgrades/{track}/{version}/static/js/bundle.js") {
-    let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
-    let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
-    content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
-  } else {
-    content = ByteBuf::from(asset_bytes.to_vec());
-  }
+    let content;
+    if asset == &format!("/upgrades/{track}/{version}/static/js/bundle.js") {
+      let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
+      let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
+      content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
+    } else {
+      content = ByteBuf::from(asset_bytes.to_vec());
+    }
 
-  // upload asset
-  let key = asset.replace(&format!("/upgrades/{track}/{version}"), "/temp");
-  let store_args = StoreArg {
-          key: key.to_owned(),
-          content_type: get_content_type(&key),
-          content_encoding: "identity".to_owned(),
-          content,
-          sha256: None
-      };
-      ic_certified_assets::store(store_args);
+    // upload asset
+    let key = asset.replace(&format!("/upgrades/{track}/{version}"), "/temp");
+    let store_args = StoreArg {
+      key: key.to_owned(),
+      content_type: get_content_type(&key),
+      content_encoding: "identity".to_owned(),
+      content,
+      sha256: None
+    };
+    ic_certified_assets::store(store_args);
   }
 
   // store metadata
@@ -89,11 +89,11 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
   let content = ByteBuf::from(metadata.as_bytes().to_vec());
   let key = format!("/temp/metadata.txt");
   let store_args = StoreArg {
-      key: key.to_owned(),
-      content_type: get_content_type(&key),
-      content_encoding: "identity".to_owned(),
-      content,
-      sha256: None
+    key: key.to_owned(),
+    content_type: get_content_type(&key),
+    content_encoding: "identity".to_owned(),
+    content,
+    sha256: None
   };
   ic_certified_assets::store(store_args);
 
