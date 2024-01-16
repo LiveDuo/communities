@@ -43,7 +43,7 @@ pub fn retrieve(key: Key) -> RcBytes {
 }
 
 #[query]
-// #[candid_method(query)]
+#[candid_method(query)]
 pub fn retrieve_batch(keys: Vec<Key>) -> Vec<(Key, Vec<u8>)> {
     STATE.with(|s| {
         let state = s.borrow();
@@ -64,16 +64,16 @@ pub fn retrieve_batch(keys: Vec<Key>) -> Vec<(Key, Vec<u8>)> {
             }
         }
 
-        let mut loaded_batch_index = 0;
-        let mut max_batch_size = 0;
+        let mut batch_index_max = 0;
+        let mut batch_size_max = 0;
         for (batch_index,(batch_size, _))  in batches.iter().enumerate() {
-            if *batch_size > max_batch_size {
-                max_batch_size = *batch_size;
-                loaded_batch_index = batch_index;
+            if *batch_size > batch_size_max {
+                batch_size_max = *batch_size;
+                batch_index_max = batch_index;
             }
         }
 
-        let (_, batch) = &batches[loaded_batch_index];
+        let (_, batch) = &batches[batch_index_max];
         batch.clone()
     })
 }
