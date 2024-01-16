@@ -140,4 +140,6 @@ service: {
 
   authorize: (principal) -> ();
   execute_batch: (vec BatchOperationKind) -> ();
+
+  retrieve_batch: (vec key) -> (vec record { vec nat8; Key; })
 }

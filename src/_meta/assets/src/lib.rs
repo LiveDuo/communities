@@ -42,6 +42,36 @@ pub fn retrieve(key: Key) -> RcBytes {
     })
 }
 
+#[query]
+#[candid_method(query)]
+pub fn retrieve_batch(keys: Vec<Key>) -> Vec<(Vec<u8>, Key)> {
+    STATE.with(|s| {
+        let state = s.borrow();
+        let mut batches: Vec<(u32, Vec<(Vec<u8>, Key)>)> = vec![(0, vec![])];
+        for key  in keys {
+            let content = state.retrieve(&key).unwrap().to_vec();
+            let mut is_stored = false;
+            for (batch_size, batch) in batches.iter_mut() {
+                if *batch_size + content.len() as u32 <= BATCH_SIZE  {
+                    *batch_size+= content.len() as u32;
+                    batch.push((content.to_owned(), key.to_owned()));
+                    is_stored = true;
+                    break;
+                }
+            }
+            if !is_stored  {
+                batches.push((content.len() as u32, vec![(content, key)]));
+            }
+        }
+
+        batches.sort_by(|(batch_size_a,_), (batch_size_b,_)| batch_size_b.cmp(batch_size_a));
+        let (_,batch) = batches.first().unwrap();
+        let a = batch.iter().map(|(_, key)|key).collect::<Vec<_>>();
+        ic_cdk::println!("batches {:?}", a);
+        batch.to_owned()
+    })
+}
+
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
 pub fn store(arg: StoreArg) {

@@ -10,6 +10,8 @@ pub type BatchId = Nat;
 pub type ChunkId = Nat;
 pub type Key = String;
 
+pub const BATCH_SIZE: u32 = 2097152;
+
 // IDL Types
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
