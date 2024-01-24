@@ -49,7 +49,7 @@ const Upgrades = () => {
     useEffect(() => {
         if (parentActor)
             getUpgradesGrouped()
-    }, [parentActor, getUpgrades])
+    }, [parentActor, getUpgrades, getUpgradesGrouped])
 
     return (
         <>
