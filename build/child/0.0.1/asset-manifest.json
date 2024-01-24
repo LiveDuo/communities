@@ -1,6 +1,7 @@
 {
   "files": {
     "main.js": "/static/js/bundle.js",
+    "main.css": "/static/css/main.02a7cb53.css",
     "static/media/plug.png": "/static/media/plug.9facca630845ade33efa.png",
     "static/media/bitfinity.png": "/static/media/bitfinity.edf734fbf685c19caad0.png",
     "static/media/metamask.svg": "/static/media/metamask.d4924798e9ead2f8db067473e48cc79a.svg",
@@ -11,6 +12,7 @@
     "index.html": "/index.html"
   },
   "entrypoints": [
-    "static/js/bundle.js"
+    "static/js/bundle.js",
+    "static/css/main.02a7cb53.css"
   ]
 }
