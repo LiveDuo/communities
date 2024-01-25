@@ -172,7 +172,7 @@ const ChildProvider = ({ children }) => {
 	const createReply = useCallback(async (_post_id, text) => {
 		const post_id = BigInt(_post_id)
 		await childActor.create_reply(post_id, text)
-		const reply = { text, timestamp: new Date(), authentication: { [account.type]: {[account.type === 'Ic' ? 'principal' :'address']: account.address} }}
+		const reply = { text, timestamp: new Date(), authentication: { [account.type]: {[account.type === 'Ic' ? 'principal' :'address']: account.address} }, status: { Visible: null }}
 		return reply
 	}, [account, childActor])
 
