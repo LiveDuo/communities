@@ -111,7 +111,7 @@ describe('Testing with done', () => {
 		const userPosts2 = await actorBackendSvm.get_posts_by_auth({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts2.Ok.length).toBe(2)
   	});
-	test.only("Should sign in with internet computer", async () => {
+	test("Should sign in with internet computer", async () => {
 		// link address
 		const profile = await actorBackendIc.create_profile({Ic: null})
 		const principal = profile.Ok.active_principal
