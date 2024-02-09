@@ -292,6 +292,40 @@ fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<Prof
     })
 }
 
+#[update]
+#[candid_method(update)]
+fn like_post(post_id: u64) -> Result<(), String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        let caller = ic_cdk::caller();
+
+        // check if caller has profile
+       
+        if !state.indexes.active_principal.contains_key(&caller) {
+            return Err("Profile does not exist".to_owned());
+        }
+
+        // check if the post exists
+        if !state.posts.contains_key(&post_id) {
+            return Err("Post does not exist".to_owned());
+        }
+
+        // add new entry in like_posts table 
+        let liked_post_id = uuid(&caller.to_text());
+        let liked_post = LikedPost {timestamp: ic_cdk::api::time() };
+        state.liked_posts.insert(liked_post_id.to_owned(), liked_post);
+
+        state.relations.post_id_to_liked_post_id.insert(post_id, liked_post_id.to_owned());
+
+        let profile_id = state.indexes.active_principal.get(&caller).unwrap().to_owned();
+        state.relations.profile_id_to_liked_post_id.insert(profile_id, liked_post_id.to_owned());
+
+        Ok(())
+
+    })
+}
+
 #[query]
 #[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
@@ -425,11 +459,25 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
         let profile = state.profiles.get(&profile_id).unwrap();
         let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
+        let liked_post_ids_opt =  state.relations.post_id_to_liked_post_id.forward.get(&post_id);
+        let likes = if liked_post_ids_opt.is_none() {
+            vec![]
+        } else  {
+            liked_post_ids_opt.unwrap().to_owned().iter().map(|(liked_post_id, _)| {
+                let profile_ids_opt = state.relations.profile_id_to_liked_post_id.backward.get(liked_post_id).unwrap().to_owned();
+                let (profile_id, _) = profile_ids_opt.first_key_value().unwrap();
+                let profile = state.profiles.get(profile_id).unwrap();
+                let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                authentication
+            }).collect::<Vec<_>>()
+        };
+
         let post_result = PostResponse {
             replies,
             title: post.title.to_owned(),
             timestamp: post.timestamp,
             description: post.description.to_owned(),
+            likes: likes,
             authentication,
             status: post.status.to_owned(),
             post_id: post_id.to_owned()
@@ -554,7 +602,8 @@ fn get_hidden_posts() -> Result<Vec<PostResponse>, String> {
                     authentication: authentication,
                     timestamp: post.timestamp.to_owned(),
                     status: post.status.to_owned(),
-                    replies: vec![]
+                    replies: vec![],
+                    likes: vec![]
                 };
                 Some(post_response)
             })

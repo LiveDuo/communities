@@ -255,4 +255,15 @@ describe('Testing with done', () => {
 		const hiddenReplies1 = await actorBackendIc.get_hidden_replies()
 		expect(hiddenReplies1.Ok.find(p => p[1].reply_id === replyId)).toBeDefined()
 	})
+	test.only('Should create, like and unlike post', async () => {
+		// create a post
+		const createdPost = await actorBackendIc.create_post('hello', '')
+		const postId = createdPost.Ok.post_id
+		
+		const likedPost = await actorBackendIc.like_post(postId)
+		expect(likedPost.Ok).toBeDefined()
+
+		const post = await actorBackendIc.get_post(postId)
+		expect(post.Ok.likes.length).toBe(1)
+	})
 })

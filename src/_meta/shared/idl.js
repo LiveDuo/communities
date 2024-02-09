@@ -28,6 +28,7 @@ const childFactory = ({ IDL }) => {
 		description: IDL.Text,
 		timestamp: IDL.Nat64,
 		replies: IDL.Vec(ReplyResponse),
+		likes: IDL.Vec(authenticationWithAddress),
 		post_id: IDL.Nat64
 	});
 
@@ -77,6 +78,7 @@ const childFactory = ({ IDL }) => {
 		create_reply: IDL.Func([IDL.Nat64, IDL.Text], [IDL.Variant({ Ok: ReplyResponse, Err: IDL.Text })], ["update"]),
 		update_post_status: IDL.Func([IDL.Nat64, PostStatus], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		update_reply_status: IDL.Func([IDL.Nat64, ReplyStatus], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		like_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
