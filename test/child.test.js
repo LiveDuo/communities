@@ -111,7 +111,7 @@ describe('Testing with done', () => {
 		const userPosts2 = await actorBackendSvm.get_posts_by_auth({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts2.Ok.length).toBe(2)
   	});
-	test("Should sign in with internet computer", async () => {
+	test.only("Should sign in with internet computer", async () => {
 		// link address
 		const profile = await actorBackendIc.create_profile({Ic: null})
 		const principal = profile.Ok.active_principal
@@ -255,15 +255,46 @@ describe('Testing with done', () => {
 		const hiddenReplies1 = await actorBackendIc.get_hidden_replies()
 		expect(hiddenReplies1.Ok.find(p => p[1].reply_id === replyId)).toBeDefined()
 	})
-	test.only('Should create, like and unlike post', async () => {
+	test('Should create, like and unlike post', async () => {
 		// create a post
 		const createdPost = await actorBackendIc.create_post('hello', '')
 		const postId = createdPost.Ok.post_id
-		
+
+		// like a post
 		const likedPost = await actorBackendIc.like_post(postId)
 		expect(likedPost.Ok).toBeDefined()
 
 		const post = await actorBackendIc.get_post(postId)
 		expect(post.Ok.likes.length).toBe(1)
+
+		// unlike a post
+		const [ likedPostId ] = post.Ok.likes[0]
+		const unlikePost = await actorBackendIc.unlike_post(likedPostId)
+		expect(unlikePost.Ok).toBeDefined()
+
+		const post1 = await actorBackendIc.get_post(postId)
+		expect(post1.Ok.likes.length).toBe(0)
+	})
+	test('Should create, like and unlike reply', async () => {
+		// create a post and a reply
+		const createdPost = await actorBackendIc.create_post('hello', '')
+		const postId = createdPost.Ok.post_id
+		const createRely = await actorBackendIc.create_reply(postId, 'hello')
+		const replyId = createRely.Ok.reply_id
+
+		// like a reply
+		const likedReply = await actorBackendIc.like_reply(replyId)
+		expect(likedReply.Ok).toBeDefined()
+
+		const post = await actorBackendIc.get_post(postId)
+		expect(post.Ok.replies[0].likes.length).toBe(1)
+
+		// unlike a reply
+		const [ likedReplyId ] = post.Ok.replies[0].likes[0]
+		const unlikeReply = await actorBackendIc.unlike_reply(likedReplyId)
+		expect(unlikeReply.Ok).toBeDefined()
+
+		const post1 = await actorBackendIc.get_post(postId)
+		expect(post1.Ok.replies[0].likes.length).toBe(0)
 	})
 })

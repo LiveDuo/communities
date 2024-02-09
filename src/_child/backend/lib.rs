@@ -210,7 +210,8 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
             timestamp: reply.timestamp,
             authentication,
             reply_id: reply_id,
-            status: reply.status
+            status: reply.status,
+            likes: vec![]
         };
 
         Ok(reply_response)
@@ -300,18 +301,14 @@ fn like_post(post_id: u64) -> Result<(), String> {
 
         let caller = ic_cdk::caller();
 
-        // check if caller has profile
-       
         if !state.indexes.active_principal.contains_key(&caller) {
             return Err("Profile does not exist".to_owned());
         }
 
-        // check if the post exists
         if !state.posts.contains_key(&post_id) {
             return Err("Post does not exist".to_owned());
         }
 
-        // add new entry in like_posts table 
         let liked_post_id = uuid(&caller.to_text());
         let liked_post = LikedPost {timestamp: ic_cdk::api::time() };
         state.liked_posts.insert(liked_post_id.to_owned(), liked_post);
@@ -325,7 +322,94 @@ fn like_post(post_id: u64) -> Result<(), String> {
 
     })
 }
+#[update]
+#[candid_method(update)]
+fn unlike_post(liked_post_id: u64) -> Result<(), String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
 
+        let caller = ic_cdk::caller();
+
+        if !state.liked_posts.contains_key(&liked_post_id) {
+            return Err("Like does not exist".to_owned());
+        }
+
+        let profile_ids =  state.relations.profile_id_to_liked_post_id.backward.get(&liked_post_id).unwrap().to_owned();
+        let (profile_id, _) = profile_ids.first_key_value().unwrap();
+        let caller_profile_id = state.indexes.active_principal.get(&caller).unwrap();
+        if profile_id != caller_profile_id {
+            return Err("Invalid caller".to_owned());
+        }
+
+        state.liked_posts.remove(&liked_post_id);
+
+        let post_ids = state.relations.post_id_to_liked_post_id.backward.get(&liked_post_id).unwrap().to_owned();
+        let (post_id, _) = post_ids.first_key_value().unwrap();
+        state.relations.post_id_to_liked_post_id.remove(post_id.to_owned(), liked_post_id.to_owned());
+        state.relations.profile_id_to_liked_post_id.remove(profile_id.to_owned(), liked_post_id.to_owned());
+        
+        Ok(())
+    })
+}
+
+#[update]
+#[candid_method(update)]
+fn like_reply(reply_id: u64) -> Result<(), String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        let caller = ic_cdk::caller();
+
+        if !state.indexes.active_principal.contains_key(&caller) {
+            return Err("Profile does not exist".to_owned());
+        }
+
+        if !state.replies.contains_key(&reply_id) {
+            return Err("Reply does not exist".to_owned());
+        }
+
+        let liked_reply_id = uuid(&caller.to_text());
+        let liked_reply = LikedReply {timestamp: ic_cdk::api::time() };
+        state.liked_replies.insert(liked_reply_id.to_owned(), liked_reply);
+
+        state.relations.reply_id_to_liked_reply_id.insert(reply_id, liked_reply_id.to_owned());
+
+        let profile_id = state.indexes.active_principal.get(&caller).unwrap().to_owned();
+        state.relations.profile_id_to_liked_reply_id.insert(profile_id, liked_reply_id.to_owned());
+
+        Ok(())
+
+    })
+}
+#[update]
+#[candid_method(update)]
+fn unlike_reply(liked_reply_id: u64) -> Result<(), String> {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+
+        let caller = ic_cdk::caller();
+
+        if !state.liked_replies.contains_key(&liked_reply_id) {
+            return Err("Like does not exist".to_owned());
+        }
+
+        let profile_ids =  state.relations.profile_id_to_liked_reply_id.backward.get(&liked_reply_id).unwrap().to_owned();
+        let (profile_id, _) = profile_ids.first_key_value().unwrap();
+        let caller_profile_id = state.indexes.active_principal.get(&caller).unwrap();
+        if profile_id != caller_profile_id {
+            return Err("Invalid caller".to_owned());
+        }
+
+        state.liked_replies.remove(&liked_reply_id);
+
+        let reply_ids = state.relations.reply_id_to_liked_reply_id.backward.get(&liked_reply_id).unwrap().to_owned();
+        let (reply_id, _) = reply_ids.first_key_value().unwrap();
+        state.relations.reply_id_to_liked_reply_id.remove(reply_id.to_owned(), liked_reply_id.to_owned());
+        state.relations.profile_id_to_liked_reply_id.remove(profile_id.to_owned(), liked_reply_id.to_owned());
+        
+        Ok(())
+    })
+}
 #[query]
 #[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
@@ -447,8 +531,21 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
                 }
                 let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
                 let profile = state.profiles.get(&profile_id).unwrap();
-                let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
-                Some(ReplyResponse { text: reply.text.to_owned(), timestamp: reply.timestamp, authentication , reply_id: reply_id.to_owned(), status: reply.status.to_owned() })
+                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                let liked_reply_ids_opt = state.relations.reply_id_to_liked_reply_id.forward.get(reply_id);
+                let likes = if liked_reply_ids_opt.is_none() {
+                    vec![]
+                } else {
+                    liked_reply_ids_opt.unwrap().iter().map(|(liked_reply_id, _)| {
+                        let profile_ids = state.relations.profile_id_to_liked_reply_id.backward.get(liked_reply_id).unwrap().to_owned();
+                        let (profile_id, _) = profile_ids.first_key_value().unwrap();
+                        let profile = state.profiles.get(profile_id).unwrap();
+                        let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                        (liked_reply_id.to_owned(), authentication)
+                    }).collect::<Vec<_>>()
+                };
+
+                Some(ReplyResponse { text: reply.text.to_owned(), timestamp: reply.timestamp, authentication , reply_id: reply_id.to_owned(), status: reply.status.to_owned(), likes: likes })
             }).collect::<Vec<_>>()
         };
 
@@ -468,7 +565,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
                 let (profile_id, _) = profile_ids_opt.first_key_value().unwrap();
                 let profile = state.profiles.get(profile_id).unwrap();
                 let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
-                authentication
+                (liked_post_id.to_owned(), authentication)
             }).collect::<Vec<_>>()
         };
 
@@ -644,6 +741,7 @@ fn get_hidden_replies() -> Result<Vec<(u64,ReplyResponse)>, String> {
                     authentication: authentication,
                     timestamp: reply.timestamp.to_owned(),
                     status: reply.status.to_owned(),
+                    likes: vec![]
                 };
                 Some((post_id.to_owned(), reply_response))
             })
