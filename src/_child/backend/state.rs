@@ -196,7 +196,9 @@ pub struct Relations {
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Indexes {
     pub profile: HashMap<AuthenticationWithAddress, u64>,
-    pub active_principal: HashMap<Principal, u64>
+    pub active_principal: HashMap<Principal, u64>,
+    pub has_liked_post: HashMap<(u64, u64), ()>,
+    pub has_liked_reply: HashMap<(u64, u64), ()>
 }
 #[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct Metadata {
