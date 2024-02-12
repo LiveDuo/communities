@@ -1,10 +1,11 @@
 import { useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { Spinner, Box, Heading, Tag } from '@chakra-ui/react'
 import { Text, Flex, Button, IconButton, Divider } from '@chakra-ui/react'
+import { useDisclosure } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
-import { addressShort, getAddress, getSeedFromAuthentication } from '../../utils/address'
+import { addressShort, getAddress, getSeedFromAuthentication, getAuthentication } from '../../utils/address'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faEyeSlash, faEye, faHeart } from '@fortawesome/free-solid-svg-icons'
@@ -16,6 +17,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import Markdown from 'react-markdown'
 import Editor from '../Editor/Editor'
 import ToolBar from '../Editor/ToolBar'
+import LikesModal from '../modals/LikesModal'
 
 
 const PostContainer = () => {
@@ -33,6 +35,9 @@ const PostContainer = () => {
   const params = useParams()
 
   const canGoBack = location.key !== 'default'
+
+  const { isOpen: isPostLikeModalOpen, onOpen: onPostLikeModalOpen, onClose: onPostLikeModalClose } = useDisclosure()
+  const { isOpen: isReplyLikeModalOpen, onOpen: onReplyLikeModalOpen, onClose: onReplyLikeModalClose } = useDisclosure()
 
   const getData = useCallback(async () => {
     const post_id = params.index
@@ -59,7 +64,6 @@ const PostContainer = () => {
     setPost(p => ({...p, status: status}))
     await updatePostStatus(postId, status)
   },[updatePostStatus])
-
   const changeReplyVisibility = useCallback(async (replyId, statusType)=>{
     const status = { [statusType]: null }
     const replyIndex = post.replies.findIndex(r => r.reply_id === replyId)
@@ -68,52 +72,66 @@ const PostContainer = () => {
     await updateReplyStatus(replyId, status)
   },[post, updateReplyStatus])
 
-  const addLikePost = useCallback(async (postId)=>{
+  const addLikePost = useCallback(async (postId) => {
+    if (!(account && principal)) {
+      setSelectedNetwork()
+      onWalletModalOpen()
+      return
+    }
     const likedPostId = await likePost(postId)
-    const like = [likedPostId, profile.authentication]
+    const like = [likedPostId, getAuthentication(account.address, account.type)]
     setPost(p => ({...p, likes: [...p.likes, like]}))
-  },[post, profile])
+  },[account, principal, likePost, setSelectedNetwork, onWalletModalOpen])
 
   const removeLikePost = useCallback(async ()=>{
-    const likeIndex = post.likes.findIndex(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
+    const likeIndex = post.likes.findIndex(([_, auth]) => getAddress(auth) === account.address)
     const [likedPostId] = post.likes[likeIndex]
     post.likes.splice(likeIndex, 1)
     setPost(p => ({...p, likes: [...post.likes]}))
     await unlikePost(likedPostId)
-  },[post, profile])
+  },[post, account, unlikePost])
 
-  const addLikeReply = useCallback(async (replyId)=>{
+  const addLikeReply = useCallback(async (replyId) => {
+    if (!(account && principal)) {
+      setSelectedNetwork()
+      onWalletModalOpen()
+      return
+    }
+
     const likedPostId = await likeReply(replyId)
-    const like = [likedPostId, profile.authentication]
+    const like = [likedPostId, getAuthentication(account.address, account.type)]
     const replyIndex = post.replies.findIndex(r => r.reply_id === replyId)
     post.replies[replyIndex].likes.push(like)
     setPost(p => ({...p, replies: [...post.replies]}))
-  },[post, profile])
+  },[post, account, principal, likeReply, onWalletModalOpen, setSelectedNetwork])
 
   const removeLikeReply = useCallback(async (replyId) => {
     const replyIndex = post.replies.findIndex(r => r.reply_id === replyId)
-    const likeIndex = post.replies[replyIndex].likes.findIndex(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
+    const likeIndex = post.replies[replyIndex].likes.findIndex(([_, auth]) => getAddress(auth) === account.address)
     const [likedReplyId] = post.replies[replyIndex].likes[likeIndex]
     post.replies[replyIndex].likes.splice(likeIndex, 1)
     setPost(p => ({...p, replies: [...post.replies]}))
     await unlikeReply(likedReplyId)
-  },[post, profile])
+  },[post, account, unlikeReply])
 
   const isAdmin = useMemo(()=> profile?.roles?.some(r => r.hasOwnProperty('Admin') ),[profile])
 
   const isLikedPost = useMemo(()=>{
-    if(!profile || !post) {
+    if(!account || !post) {
       return false
     }
-    return post.likes.some(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
-  } ,[profile, post])
+    return post.likes.some(([_, auth]) => {
+      return getAddress(auth) === account.address
+    })
+  } ,[account, post])
 
   const isLikedReply = useCallback((reply) => {
-    if(!profile || !reply) {
+    if(!account || !reply) {
       return false
     }
-    return reply.likes.some(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
-  } ,[profile])
+
+    return reply.likes.some(([_, auth]) => getAddress(auth) === account.address)
+  } ,[account])
 
   useEffect(() => {
     if (childActor) {
@@ -141,15 +159,18 @@ const PostContainer = () => {
             <Markdown>{post.description}</Markdown>
           </Box>
           <Flex>
-            {isLikedPost ?
-              <IconButton onClick={() => removeLikePost()} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} /> 
-              :
-              <IconButton onClick={() => addLikePost(post.post_id)} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
-            }
+            <Flex alignItems="center" justifyContent="space-between" ml="auto" w="36px">
+              {isLikedPost ?
+                <IconButton onClick={() => removeLikePost()} variant={'link'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} /> 
+                :
+                <IconButton onClick={() => addLikePost(post.post_id)} variant={'link'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
+              }
+              {post.likes.length > 0 && <Button onClick={onPostLikeModalOpen} _focus={{boxShadow: 'none'}} color="#595958" minW="2" variant="link" >{post.likes.length}</Button>}
+            </Flex>
             {isAdmin && 
               <>
                 {post.status.hasOwnProperty("Visible") ? 
-                  <IconButton onClick={() => changePostVisibility(post.post_id, 'Hidden')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
+                  <IconButton onClick={() => changePostVisibility(post.post_id, 'Hidden')}  variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
                   :
                   <IconButton  onClick={() => changePostVisibility(post.post_id, 'Visible')} variant={'ghost'} ml="auto"  icon={<FontAwesomeIcon icon={faEye}/>} />
                 }
@@ -170,12 +191,15 @@ const PostContainer = () => {
                   <Markdown>{r.text}</Markdown>
                 </Box>
                 <Flex>
-                  {isLikedReply(r) ? 
-                    <IconButton onClick={() => removeLikeReply(r.reply_id)} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} />
-                  :
-                    <IconButton onClick={() => addLikeReply(r.reply_id)} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
-                  }
-                  
+                  <Flex alignItems="center" justifyContent="space-between" w="36px" ml="auto">
+                    {isLikedReply(r) ? 
+                      <IconButton onClick={() => removeLikeReply(r.reply_id)} variant={'link'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} />
+                    :
+                      <IconButton onClick={() => addLikeReply(r.reply_id)} variant={'link'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
+                    }
+                    {r.likes.length > 0 && <Button onClick={onReplyLikeModalOpen} _focus={{boxShadow: 'none'}} color="#595958" minW="2" variant="link">{r.likes.length}</Button>}
+                    <LikesModal isOpen={isReplyLikeModalOpen} onClose={onReplyLikeModalClose} likes={r.likes} title={"Reply likes"}/>
+                  </Flex>
                   {isAdmin &&
                     <>
                       {r.status.hasOwnProperty('Visible') ? 
@@ -205,6 +229,7 @@ const PostContainer = () => {
           </Flex>
         </Box> :
         <Spinner/>}
+        <LikesModal isOpen={isPostLikeModalOpen} onClose={onPostLikeModalClose} likes={post.likes} title={"Post likes"}/>
     </Box>
 }
 export default PostContainer

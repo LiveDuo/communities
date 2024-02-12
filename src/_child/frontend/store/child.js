@@ -180,7 +180,7 @@ const ChildProvider = ({ children }) => {
 		const response = await childActor.create_reply(post_id, text)
 		const reply = {...response.Ok, timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
 		return reply
-	}, [account, childActor])
+	}, [childActor])
 
 	const createPost = useCallback(async (title, description) => {
 		const response = await childActor.create_post(title, description)

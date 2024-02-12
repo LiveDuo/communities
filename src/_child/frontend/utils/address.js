@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer'
+import {Principal} from '@dfinity/principal'
 
 window.Buffer = Buffer
 
@@ -12,6 +13,28 @@ const getAddress = (authentication) => {
     }
 }
 export { getAddress }
+
+const getAuthenticationType = (authentication) => {
+    if(authentication.Evm) {
+        return 'Evm'
+    } else if(authentication.Svm) {
+        return 'Svm'
+    } else if(authentication.Ic) {
+        return 'Ic'
+    }
+}
+export { getAuthenticationType }
+
+const getAuthentication = (address, type) => {
+    if(type === 'Evm') {
+        return {Evm: {address: address}}
+    } else if(type === 'Svm') {
+        return {Svm: {address: address}}
+    } else if(type === 'Ic') {
+        return {Ic: {principal: Principal.fromText(address)}}
+    }
+}
+export { getAuthentication }
 
 const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(a.length - 6, a.length)}`
 export { addressShort }
