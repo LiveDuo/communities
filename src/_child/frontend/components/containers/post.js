@@ -7,7 +7,7 @@ import { timeSince } from '../../utils/time'
 import { addressShort, getAddress, getSeedFromAuthentication } from '../../utils/address'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faEyeSlash, faEye } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faEyeSlash, faEye, faHeart } from '@fortawesome/free-solid-svg-icons'
 
 import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
@@ -20,7 +20,7 @@ import ToolBar from '../Editor/ToolBar'
 
 const PostContainer = () => {
   const { account, principal, setSelectedNetwork, onWalletModalOpen } = useContext(IdentityContext)
-  const { profile, getPost, createReply, childActor, updateReplyStatus, updatePostStatus } = useContext(ChildContext)
+  const { profile, getPost, createReply, childActor, updateReplyStatus, updatePostStatus, likePost, unlikePost } = useContext(ChildContext)
 
   const textAreaRef = useRef()
   
@@ -68,7 +68,28 @@ const PostContainer = () => {
     await updateReplyStatus(replyId, status)
   },[post, updateReplyStatus])
 
+  const likedPost = useCallback(async (postId)=>{
+    const likedPostId = await likePost(postId)
+    const like = [likedPostId, profile.authentication]
+    setPost(p => ({...p, likes: [...p.likes, like]}))
+  },[post, profile])
+
+  const unlikedPost = useCallback(async ()=>{
+    const likeIndex = post.likes.findIndex(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
+    const [likedPostId] = post.likes[likeIndex]
+    post.likes.splice(likeIndex, 1)
+    setPost(p => ({...p, likes: [...post.likes]}))
+    await unlikePost(likedPostId)
+  },[post, profile])
+
   const isAdmin = useMemo(()=> profile?.roles?.some(r => r.hasOwnProperty('Admin') ),[profile])
+
+  const isLikedPost = useMemo(()=>{
+    if(!profile || !post) {
+      return false
+    }
+    return post.likes.some(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
+  } ,[profile, post])
 
   useEffect(() => {
     if (childActor) {
@@ -77,6 +98,8 @@ const PostContainer = () => {
 	}, [getData, childActor])
 
   if (!post) return <Spinner/>
+
+
 
   return <Box>
       {post ? 
@@ -95,15 +118,22 @@ const PostContainer = () => {
           <Box textAlign="start" className="markdown-body">
             <Markdown>{post.description}</Markdown>
           </Box>
-          {isAdmin && 
-            <Flex>
-              {post.status.hasOwnProperty("Visible") ? 
-                <IconButton onClick={() => changePostVisibility(post.post_id, 'Hidden')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
-                :
-                <IconButton  onClick={() => changePostVisibility(post.post_id, 'Visible')} variant={'ghost'} ml="auto"  icon={<FontAwesomeIcon icon={faEye}/>} />
-              }
-            </Flex>
-          }
+          <Flex>
+            {isLikedPost ?
+              <IconButton onClick={() => unlikedPost()} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} /> 
+              :
+              <IconButton onClick={() => likedPost(post.post_id)} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
+            }
+            {isAdmin && 
+              <>
+                {post.status.hasOwnProperty("Visible") ? 
+                  <IconButton onClick={() => changePostVisibility(post.post_id, 'Hidden')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
+                  :
+                  <IconButton  onClick={() => changePostVisibility(post.post_id, 'Visible')} variant={'ghost'} ml="auto"  icon={<FontAwesomeIcon icon={faEye}/>} />
+                }
+              </>
+            }
+          </Flex>
         </Box>
           <Divider mb="10px"/>
           <Box mb="40px">

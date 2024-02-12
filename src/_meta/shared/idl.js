@@ -15,6 +15,11 @@ const childFactory = ({ IDL }) => {
 		Hidden: IDL.Null
 	})
 
+	const PostStatus = IDL.Variant({
+		Visible: IDL.Null,
+		Hidden: IDL.Null
+	})
+
 	const ReplyResponse = IDL.Record({
 		text: IDL.Text,
 		timestamp: IDL.Nat64,
@@ -30,6 +35,7 @@ const childFactory = ({ IDL }) => {
 		timestamp: IDL.Nat64,
 		replies: IDL.Vec(ReplyResponse),
 		likes: IDL.Vec(IDL.Tuple(IDL.Nat64, AuthenticationWithAddress)),
+		status: PostStatus,
 		post_id: IDL.Nat64
 	});
 
@@ -39,11 +45,6 @@ const childFactory = ({ IDL }) => {
 		authentication: Authentication,
 		active_principal: IDL.Principal
 	});
-
-	const PostStatus = IDL.Variant({
-		Visible: IDL.Null,
-		Hidden: IDL.Null
-	})
 
 	const PostSummary = IDL.Record({
 		title: IDL.Text,
@@ -79,7 +80,7 @@ const childFactory = ({ IDL }) => {
 		create_reply: IDL.Func([IDL.Nat64, IDL.Text], [IDL.Variant({ Ok: ReplyResponse, Err: IDL.Text })], ["update"]),
 		update_post_status: IDL.Func([IDL.Nat64, PostStatus], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		update_reply_status: IDL.Func([IDL.Nat64, ReplyStatus], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
-		like_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		like_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
 		unlike_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		like_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		unlike_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
