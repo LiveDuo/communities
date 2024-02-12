@@ -354,7 +354,7 @@ fn unlike_post(liked_post_id: u64) -> Result<(), String> {
 
 #[update]
 #[candid_method(update)]
-fn like_reply(reply_id: u64) -> Result<(), String> {
+fn like_reply(reply_id: u64) -> Result<u64, String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
@@ -377,7 +377,7 @@ fn like_reply(reply_id: u64) -> Result<(), String> {
         let profile_id = state.indexes.active_principal.get(&caller).unwrap().to_owned();
         state.relations.profile_id_to_liked_reply_id.insert(profile_id, liked_reply_id.to_owned());
 
-        Ok(())
+        Ok(liked_reply_id)
 
     })
 }

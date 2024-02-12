@@ -126,7 +126,7 @@ const idlFactory = ({ IDL }) => {
 		canister_status: IDL.Func([], [canisterStatusResponse], ["update"]),
 		like_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
 		unlike_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
-		like_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		like_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
 		unlike_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
@@ -177,8 +177,8 @@ const ChildProvider = ({ children }) => {
 
 	const createReply = useCallback(async (_post_id, text) => {
 		const post_id = BigInt(_post_id)
-		await childActor.create_reply(post_id, text)
-		const reply = { text, timestamp: new Date(), authentication: { [account.type]: {[account.type === 'Ic' ? 'principal' :'address']: account.address} }}
+		const response = await childActor.create_reply(post_id, text)
+		const reply = {...response.Ok, timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
 		return reply
 	}, [account, childActor])
 
@@ -204,6 +204,15 @@ const ChildProvider = ({ children }) => {
 
 	const unlikePost = useCallback(async (likedPostId) => {
 		await childActor.unlike_post(BigInt(likedPostId))
+	},[childActor])
+
+	const likeReply = useCallback(async (replyId) => {
+		const response = await childActor.like_reply(BigInt(replyId))
+		return response.Ok
+	},[childActor])
+
+	const unlikeReply = useCallback(async (likedPostId) => {
+		await childActor.unlike_reply(BigInt(likedPostId))
 	},[childActor])
 
 	const getPosts = useCallback(async () => {
@@ -346,7 +355,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost }
+	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

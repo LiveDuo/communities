@@ -20,7 +20,7 @@ import ToolBar from '../Editor/ToolBar'
 
 const PostContainer = () => {
   const { account, principal, setSelectedNetwork, onWalletModalOpen } = useContext(IdentityContext)
-  const { profile, getPost, createReply, childActor, updateReplyStatus, updatePostStatus, likePost, unlikePost } = useContext(ChildContext)
+  const { profile, getPost, createReply, childActor, updateReplyStatus, updatePostStatus, likePost, unlikePost, likeReply, unlikeReply } = useContext(ChildContext)
 
   const textAreaRef = useRef()
   
@@ -68,18 +68,35 @@ const PostContainer = () => {
     await updateReplyStatus(replyId, status)
   },[post, updateReplyStatus])
 
-  const likedPost = useCallback(async (postId)=>{
+  const addLikePost = useCallback(async (postId)=>{
     const likedPostId = await likePost(postId)
     const like = [likedPostId, profile.authentication]
     setPost(p => ({...p, likes: [...p.likes, like]}))
   },[post, profile])
 
-  const unlikedPost = useCallback(async ()=>{
+  const removeLikePost = useCallback(async ()=>{
     const likeIndex = post.likes.findIndex(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
     const [likedPostId] = post.likes[likeIndex]
     post.likes.splice(likeIndex, 1)
     setPost(p => ({...p, likes: [...post.likes]}))
     await unlikePost(likedPostId)
+  },[post, profile])
+
+  const addLikeReply = useCallback(async (replyId)=>{
+    const likedPostId = await likeReply(replyId)
+    const like = [likedPostId, profile.authentication]
+    const replyIndex = post.replies.findIndex(r => r.reply_id === replyId)
+    post.replies[replyIndex].likes.push(like)
+    setPost(p => ({...p, replies: [...post.replies]}))
+  },[post, profile])
+
+  const removeLikeReply = useCallback(async (replyId) => {
+    const replyIndex = post.replies.findIndex(r => r.reply_id === replyId)
+    const likeIndex = post.replies[replyIndex].likes.findIndex(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
+    const [likedReplyId] = post.replies[replyIndex].likes[likeIndex]
+    post.replies[replyIndex].likes.splice(likeIndex, 1)
+    setPost(p => ({...p, replies: [...post.replies]}))
+    await unlikeReply(likedReplyId)
   },[post, profile])
 
   const isAdmin = useMemo(()=> profile?.roles?.some(r => r.hasOwnProperty('Admin') ),[profile])
@@ -91,6 +108,13 @@ const PostContainer = () => {
     return post.likes.some(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
   } ,[profile, post])
 
+  const isLikedReply = useCallback((reply) => {
+    if(!profile || !reply) {
+      return false
+    }
+    return reply.likes.some(([_, auth]) => getAddress(auth) === getAddress(profile.authentication))
+  } ,[profile])
+
   useEffect(() => {
     if (childActor) {
 			getData()
@@ -98,8 +122,6 @@ const PostContainer = () => {
 	}, [getData, childActor])
 
   if (!post) return <Spinner/>
-
-
 
   return <Box>
       {post ? 
@@ -120,9 +142,9 @@ const PostContainer = () => {
           </Box>
           <Flex>
             {isLikedPost ?
-              <IconButton onClick={() => unlikedPost()} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} /> 
+              <IconButton onClick={() => removeLikePost()} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} /> 
               :
-              <IconButton onClick={() => likedPost(post.post_id)} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
+              <IconButton onClick={() => addLikePost(post.post_id)} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
             }
             {isAdmin && 
               <>
@@ -147,15 +169,23 @@ const PostContainer = () => {
                 <Box textAlign={'start'} className="markdown-body">
                   <Markdown>{r.text}</Markdown>
                 </Box>
-                {isAdmin &&
-                  <Flex>
-                    {r.status.hasOwnProperty('Visible') ? 
-                      <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Hidden')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
-                      :
-                      <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Visible')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEye}/>} />
-                    }
-                  </Flex>
-                }
+                <Flex>
+                  {isLikedReply(r) ? 
+                    <IconButton onClick={() => removeLikeReply(r.reply_id)} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} />
+                  :
+                    <IconButton onClick={() => addLikeReply(r.reply_id)} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
+                  }
+                  
+                  {isAdmin &&
+                    <>
+                      {r.status.hasOwnProperty('Visible') ? 
+                        <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Hidden')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
+                        :
+                        <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Visible')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEye}/>} />
+                      }
+                    </>
+                  }
+                </Flex>
               </Flex>
             ) : <Text textAlign="center">No replies yet</Text>}
           </Box>
