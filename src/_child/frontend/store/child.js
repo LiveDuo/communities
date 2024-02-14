@@ -223,7 +223,6 @@ const ChildProvider = ({ children }) => {
 	const getPost = useCallback(async (index) => {
 		const response = await childActor.get_post(BigInt(index)).then(r =>  r.Ok)
 		const _post = {...response, timestamp: new Date(Number(response.timestamp / 1000n / 1000n)), replies: response.replies.map(r => ({...r, timestamp: new Date(Number(r.timestamp / 1000n / 1000n))}))}
-		console.log(_post)
 		return _post
 	}, [childActor])
 

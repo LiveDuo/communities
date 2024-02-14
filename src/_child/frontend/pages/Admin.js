@@ -6,7 +6,7 @@ import Jazzicon from 'react-jazzicon'
 import Markdown from 'react-markdown'
 
 import { timeSince } from '../utils/time'
-import { addressShort, getAddress, getSeedFromAuthentication } from '../utils/address'
+import { addressShorter, getAddress, getSeedFromAuthentication } from '../utils/address'
 
 import { ChildContext } from '../store/child'
 import { useNavigate } from 'react-router-dom'
@@ -71,7 +71,7 @@ const Admin = () => {
                       <Tag ml="10px" colorScheme='orange' size={'md'}>Hidden</Tag>
                       <Flex ml="auto" alignItems="center">
                         <Jazzicon diameter={20} seed={getSeedFromAuthentication(post.authentication)} />
-                        <Text ml="20px">{addressShort(getAddress(post.authentication))}</Text>
+                        <Text ml="20px">{addressShorter(getAddress(post.authentication))}</Text>
                       </Flex>
                       <Text ml="40px" mr="40px">{timeSince(post.timestamp)}</Text>
                     </Flex>
@@ -97,7 +97,7 @@ const Admin = () => {
                 <Box _hover={{opacity: 0.7, cursor: 'pointer'}} onClick={() => goToPost(reply.postId)}>
                   <Flex flexDirection={'row'} alignItems={'center'} ml="40px" mt="20px" mb="20px">
                     <Jazzicon ml="40px" diameter={20} seed={getSeedFromAuthentication(reply?.authentication)} />
-                    <Text ml="5px" fontWeight="bold">{addressShort(getAddress(reply?.authentication) || '')}</Text>
+                    <Text ml="5px" fontWeight="bold">{addressShorter(getAddress(reply?.authentication) || '')}</Text>
                     <Tag ml="10px" colorScheme='orange' size={'md'}>Hidden</Tag>
                     <Text ml="auto" mr="40px">{timeSince(reply?.timestamp)}</Text>
                   </Flex>

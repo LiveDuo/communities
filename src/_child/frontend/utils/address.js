@@ -36,7 +36,10 @@ const getAuthentication = (address, type) => {
 }
 export { getAuthentication }
 
-const addressShort = (a) => `${a.substring(0, 8)}...${a.substring(a.length - 6, a.length)}`
+const addressShorter = (a) => `${a.substring(0, 8)}...${a.substring(a.length - 6, a.length)}`
+export { addressShorter }
+
+const addressShort = (a) => `${a.substring(0, 16)}...${a.substring(a.length - 16, a.length)}`
 export { addressShort }
 
 const getExplorerUrl = (address) => {

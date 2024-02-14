@@ -152,7 +152,7 @@ const PostContainer = () => {
           </Flex>
           <Flex mb="20px" padding="20px 60px" alignItems="center">
             <Jazzicon diameter={20} seed={getSeedFromAuthentication(post.authentication)} />
-            <Text ml="20px">{getAddress(post.authentication)}</Text>
+            <Text ml="20px">{addressShort(getAddress(post.authentication))}</Text>
           </Flex>
           <Box mb="40px" padding="20px 60px">
           <Box textAlign="start" className="markdown-body">
@@ -170,9 +170,9 @@ const PostContainer = () => {
             {isAdmin && 
               <>
                 {post.status.hasOwnProperty("Visible") ? 
-                  <IconButton onClick={() => changePostVisibility(post.post_id, 'Hidden')}  variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
+                  <IconButton onClick={() => changePostVisibility(post.post_id, 'Hidden')}  variant={'ghost'} ml="10px" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
                   :
-                  <IconButton  onClick={() => changePostVisibility(post.post_id, 'Visible')} variant={'ghost'} ml="auto"  icon={<FontAwesomeIcon icon={faEye}/>} />
+                  <IconButton  onClick={() => changePostVisibility(post.post_id, 'Visible')} variant={'ghost'} ml="10px"  icon={<FontAwesomeIcon icon={faEye}/>} />
                 }
               </>
             }
@@ -203,9 +203,9 @@ const PostContainer = () => {
                   {isAdmin &&
                     <>
                       {r.status.hasOwnProperty('Visible') ? 
-                        <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Hidden')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
+                        <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Hidden')} variant={'ghost'} ml="8px" icon={<FontAwesomeIcon icon={faEyeSlash}/>} /> 
                         :
-                        <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Visible')} variant={'ghost'} ml="auto" icon={<FontAwesomeIcon icon={faEye}/>} />
+                        <IconButton onClick={()=> changeReplyVisibility(r.reply_id, 'Visible')} variant={'ghost'} ml="8px" icon={<FontAwesomeIcon icon={faEye}/>} />
                       }
                     </>
                   }
