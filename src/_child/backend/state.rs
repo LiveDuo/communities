@@ -89,6 +89,7 @@ pub struct ReplyResponse {
     pub timestamp: u64,
     pub authentication: AuthenticationWithAddress,
     pub reply_id: u64,
+    pub likes: Vec<(u64, AuthenticationWithAddress)>,
     pub status: ReplyStatus
 }
 
@@ -98,6 +99,7 @@ pub struct PostResponse {
     pub post_id: u64,
     pub description: String,
     pub authentication: AuthenticationWithAddress,
+    pub likes: Vec<(u64, AuthenticationWithAddress)>,
     pub timestamp: u64,
     pub status: PostStatus,
     pub replies: Vec<ReplyResponse>,
@@ -133,6 +135,14 @@ pub struct  Role {
     pub timestamp: u64,
     pub role: UserRole
 }
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct LikedPost {
+    pub timestamp: u64
+}
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct LikedReply {
+    pub timestamp: u64
+}
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relation<X: Ord, Y: Ord> {
@@ -155,6 +165,20 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
                 .insert(y, BTreeMap::from_iter([(x.clone(), ())]));
         }
     }
+
+    pub fn remove(&mut self, x: X, y: Y) {
+        let forward_x = self.forward.get_mut(&x).unwrap();
+        forward_x.remove(&y.clone());
+        if forward_x.is_empty() {
+            self.forward.remove(&x);
+        }
+
+        let backward_y = self.backward.get_mut(&y).unwrap();
+        backward_y.remove(&x.clone());
+        if backward_y.is_empty() {
+            self.backward.remove(&y);
+        }
+    }
 }
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
@@ -163,12 +187,18 @@ pub struct Relations {
     pub profile_id_to_reply_id: Relation<u64, u64>,
     pub reply_id_to_post_id: Relation<u64, u64>,
     pub profile_id_to_role_id: Relation<u64, u64>,
+    pub post_id_to_liked_post_id: Relation<u64, u64>,
+    pub profile_id_to_liked_post_id: Relation<u64, u64>,
+    pub reply_id_to_liked_reply_id: Relation<u64, u64>,
+    pub profile_id_to_liked_reply_id: Relation<u64, u64>,
 }
 
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Indexes {
     pub profile: HashMap<AuthenticationWithAddress, u64>,
-    pub active_principal: HashMap<Principal, u64>
+    pub active_principal: HashMap<Principal, u64>,
+    pub has_liked_post: HashMap<(u64, u64), ()>,
+    pub has_liked_reply: HashMap<(u64, u64), ()>
 }
 #[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct Metadata {
@@ -182,11 +212,13 @@ pub struct State {
     pub posts: BTreeMap<u64, Post>,
     pub replies: BTreeMap<u64, Reply>,
     pub roles: BTreeMap<u64, Role>,
+    pub liked_posts: BTreeMap<u64, LikedPost>,
+    pub liked_replies: BTreeMap<u64, LikedReply>,
     pub relations: Relations,
     pub indexes: Indexes,
     pub parent: Option<Principal>,
     pub version: Option<String>,
-    pub track: Option<String>
+    pub track: Option<String>,
 }
 
 thread_local! {

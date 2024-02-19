@@ -7,7 +7,7 @@ import Jazzicon from 'react-jazzicon'
 
 import { IdentityContext } from '../../store/identity'
 import { ChildContext } from '../../store/child'
-import { addressShort, getSeedFromAccount } from '../../utils/address'
+import { addressShorter, getSeedFromAccount } from '../../utils/address'
 
 import { ReactComponent as EthereumLogo } from '../../logos/ethereum.svg'
 import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
@@ -76,7 +76,7 @@ const Header = () => {
               <Box h="16px" w="16px" mr="8px">
                 <Jazzicon diameter={20} seed={getSeedFromAccount(account)} />
               </Box>
-              {addressShort(account.address)}
+              {addressShorter(account.address)}
             </Button>
           </Link>
         </Box>}

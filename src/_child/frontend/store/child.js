@@ -15,12 +15,12 @@ export const CHILD_CANISTER_ID =  process.env.REACT_APP_CHILD_CANISTER_ID ?? 'RE
 
 
 const idlFactory = ({ IDL }) => {
-	const authentication = IDL.Variant({
+	const Authentication = IDL.Variant({
 		Ic: IDL.Null,
 		Evm: IDL.Record({ address: IDL.Text }),
 		Svm: IDL.Record({ address: IDL.Text }),
 	});
-	const authenticationWithAddress = IDL.Variant({
+	const AuthenticationWithAddress = IDL.Variant({
 		Ic: IDL.Record({ principal: IDL.Principal}),
 		Evm: IDL.Record({ address: IDL.Text }),
 		Svm: IDL.Record({ address: IDL.Text }),
@@ -33,7 +33,8 @@ const idlFactory = ({ IDL }) => {
 	const ReplyResponse = IDL.Record({
 		text: IDL.Text,
 		timestamp: IDL.Nat64,
-		authentication: authenticationWithAddress,
+		authentication: AuthenticationWithAddress,
+		likes: IDL.Vec(IDL.Tuple(IDL.Nat64, AuthenticationWithAddress)),
 		status: ReplyStatus,
 		reply_id: IDL.Nat64 
 	});
@@ -47,7 +48,8 @@ const idlFactory = ({ IDL }) => {
 		description: IDL.Text,
 		timestamp: IDL.Nat64,
 		replies: IDL.Vec(ReplyResponse),
-    	authentication: authenticationWithAddress,
+    	authentication: AuthenticationWithAddress,
+		likes: IDL.Vec(IDL.Tuple(IDL.Nat64, AuthenticationWithAddress)),
 		status: PostStatus,
 		post_id: IDL.Nat64
 	});
@@ -56,14 +58,14 @@ const idlFactory = ({ IDL }) => {
 	const Profile = IDL.Record({
 		name: IDL.Text,
 		description: IDL.Text,
-		authentication: authentication,
+		authentication: Authentication,
 		active_principal: IDL.Principal
 	});
 
 	const ProfileResponse = IDL.Record({
 		name: IDL.Text,
 		description: IDL.Text,
-		authentication: authentication,
+		authentication: Authentication,
 		active_principal: IDL.Principal,
 		roles: IDL.Vec(UserRole)
 	});
@@ -72,7 +74,7 @@ const idlFactory = ({ IDL }) => {
 		title: IDL.Text,
 		post_id: IDL.Nat64,
 		description: IDL.Text,
-		authentication: authenticationWithAddress,
+		authentication: AuthenticationWithAddress,
 		timestamp: IDL.Nat64,
 		replies_count: IDL.Nat64,
 		last_activity: IDL.Nat64,
@@ -122,13 +124,17 @@ const idlFactory = ({ IDL }) => {
 		create_post: IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ Ok: PostSummary, Err: IDL.Text })], ["update"]),
 		create_reply: IDL.Func([IDL.Nat64, IDL.Text], [IDL.Variant({ Ok: ReplyResponse, Err: IDL.Text })], ["update"]),
 		canister_status: IDL.Func([], [canisterStatusResponse], ["update"]),
+		like_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
+		unlike_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		like_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
+		unlike_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-		get_posts_by_auth: IDL.Func([authenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_posts_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
 		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
-		get_profile_by_auth: IDL.Func([authenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
+		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),
@@ -171,10 +177,10 @@ const ChildProvider = ({ children }) => {
 
 	const createReply = useCallback(async (_post_id, text) => {
 		const post_id = BigInt(_post_id)
-		await childActor.create_reply(post_id, text)
-		const reply = { text, timestamp: new Date(), authentication: { [account.type]: {[account.type === 'Ic' ? 'principal' :'address']: account.address} }, status: { Visible: null }}
+		const response = await childActor.create_reply(post_id, text)
+		const reply = {...response.Ok, timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
 		return reply
-	}, [account, childActor])
+	}, [childActor])
 
 	const createPost = useCallback(async (title, description) => {
 		const response = await childActor.create_post(title, description)
@@ -188,6 +194,25 @@ const ChildProvider = ({ children }) => {
 
 	const updateReplyStatus = useCallback(async (replyId, status) => {
 		await childActor.update_reply_status(BigInt(replyId), status)
+	},[childActor])
+
+
+	const likePost = useCallback(async (postId) => {
+		const response = await childActor.like_post(BigInt(postId))
+		return response.Ok
+	},[childActor])
+
+	const unlikePost = useCallback(async (likedPostId) => {
+		await childActor.unlike_post(BigInt(likedPostId))
+	},[childActor])
+
+	const likeReply = useCallback(async (replyId) => {
+		const response = await childActor.like_reply(BigInt(replyId))
+		return response.Ok
+	},[childActor])
+
+	const unlikeReply = useCallback(async (likedPostId) => {
+		await childActor.unlike_reply(BigInt(likedPostId))
 	},[childActor])
 
 	const getPosts = useCallback(async () => {
@@ -329,7 +354,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies }
+	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

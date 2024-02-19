@@ -1,10 +1,10 @@
 const childFactory = ({ IDL }) => {
-	const authentication = IDL.Variant({
+	const Authentication = IDL.Variant({
 		Ic: IDL.Null,
 		Evm: IDL.Record({ address: IDL.Text }),
 		Svm: IDL.Record({ address: IDL.Text }),
 	});
-	const authenticationWithAddress = IDL.Variant({
+	const AuthenticationWithAddress = IDL.Variant({
 		Ic: IDL.Record({ principal: IDL.Principal }),
 		Evm: IDL.Record({ address: IDL.Text }),
 		Svm: IDL.Record({ address: IDL.Text }),
@@ -15,10 +15,16 @@ const childFactory = ({ IDL }) => {
 		Hidden: IDL.Null
 	})
 
+	const PostStatus = IDL.Variant({
+		Visible: IDL.Null,
+		Hidden: IDL.Null
+	})
+
 	const ReplyResponse = IDL.Record({
 		text: IDL.Text,
 		timestamp: IDL.Nat64,
-		authentication: authenticationWithAddress,
+		authentication: AuthenticationWithAddress,
+		likes: IDL.Vec(IDL.Tuple(IDL.Nat64, AuthenticationWithAddress)),
 		reply_id: IDL.Nat64,
 		status: ReplyStatus
 	});
@@ -28,26 +34,23 @@ const childFactory = ({ IDL }) => {
 		description: IDL.Text,
 		timestamp: IDL.Nat64,
 		replies: IDL.Vec(ReplyResponse),
+		likes: IDL.Vec(IDL.Tuple(IDL.Nat64, AuthenticationWithAddress)),
+		status: PostStatus,
 		post_id: IDL.Nat64
 	});
 
 	const Profile = IDL.Record({
 		name: IDL.Text,
 		description: IDL.Text,
-		authentication: authentication,
+		authentication: Authentication,
 		active_principal: IDL.Principal
 	});
-
-	const PostStatus = IDL.Variant({
-		Visible: IDL.Null,
-		Hidden: IDL.Null
-	})
 
 	const PostSummary = IDL.Record({
 		title: IDL.Text,
 		post_id: IDL.Nat64,
 		description: IDL.Text,
-		authentication: authenticationWithAddress,
+		authentication: AuthenticationWithAddress,
 		timestamp: IDL.Nat64,
 		replies_count: IDL.Nat64,
 		last_activity: IDL.Nat64,
@@ -77,10 +80,14 @@ const childFactory = ({ IDL }) => {
 		create_reply: IDL.Func([IDL.Nat64, IDL.Text], [IDL.Variant({ Ok: ReplyResponse, Err: IDL.Text })], ["update"]),
 		update_post_status: IDL.Func([IDL.Nat64, PostStatus], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		update_reply_status: IDL.Func([IDL.Nat64, ReplyStatus], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		like_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
+		unlike_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		like_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
+		unlike_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-		get_posts_by_auth: IDL.Func([authenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_posts_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
 		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),

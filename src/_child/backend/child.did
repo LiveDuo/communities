@@ -32,6 +32,7 @@ type PostResponse = record {
   post_id: nat64;
   authentication : AuthenticationWithAddress;
   title : text;
+  likes: vec record { nat64; AuthenticationWithAddress; };
   description : text;
   timestamp : nat64;
   replies : vec ReplyResponse;
@@ -73,6 +74,7 @@ type ReplyStatus = variant {
 type ReplyResponse = record {
   authentication : AuthenticationWithAddress;
   "text" : text;
+  likes: vec record { nat64; AuthenticationWithAddress; };
   timestamp : nat64;
   status : ReplyStatus;
   reply_id: nat64;
@@ -90,6 +92,10 @@ type UpdatePostStatusResult = variant { Ok : null; Err : text };
 type UpdateReplyStatusResult = variant { Ok : null; Err : text };
 type GetHiddenPostsResult = variant { Ok : vec PostResponse; Err : text };
 type GetHiddenReplyResult = variant { Ok : vec record { nat64; ReplyResponse; }; Err : text };
+type LikePostResult = variant { Ok : nat64; Err : text };
+type UnlikePostResult = variant { Ok : null; Err : text };
+type LikeReplyResult = variant { Ok : nat64; Err : text };
+type UnlikeReplyResult = variant { Ok : null; Err : text };
 
 type Role = record { role : UserRole; timestamp : nat64 };
 
@@ -154,6 +160,10 @@ service : (opt principal, opt text, opt text ) -> {
   create_reply : (nat64, text) -> (CreateReplyResult);
   update_post_status : (nat64, PostStatus) -> (UpdatePostStatusResult);
   update_reply_status : (nat64, ReplyStatus) -> (UpdateReplyStatusResult);
+  like_post : (nat64) -> (LikePostResult);
+  unlike_post : (nat64) -> (UnlikePostResult);
+  like_reply : (nat64) -> (LikeReplyResult);
+  unlike_reply : (nat64) -> (UnlikeReplyResult);
   upgrade_canister : (text, text) -> (UpgradeCanisterResult);
   get_next_upgrades : () -> (GetNextUpgradesResult);
   canister_status : () -> (CanisterStatusResponse);
