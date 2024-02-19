@@ -3,7 +3,7 @@ const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')	
 
 const { getCanisters, getAgent, getHost } = require('../_meta/shared/utils')
-const { getFiles, addToBatch, executeBatch } = require('../_meta/shared/assets')
+const { getFiles, addItemToBatches, executeBatch } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { parentFactory, assetFactory } = require('../_meta/shared/idl')
 
@@ -41,7 +41,7 @@ const filter = argv.filter ?? null
 	const assets = await getFiles(`${path}/${version}`).then(e => e.filter(f => filter === f || filter === null))
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(`${path}/${version}/${asset}`)
-		addToBatch(batches, assetBuf,`/upgrades/${track}/${version}/${asset}`)
+		addItemToBatches(batches, assetBuf,`/upgrades/${track}/${version}/${asset}`)
 	}
 
 	await executeBatch(actorAsset, batches)
