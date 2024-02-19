@@ -305,6 +305,7 @@ impl State {
         for op in arg.operations {
             match op {
                 BatchOperation::CreateAsset(arg) => self.create_asset(arg)?,
+                BatchOperation::StoreAsset(arg) => self.store(arg, now)?,
                 BatchOperation::SetAssetContent(arg) => self.set_asset_content(arg, now)?,
                 BatchOperation::UnsetAssetContent(arg) => self.unset_asset_content(arg)?,
                 BatchOperation::DeleteAsset(arg) => self.delete_asset(arg),

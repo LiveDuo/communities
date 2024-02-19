@@ -32,9 +32,18 @@ type DeleteAssetArguments = record {
 // Reset everything
 type ClearArguments = record {};
 
+type StoreArg = record {
+  key: Key;
+  content_type: text;
+  content_encoding: text;
+  content: blob;
+  sha256: opt blob
+};
+
 type BatchOperationKind = variant {
   CreateAsset: CreateAssetArguments;
   SetAssetContent: SetAssetContentArguments;
+  StoreAsset: StoreArg;
 
   UnsetAssetContent: UnsetAssetContentArguments;
   DeleteAsset: DeleteAssetArguments;
@@ -99,7 +108,7 @@ service: {
     sha256: opt blob;  // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
   }) -> (record { content: blob }) query;
 
-  list : (record {}) -> (vec record {
+  list : () -> (vec record {
     key: Key;
     content_type: text;
     encodings: vec record {
@@ -127,13 +136,10 @@ service: {
 
   // Single call to create an asset with content for a single content encoding that
   // fits within the message ingress limit.
-  store: (record {
-    key: Key;
-    content_type: text;
-    content_encoding: text;
-    content: blob;
-    sha256: opt blob
-  }) -> ();
+  store: (StoreArg) -> ();
 
   authorize: (principal) -> ();
+  execute_batch: (vec BatchOperationKind) -> ();
+
+  retrieve_batch: (vec key) -> (vec record { vec nat8; Key; })
 }

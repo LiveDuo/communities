@@ -3,7 +3,7 @@ const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')
 
 const { getCanisters, getAgent, getHost } = require('../_meta/shared/utils')
-const { getFiles, uploadFile } = require('../_meta/shared/assets')
+const { getFiles, addItemToBatches, executeBatch } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { assetFactory, parentFactory } = require('../_meta/shared/idl')
 
@@ -19,31 +19,32 @@ const description = argv.description ?? 'upgrade to 0.0.1'
 
 // node src/_parent/upload-assets.js --network ic --identity with-wallet
 ; (async () => {
-
 	const canisters = await getCanisters(network)
 	const identity = await getIdentity(id)
 	const agent = getAgent(getHost(network), identity)
 	const actorAsset = Actor.createActor(assetFactory, { agent, canisterId: canisters.parent[network] })
 	const actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisters.parent[network] })
-	
+
+	const batches = [{batchSize: 0, items: []}]
 	// upload domain file
 	const domains = await fs.readFile('./build/domains/index.txt')
-	await uploadFile(actorAsset, '/.well-known/ic-domains', domains)
+	addItemToBatches(batches, domains, '/.well-known/ic-domains')
 
 	// upload parent assets
 	const assetsParent = await getFiles('./build/parent')
 	for (let asset of assetsParent) {
 		const assetBuf = await fs.readFile(`build/parent/${asset}`)
-		await uploadFile(actorAsset, `/${asset}`, assetBuf)
+		addItemToBatches(batches, assetBuf, `/${asset}`)
 	}
-
 	// upload child assets
 	const assetsChild = await getFiles(`./build/child/${version}`)
 	for (let asset of assetsChild) {
 		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
-		await uploadFile(actorAsset, `/upgrades/${track}/${version}/${asset}`, assetBuf)
+		addItemToBatches(batches, assetBuf, `/upgrades/${track}/${version}/${asset}`)
 	}
 
+	await executeBatch(actorAsset, batches)
+	
 	// create upgrade
 	const assetsWithPath = assetsChild.map(a => `/upgrades/${track}/${version}/${a}`)
 	const res = await actorParent.create_upgrade(version, [], assetsWithPath, track, description)

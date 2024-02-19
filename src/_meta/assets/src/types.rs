@@ -10,6 +10,8 @@ pub type BatchId = Nat;
 pub type ChunkId = Nat;
 pub type Key = String;
 
+pub const MAX_MESSAGE_SIZE: u32 = 2097152; // 2MB in bytes
+
 // IDL Types
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
@@ -43,8 +45,18 @@ pub struct DeleteAssetArguments {
 pub struct ClearArguments {}
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
+pub struct StoreArg {
+    pub key: Key,
+    pub content_type: String,
+    pub content_encoding: String,
+    pub content: ByteBuf,
+    pub sha256: Option<ByteBuf>,
+}
+
+#[derive(Clone, Debug, CandidType, Deserialize)]
 pub enum BatchOperation {
     CreateAsset(CreateAssetArguments),
+    StoreAsset(StoreArg),
     SetAssetContent(SetAssetContentArguments),
     UnsetAssetContent(UnsetAssetContentArguments),
     DeleteAsset(DeleteAssetArguments),
@@ -57,14 +69,6 @@ pub struct CommitBatchArguments {
     pub operations: Vec<BatchOperation>,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
-pub struct StoreArg {
-    pub key: Key,
-    pub content_type: String,
-    pub content_encoding: String,
-    pub content: ByteBuf,
-    pub sha256: Option<ByteBuf>,
-}
 
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct GetArg {

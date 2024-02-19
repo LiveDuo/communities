@@ -42,6 +42,44 @@ pub fn retrieve(key: Key) -> RcBytes {
     })
 }
 
+#[query]
+#[candid_method(query)]
+pub fn retrieve_batch(keys: Vec<Key>) -> Vec<(Key, Vec<u8>)> {
+    STATE.with(|s| {
+        let state = s.borrow();
+
+        // get batches
+        let mut batches: Vec<(u32, Vec<(Key, Vec<u8>)>)> = vec![(0, vec![])];
+        for key  in keys {
+            let content = state.retrieve(&key).unwrap().to_vec();
+            let mut is_stored_already = false;
+            for (batch_size, batch) in batches.iter_mut() {
+                if *batch_size + content.len() as u32 <= MAX_MESSAGE_SIZE  {
+                    *batch_size+= content.len() as u32;
+                    batch.push((key.to_owned(), content.to_owned()));
+                    is_stored_already = true;
+                    break;
+                }
+            }
+            if !is_stored_already  {
+                batches.push((content.len() as u32, vec![(key, content)]));
+            }
+        }
+
+        // return the largest batch
+        let mut batch_index_max = 0;
+        let mut batch_size_max = 0;
+        for (batch_index,(batch_size, _))  in batches.iter().enumerate() {
+            if *batch_size > batch_size_max {
+                batch_size_max = *batch_size;
+                batch_index_max = batch_index;
+            }
+        }
+        let (_, batch) = &batches[batch_index_max];
+        batch.clone()
+    })
+}
+
 #[update(guard = "is_authorized")]
 #[candid_method(update)]
 pub fn store(arg: StoreArg) {
@@ -129,6 +167,22 @@ pub fn commit_batch(arg: CommitBatchArguments) {
             trap(&msg);
         }
         set_certified_data(&s.borrow().root_hash());
+    });
+}
+
+
+#[update(guard = "is_authorized")]
+#[candid_method(update)]
+pub fn execute_batch(arg: Vec<BatchOperation>) {
+    STATE.with(|s| {
+        let now = time();
+        let mut state = s.borrow_mut();
+        let batch_id = state.create_batch(now);
+        let commit_batch = CommitBatchArguments {batch_id, operations: arg};
+        if let Err(msg) = state.commit_batch(commit_batch, now) {
+            trap(&msg);
+        }
+        set_certified_data(&state.root_hash());
     });
 }
 

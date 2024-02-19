@@ -5,7 +5,6 @@ use crate::state::STATE;
 use ic_cdk::api::management_canister::main::*;
 use ic_cdk::api::canister_balance;
 use serde_bytes::ByteBuf;
-use ic_certified_assets::rc_bytes::RcBytes;
 use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
 
 const UPGRADE_THRESHOLD_CYCLES: u64 = 100_000_000_000; // 100b cycles
@@ -57,31 +56,53 @@ pub async fn check_canister_cycles_balance() -> Result<(), String> {
 pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, version: &str, track: &String) -> Result<(), String> {
   let canister_id = ic_cdk::id();
 
-  for asset in assets {
+  let mut request_assets = assets.clone();
+  let mut request_index = 0;
+  let mut retrieved_assets: Vec<(String, Vec<u8>)> = vec![];
+  // NOTE the check request_index < assets.len() is used to prevent infinity requests bugs
+  while !request_assets.is_empty() && request_index < assets.len() {
+    let (stored_assets,) = 
+      ic_cdk::call::<_, (Vec<(String, Vec<u8>)>, )>(
+        parent_canister,
+        "retrieve_batch",
+        (request_assets.to_owned(),))
+      .await
+      .unwrap();
+    // the check stored_assets.is_empty() is used to prevent extra requests in case of a request bug
+    if stored_assets.is_empty() {
+      break;
+    }
+   
+    for (key, asset) in stored_assets.iter() {
+      retrieved_assets.push((key.to_owned(), asset.to_owned()));
+      let removed_index = request_assets.iter().position(|k| k == key).unwrap();
+      request_assets.remove(removed_index);
+    }
+    request_index+= 1;
+  };
+
+  for (key_asset, content_asset) in retrieved_assets {
   
-      // get asset content
-      let (asset_bytes, ): (RcBytes, ) = ic_cdk::call(parent_canister, "retrieve", (asset.to_owned(),),).await.unwrap();
+    // get asset content
+    let content;
+    if key_asset == format!("/upgrades/{track}/{version}/static/js/bundle.js") {
+      let bundle_str = String::from_utf8(content_asset.to_vec()).expect("Invalid JS bundle");
+      let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
+      content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
+    } else {
+      content = ByteBuf::from(content_asset.to_vec());
+    }
 
-      // replace env car
-  let content;
-  if asset == &format!("/upgrades/{track}/{version}/static/js/bundle.js") {
-    let bundle_str = String::from_utf8(asset_bytes.to_vec()).expect("Invalid JS bundle");
-    let bundle_with_env = bundle_str.replace("REACT_APP_CHILD_CANISTER_ID", &canister_id.to_string());
-    content = ByteBuf::from(bundle_with_env.as_bytes().to_vec());
-  } else {
-    content = ByteBuf::from(asset_bytes.to_vec());
-  }
-
-  // upload asset
-  let key = asset.replace(&format!("/upgrades/{track}/{version}"), "/temp");
-  let store_args = StoreArg {
-          key: key.to_owned(),
-          content_type: get_content_type(&key),
-          content_encoding: "identity".to_owned(),
-          content,
-          sha256: None
-      };
-      ic_certified_assets::store(store_args);
+    // upload asset
+    let key = key_asset.replace(&format!("/upgrades/{track}/{version}"), "/temp");
+    let store_args = StoreArg {
+      key: key.to_owned(),
+      content_type: get_content_type(&key),
+      content_encoding: "identity".to_owned(),
+      content,
+      sha256: None
+    };
+    ic_certified_assets::store(store_args);
   }
 
   // store metadata
@@ -89,11 +110,11 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
   let content = ByteBuf::from(metadata.as_bytes().to_vec());
   let key = format!("/temp/metadata.txt");
   let store_args = StoreArg {
-      key: key.to_owned(),
-      content_type: get_content_type(&key),
-      content_encoding: "identity".to_owned(),
-      content,
-      sha256: None
+    key: key.to_owned(),
+    content_type: get_content_type(&key),
+    content_encoding: "identity".to_owned(),
+    content,
+    sha256: None
   };
   ic_certified_assets::store(store_args);
 

@@ -3,7 +3,7 @@ const path = require('path')
 
 global.fetch = require('node-fetch')
 
-const SIZE_CHUNK = 1024000 // one megabyte
+const MAX_MESSAGE_SIZE = 2097152 // 2MB in bytes
 
 const getContentType = (k) => {
 	if (k.endsWith('.html')) return 'text/html'
@@ -32,42 +32,38 @@ const getFiles = async (dir, initial) => {
 }
 exports.getFiles = getFiles
 
-// https://github.com/ORIGYN-SA/large_canister_deployer_internal/blob/master/chunker_appender/index.js
-const uploadFileBatch = async (actor, key, assetBuffer) => {
-	const chunksNumber = Math.ceil(assetBuffer.byteLength / SIZE_CHUNK)
-
-	if (chunksNumber === 1) {
-		console.log(`Storing ${key} batch...`)
-		await actor.store_batch(key, Array.from(assetBuffer))
-	} else {
-		const chunks = []
-
-		for (let i = 0; i < assetBuffer.byteLength / SIZE_CHUNK; i++) {
-			const startIndex = i * SIZE_CHUNK
-			chunks.push(assetBuffer.subarray(startIndex, startIndex + SIZE_CHUNK))
-		}
-
-		try {
-			console.log(`Creating ${key} batch...`)
-			await actor.create_batch(key)
-
-			console.log(`Appending ${key} chunk(s)...`)
-			for (let i = 0; i < chunks.length; i++) {
-				await actor.append_chunk(key, Array.from(chunks[i]))
-			}
-
-			console.log(`Committing ${key} batch...`)
-			await actor.commit_batch(key)
-
-		} catch (e) {
-			console.error('error', e)
-		}
-	}
-}
-exports.uploadFileBatch = uploadFileBatch
-
 const uploadFile = async (actor, key, assetBuffer) => {
 	await actor.store({key, content_type: getContentType(key), content_encoding: 'identity', content: Array.from(assetBuffer)})
 	console.log(key)
 }
 exports.uploadFile = uploadFile
+
+const addItemToBatches= (batches, item, key) => {
+	let isStoredAlready = false
+	for (const batch of batches) {
+		if(batch.batchSize + item.length <= MAX_MESSAGE_SIZE) {
+			const storeAsset = { StoreAsset: {key, content_type: getContentType(key), content_encoding: 'identity', content: Array.from(item), sha256: []}}
+			batch.items.push(storeAsset)
+			isStoredAlready = true
+			batch.batchSize = batch.batchSize + item.length
+			break
+		}
+	}
+	if(!isStoredAlready) {
+		const storeAsset = {StoreAsset:{key, content_type: getContentType(key), content_encoding: 'identity', content: Array.from(item), sha256: []}}
+		batches.push({batchSize: item.length, items: [storeAsset]})
+	}
+}
+
+exports.addItemToBatches = addItemToBatches
+
+const executeBatch = async (actorAsset, batches) => {
+	for (const [index, batch] of batches.entries()) {
+		await actorAsset.execute_batch(batch.items)
+		console.log("executed batch", index + 1)
+	}
+}
+
+exports.executeBatch = executeBatch
+
+
