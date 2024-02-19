@@ -520,14 +520,13 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
         let replies = if replies_opt == None {
             vec![]
         } else {
-             replies_opt.unwrap().iter().filter_map(|(reply_id, _)| {
+            replies_opt.unwrap().iter().filter_map(|(reply_id, _)| {
                 let reply = state.replies.get(reply_id).unwrap();
                 if !caller_is_admin && reply.status == ReplyStatus::Hidden {
                     return None;
                 }
                 let (profile_id, _) = state.relations.profile_id_to_reply_id.backward.get(reply_id).unwrap().first_key_value().unwrap();
                 let profile = state.profiles.get(&profile_id).unwrap();
-                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
                 let liked_reply_ids_opt = state.relations.reply_id_to_liked_reply_id.forward.get(reply_id);
                 let likes = if liked_reply_ids_opt.is_none() {
                     vec![]
@@ -536,11 +535,12 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
                         let profile_ids = state.relations.profile_id_to_liked_reply_id.backward.get(liked_reply_id).unwrap().to_owned();
                         let (profile_id, _) = profile_ids.first_key_value().unwrap();
                         let profile = state.profiles.get(profile_id).unwrap();
-                        let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                        let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
                         (liked_reply_id.to_owned(), authentication)
                     }).collect::<Vec<_>>()
                 };
 
+                let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
                 Some(ReplyResponse { text: reply.text.to_owned(), timestamp: reply.timestamp, authentication , reply_id: reply_id.to_owned(), status: reply.status.to_owned(), likes: likes })
             }).collect::<Vec<_>>()
         };
