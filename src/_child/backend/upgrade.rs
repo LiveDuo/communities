@@ -59,6 +59,7 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
   let mut request_assets = assets.clone();
   let mut request_index = 0;
   let mut retrieved_assets: Vec<(String, Vec<u8>)> = vec![];
+  // NOTE the check request_index < assets.len() is used to prevent infinity requests bugs
   while !request_assets.is_empty() && request_index < assets.len() {
     let (stored_assets,) = 
       ic_cdk::call::<_, (Vec<(String, Vec<u8>)>, )>(
@@ -67,7 +68,7 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
         (request_assets.to_owned(),))
       .await
       .unwrap();
-    
+    // the check stored_assets.is_empty() is used to prevent extra requests in case of a request bug
     if stored_assets.is_empty() {
       break;
     }

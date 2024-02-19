@@ -1,4 +1,4 @@
-import { createContext, useState, useCallback, useEffect } from 'react'
+import { createContext, useState, useCallback, useEffect, useMemo } from 'react'
 
 import { useToast, useDisclosure } from '@chakra-ui/react'
 
@@ -24,7 +24,8 @@ const IdentityProvider = ({ children }) => {
 
 	const toast = useToast()
 
-	const host = isLocal ? 'http://localhost:8000/' : undefined
+	const host = useMemo(()=> isLocal ? 'http://localhost:8000/' : undefined, [])
+	
 
 	const loadWallet = useCallback(async () => {
 		// check wallet connected
@@ -61,7 +62,7 @@ const IdentityProvider = ({ children }) => {
 			const actorOptions = { agent: getAgent(null), canisterId: options.canisterId, host: host, identity: null}
 			return Actor.createActor(options.interfaceFactory, actorOptions)
 		}
-	},[walletName])
+	},[walletName, host])
 
 	const batchTransactions = (txs) => {
 		const options = { host }

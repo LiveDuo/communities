@@ -48,7 +48,6 @@ describe.only('Testing with done', () => {
 		const actorChild = Actor.createActor(childFactory, { agent, canisterId: childPrincipalId })
 		console.log(`http://${childPrincipalId}.localhost:8000/`)
 		
-
 		// upload upgrade (0.0.2)
 		const tractUpgrade = 'default'
 		spawnSync('node', ['./src/_parent/upload-upgrade.js', '--version', '0.0.2' ,'--description', 'description for 0.0.2', '--upgradeFromVersion', '0.0.1', '--upgradeFromTrack', 'default', '--track', tractUpgrade, '--path' ,'./build/child-test' ] ,{cwd: process.cwd(), stdio: 'inherit'})
