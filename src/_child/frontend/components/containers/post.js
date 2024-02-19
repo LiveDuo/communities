@@ -161,11 +161,11 @@ const PostContainer = () => {
           <Flex>
             <Flex alignItems="center" justifyContent="space-between" ml="auto" w="36px">
               {isLikedPost ?
-                <IconButton onClick={() => removeLikePost()} variant={'link'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} /> 
+                <IconButton onClick={() => removeLikePost()} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
                 :
-                <IconButton onClick={() => addLikePost(post.post_id)} variant={'link'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
+                <IconButton onClick={() => addLikePost(post.post_id)} variant={'link'} color={'gray.300'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
               }
-              {post.likes.length > 0 && <Button onClick={onPostLikeModalOpen} _focus={{boxShadow: 'none'}} color="#595958" minW="2" variant="link" >{post.likes.length}</Button>}
+              {post.likes.length > 0 && <Button onClick={onPostLikeModalOpen} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link" >{post.likes.length}</Button>}
             </Flex>
             {isAdmin && 
               <>
@@ -193,11 +193,11 @@ const PostContainer = () => {
                 <Flex>
                   <Flex alignItems="center" justifyContent="space-between" w="36px" ml="auto">
                     {isLikedReply(r) ? 
-                      <IconButton onClick={() => removeLikeReply(r.reply_id)} variant={'link'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon color="#ff8787"  icon={faHeart} />} />
+                      <IconButton onClick={() => removeLikeReply(r.reply_id)} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} />
                     :
-                      <IconButton onClick={() => addLikeReply(r.reply_id)} variant={'link'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon color="#c7cdd6"  icon={faHeart} />} /> 
+                      <IconButton onClick={() => addLikeReply(r.reply_id)} variant={'link'} _focus={{boxShadow: 'none'}} color={'gray.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
                     }
-                    {r.likes.length > 0 && <Button onClick={onReplyLikeModalOpen} _focus={{boxShadow: 'none'}} color="#595958" minW="2" variant="link">{r.likes.length}</Button>}
+                    {r.likes.length > 0 && <Button onClick={onReplyLikeModalOpen} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link">{r.likes.length}</Button>}
                     <LikesModal isOpen={isReplyLikeModalOpen} onClose={onReplyLikeModalClose} likes={r.likes} title={"Reply likes"}/>
                   </Flex>
                   {isAdmin &&
