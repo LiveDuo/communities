@@ -7,7 +7,7 @@ dfx deploy parent --with-cycles 200000000000 --network ic --mode reinstall # mod
 ### Upload
 ```sh
 CRA_MODE=production npm run build:parent
-node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
+node src/_parent/upload-assets.js --network ic --identity deployer
 ```
 
 ### Domain
