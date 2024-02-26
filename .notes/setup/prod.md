@@ -1,11 +1,12 @@
 
 ### Deploy
 ```sh
-DFX_NETWORK=ic dfx deploy parent --with-cycles 200000000000
+dfx deploy parent --with-cycles 200000000000 --network ic --mode reinstall # mode = install, upgrade, reinstall
 ```
 
 ### Upload
 ```sh
+CRA_MODE=production npm run build:parent
 node src/_parent/upload-assets.js --network https://ic0.app --identity with-wallet
 ```
 
