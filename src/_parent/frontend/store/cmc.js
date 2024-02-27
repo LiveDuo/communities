@@ -89,7 +89,7 @@ const CmcProvider = ({ children }) => {
 	const loadActor = useCallback(async () => {
 
 		if (!cmcCanisterId) return
-		const actor = await createActor({ canisterId: cmcCanisterId, interfaceFactory: idlCmcFactory })
+		const actor = await createActor({ canisterId: cmcCanisterId, interfaceFactory: idlCmcFactory, type: 'wallet' })
 		setCmcActor(actor)
 	}, [createActor])
 	

@@ -12,7 +12,7 @@ pub const TOPUP_CYCLES: u64 = 200_000_000_000; // 200b cycles
 
 pub const TRANSFER_FEE: u64 = 10_000;
 pub const MINT_MEMO: u64 = 1347768404;
-pub const MAX_MESSAGE_SIZE: u32 = 2097152; // 2MB in bytes
+pub const MAX_MESSAGE_SIZE: u32 = 2097152 - 20000;// 2mb max message size - 20kb padding
 
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 pub static CMC_CANISTER: Option<Principal> = get_canister!("cmc");

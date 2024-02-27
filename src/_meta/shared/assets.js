@@ -3,7 +3,7 @@ const path = require('path')
 
 global.fetch = require('node-fetch')
 
-const MAX_MESSAGE_SIZE = 2097152 // 2MB in bytes
+const MAX_MESSAGE_SIZE = 2097152 - 20000 // 2mb max message size - 20kb padding
 
 const getContentType = (k) => {
 	if (k.endsWith('.html')) return 'text/html'

@@ -10,7 +10,7 @@ pub type BatchId = Nat;
 pub type ChunkId = Nat;
 pub type Key = String;
 
-pub const MAX_MESSAGE_SIZE: u32 = 2097152; // 2MB in bytes
+pub const MAX_MESSAGE_SIZE: u32 = 2097152 - 20000;// 2mb max message size - 20kb padding
 
 // IDL Types
 

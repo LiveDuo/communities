@@ -40,7 +40,7 @@ const LedgerProvider = ({ children }) => {
 	const loadActor = useCallback(async () => {
 
 		if (!ledgerCanisterId) return
-		const actor = await createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory })
+		const actor = await createActor({ canisterId: ledgerCanisterId, interfaceFactory: idlLedgerFactory, type: 'wallet' })
 		setLedgerActor(actor)
 	}, [createActor])
 	
