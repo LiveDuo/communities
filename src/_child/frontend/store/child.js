@@ -8,6 +8,7 @@ import { utils , ethers} from 'ethers'
 import bs58 from 'bs58'
 
 import { getLoginMessage, getIdentityFromSignature } from '../utils/identity'
+import { getAuthentication } from '../utils/address'
 
 /* global BigInt */
 
@@ -184,7 +185,7 @@ const ChildProvider = ({ children }) => {
 
 	const createPost = useCallback(async (title, description) => {
 		const tempId = getTempId()
-		const post = {post_id: null, tempId: tempId, title, description, last_activity: new Date(), timestamp: new Date(), replies_count: 0, status:{ Visible:null}, authentication: {[account.type]: {address: account.address}} }
+		const post = {post_id: null, tempId: tempId, title, description, last_activity: new Date(), timestamp: new Date(), replies_count: 0, status:{ Visible:null}, authentication: getAuthentication(account.address, account.type) }
 		setPosts(p => [post, ...p])
 
 		const response = await childActor.create_post(title, description)
@@ -227,6 +228,7 @@ const ChildProvider = ({ children }) => {
 	const getPosts = useCallback(async () => {
 		const response = await childActor.get_posts()
 		const _posts = response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
+		console.log(_posts)
 		_posts.sort((a, b) => b.timestamp - a.timestamp)
 		setPosts(_posts)
 	}, [childActor])

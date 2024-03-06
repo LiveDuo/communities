@@ -58,7 +58,7 @@ const PostContainer = () => {
 		setReplyText('')
 
     const tempId = getTempId()
-		const _reply = {reply_id: null, text: replyText, tempId, timestamp: new Date(), status:{ Visible:null}, authentication: {[account.type]: {address: account.address}}, likes:[] }
+		const _reply = {reply_id: null, text: replyText, tempId, timestamp: new Date(), status:{ Visible:null}, authentication: getAuthentication(account.address, account.type), likes:[] }
 		setPost(h => ({...h, replies: [...h.replies, _reply]}))
 
 		const reply = await createReply(p.post_id, replyText)
@@ -126,7 +126,6 @@ const PostContainer = () => {
     setPost(p => ({...p, replies: [...post.replies]}))
     const likedPostId = await likeReply(replyId)
 
-
     setPost(p => {
       const _post = {...p}
       const replyIndex = _post.replies.findIndex(r => r.reply_id === replyId)
@@ -134,8 +133,6 @@ const PostContainer = () => {
       _post.replies[replyIndex].likes[likeIndex][0] = likedPostId
       return _post
     })
-
-
   },[post, account, principal, likeReply, onWalletModalOpen, setSelectedNetwork])
 
   const removeLikeReply = useCallback(async (replyId) => {
