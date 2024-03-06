@@ -29,7 +29,8 @@ const PostContainer = () => {
   
 	const [replyText, setReplyText] = useState('')
 	const [isPreview, setIsPreview] = useState(false)
-	const [loadingUnlike, setLoadingUnlike] = useState(false)
+	const [isLoading, setIsLoading] = useState(false)
+	const [removedLikeReply, setRemovedLikeReply] = useState()
 	const [post, setPost] = useState()
   
   const location = useLocation()
@@ -107,9 +108,9 @@ const PostContainer = () => {
     const [likedPostId] = post.likes[likeIndex]
     post.likes.splice(likeIndex, 1)
     setPost(p => ({...p, likes: [...post.likes]}))
-    setLoadingUnlike(true)
+    setIsLoading(true)
     await unlikePost(likedPostId)
-    setLoadingUnlike(false)
+    setIsLoading(false)
   },[post, account, unlikePost])
 
   const addLikeReply = useCallback(async (replyId) => {
@@ -143,9 +144,9 @@ const PostContainer = () => {
     const [likedReplyId] = post.replies[replyIndex].likes[likeIndex]
     post.replies[replyIndex].likes.splice(likeIndex, 1)
     setPost(p => ({...p, replies: [...post.replies]}))
-    setLoadingUnlike(true)
+    setRemovedLikeReply(replyId)
     await unlikeReply(likedReplyId)
-    setLoadingUnlike(false)
+    setRemovedLikeReply()
   },[post, account, unlikeReply])
 
   const isAdmin = useMemo(()=> profile?.roles?.some(r => r.hasOwnProperty('Admin') ),[profile])
@@ -197,7 +198,12 @@ const PostContainer = () => {
               {isLikedPost ?
                 <IconButton isDisabled={post.likes.some(([likeId, _]) => likeId === null)} onClick={() => removeLikePost()} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
                 :
-                <IconButton isDisabled={loadingUnlike} onClick={() => addLikePost(post.post_id)} variant={'link'} color={'gray.300'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
+                <IconButton isDisabled={isLoading} onClick={() => addLikePost(post.post_id)} variant={'link'} color={'gray.300'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
+              }
+              {(post.likes.some(([likeId, _]) => likeId === null) || isLoading) && 
+                <Box ml="10px" mr="10px">
+                  <Spinner size={'xs'} color={'gray.600'}/>
+                </Box>
               }
               {post.likes.length > 0 && <Button onClick={onPostLikeModalOpen} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link" >{post.likes.length}</Button>}
             </Flex>
@@ -230,7 +236,12 @@ const PostContainer = () => {
                     {isLikedReply(r) ? 
                       <IconButton onClick={() => removeLikeReply(r.reply_id)} isDisabled={!r.reply_id || r.likes.some(([likeId, _]) => likeId === null)} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} />
                     :
-                      <IconButton onClick={() => addLikeReply(r.reply_id)} isDisabled={!r.reply_id || loadingUnlike} variant={'link'} _focus={{boxShadow: 'none'}} color={'gray.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
+                      <IconButton onClick={() => addLikeReply(r.reply_id)} isDisabled={!r.reply_id || r.reply_id === removedLikeReply} variant={'link'} _focus={{boxShadow: 'none'}} color={'gray.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
+                    }
+                    {(r.likes.some(([likeId, _]) => likeId === null) || r.reply_id === removedLikeReply) && 
+                      <Box ml="10px" mr="10px">
+                        <Spinner size={'xs'} color={'gray.600'}/>
+                      </Box>
                     }
                     {r.likes.length > 0 && <Button onClick={onReplyLikeModalOpen} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link">{r.likes.length}</Button>}
                     <LikesModal isOpen={isReplyLikeModalOpen} onClose={onReplyLikeModalClose} likes={r.likes} title={"Reply likes"}/>
