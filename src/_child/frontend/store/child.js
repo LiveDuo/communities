@@ -1,5 +1,6 @@
 import { useState, useContext, createContext, useCallback, useEffect } from 'react'
 import { IdentityContext } from './identity'
+import { getTempId } from '../utils/random'
 import {Principal} from '@dfinity/principal'
 import { useToast } from '@chakra-ui/react'
 
@@ -178,15 +179,23 @@ const ChildProvider = ({ children }) => {
 	const createReply = useCallback(async (_post_id, text) => {
 		const post_id = BigInt(_post_id)
 		const response = await childActor.create_reply(post_id, text)
-		const reply = {...response.Ok, timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
-		return reply
+		return response.Ok
 	}, [childActor])
 
 	const createPost = useCallback(async (title, description) => {
+		const tempId = getTempId()
+		const post = {post_id: null, tempId: tempId, title, description, last_activity: new Date(), timestamp: new Date(), replies_count: 0, status:{ Visible:null}, authentication: {[account.type]: {address: account.address}} }
+		setPosts(p => [post, ...p])
+
 		const response = await childActor.create_post(title, description)
-		const _post = {...response.Ok, last_activity: new Date(Number(response.Ok.timestamp / 1000n / 1000n)), timestamp: new Date(Number(response.Ok.timestamp / 1000n / 1000n)) }
-		setPosts([...posts, _post])
-	},[childActor, posts])
+		setPosts(p => {
+			const _posts = [...p]
+			const postIndex = _posts.findIndex(_p =>_p.tempId === tempId)
+			_posts[postIndex].post_id = response.Ok.post_id
+			delete _posts[postIndex].tempId
+			return _posts
+		})
+	},[childActor, account])
 
 	const updatePostStatus = useCallback(async (postId, status) => {
 		await childActor.update_post_status(BigInt(postId), status)
@@ -217,7 +226,9 @@ const ChildProvider = ({ children }) => {
 
 	const getPosts = useCallback(async () => {
 		const response = await childActor.get_posts()
-		setPosts(response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
+		const _posts = response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
+		_posts.sort((a, b) => b.timestamp - a.timestamp)
+		setPosts(_posts)
 	}, [childActor])
 	
 	const getPost = useCallback(async (index) => {

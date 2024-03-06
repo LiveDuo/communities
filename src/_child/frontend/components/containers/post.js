@@ -6,6 +6,7 @@ import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
 import { addressShort, getAddress, getSeedFromAuthentication, getAuthentication } from '../../utils/address'
+import { getTempId } from '../../utils/random'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faEyeSlash, faEye, faHeart } from '@fortawesome/free-solid-svg-icons'
@@ -28,6 +29,7 @@ const PostContainer = () => {
   
 	const [replyText, setReplyText] = useState('')
 	const [isPreview, setIsPreview] = useState(false)
+	const [loadingUnlike, setLoadingUnlike] = useState(false)
 	const [post, setPost] = useState()
   
   const location = useLocation()
@@ -54,9 +56,18 @@ const PostContainer = () => {
 
 		setReplyText('')
 
+    const tempId = getTempId()
+		const _reply = {reply_id: null, text: replyText, tempId, timestamp: new Date(), status:{ Visible:null}, authentication: {[account.type]: {address: account.address}}, likes:[] }
+		setPost(h => ({...h, replies: [...h.replies, _reply]}))
+
 		const reply = await createReply(p.post_id, replyText)
 		
-		setPost(h => ({...h, replies: [...h.replies, reply]}))
+		setPost(p => {
+      const _post = {...p}
+      const replyIndex = _post.replies.findIndex(_h => _h.tempId === tempId)
+      _post.replies[replyIndex].reply_id = reply.reply_id
+      return _post
+    })
 	}
 
   const changePostVisibility = useCallback(async (postId, statusType)=>{
@@ -78,9 +89,17 @@ const PostContainer = () => {
       onWalletModalOpen()
       return
     }
-    const likedPostId = await likePost(postId)
-    const like = [likedPostId, getAuthentication(account.address, account.type)]
+    const tempId = getTempId()
+    const like = [null, getAuthentication(account.address, account.type), tempId]
     setPost(p => ({...p, likes: [...p.likes, like]}))
+
+    const likedPostId = await likePost(postId)
+    setPost(p => {
+      const _post = {...p}
+      const likeIndex = _post.likes.findIndex(([likeId, auth, _tempId]) => _tempId === tempId)
+      _post.likes[likeIndex][0] = likedPostId
+      return _post
+    })
   },[account, principal, likePost, setSelectedNetwork, onWalletModalOpen])
 
   const removeLikePost = useCallback(async ()=>{
@@ -88,7 +107,9 @@ const PostContainer = () => {
     const [likedPostId] = post.likes[likeIndex]
     post.likes.splice(likeIndex, 1)
     setPost(p => ({...p, likes: [...post.likes]}))
+    setLoadingUnlike(true)
     await unlikePost(likedPostId)
+    setLoadingUnlike(false)
   },[post, account, unlikePost])
 
   const addLikeReply = useCallback(async (replyId) => {
@@ -97,12 +118,23 @@ const PostContainer = () => {
       onWalletModalOpen()
       return
     }
-
-    const likedPostId = await likeReply(replyId)
-    const like = [likedPostId, getAuthentication(account.address, account.type)]
+    const tempId = getTempId()
+    const like = [null, getAuthentication(account.address, account.type), tempId]
     const replyIndex = post.replies.findIndex(r => r.reply_id === replyId)
     post.replies[replyIndex].likes.push(like)
     setPost(p => ({...p, replies: [...post.replies]}))
+    const likedPostId = await likeReply(replyId)
+
+
+    setPost(p => {
+      const _post = {...p}
+      const replyIndex = _post.replies.findIndex(r => r.reply_id === replyId)
+      const likeIndex = _post.replies[replyIndex].likes.findIndex(([likeId, auth, _tempId]) => _tempId === tempId)
+      _post.replies[replyIndex].likes[likeIndex][0] = likedPostId
+      return _post
+    })
+
+
   },[post, account, principal, likeReply, onWalletModalOpen, setSelectedNetwork])
 
   const removeLikeReply = useCallback(async (replyId) => {
@@ -111,7 +143,9 @@ const PostContainer = () => {
     const [likedReplyId] = post.replies[replyIndex].likes[likeIndex]
     post.replies[replyIndex].likes.splice(likeIndex, 1)
     setPost(p => ({...p, replies: [...post.replies]}))
+    setLoadingUnlike(true)
     await unlikeReply(likedReplyId)
+    setLoadingUnlike(false)
   },[post, account, unlikeReply])
 
   const isAdmin = useMemo(()=> profile?.roles?.some(r => r.hasOwnProperty('Admin') ),[profile])
@@ -161,9 +195,9 @@ const PostContainer = () => {
           <Flex>
             <Flex alignItems="center" justifyContent="space-between" ml="auto" w="36px">
               {isLikedPost ?
-                <IconButton onClick={() => removeLikePost()} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
+                <IconButton isDisabled={post.likes.some(([likeId, _]) => likeId === null)} onClick={() => removeLikePost()} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
                 :
-                <IconButton onClick={() => addLikePost(post.post_id)} variant={'link'} color={'gray.300'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
+                <IconButton isDisabled={loadingUnlike} onClick={() => addLikePost(post.post_id)} variant={'link'} color={'gray.300'} _focus={{boxShadow: 'none'}} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
               }
               {post.likes.length > 0 && <Button onClick={onPostLikeModalOpen} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link" >{post.likes.length}</Button>}
             </Flex>
@@ -185,6 +219,7 @@ const PostContainer = () => {
                 <Flex flexDirection={'row'} alignItems={'center'} mb="6">
                   <Jazzicon diameter={20} seed={getSeedFromAuthentication(r?.authentication)} />
                   <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
+                  {!r.reply_id && <Spinner ml="10px" size={'xs'}/>}
                   <Text ml="auto">{timeSince(r?.timestamp)}</Text>
                 </Flex>
                 <Box textAlign={'start'} className="markdown-body">
@@ -193,9 +228,9 @@ const PostContainer = () => {
                 <Flex>
                   <Flex alignItems="center" justifyContent="space-between" w="36px" ml="auto">
                     {isLikedReply(r) ? 
-                      <IconButton onClick={() => removeLikeReply(r.reply_id)} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} />
+                      <IconButton onClick={() => removeLikeReply(r.reply_id)} isDisabled={!r.reply_id || r.likes.some(([likeId, _]) => likeId === null)} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} />
                     :
-                      <IconButton onClick={() => addLikeReply(r.reply_id)} variant={'link'} _focus={{boxShadow: 'none'}} color={'gray.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
+                      <IconButton onClick={() => addLikeReply(r.reply_id)} isDisabled={loadingUnlike} variant={'link'} _focus={{boxShadow: 'none'}} color={'gray.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
                     }
                     {r.likes.length > 0 && <Button onClick={onReplyLikeModalOpen} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link">{r.likes.length}</Button>}
                     <LikesModal isOpen={isReplyLikeModalOpen} onClose={onReplyLikeModalClose} likes={r.likes} title={"Reply likes"}/>
