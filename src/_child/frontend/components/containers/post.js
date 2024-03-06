@@ -230,7 +230,7 @@ const PostContainer = () => {
                     {isLikedReply(r) ? 
                       <IconButton onClick={() => removeLikeReply(r.reply_id)} isDisabled={!r.reply_id || r.likes.some(([likeId, _]) => likeId === null)} variant={'link'} _focus={{boxShadow: 'none'}} color={'red.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} />
                     :
-                      <IconButton onClick={() => addLikeReply(r.reply_id)} isDisabled={loadingUnlike} variant={'link'} _focus={{boxShadow: 'none'}} color={'gray.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
+                      <IconButton onClick={() => addLikeReply(r.reply_id)} isDisabled={!r.reply_id || loadingUnlike} variant={'link'} _focus={{boxShadow: 'none'}} color={'gray.300'} minW="2" icon={<FontAwesomeIcon icon={faHeart} />} /> 
                     }
                     {r.likes.length > 0 && <Button onClick={onReplyLikeModalOpen} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link">{r.likes.length}</Button>}
                     <LikesModal isOpen={isReplyLikeModalOpen} onClose={onReplyLikeModalClose} likes={r.likes} title={"Reply likes"}/>
