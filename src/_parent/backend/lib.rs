@@ -38,7 +38,6 @@ async fn create_child() -> Result<Principal, String> {
     if LEDGER_CANISTER.is_some() && CMC_CANISTER.is_some() {
         mint_cycles(caller, id).await.unwrap();
     }
-
     // create canister
     let canister_id = create_canister(id).await.unwrap();
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_id_callback", (canister_data_id, canister_id)).await.unwrap().0.unwrap();});
@@ -443,10 +442,8 @@ fn candid_interface_compatibility() {
     
     use candid::utils::{service_compatible, CandidSource};
     use std::path::PathBuf;
-    use ic_cdk::export::candid::export_service;
     
-    
-    export_service!();
+    candid::export_service!();
     let new_interface = __export_service();
 
     let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("parent.did");

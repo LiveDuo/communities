@@ -5,7 +5,7 @@
 // as formal arguments.  This approach makes it very easy to test the state machine.
 
 use crate::{rc_bytes::RcBytes, types::*, url_decode::url_decode};
-use candid::{CandidType, Deserialize, Func, Int, Nat, Principal};
+use candid::{CandidType, Deserialize, Int, Nat, Principal};
 use ic_certified_map::{AsHashTree, Hash, HashTree, RbTree};
 use num_traits::ToPrimitive;
 use serde::Serialize;
@@ -391,7 +391,7 @@ impl State {
         path: &str,
         encodings: Vec<String>,
         index: usize,
-        callback: Func,
+        callback: CallbackFunc,
         etags: Vec<Hash>,
     ) -> HttpResponse {
         let index_redirect_certificate = if self.asset_hashes.get(path.as_bytes()).is_none()
@@ -471,7 +471,7 @@ impl State {
         &self,
         req: HttpRequest,
         certificate: &[u8],
-        callback: Func,
+        callback: CallbackFunc,
     ) -> HttpResponse {
         let mut encodings = vec![];
         let mut etags = Vec::new();
@@ -782,7 +782,7 @@ fn build_ok(
     key: &str,
     chunk_index: usize,
     certificate_header: Option<HeaderField>,
-    callback: Func,
+    callback: CallbackFunc,
     etags: Vec<Hash>,
 ) -> HttpResponse {
     let mut headers = vec![("Content-Type".to_string(), asset.content_type.to_string())];

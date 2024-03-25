@@ -869,7 +869,7 @@ fn candid_interface_compatibility() {
     use candid::utils::{service_compatible, CandidSource};
     use std::path::PathBuf;
 
-    ic_cdk::export::candid::export_service!();
+    candid::export_service!();
     let new_interface = __export_service();
 
     let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("child.did");
