@@ -8,7 +8,7 @@ use candid::{ CandidType, Deserialize, Principal, candid_method};
 
 use ic_cdk::api::management_canister::main::CanisterStatusResponse;
 use ic_cdk::api::management_canister::provisional::CanisterIdRecord;
-use ic_cdk_macros::{update, query, init};
+use ic_cdk::{update, query, init, pre_upgrade, post_upgrade};
 
 
 use crate::state::{*, STATE};
@@ -776,7 +776,7 @@ pub struct StableState {
     pub storage: ic_certified_assets::StableState,
 }
 
-#[ic_cdk_macros::pre_upgrade]
+#[pre_upgrade]
 fn pre_upgrade() {
     let state_pre_upgrade = STATE.with(|s| s.borrow().clone());
 
@@ -788,7 +788,7 @@ fn pre_upgrade() {
     ic_cdk::storage::stable_save((state,)).unwrap();
 }
 
-#[ic_cdk_macros::post_upgrade]
+#[post_upgrade]
 fn post_upgrade() {
     // restore state
     let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();

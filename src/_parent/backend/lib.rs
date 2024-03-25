@@ -3,7 +3,7 @@ mod assets;
 mod create_child;
 
 use candid::{CandidType, Deserialize, Principal, candid_method};
-use ic_cdk_macros::{query, update, init};
+use ic_cdk::{query, update, init, post_upgrade, pre_upgrade};
 use ic_cdk::api::management_canister::main::{CanisterIdRecord, CanisterStatusResponse};
 
 // use assets::*;
@@ -119,7 +119,7 @@ async fn remove_track(track_name: String) -> Result<(), String> {
     })
 }
 
-#[ic_cdk_macros::update]
+#[update]
 fn update_canister_state_callback(canister_data_id: u64, canister_state: CanisterState) -> Result<(), String> {
     if ic_cdk::caller() != ic_cdk::id() {
         return Err("Unauthorized".to_owned());
@@ -136,7 +136,7 @@ fn update_canister_state_callback(canister_data_id: u64, canister_state: Caniste
 
     Ok(())
 }
-#[ic_cdk_macros::update]
+#[update]
 fn update_canister_id_callback(canister_data_id: u64, canister_id: Principal) -> Result<(), String> {
     if ic_cdk::caller() != ic_cdk::id() {
         return Err("Unauthorized".to_owned());
@@ -151,7 +151,7 @@ fn update_canister_id_callback(canister_data_id: u64, canister_id: Principal) ->
     Ok(())
 }
 
-#[ic_cdk_macros::update]
+#[update]
 fn create_canister_data_callback(caller: Principal, canister_data_id: u64) -> Result<u64, String> {
     if ic_cdk::caller() != ic_cdk::id() {
         return Err("Unauthorized".to_owned());
@@ -223,7 +223,7 @@ fn get_user_canisters() -> Vec<CanisterData> {
     })
 }
 
-#[ic_cdk_macros::query]
+#[query]
 fn get_children() ->  Vec<Principal>{
     STATE.with(|s| s.borrow().canister_data.iter().map(|(_, canister_data)| canister_data.id.unwrap()).collect::<Vec<_>>())
 }
@@ -412,7 +412,7 @@ pub struct UpgradeState {
     pub assets: ic_certified_assets::StableState,
 }
 
-#[ic_cdk_macros::pre_upgrade]
+#[pre_upgrade]
 fn pre_upgrade() {
     let lib = STATE.with(|s| s.clone().into_inner());
     let assets = ic_certified_assets::pre_upgrade();
@@ -421,7 +421,7 @@ fn pre_upgrade() {
     ic_cdk::storage::stable_save((state,)).unwrap();
 }
 
-#[ic_cdk_macros::post_upgrade]
+#[post_upgrade]
 fn post_upgrade() {
     let (s_prev,): (UpgradeState,) = ic_cdk::storage::stable_restore().unwrap();
 
