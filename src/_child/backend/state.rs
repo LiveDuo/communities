@@ -4,6 +4,9 @@ use std::hash::Hash;
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
+use crate::icrc7::Icrc7Token;
+use crate::icrc3::Transaction;
+
 
 #[derive(Clone, CandidType, Deserialize, Default, Hash, PartialEq, Eq, Debug)]
 pub struct EvmParams {
@@ -219,6 +222,9 @@ pub struct State {
     pub parent: Option<Principal>,
     pub version: Option<String>,
     pub track: Option<String>,
+    pub tokens: BTreeMap<u128, Icrc7Token>,
+    pub txn_count: u128,
+    pub txn_log: BTreeMap<u128, Transaction>,
 }
 
 thread_local! {
