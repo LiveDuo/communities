@@ -6,10 +6,10 @@ on:
     branches: [ "master", "debug" ]
   workflow_dispatch:
     inputs:
-      mode:
-        description: 'Runtime Mode: "standard" or "interactive"'
+      debug_enabled:
+        type: boolean
         required: false
-        default: 'standard'
+        default: false
 
 env:
   RUST_BACKTRACE: short
@@ -25,13 +25,16 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: export PATH=~/.cargo/bin:/usr/local/bin/:$PATH
       - run: rustup target add wasm32-unknown-unknown
-      - run: DFX_VERSION=0.13.1 sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
-      - run: mkdir ~/.config/dfx/ && cp ./test/networks.json ~/.config/dfx/networks.json
+      - run: wget --output-document install-dfx.sh "https://raw.githubusercontent.com/dfinity/sdk/dfxvm-install-script/install.sh"
+      - run: DFX_VERSION=${DFX_VERSION:=0.18.0} DFXVM_INIT_YES=true bash install-dfx.sh
+      - run: rm install-dfx.sh
+      - run: source "$HOME/.local/share/dfx/env"
+      - run: mkdir -p ~/.config/dfx/ && cp ./test/networks.json ~/.config/dfx/networks.json
+      - uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - run: dfx --version
       - run: dfx identity whoami
       - run: dfx start --background &> dfx.log
-      - uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - run: dfx deploy parent
       - run: npm ci
       - run: npm run test:unit
