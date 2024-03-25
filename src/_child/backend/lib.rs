@@ -866,7 +866,7 @@ async fn upgrade_canister(version: String, track: String) -> Result<(), String> 
 
 #[test]
 fn candid_interface_compatibility() {
-    use candid_parser::utils::{service_compatible, CandidSource};
+    use candid::utils::{service_compatible, CandidSource};
     use std::path::PathBuf;
 
     candid::export_service!();

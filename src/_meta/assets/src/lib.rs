@@ -278,7 +278,7 @@ pub fn post_upgrade(stable_state: StableState) {
 
 #[test]
 fn candid_interface_compatibility() {
-    use candid_parser::utils::{service_compatible, CandidSource};
+    use candid::utils::{service_compatible, CandidSource};
     use std::path::PathBuf;
 
     candid::export_service!();

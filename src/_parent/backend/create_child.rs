@@ -78,7 +78,6 @@ pub async fn create_canister(canister_id: Principal) -> Result<Principal, String
         compute_allocation: None,
         memory_allocation: None,
         freezing_threshold: None,
-        reserved_cycles_limit: None
     };
     let (create_result,) = ic_cdk::api::call::call_with_payment::<_, (CanisterIdRecord,)>(
         Principal::management_canister(),
@@ -187,7 +186,6 @@ pub async fn set_canister_controllers( canister_id: Principal,caller: Principal)
         compute_allocation: None,
         memory_allocation: None,
         freezing_threshold: None,
-        reserved_cycles_limit: None
     };
     ic_cdk::call::<_, ((),)>(
         Principal::management_canister(),
