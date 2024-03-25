@@ -440,7 +440,7 @@ fn http_request(req: ic_certified_assets::types::HttpRequest) -> ic_certified_as
 #[test]
 fn candid_interface_compatibility() {
     
-    use candid::utils::{service_compatible, CandidSource};
+    use candid_parser::utils::{service_compatible, CandidSource};
     use std::path::PathBuf;
     
     candid::export_service!();
