@@ -17,7 +17,7 @@ pub fn get_asset(key: String) -> Vec<u8> {
     let total_length = encoded_asset.total_length.0.to_usize().unwrap();
 
     // concat asset chunks
-    let mut index = 0;
+    let mut index = 0 as u64;
     let mut content = vec![];
     while content.len() < total_length {
         let arg = GetChunkArg {

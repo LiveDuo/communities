@@ -8,10 +8,11 @@ path = "lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-ic-cdk = "0.11.3"
-ic-cdk-macros = "0.8.1"
+ic-cdk = "0.12.1"
+ic-cdk-macros = "0.8.4"
 ic-certified-assets = { path = "../../_meta/assets" }
-candid = "0.9.11"
+candid = "0.10.5"
+candid_parser = "0.1.4"
 serde_bytes = "0.11.9"
 serde = "1.0.188"
 hex = "0.4.3"
