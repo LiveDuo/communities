@@ -134,6 +134,8 @@ const idlFactory = ({ IDL }) => {
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
 		get_posts_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_most_liked_posts: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
+		get_most_liked_replies: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(ReplyResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
 		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
@@ -228,7 +230,6 @@ const ChildProvider = ({ children }) => {
 	const getPosts = useCallback(async () => {
 		const response = await childActor.get_posts()
 		const _posts = response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
-		console.log(_posts)
 		_posts.sort((a, b) => b.timestamp - a.timestamp)
 		setPosts(_posts)
 	}, [childActor])
@@ -260,6 +261,31 @@ const ChildProvider = ({ children }) => {
 		}
 		const response = await childActor.get_posts_by_auth(auth)
 		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
+	}, [childActor])
+
+	const getMostLikedPosts = useCallback(async (address, type) => {
+		const auth = {}
+		if (type === 'Ic') {
+			auth[type] = {principal: Principal.fromText(address)} 
+		} else if(type === 'Evm' || type === 'Svm') {
+			auth[type] = {address} 
+		}
+
+		const response = await childActor.get_most_liked_posts(auth)
+
+		return response.Ok.map(p => ({...p, timestamp: new Date(Number(p.timestamp / 1000n / 1000n))}))
+	}, [childActor])
+
+	const getMostLikedReplies = useCallback(async (address, type) => {
+		const auth = {}
+		if (type === 'Ic') {
+			auth[type] = {principal: Principal.fromText(address)} 
+		} else if(type === 'Evm' || type === 'Svm') {
+			auth[type] = {address} 
+		}
+
+		const response = await childActor.get_most_liked_replies(auth)
+		return response.Ok.map(p => ({...p, timestamp: new Date(Number(p.timestamp / 1000n / 1000n))}))
 	}, [childActor])
 
 	const getProfileByAuth = useCallback(async (address, type) => {
@@ -367,7 +393,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
+	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getMostLikedPosts, getMostLikedReplies, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

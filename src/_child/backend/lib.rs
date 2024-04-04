@@ -7,6 +7,7 @@ mod auth;
 use candid::{ CandidType, Deserialize, Principal, candid_method};
 
 use ic_cdk::api::management_canister::main::CanisterStatusResponse;
+
 use ic_cdk::api::management_canister::provisional::CanisterIdRecord;
 use ic_cdk_macros::{update, query, init};
 
@@ -662,6 +663,28 @@ fn get_posts_by_auth(authentication: AuthenticationWithAddress) -> Result<Vec<Po
             }).collect::<Vec<_>>();
         Ok(user_post)
     })
+}
+
+#[query]
+#[candid_method(query)]
+fn get_most_liked_posts(authentication: AuthenticationWithAddress) -> Result<Vec<PostResponse>, String> {
+    Ok(vec![
+        PostResponse {title: "Post".to_owned(), post_id: 0, description: "Post description".to_owned(), authentication: authentication.to_owned(), likes: vec![], timestamp: ic_cdk::api::time(), status: PostStatus::Visible, replies: vec![]},
+        PostResponse {title: "Post 1".to_owned(), post_id: 1, description: "Post description".to_owned(), authentication: authentication.to_owned(), likes: vec![], timestamp: ic_cdk::api::time(), status: PostStatus::Visible, replies: vec![]},
+        PostResponse {title: "Post 2".to_owned(), post_id: 2, description: "Post description".to_owned(), authentication: authentication.to_owned(), likes: vec![], timestamp: ic_cdk::api::time(), status: PostStatus::Visible, replies: vec![]},
+        PostResponse {title: "Post 3".to_owned(), post_id: 3, description: "Post description".to_owned(), authentication: authentication.to_owned(), likes: vec![], timestamp: ic_cdk::api::time(), status: PostStatus::Visible, replies: vec![]},
+    ])
+}
+
+#[query]
+#[candid_method(query)]
+fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<Vec<ReplyResponse>, String> {
+    Ok(vec![
+        ReplyResponse {text: "Reply".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 0, likes: vec![], status: ReplyStatus::Visible },
+        ReplyResponse {text: "Reply 1".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 1, likes: vec![], status: ReplyStatus::Visible },
+        ReplyResponse {text: "Reply 2".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 2, likes: vec![], status: ReplyStatus::Visible },
+        ReplyResponse {text: "Reply 3".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 3, likes: vec![], status: ReplyStatus::Visible },
+    ])
 }
 #[query]
 #[candid_method(query)]
