@@ -55,7 +55,7 @@ pub struct MintArg {
     pub token_description: Option<String>,
     pub token_logo: Option<String>,
 }
-
+#[allow(dead_code)]
 #[derive(CandidType, Clone)]
 pub enum MintError {
     SupplyCapReached,
