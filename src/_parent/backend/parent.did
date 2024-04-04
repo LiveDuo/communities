@@ -26,9 +26,9 @@ type HttpResponse = record {
 
 type CreateChildResult = variant { Ok : principal; Err : text };
 type CreateTrackResult = variant { Ok; Err : text };
-type CreateUpgreadeResult = variant { Ok; Err : text };
+type CreateUpgradeResult = variant { Ok; Err : text };
 type RemoveTrackResult = variant { Ok; Err : text };
-type RemoveUpgreadeResult = variant { Ok; Err : text };
+type RemoveUpgradeResult = variant { Ok; Err : text };
 
 type StreamingCallbackToken = record {
   key : text;
@@ -69,7 +69,7 @@ type UpgradeWithTrack = record {
 service : () -> {
   create_child : () -> (CreateChildResult);
   create_track : (text) -> (CreateTrackResult);
-  create_upgrade : (text, opt UpgradeFrom, vec text, text, text) -> (CreateUpgreadeResult);
+  create_upgrade : (text, opt UpgradeFrom, vec text, text, text) -> (CreateUpgradeResult);
   get_next_upgrades : (text, text) -> (vec UpgradeWithTrack) query;
   get_upgrade : (text, text) -> (opt UpgradeWithTrack) query;
   get_upgrades : () -> (vec UpgradeWithTrack) query;
@@ -77,5 +77,5 @@ service : () -> {
   http_request : (HttpRequest) -> (HttpResponse) query;
   handle_interface: (text, text, vec nat8) -> (variant { Ok: vec nat8; Err : text }) query;
   remove_track : (text) -> (RemoveTrackResult);
-  remove_upgrade : (text, text) -> (RemoveUpgreadeResult);
+  remove_upgrade : (text, text) -> (RemoveUpgradeResult);
 }

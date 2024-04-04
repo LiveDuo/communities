@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use crate::rc_bytes::RcBytes;
-use candid::{CandidType, Deserialize, Func, Nat};
+use candid::{CandidType, Deserialize, Nat};
 use serde_bytes::ByteBuf;
 
 pub type BatchId = Nat;
@@ -132,11 +132,11 @@ pub struct StreamingCallbackToken {
     // We don't care about the sha, we just want to be backward compatible.
     pub sha256: Option<ByteBuf>,
 }
-
+candid::define_function!(pub CallbackFunc : (StreamingCallbackToken) -> (StreamingCallbackHttpResponse) query);
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub enum StreamingStrategy {
     Callback {
-        callback: Func,
+        callback: CallbackFunc,
         token: StreamingCallbackToken,
     },
 }

@@ -1,6 +1,5 @@
 
-use ed25519_dalek::{PublicKey, Signature, Verifier};
-
+use ed25519_dalek::{VerifyingKey, Signature, Verifier};
 use crate::state::*;
 
 fn checksum_evm_address (address: String) -> String {
@@ -27,8 +26,8 @@ pub fn verify_svm(args: SvmAuthenticationWithParams) -> SvmParams {
     let signature = hex::decode(&args.signature).unwrap();
     let msg = hex::decode(&args.message).unwrap();
 
-    let public_key = PublicKey::from_bytes(&public_key).unwrap();
-    let sig = Signature::from_bytes(&signature).unwrap();
+    let public_key = VerifyingKey::from_bytes(&public_key.try_into().unwrap()).unwrap();
+    let sig = Signature::from_bytes(&signature.try_into().unwrap());
     public_key.verify(&msg, &sig).unwrap();
 
     let address = bs58::encode(public_key).into_string();

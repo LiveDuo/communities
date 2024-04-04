@@ -156,6 +156,65 @@ type CanisterStatusResponse = record {
 };
 type UserRole = variant { Admin };
 
+
+// Icrc7 and Icrc3
+type Account = record { owner : principal; subaccount : opt vec nat8 };
+type BurnArg = record {
+  token_id : nat;
+  memo : opt vec nat8;
+  from_subaccount : opt vec nat8;
+};
+type BurnError = variant {
+  GenericError : record { message : text; error_code : nat };
+  NonExistingTokenId;
+  Unauthorized;
+  GenericBatchError : record { message : text; error_code : nat };
+};
+type MetadataValue = variant {
+  Int : int;
+  Nat : nat;
+  Blob : vec nat8;
+  Text : text;
+};
+type MintArg = record {
+  to : Account;
+  token_id : nat;
+  memo : opt vec nat8;
+  from_subaccount : opt vec nat8;
+  token_description : opt text;
+  token_logo : opt text;
+  token_name : opt text;
+};
+type MintError = variant {
+  GenericError : record { message : text; error_code : nat };
+  SupplyCapReached;
+  Unauthorized;
+  GenericBatchError : record { message : text; error_code : nat };
+  TokenIdAlreadyExist;
+};
+type Result = variant { Ok : nat; Err : BurnError };
+type Result_1 = variant { Ok : nat; Err : TransferError };
+type Result_2 = variant { Ok : nat; Err : MintError };
+type Result_3 = variant { Ok : null; Err : text };
+type Standard = record { url : text; name : text };
+type TransferArg = record {
+  to : Account;
+  token_id : nat;
+  memo : opt vec nat8;
+  from_subaccount : opt vec nat8;
+  created_at_time : opt nat64;
+};
+type TransferError = variant {
+  GenericError : record { message : text; error_code : nat };
+  Duplicate : record { duplicate_of : nat };
+  NonExistingTokenId;
+  Unauthorized;
+  CreatedInFuture : record { ledger_time : nat64 };
+  InvalidRecipient;
+  GenericBatchError : record { message : text; error_code : nat };
+  TooOld;
+};
+
 service : (opt principal, opt text, opt text ) -> {
   create_post : (text, text) -> (CreatePostResult);
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
@@ -180,4 +239,29 @@ service : (opt principal, opt text, opt text ) -> {
   get_profile_by_auth : (AuthenticationWithAddress) -> (opt ProfileResponse) query;
   get_metadata: () -> (GetMetadataResult) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
+
+  burn : (vec BurnArg) -> (vec opt Result);
+  icrc7_atomic_batch_transfers : () -> (opt bool) query;
+  icrc7_balance_of : (vec Account) -> (vec nat) query;
+  icrc7_default_take_value : () -> (opt nat) query;
+  icrc7_description : () -> (opt text) query;
+  icrc7_logo : () -> (opt text) query;
+  icrc7_max_memo_size : () -> (opt nat) query;
+  icrc7_max_query_batch_size : () -> (opt nat) query;
+  icrc7_max_take_value : () -> (opt nat) query;
+  icrc7_max_update_batch_size : () -> (opt nat) query;
+  icrc7_name : () -> (text) query;
+  icrc7_owner_of : (vec nat) -> (vec opt Account) query;
+  icrc7_supply_cap : () -> (opt nat) query;
+  icrc7_supported_standards : () -> (vec Standard) query;
+  icrc7_symbol : () -> (text) query;
+  icrc7_token_metadata : (vec nat) -> (
+      vec opt vec record { text; MetadataValue },
+    ) query;
+  icrc7_tokens : (opt nat, opt nat) -> (vec nat) query;
+  icrc7_tokens_of : (Account, opt nat, opt nat) -> (vec nat) query;
+  icrc7_total_supply : () -> (nat) query;
+  icrc7_transfer : (vec TransferArg) -> (vec opt Result_1);
+  mint : (MintArg) -> (Result_2);
+  reset_tokens : () -> (Result_3);
 }

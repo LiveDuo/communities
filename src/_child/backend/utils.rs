@@ -1,5 +1,6 @@
 use candid::{Nat, Principal};
 use ic_certified_assets::types::{GetArg, GetChunkArg};
+use icrc_ledger_types::icrc1::account::{Account, Subaccount, DEFAULT_SUBACCOUNT};
 use num_traits::ToPrimitive;
 use std::collections::hash_map;
 use std::hash::{Hash, Hasher};
@@ -17,7 +18,7 @@ pub fn get_asset(key: String) -> Vec<u8> {
     let total_length = encoded_asset.total_length.0.to_usize().unwrap();
 
     // concat asset chunks
-    let mut index = 0;
+    let mut index = 0 as u64;
     let mut content = vec![];
     while content.len() < total_length {
         let arg = GetChunkArg {
@@ -86,4 +87,36 @@ pub fn get_user_roles(caller: &Principal) -> Option<Vec<UserRole>> {
             .collect::<Vec<_>>();
         Some(user_roles)
     })
+}
+
+
+pub fn default_account(owner: &Principal) -> Account {
+    Account {
+        owner: owner.clone(),
+        subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+    }
+}
+
+pub fn burn_subaccount() -> Subaccount {
+    let mut bytes = [0; 32];
+    let slice = b"BURN SUBACCOUNT";
+    bytes[0..15].copy_from_slice(slice);
+    bytes
+}
+
+pub fn burn_account() -> Account {
+    Account {
+        owner: ic_cdk::api::id(),
+        subaccount: Some(burn_subaccount()),
+    }
+}
+pub fn account_transformer(account: Account) -> Account {
+    if let Some(_) = account.subaccount {
+        account
+    } else {
+        Account {
+            owner: account.owner,
+            subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+        }
+    }
 }

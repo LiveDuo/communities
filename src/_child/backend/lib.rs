@@ -3,22 +3,23 @@ mod verify;
 mod utils;
 mod upgrade;
 mod auth;
+mod icrc7;
+mod icrc3;
 
 use candid::{ CandidType, Deserialize, Principal, candid_method};
-
 use ic_cdk::api::management_canister::main::CanisterStatusResponse;
 
 use ic_cdk::api::management_canister::provisional::CanisterIdRecord;
-use ic_cdk_macros::{update, query, init};
+use ic_cdk::{update, query, init, pre_upgrade, post_upgrade};
 
-
+use crate::icrc7::Icrc7Token;
+use crate::icrc3::{log_transaction, TransactionType};
+use icrc_ledger_types::icrc::generic_metadata_value::MetadataValue;
 use crate::state::{*, STATE};
 use upgrade::{update_metadata, check_canister_cycles_balance, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::UpgradeWithTrack;
-use utils::{uuid, get_asset, get_user_roles};
-
+use utils::{uuid, get_asset, get_user_roles, default_account};
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
-
 use candid::{Encode, Decode};
 
 #[init]
@@ -36,6 +37,7 @@ fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Op
     if let Some(admin) = admin_opt { 
         let admin_id = create_profile_by_principal(&admin);
         add_profile_role(admin_id, UserRole::Admin);
+        add_icrc7_token(&admin)
     }
 }
 
@@ -59,6 +61,20 @@ fn add_profile_role(profile_id: u64, role: UserRole) {
         let role = Role{timestamp: ic_cdk::api::time(), role};
         state.roles.insert(role_id.to_owned(), role);
         state.relations.profile_id_to_role_id.insert(profile_id, role_id)
+    })
+}
+
+fn add_icrc7_token(principal: &Principal) {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let token_id = uuid(&principal.to_text()) as u128;
+        let admin_account = default_account(&principal);
+        let minter_account = default_account(&ic_cdk::caller());
+        let token_name = format!("{}", token_id);
+        let token = Icrc7Token::new(token_id, token_name.to_owned(), None, None, admin_account);
+        state.tokens.insert(token_id, token);
+        let tx_type = TransactionType::Mint { tid: token_id, from: minter_account, to: admin_account, meta: MetadataValue::Text(token_name) };
+        log_transaction(&mut state, tx_type, ic_cdk::api::time(), None);
     })
 }
 
@@ -799,7 +815,7 @@ pub struct StableState {
     pub storage: ic_certified_assets::StableState,
 }
 
-#[ic_cdk_macros::pre_upgrade]
+#[pre_upgrade]
 fn pre_upgrade() {
     let state_pre_upgrade = STATE.with(|s| s.borrow().clone());
 
@@ -811,7 +827,7 @@ fn pre_upgrade() {
     ic_cdk::storage::stable_save((state,)).unwrap();
 }
 
-#[ic_cdk_macros::post_upgrade]
+#[post_upgrade]
 fn post_upgrade() {
     // restore state
     let (s_prev,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
@@ -889,10 +905,12 @@ async fn upgrade_canister(version: String, track: String) -> Result<(), String> 
 
 #[test]
 fn candid_interface_compatibility() {
-    use candid::utils::{service_compatible, CandidSource};
+    use candid_parser::utils::{service_compatible, CandidSource};
+    use crate::icrc7::*;
+    use icrc_ledger_types::icrc1::account::Account;
     use std::path::PathBuf;
 
-    ic_cdk::export::candid::export_service!();
+    candid::export_service!();
     let new_interface = __export_service();
 
     let old_interface = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("child.did");
