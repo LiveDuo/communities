@@ -15,7 +15,7 @@ use crate::{
 };
 use candid::{candid_method, Principal};
 use ic_cdk::api::{caller, data_certificate, set_certified_data, time, trap};
-use ic_cdk_macros::{query, update};
+use ic_cdk::{query, update};
 use std::cell::RefCell;
 
 thread_local! {
@@ -225,10 +225,7 @@ fn http_request(req: HttpRequest) -> HttpResponse {
         s.borrow().http_request(
             req,
             &certificate,
-            candid::Func {
-                method: "http_request_streaming_callback".to_string(),
-                principal: ic_cdk::id(),
-            },
+            CallbackFunc::new(ic_cdk::id(), "http_request_streaming_callback".to_string())
         )
     })
 }
@@ -281,7 +278,7 @@ pub fn post_upgrade(stable_state: StableState) {
 
 #[test]
 fn candid_interface_compatibility() {
-    use candid::utils::{service_compatible, CandidSource};
+    use candid_parser::utils::{service_compatible, CandidSource};
     use std::path::PathBuf;
 
     candid::export_service!();

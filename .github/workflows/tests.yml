@@ -28,6 +28,7 @@ jobs:
       - run: wget --output-document install-dfx.sh "https://raw.githubusercontent.com/dfinity/sdk/dfxvm-install-script/install.sh"
       - run: DFX_VERSION=${DFX_VERSION:=0.18.0} DFXVM_INIT_YES=true bash install-dfx.sh
       - run: rm install-dfx.sh
+      - run: echo "$HOME/.local/share/dfx/bin" >> $GITHUB_PATH
       - run: source "$HOME/.local/share/dfx/env"
       - run: mkdir -p ~/.config/dfx/ && cp ./test/networks.json ~/.config/dfx/networks.json
       - uses: mxschmitt/action-tmate@v3

@@ -9,4 +9,4 @@ proc-macro = true
 [dependencies]
 quote = "1.0.28"
 serde_json = "1.0.97"
-candid = "0.8.2"
+candid = "0.10.5"

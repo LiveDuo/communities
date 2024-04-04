@@ -1,7 +1,7 @@
 //! This module contains an implementation of [RcBytes], a reference-counted byte array.
-use ic_cdk::export::candid::{
-    types::{internal::Type, Serializer},
-    CandidType, Deserialize,
+use candid::{
+    types::{internal::{Type, TypeInner}, Serializer},
+    CandidType, Deserialize
 };
 use serde::de::Deserializer;
 use serde_bytes::ByteBuf;
@@ -14,7 +14,7 @@ pub struct RcBytes(Rc<ByteBuf>);
 
 impl CandidType for RcBytes {
     fn _ty() -> Type {
-        Type::Vec(Box::new(Type::Nat8))
+        Type(Rc::new(TypeInner::Vec(candid::types::Type(Rc::new(TypeInner::Nat8)))))
     }
 
     fn idl_serialize<S>(&self, serializer: S) -> Result<(), S::Error>
