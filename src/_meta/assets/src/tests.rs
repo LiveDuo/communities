@@ -305,7 +305,6 @@ fn uses_streaming_for_multichunk_assets() {
             .with_encoding("identity", vec![INDEX_BODY_CHUNK_1, INDEX_BODY_CHUNK_2])],
     );
     
-
     let streaming_callback = CallbackFunc::new(some_principal(), "stream".to_string());
     
     let response = state.http_request(

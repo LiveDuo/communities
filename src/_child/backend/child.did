@@ -259,5 +259,5 @@ service : (opt principal, opt text, opt text ) -> {
   icrc7_total_supply : () -> (nat) query;
   icrc7_transfer : (vec TransferArg) -> (vec opt Result_1);
   mint : (MintArg) -> (Result_2);
-  reset_tokes : () -> (Result_3);
+  reset_tokens : () -> (Result_3);
 }

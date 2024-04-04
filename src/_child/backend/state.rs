@@ -223,7 +223,6 @@ pub struct State {
     pub version: Option<String>,
     pub track: Option<String>,
     pub tokens: BTreeMap<u128, Icrc7Token>,
-    pub txn_count: u128,
     pub txn_log: BTreeMap<u128, Transaction>,
 }
 

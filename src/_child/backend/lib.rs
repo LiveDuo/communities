@@ -7,7 +7,6 @@ mod icrc7;
 mod icrc3;
 
 use candid::{ CandidType, Deserialize, Principal, candid_method};
-
 use ic_cdk::api::management_canister::main::CanisterStatusResponse;
 use ic_cdk::api::management_canister::provisional::CanisterIdRecord;
 use ic_cdk::{update, query, init, pre_upgrade, post_upgrade};
@@ -19,26 +18,8 @@ use crate::state::{*, STATE};
 use upgrade::{update_metadata, check_canister_cycles_balance, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::UpgradeWithTrack;
 use utils::{uuid, get_asset, get_user_roles, default_account};
-
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
-
 use candid::{Encode, Decode};
-
-
-// #[init]
-// pub fn init() {
-//     let caller = ic_cdk::caller();
-//     let caller_account = default_account(&caller);
-//     STATE.with(|s| {
-//         let mut state = s.borrow_mut();
-//         let token_id = uuid(&caller.to_text()) as u128;
-//         let token_name = format!("{}", token_id);
-//         let token = Icrc7Token::new(token_id, token_name.to_owned(), None, None, caller_account);
-//         state.tokens.insert(token_id, token);
-//         let tx_type = TransactionType::Mint { tid: token_id, from: caller_account, to: caller_account, meta: MetadataValue::Text(token_name) };
-//         log_transaction(&mut state, tx_type, ic_cdk::api::time(), None);
-//     })
-// }
 
 #[init]
 #[candid_method(init)]
@@ -55,9 +36,8 @@ fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Op
     if let Some(admin) = admin_opt { 
         let admin_id = create_profile_by_principal(&admin);
         add_profile_role(admin_id, UserRole::Admin);
-        create_admin_ntf(&admin)
+        add_icrc7_token(&admin)
     }
-
 }
 
 fn create_profile_by_principal(principal: &Principal) -> u64 {
@@ -83,15 +63,16 @@ fn add_profile_role(profile_id: u64, role: UserRole) {
     })
 }
 
-fn create_admin_ntf(admin: &Principal) {
+fn add_icrc7_token(principal: &Principal) {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        let token_id = uuid(&admin.to_text()) as u128;
-        let admin_account = default_account(&admin);
+        let token_id = uuid(&principal.to_text()) as u128;
+        let admin_account = default_account(&principal);
+        let minter_account = default_account(&ic_cdk::caller());
         let token_name = format!("{}", token_id);
         let token = Icrc7Token::new(token_id, token_name.to_owned(), None, None, admin_account);
         state.tokens.insert(token_id, token);
-        let tx_type = TransactionType::Mint { tid: token_id, from: admin_account, to: admin_account, meta: MetadataValue::Text(token_name) };
+        let tx_type = TransactionType::Mint { tid: token_id, from: minter_account, to: admin_account, meta: MetadataValue::Text(token_name) };
         log_transaction(&mut state, tx_type, ic_cdk::api::time(), None);
     })
 }

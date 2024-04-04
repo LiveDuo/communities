@@ -69,8 +69,7 @@ impl Transaction {
 }
 
 pub fn log_transaction(state: &mut RefMut<'_, State>, txn_type: TransactionType, ts: u64, memo: Option<Vec<u8>>) -> u128 {
-    state.txn_count += 1;
-    let txn_id = state.txn_count;
+    let txn_id = (state.txn_log.len() + 1) as u128;
     let txn = Transaction::new(txn_id, txn_type, ts, memo);
     state.txn_log.insert( txn_id, txn);
     txn_id

@@ -148,12 +148,12 @@ impl Icrc7Token {
 
 #[query]
 pub fn icrc7_symbol() -> String {
-   "ICRC7".to_owned()
+   "COM".to_owned()
 }
 
 #[query]
 pub fn icrc7_name() -> String {
-   "ICRC7 Collection".to_owned()
+    format!("Community {}", &ic_cdk::id().to_text()[0..5])
 }
 #[query]
 pub fn icrc7_description() -> Option<String> {
@@ -401,7 +401,7 @@ async fn mint(mut arg: MintArg) -> MintResult {
 }
 
 fn txn_deduplication_check(state: &RefMut<'_, State>, allowed_past_time: &u64, caller: &Account, args: &TransferArg) -> Result<(), TransferError> {
-    let mut count = state.txn_count;
+    let mut count = state.txn_log.len() as u128;
     while count != 0 {
         let txn = state.txn_log.get(&count).unwrap();
         if txn.ts < *allowed_past_time {
@@ -666,7 +666,7 @@ async fn burn(mut args: Vec<BurnArg>) -> Vec<Option<BurnResult>> {
 }
 
 #[update]
-async fn reset_tokes() -> Result<(), String> {
+async fn reset_tokens() -> Result<(), String> {
     let caller = ic_cdk::caller();
     let (canister_status, )= canister_status(CanisterIdRecord { canister_id: ic_cdk::id() }).await.unwrap();
     if !canister_status.settings.controllers.iter().any(|c| c == &caller) {
