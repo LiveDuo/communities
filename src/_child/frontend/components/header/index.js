@@ -70,6 +70,7 @@ const Header = () => {
           </Menu>
         </Box>)}
         {(account && principal) &&
+        !location.pathname.startsWith('/user') &&
         <Box ml="auto">
           <Link as={RouterLink} to={`/user/${account?.type.toLowerCase()}/${account?.address}`}>
             <Button >
@@ -81,7 +82,7 @@ const Header = () => {
           </Link>
         </Box>}
         {(account && principal) && 
-        <Box display="inline-block" ml="8px">
+        <Box display="inline-block" ml={!location.pathname.startsWith('/user') ? '8px' : 'auto'}>
           <Menu>
             <MenuButton fontSize="25px" as={IconButton} aria-label='Options' icon={<FontAwesomeIcon icon={faEllipsis} />}>
               Sign in with...
