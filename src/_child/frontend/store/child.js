@@ -259,6 +259,7 @@ const ChildProvider = ({ children }) => {
 			auth[type] = {address} 
 		}
 		const response = await childActor.get_posts_by_auth(auth)
+		console.log(response)
 		return response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
 	}, [childActor])
 
