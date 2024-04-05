@@ -153,7 +153,6 @@ const ChildProvider = ({ children }) => {
 
 	const [childActor, setChildActor] = useState()
 	const [posts, setPosts] = useState()
-	const [postsUser, setPostsUser] = useState()
 	const [loading, setLoading] = useState()
 	const [profile, setProfile] = useState()
 	const [profileUser, setProfileUser] = useState()
@@ -252,7 +251,7 @@ const ChildProvider = ({ children }) => {
 		return _hiddenReplies
 	}, [childActor])
 
-	const getPostsByAuth = useCallback(async (address, type) => {
+	const getMostRecentPosts = useCallback(async (address, type) => {
 		const auth = {}
 		if (type === 'Ic') {
 			auth[type] = {principal: Principal.fromText(address)} 
@@ -260,7 +259,7 @@ const ChildProvider = ({ children }) => {
 			auth[type] = {address} 
 		}
 		const response = await childActor.get_posts_by_auth(auth)
-		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
+		return response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
 	}, [childActor])
 
 	const getMostLikedPosts = useCallback(async (address, type) => {

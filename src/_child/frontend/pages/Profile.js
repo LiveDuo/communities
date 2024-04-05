@@ -16,10 +16,11 @@ const Profile = () => {
   const { address, type } = useParams()
   
   const { account } = useContext(IdentityContext)
-  const { getProfileByAuth, getPostsByAuth, postsUser, childActor,  getMostLikedPosts, getMostLikedReplies } = useContext(ChildContext)
+  const { getProfileByAuth, getMostRecentPosts, childActor,  getMostLikedPosts, getMostLikedReplies } = useContext(ChildContext)
   
   const [mostLikedPosts, setMostLikedPosts] = useState() 
   const [mostLikedReplies, setMostLikedReplies] = useState() 
+  const [mostRecentPosts, setMostRecentPosts] = useState() 
 
   const loadMostLikedPosts = useCallback(async () => {
     const mostLikedPosts = await getMostLikedPosts(address, capitalizeFirstLetter(type))
@@ -30,6 +31,11 @@ const Profile = () => {
     const replies = await getMostLikedReplies(address, capitalizeFirstLetter(type))
     setMostLikedReplies(replies)
   },[getMostLikedReplies, address, type])
+  
+  const loadMostRecentPosts = useCallback(async () => {
+    const posts = await getMostRecentPosts(address, capitalizeFirstLetter(type))
+    setMostRecentPosts(posts)
+  },[loadMostRecentPosts, address, type])
 
   useEffect(() => {
     if (address) {
@@ -42,6 +48,7 @@ const Profile = () => {
       getPostsByAuth(address, capitalizeFirstLetter(type))
       loadMostLikedPosts()
       loadMostLikedReplies()
+      loadMostRecentPosts()
     }
   },[childActor, getPostsByAuth, address, type, loadMostLikedPosts, loadMostLikedReplies])
 
@@ -80,7 +87,7 @@ const Profile = () => {
 
         <TabPanels>
           <TabPanel>
-            <PostsContainer posts={postsUser} />
+            <PostsContainer posts={mostRecentPosts} />
           </TabPanel>
           <TabPanel>
           <Box>
