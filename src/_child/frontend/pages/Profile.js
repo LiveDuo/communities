@@ -4,10 +4,10 @@ import { Box, Text, Badge } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 
 import { capitalizeFirstLetter, getSeedFromAccount } from '../utils/address'
-import PostsContainer from '../components/containers/posts'
+import EntriesContainer from '../components/containers/entries'
 import { IdentityContext } from '../store/identity'
 import { ChildContext } from '../store/child'
-import { timeSince } from '../utils/time'
+// import { timeSince } from '../utils/time'
 
 import Jazzicon from 'react-jazzicon'
 
@@ -64,27 +64,29 @@ const Profile = () => {
 
         <TabPanels>
           <TabPanel>
-            <PostsContainer posts={postsUser} />
+            <EntriesContainer entries={postsUser} />
           </TabPanel>
           <TabPanel>
           <Box>
-            {mostLikedPosts && mostLikedPosts.map((p, i)=> (
+            <EntriesContainer entries={mostLikedPosts} />
+            {/* {mostLikedPosts && mostLikedPosts.map((p, i)=> (
               <Box key={i}>
                 <Text>{p.title}</Text>
                 <Text>{p.description}</Text>
                 <Text>{timeSince(p.timestamp)}</Text>
               </Box>
-            ))}
+            ))} */}
           </Box>
           </TabPanel>
           <TabPanel>
           <Box>
-            {mostLikedReplies && mostLikedReplies.map((p, i)=> (
+            <EntriesContainer entries={mostLikedReplies} />
+            {/* {mostLikedReplies && mostLikedReplies.map((p, i)=> (
               <Box key={i}>
                 <Text>{p.text}</Text>
                 <Text>{timeSince(p.timestamp)}</Text>
               </Box>
-            ))}
+            ))} */}
           </Box>
           </TabPanel>
         </TabPanels>
