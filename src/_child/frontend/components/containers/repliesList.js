@@ -7,7 +7,7 @@ import { getAddress, addressShort, getExplorerUrl, getSeedFromAuthentication } f
 
 import { useNavigate } from 'react-router-dom'
 
-const EntriesContainer = ({ entries }) => {
+const RepliesContainer = ({ replies }) => {
   
   const navigate = useNavigate()
 
@@ -15,23 +15,23 @@ const EntriesContainer = ({ entries }) => {
     navigate(`/post/${i}`)
 	}
 
-  if (!entries) return <Spinner/>
+  if (!replies) return <Spinner/>
 
   return  <Box mt="32px" textAlign="center" m="auto">
-      {entries?.length > 0 ?
+      {replies?.length > 0 ?
         <Box>
           <Flex mb="12px">
             <Text color="gray.500" ml="52px" mr="auto">Topic</Text>
             <Text color="gray.500" width="120px" textAlign="center">Last Activity</Text>
             <Text color="gray.500" mr="40px" width="80px" textAlign="center">Replies</Text>
           </Flex>
-          {entries.map((p, i) => 
+          {replies.map((p, i) => 
             <Box opacity={p.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
               <Flex alignItems="center">
                 <Flex alignItems={'center'} mr="auto" _hover={{cursor: 'pointer', opacity: 0.7}} >
                   <Link href={!p.post_id ? '' : `/post/${p.post_id.toString()}`} onClick={(e) => {e.preventDefault(); !!p.post_id && goToPost(p.post_id.toString())}} _hover={{textDecor: 'none'}}  cursor={!p.post_id && 'not-allowed'}>
                     <Heading noOfLines={1} size="sm">{p.title}</Heading>
-                    {/* <Text noOfLines={1}>{p.description}</Text> */}
+                    <Text noOfLines={1}>{p.description}</Text>
                   </Link>
                   {!p.post_id && <Spinner ml="10px" size={'xs'}/>}
                 </Flex>
@@ -47,7 +47,7 @@ const EntriesContainer = ({ entries }) => {
               </Flex>
             </Box>)}
         </Box> : 
-        <Text mt="20px">No entries yet</Text>}
+        <Text mt="20px">No replies yet</Text>}
     </Box>
 }
-export default EntriesContainer
+export default RepliesContainer

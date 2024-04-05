@@ -4,7 +4,8 @@ import { Box, Text, Badge, Link } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 
 import { capitalizeFirstLetter, getSeedFromAccount, getExplorerUrl, getAuthentication } from '../utils/address'
-import EntriesContainer from '../components/containers/entries'
+import PostsContainer from '../components/containers/postsList'
+import RepliesContainer from '../components/containers/repliesList'
 import { IdentityContext } from '../store/identity'
 import { ChildContext } from '../store/child'
 // import { timeSince } from '../utils/time'
@@ -79,11 +80,11 @@ const Profile = () => {
 
         <TabPanels>
           <TabPanel>
-            <EntriesContainer entries={postsUser} />
+            <PostsContainer posts={postsUser} />
           </TabPanel>
           <TabPanel>
           <Box>
-            <EntriesContainer entries={mostLikedPosts} />
+            <PostsContainer posts={mostLikedPosts} />
             {/* {mostLikedPosts && mostLikedPosts.map((p, i)=> (
               <Box key={i}>
                 <Text>{p.title}</Text>
@@ -95,7 +96,7 @@ const Profile = () => {
           </TabPanel>
           <TabPanel>
           <Box>
-            <EntriesContainer entries={mostLikedReplies} />
+            <RepliesContainer replies={mostLikedReplies} />
             {/* {mostLikedReplies && mostLikedReplies.map((p, i)=> (
               <Box key={i}>
                 <Text>{p.text}</Text>
