@@ -201,7 +201,9 @@ pub struct Indexes {
     pub profile: HashMap<AuthenticationWithAddress, u64>,
     pub active_principal: HashMap<Principal, u64>,
     pub has_liked_post: HashMap<(u64, u64), ()>,
-    pub has_liked_reply: HashMap<(u64, u64), ()>
+    pub has_liked_reply: HashMap<(u64, u64), ()>,
+    pub most_liked_replies: HashMap<u64, Vec<(u64, u64)>>,
+    pub most_liked_posts: HashMap<u64, Vec<(u64, u64)>>,
 }
 #[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct Metadata {

@@ -110,6 +110,7 @@ pub fn burn_account() -> Account {
         subaccount: Some(burn_subaccount()),
     }
 }
+
 pub fn account_transformer(account: Account) -> Account {
     if let Some(_) = account.subaccount {
         account

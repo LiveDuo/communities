@@ -335,6 +335,48 @@ fn like_post(post_id: u64) -> Result<u64, String> {
         state.relations.post_id_to_liked_post_id.insert(post_id, liked_post_id.to_owned());
         state.relations.profile_id_to_liked_post_id.insert(profile_id, liked_post_id.to_owned());
         state.indexes.has_liked_post.insert((profile_id.to_owned(), post_id.to_owned()), ());
+
+        let profile_ids = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().to_owned();
+        let (profile_id, _) = profile_ids.first_key_value().unwrap(); 
+        let likes = state.relations.post_id_to_liked_post_id.forward.get(&post_id).unwrap().len() as u64;
+
+        let mosts_liked_posts_otp = state.indexes.most_liked_posts.get_mut(profile_id);
+
+        if mosts_liked_posts_otp.is_none() {
+            state.indexes.most_liked_posts.insert(profile_id.clone(), vec![(post_id.clone(), 1)]);
+        } else {
+            let mosts_liked_posts  = mosts_liked_posts_otp.unwrap();
+            let mut exists = false;
+            
+            for (index, (_post_id, _likes)) in  mosts_liked_posts.iter().enumerate() {
+                if _post_id == &post_id {
+                    if index == 0 {
+                        mosts_liked_posts[index] = (*_post_id, _likes +1);
+                        exists = true;
+                        break;
+                    } else if mosts_liked_posts[index - 1].1 < _likes + 1 {
+                        let temp = mosts_liked_posts[index - 1];
+                        mosts_liked_posts[index - 1] = (*_post_id, _likes + 1);
+                        mosts_liked_posts[index] = temp;
+                        exists = true;
+                        break;
+                    } else {
+                        mosts_liked_posts[index] = (*_post_id, _likes + 1);
+                        exists = true;
+                        break;
+                    }
+                }
+            }
+            if !exists && mosts_liked_posts.len() > 10 {
+                mosts_liked_posts.push((post_id, likes));
+            } else if !exists && mosts_liked_posts[mosts_liked_posts.len()- 1].1 < likes {
+                let i = mosts_liked_posts.len()- 1;
+                mosts_liked_posts[i] = (post_id, likes);
+            }
+            let result = mosts_liked_posts.to_vec();
+            state.indexes.most_liked_posts.insert(profile_id.clone(), result);
+        }
+
         Ok(liked_post_id)
     })
 }
