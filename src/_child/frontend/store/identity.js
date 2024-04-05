@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useCallback } from 'react'
 import { useDisclosure } from '@chakra-ui/react'
 
-import {loadAccount, clearAccount, saveAccount } from '../utils/stoge'
+import {loadAccount, clearAccount, saveAccount } from '../utils/storage'
 
 import { Actor } from '@dfinity/agent'
 

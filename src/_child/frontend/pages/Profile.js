@@ -6,8 +6,9 @@ import PostsContainer from '../components/containers/posts'
 // import UserInfo from '../components/user/UserInfo'
 import { ChildContext } from '../store/child'
 import { timeSince } from '../utils/time'
+import { capitalizeFirstLetter } from '../utils/address'
 
-const UserPost = () => {
+const Profile = () => {
   const [mostLikedPosts, setMostLikedPosts] = useState() 
   const [mostLikedReplies, setMostLikedReplies] = useState() 
   const { address, type } = useParams()
@@ -15,21 +16,21 @@ const UserPost = () => {
   const { getProfileByAuth, getPostsByAuth, postsUser, childActor,  getMostLikedPosts, getMostLikedReplies } = useContext(ChildContext)
 
   const getData = useCallback(async () => {
-    const posts = await getMostLikedPosts(address, type)
+    const posts = await getMostLikedPosts(address, capitalizeFirstLetter(type))
     setMostLikedPosts(posts)
-    const replies = await getMostLikedReplies(address, type)
+    const replies = await getMostLikedReplies(address, capitalizeFirstLetter(type))
     setMostLikedReplies(replies)
   },[getMostLikedPosts, getMostLikedReplies, address, type])
 
   useEffect(() => {
     if (address) {
-      getProfileByAuth(address, type)
+      getProfileByAuth(address, capitalizeFirstLetter(type))
     }
   }, [getProfileByAuth, address, type])
 
   useEffect(() => {
     if (childActor) {
-      getPostsByAuth(address, type)
+      getPostsByAuth(address, capitalizeFirstLetter(type))
       getData()
     }
   },[childActor, getPostsByAuth, address, type, getData])
@@ -58,4 +59,4 @@ const UserPost = () => {
     </Box>
   )
 }
-export default UserPost
+export default Profile
