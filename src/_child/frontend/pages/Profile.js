@@ -36,8 +36,7 @@ const UserPost = () => {
 
   return (
     <Box>
-      <Box mb="40px">
-      </Box>
+      <Box mb="40px"></Box>
       <PostsContainer posts={postsUser} />
       <Box>
         {mostLikedPosts && mostLikedPosts.map((p, i)=> (

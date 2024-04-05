@@ -71,7 +71,7 @@ const Header = () => {
         </Box>)}
         {(account && principal) &&
         <Box ml="auto">
-          <Link as={RouterLink} to={`/user/${account?.address}/${account?.type}`}>
+          <Link as={RouterLink} to={`/user/${account?.type.toLowerCase()}/${account?.address}`}>
             <Button >
               <Box h="16px" w="16px" mr="8px">
                 <Jazzicon diameter={20} seed={getSeedFromAccount(account)} />
