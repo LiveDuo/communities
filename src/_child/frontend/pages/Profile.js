@@ -60,7 +60,7 @@ const Profile = () => {
             <Text display="inline" mb="20px">{address}</Text>
           </Link>}
         </Box>
-        <Box mb="20px">
+        <Box mb="40px">
           <Box display="inline">
             <Badge mr="8px" fontSize={'xs'}>Last login: 2/2/22</Badge>
             <Badge mr="8px" fontSize={'xs'}>Join date: 3/3/23</Badge>
@@ -74,7 +74,7 @@ const Profile = () => {
       <Tabs>
         <TabList>
           <Tab>Recent posts</Tab>
-          <Tab>Top tops</Tab>
+          <Tab>Top posts</Tab>
           <Tab>Top replies</Tab>
         </TabList>
 
@@ -85,24 +85,11 @@ const Profile = () => {
           <TabPanel>
           <Box>
             <PostsContainer posts={mostLikedPosts} />
-            {/* {mostLikedPosts && mostLikedPosts.map((p, i)=> (
-              <Box key={i}>
-                <Text>{p.title}</Text>
-                <Text>{p.description}</Text>
-                <Text>{timeSince(p.timestamp)}</Text>
-              </Box>
-            ))} */}
           </Box>
           </TabPanel>
           <TabPanel>
           <Box>
             <RepliesContainer replies={mostLikedReplies} />
-            {/* {mostLikedReplies && mostLikedReplies.map((p, i)=> (
-              <Box key={i}>
-                <Text>{p.text}</Text>
-                <Text>{timeSince(p.timestamp)}</Text>
-              </Box>
-            ))} */}
           </Box>
           </TabPanel>
         </TabPanels>

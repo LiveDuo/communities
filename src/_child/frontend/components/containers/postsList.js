@@ -2,7 +2,7 @@ import { Spinner, Box, Link, Heading } from '@chakra-ui/react'
 import { Text, Flex, Tooltip } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
-import { timeSinceShort } from '../../utils/time'
+// import { timeSinceShort } from '../../utils/time'
 import { getAddress, addressShort, getExplorerUrl, getSeedFromAuthentication } from '../../utils/address'
 
 import { useNavigate } from 'react-router-dom'
@@ -24,6 +24,7 @@ const PostsContainer = ({ posts }) => {
             <Text color="gray.500" ml="52px" mr="auto">Topic</Text>
             <Text color="gray.500" width="120px" textAlign="center">Last Activity</Text>
             <Text color="gray.500" mr="40px" width="80px" textAlign="center">Replies</Text>
+            <Text color="gray.500" mr="40px" width="80px" textAlign="center">Likes</Text>
           </Flex>
           {posts.map((p, i) => 
             <Box opacity={p.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
@@ -33,7 +34,7 @@ const PostsContainer = ({ posts }) => {
                     <Heading noOfLines={1} size="sm">{p.title}</Heading>
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>
-                  {!p.post_id && <Spinner ml="10px" size={'xs'}/>}
+                  {/* {!p.post_id && <Spinner ml="10px" size={'xs'}/>} */}
                 </Flex>
                 <Tooltip label={addressShort(getAddress(p?.authentication))}>
                   <Link href={getExplorerUrl(p.authentication)} isExternal>
@@ -42,8 +43,8 @@ const PostsContainer = ({ posts }) => {
                     </Box>
                   </Link>
                 </Tooltip>
-                <Text width="120px" textAlign="center">{timeSinceShort(p.last_activity)}</Text>
-                <Text width="80px" textAlign="center">{p.replies_count.toString()}</Text>
+                {/* <Text width="120px" textAlign="center">{timeSinceShort(p.last_activity)}</Text> */}
+                {/* <Text width="80px" textAlign="center">{p.replies_count.toString()}</Text> */}
               </Flex>
             </Box>)}
         </Box> : 
