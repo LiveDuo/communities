@@ -1,15 +1,20 @@
 import { useEffect, useContext, useState, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { Box, Text } from '@chakra-ui/react'
+import { Box, Text, Badge } from '@chakra-ui/react'
+import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 
+import { capitalizeFirstLetter, getSeedFromAccount } from '../utils/address'
 import PostsContainer from '../components/containers/posts'
+import { IdentityContext } from '../store/identity'
 import { ChildContext } from '../store/child'
 import { timeSince } from '../utils/time'
-import { capitalizeFirstLetter } from '../utils/address'
+
+import Jazzicon from 'react-jazzicon'
 
 const Profile = () => {
   const { address, type } = useParams()
   
+  const { account } = useContext(IdentityContext)
   const { getProfileByAuth, getPostsByAuth, postsUser, childActor,  getMostLikedPosts, getMostLikedReplies } = useContext(ChildContext)
   
   const [mostLikedPosts, setMostLikedPosts] = useState() 
@@ -41,26 +46,49 @@ const Profile = () => {
 
   return (
     <Box>
-      <Box mb="40px">
-        <PostsContainer posts={postsUser} />
+      
+      <Box mb="20px">
+        <Box mb="20px">
+          <Jazzicon diameter={60} seed={getSeedFromAccount(account)} />
+        </Box>
+        <Text mb="20px">{address}</Text>
+        <Badge>{type.toUpperCase()}</Badge>
       </Box>
-      <Box>
-        {mostLikedPosts && mostLikedPosts.map((p, i)=> (
-          <Box key={i}>
-            <Text>{p.title}</Text>
-            <Text>{p.description}</Text>
-            <Text>{timeSince(p.timestamp)}</Text>
+
+      <Tabs>
+        <TabList>
+          <Tab>Recent posts</Tab>
+          <Tab>Top tops</Tab>
+          <Tab>Top replies</Tab>
+        </TabList>
+
+        <TabPanels>
+          <TabPanel>
+            <PostsContainer posts={postsUser} />
+          </TabPanel>
+          <TabPanel>
+          <Box>
+            {mostLikedPosts && mostLikedPosts.map((p, i)=> (
+              <Box key={i}>
+                <Text>{p.title}</Text>
+                <Text>{p.description}</Text>
+                <Text>{timeSince(p.timestamp)}</Text>
+              </Box>
+            ))}
           </Box>
-        ))}
-      </Box>
-      <Box>
-        {mostLikedReplies && mostLikedReplies.map((p, i)=> (
-          <Box key={i}>
-            <Text>{p.text}</Text>
-            <Text>{timeSince(p.timestamp)}</Text>
+          </TabPanel>
+          <TabPanel>
+          <Box>
+            {mostLikedReplies && mostLikedReplies.map((p, i)=> (
+              <Box key={i}>
+                <Text>{p.text}</Text>
+                <Text>{timeSince(p.timestamp)}</Text>
+              </Box>
+            ))}
           </Box>
-        ))}
-      </Box>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </Box>
   )
 }
