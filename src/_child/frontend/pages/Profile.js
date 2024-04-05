@@ -49,10 +49,10 @@ const Profile = () => {
       
       <Box mb="20px">
         <Box mb="20px">
-          <Jazzicon diameter={60} seed={getSeedFromAccount(account)} />
+          <Jazzicon diameter={60} seed={account ? getSeedFromAccount(account) : ''} />
         </Box>
         <Text mb="20px">{address}</Text>
-        <Badge>{type.toUpperCase()}</Badge>
+        <Badge fontSize={'md'}>{type?.toUpperCase()}</Badge>
       </Box>
 
       <Tabs>
