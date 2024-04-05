@@ -35,7 +35,7 @@ const Profile = () => {
   const loadMostRecentPosts = useCallback(async () => {
     const posts = await getMostRecentPosts(address, capitalizeFirstLetter(type))
     setMostRecentPosts(posts)
-  },[loadMostRecentPosts, address, type])
+  },[getMostRecentPosts, address, type])
 
   useEffect(() => {
     if (address) {
@@ -45,12 +45,11 @@ const Profile = () => {
 
   useEffect(() => {
     if (childActor) {
-      getPostsByAuth(address, capitalizeFirstLetter(type))
+      loadMostRecentPosts()
       loadMostLikedPosts()
       loadMostLikedReplies()
-      loadMostRecentPosts()
     }
-  },[childActor, getPostsByAuth, address, type, loadMostLikedPosts, loadMostLikedReplies])
+  },[childActor, loadMostRecentPosts, address, type, loadMostLikedPosts, loadMostLikedReplies])
 
   return (
     <Box>

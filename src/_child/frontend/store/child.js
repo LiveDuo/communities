@@ -392,7 +392,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getMostLikedPosts, getMostLikedReplies, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
+	const value = {childActor, profile, profileUser, setProfile , getProfileByAuth, getMostLikedPosts, getMostLikedReplies, getMostRecentPosts, getProfile, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 
