@@ -3,24 +3,27 @@ import { useParams } from 'react-router-dom'
 import { Box, Text } from '@chakra-ui/react'
 
 import PostsContainer from '../components/containers/posts'
-// import UserInfo from '../components/user/UserInfo'
 import { ChildContext } from '../store/child'
 import { timeSince } from '../utils/time'
 import { capitalizeFirstLetter } from '../utils/address'
 
 const Profile = () => {
+  const { address, type } = useParams()
+  
+  const { getProfileByAuth, getPostsByAuth, postsUser, childActor,  getMostLikedPosts, getMostLikedReplies } = useContext(ChildContext)
+  
   const [mostLikedPosts, setMostLikedPosts] = useState() 
   const [mostLikedReplies, setMostLikedReplies] = useState() 
-  const { address, type } = useParams()
 
-  const { getProfileByAuth, getPostsByAuth, postsUser, childActor,  getMostLikedPosts, getMostLikedReplies } = useContext(ChildContext)
-
-  const getData = useCallback(async () => {
-    const posts = await getMostLikedPosts(address, capitalizeFirstLetter(type))
-    setMostLikedPosts(posts)
+  const loadMostLikedPosts = useCallback(async () => {
+    const mostLikedPosts = await getMostLikedPosts(address, capitalizeFirstLetter(type))
+    setMostLikedPosts(mostLikedPosts)
+  },[getMostLikedPosts, address, type])
+  
+  const loadMostLikedReplies = useCallback(async () => {
     const replies = await getMostLikedReplies(address, capitalizeFirstLetter(type))
     setMostLikedReplies(replies)
-  },[getMostLikedPosts, getMostLikedReplies, address, type])
+  },[getMostLikedReplies, address, type])
 
   useEffect(() => {
     if (address) {
@@ -31,14 +34,16 @@ const Profile = () => {
   useEffect(() => {
     if (childActor) {
       getPostsByAuth(address, capitalizeFirstLetter(type))
-      getData()
+      loadMostLikedPosts()
+      loadMostLikedReplies()
     }
-  },[childActor, getPostsByAuth, address, type, getData])
+  },[childActor, getPostsByAuth, address, type, loadMostLikedPosts, loadMostLikedReplies])
 
   return (
     <Box>
-      <Box mb="40px"></Box>
-      <PostsContainer posts={postsUser} />
+      <Box mb="40px">
+        <PostsContainer posts={postsUser} />
+      </Box>
       <Box>
         {mostLikedPosts && mostLikedPosts.map((p, i)=> (
           <Box key={i}>

@@ -2,7 +2,6 @@ import { useEffect, useContext } from 'react'
 import { Box, Button, useDisclosure } from '@chakra-ui/react'
 
 import PostsContainer from '../components/containers/posts'
-// import WritePost from '../components/posts/WritePost'
 
 import { ChildContext } from '../store/child'
 import { IdentityContext } from '../store/identity'
@@ -35,7 +34,9 @@ const Home = () => {
 
   return (
     <Box>
-      <Button mt="28px" leftIcon={<FontAwesomeIcon icon={faPenToSquare} />} mb="28px" w="200px" onClick={onCreatePost}>New Post</Button>
+      <Box>
+        <Button mt="28px" leftIcon={<FontAwesomeIcon icon={faPenToSquare} />} mb="28px" w="200px" onClick={onCreatePost}>New Post</Button>
+      </Box>
       <PostModal isOpen={isPostOpen} onClose={onPostClose} createPost={createPost}/>
 
       <PostsContainer posts={posts} />
