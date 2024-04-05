@@ -20,8 +20,8 @@ const RepliesContainer = ({ replies }) => {
         <Box>
           <Flex mb="12px">
             <Text color="gray.500" ml="52px" mr="auto">Text</Text>
-            <Text color="gray.500" width="120px" textAlign="center">Timestamp</Text>
-            <Text color="gray.500" mr="40px" width="80px" textAlign="center">Likes</Text>
+            <Text color="gray.500" width="80px" textAlign="center">Likes</Text>
+            <Text color="gray.500" mr="40px" width="120px" textAlign="center">Timestamp</Text>
           </Flex>
           {replies.map((p, i) => 
             <Box opacity={p.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
@@ -31,8 +31,8 @@ const RepliesContainer = ({ replies }) => {
                     <Text noOfLines={1}>{p.text}</Text>
                   </Link>
                 </Flex>
-                <Text width="120px" textAlign="center">{timeSinceShort(p.timestamp)}</Text>
                 <Text width="80px" textAlign="center">{p.likes.length}</Text>
+                <Text width="120px" textAlign="center">{timeSinceShort(p.timestamp)}</Text>
               </Flex>
             </Box>)}
         </Box> : 
