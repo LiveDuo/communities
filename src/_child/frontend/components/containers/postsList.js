@@ -1,9 +1,5 @@
 import { Spinner, Box, Link, Heading } from '@chakra-ui/react'
-import { Text, Flex, Tooltip } from '@chakra-ui/react'
-import Jazzicon from 'react-jazzicon'
-
-// import { timeSinceShort } from '../../utils/time'
-import { getAddress, addressShort, getExplorerUrl, getSeedFromAuthentication } from '../../utils/address'
+import { Text, Flex } from '@chakra-ui/react'
 
 import { useNavigate } from 'react-router-dom'
 
@@ -22,7 +18,7 @@ const PostsContainer = ({ posts }) => {
         <Box>
           <Flex mb="12px">
             <Text color="gray.500" ml="52px" mr="auto">Topic</Text>
-            <Text color="gray.500" width="120px" textAlign="center">Last Activity</Text>
+            <Text color="gray.500" width="120px" textAlign="center">Timestamp</Text>
             <Text color="gray.500" mr="40px" width="80px" textAlign="center">Replies</Text>
             <Text color="gray.500" mr="40px" width="80px" textAlign="center">Likes</Text>
           </Flex>
@@ -34,17 +30,10 @@ const PostsContainer = ({ posts }) => {
                     <Heading noOfLines={1} size="sm">{p.title}</Heading>
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>
-                  {/* {!p.post_id && <Spinner ml="10px" size={'xs'}/>} */}
                 </Flex>
-                <Tooltip label={addressShort(getAddress(p?.authentication))}>
-                  <Link href={getExplorerUrl(p.authentication)} isExternal>
-                    <Box width="40px" height="20px" textAlign="center" _hover={{cursor: 'pointer', opacity: 0.7}}>
-                      <Jazzicon diameter={20} seed={getSeedFromAuthentication(p?.authentication)} />
-                    </Box>
-                  </Link>
-                </Tooltip>
-                {/* <Text width="120px" textAlign="center">{timeSinceShort(p.last_activity)}</Text> */}
-                {/* <Text width="80px" textAlign="center">{p.replies_count.toString()}</Text> */}
+                <Text width="120px" textAlign="center">{timeSinceShort(p.timestamp)}</Text>
+                <Text width="80px" textAlign="center">{p.replies.length}</Text>
+                <Text width="80px" textAlign="center">{p.likes.length}</Text>
               </Flex>
             </Box>)}
         </Box> : 

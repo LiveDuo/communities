@@ -1,9 +1,7 @@
 import { Spinner, Box, Link } from '@chakra-ui/react'
-import { Text, Flex, Tooltip } from '@chakra-ui/react'
-import Jazzicon from 'react-jazzicon'
+import { Text, Flex } from '@chakra-ui/react'
 
 import { timeSinceShort } from '../../utils/time'
-import { getAddress, addressShort, getExplorerUrl, getSeedFromAuthentication } from '../../utils/address'
 
 import { useNavigate } from 'react-router-dom'
 
@@ -30,19 +28,11 @@ const RepliesContainer = ({ replies }) => {
               <Flex alignItems="center">
                 <Flex alignItems={'center'} mr="auto" _hover={{cursor: 'pointer', opacity: 0.7}} >
                   <Link href={!p.post_id ? '' : `/post/${p.post_id.toString()}`} onClick={(e) => {e.preventDefault(); !!p.post_id && goToPost(p.post_id.toString())}} _hover={{textDecor: 'none'}}  cursor={!p.post_id && 'not-allowed'}>
-                    {/* <Heading noOfLines={1} size="sm">{p.text}</Heading> */}
                     <Text noOfLines={1}>{p.text}</Text>
                   </Link>
-                  {/* {!p.post_id && <Spinner ml="10px" size={'xs'}/>} */}
                 </Flex>
-                <Tooltip label={addressShort(getAddress(p?.authentication))}>
-                  <Link href={getExplorerUrl(p.authentication)} isExternal>
-                    <Box width="40px" height="20px" textAlign="center" _hover={{cursor: 'pointer', opacity: 0.7}}>
-                      <Jazzicon diameter={20} seed={getSeedFromAuthentication(p?.authentication)} />
-                    </Box>
-                  </Link>
-                </Tooltip>
                 <Text width="120px" textAlign="center">{timeSinceShort(p.timestamp)}</Text>
+                <Text width="80px" textAlign="center">{p.likes.length}</Text>
               </Flex>
             </Box>)}
         </Box> : 
