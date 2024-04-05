@@ -33,8 +33,8 @@ const PostsContainer = ({ posts }) => {
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>
                 </Flex>
-                <Text width="80px" textAlign="center">{p.replies?.length ?? p.replies_count}</Text>
-                <Text width="80px" textAlign="center">{p.likes.length}</Text>
+                <Text width="80px" textAlign="center">{p.replies?.length ?? 0}</Text>
+                <Text width="80px" textAlign="center">{p.likes?.length ?? 0}</Text>
                 <Text width="120px" textAlign="center">{timeSinceShort(p.timestamp)}</Text>
               </Flex>
             </Box>)}
