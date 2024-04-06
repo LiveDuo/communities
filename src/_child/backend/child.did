@@ -234,7 +234,7 @@ service : (opt principal, opt text, opt text ) -> {
   get_most_liked_replies : (AuthenticationWithAddress) -> (GetMostReplyResult) query;
   get_hidden_posts : () -> (GetHiddenPostsResult) query;
   get_hidden_replies : () -> (GetHiddenReplyResult) query;
-  get_posts_by_auth : (AuthenticationWithAddress) -> (GetPostsByAuthResult) query;
+  get_most_recent_posts : (AuthenticationWithAddress) -> (GetPostsByAuthResult) query;
   get_profile : () -> (GetProfileResult) query;
   get_profile_by_auth : (AuthenticationWithAddress) -> (opt ProfileResponse) query;
   get_metadata: () -> (GetMetadataResult) query;

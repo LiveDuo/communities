@@ -133,7 +133,7 @@ const idlFactory = ({ IDL }) => {
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-		get_posts_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_most_recent_posts: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
 		get_most_liked_posts_mock: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
 		get_most_liked_replies_mock: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(ReplyResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
@@ -258,7 +258,7 @@ const ChildProvider = ({ children }) => {
 		} else if(type === 'Evm' || type === 'Svm') {
 			auth[type] = {address} 
 		}
-		const response = await childActor.get_posts_by_auth(auth)
+		const response = await childActor.get_most_recent_posts(auth)
 		console.log(response)
 		return response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
 	}, [childActor])

@@ -57,7 +57,7 @@ describe('Testing with done', () => {
 		expect(identityEvm.getPrincipal().toString()).toBe(principal)
 		
 		await actorBackendEvm.create_post('hello', '')
-		const userPosts = await actorBackendEvm.get_posts_by_auth({Evm: { address: signerAddress}})
+		const userPosts = await actorBackendEvm.get_most_recent_posts({Evm: { address: signerAddress}})
 		expect(userPosts.Ok.length).toBe(1)
 		identityEvm = Ed25519KeyIdentity.generate()
 		const {signature: signature1, loginMessageHash: loginMessageHash1} = await getSignatureAndMessage(signerEvm, identityEvm.getPrincipal())
@@ -76,7 +76,7 @@ describe('Testing with done', () => {
 		expect(identityEvm.getPrincipal().toString()).toBe(principal2)
 
 		await actorBackendEvm.create_post('hello', '')
-		const userPosts2 = await actorBackendEvm.get_posts_by_auth({Evm: { address: signerAddress}})
+		const userPosts2 = await actorBackendEvm.get_most_recent_posts({Evm: { address: signerAddress}})
 		expect(userPosts2.Ok.length).toBe(2)
 		
 	})
@@ -90,7 +90,7 @@ describe('Testing with done', () => {
 		expect(address).toBe(signerSvm.publicKey.toString());
 
 		await actorBackendSvm.create_post('hello', '')
-		const userPosts = await actorBackendSvm.get_posts_by_auth({Svm: { address: signerSvm.publicKey.toString()}})
+		const userPosts = await actorBackendSvm.get_most_recent_posts({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts.Ok.length).toBe(1)
 
 		identitySvm = Ed25519KeyIdentity.generate()
@@ -108,7 +108,7 @@ describe('Testing with done', () => {
 		expect(address2).toBe(signerSvm.publicKey.toString());
 
 		await actorBackendSvm.create_post('hello', '')
-		const userPosts2 = await actorBackendSvm.get_posts_by_auth({Svm: { address: signerSvm.publicKey.toString()}})
+		const userPosts2 = await actorBackendSvm.get_most_recent_posts({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts2.Ok.length).toBe(2)
   	});
 	test("Should sign in with internet computer", async () => {
@@ -118,7 +118,7 @@ describe('Testing with done', () => {
 		expect(principal.toString()).toBe(identityIc.getPrincipal().toString())
 
 		await actorBackendIc.create_post('hello', '')
-		const userPosts = await actorBackendIc.get_posts_by_auth({Ic: {principal: principal}})
+		const userPosts = await actorBackendIc.get_most_recent_posts({Ic: {principal: principal}})
 		expect(userPosts.Ok.length).toBe(1)
 
 
@@ -128,7 +128,7 @@ describe('Testing with done', () => {
     	expect(principal1.toString()).toBe(identityIc.getPrincipal().toString())
 
 		await actorBackendIc.create_post('hello', '')
-		const userPosts2 = await actorBackendIc.get_posts_by_auth({Ic: {principal: principal1}})
+		const userPosts2 = await actorBackendIc.get_most_recent_posts({Ic: {principal: principal1}})
 		expect(userPosts2.Ok.length).toBe(2)
   	});
 
@@ -143,8 +143,8 @@ describe('Testing with done', () => {
 
 		// get user last post
 		const principal = identityIc.getPrincipal()
-		const userPosts = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
-		const userLastPost = userPosts.Ok.sort((a, b) => Number(b.timestamp / 1000n / 1000n) -  Number(a.timestamp / 1000n / 1000n)).at(0)
+		const userPosts = await actorBackendIc.get_most_recent_posts({Ic: { principal: principal}})
+		const userLastPost = userPosts.Ok[0]
 
 		expect(userLastPost.title).toBe('hello')
 		expect(userLastPost.replies_count).toBe(1n)
@@ -181,7 +181,7 @@ describe('Testing with done', () => {
 		expect(postIds.every((postId, index)=> mostLikedPosts1.Ok[index].post_id === postId)).toBe(true)
 
 		// like "most liked post"
-		await actors[2].like_post(postIds[9])
+		await actorBackendIc.like_post(postIds[9])
 		postIds = [postIds[9], postIds[0], ...postIds.slice(1, 8)]
 		const mostLikedPosts2 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
 		expect(postIds.every((postId, index)=> mostLikedPosts2.Ok[index].post_id === postId)).toBe(true)
@@ -198,6 +198,13 @@ describe('Testing with done', () => {
 		const mostLikedPosts4 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
 		postIds = [postIds[0], postId, ...postIds.slice(1, 8)]
 		expect(postIds.every((postId, index)=> mostLikedPosts4.Ok[index].post_id === postId)).toBe(true)
+
+		// unlike "most liked reply"
+		const likePost = mostLikedPosts4.Ok[0].likes.filter(([_, auth]) => auth.Ic.principal.toText() === principal.toText())
+		const [ likePostId ] = likePost[0]
+		await actorBackendIc.unlike_post(likePostId)
+		const mostLikedPosts5 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
+		expect(mostLikedPosts5.Ok[0].post_id).toBe(postIds[1])
 	})
 
 	test('Should create replies and get the most like replies', async () => {
@@ -228,11 +235,12 @@ describe('Testing with done', () => {
 			replyIds.push(replyId)
 			
 		}
+		
 		const mostLikedReplies1 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
 		expect(replyIds.every((replyId, index)=> mostLikedReplies1.Ok[index].reply_id === replyId)).toBe(true)
 
 		// like "most liked reply"
-		await actors[2].like_reply(replyIds[9])
+		await actorBackendIc.like_reply(replyIds[9])
 		replyIds = [replyIds[9], replyIds[0], ...replyIds.slice(1, 8)]
 		const mostLikedReplies2 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
 		expect(replyIds.every((replyId, index)=> mostLikedReplies2.Ok[index].reply_id === replyId)).toBe(true)
@@ -249,6 +257,13 @@ describe('Testing with done', () => {
 		const mostLikedReplies4 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
 		replyIds = [replyIds[0], replyId, ...replyIds.slice(1, 8)]
 		expect(replyIds.every((replyId, index)=> mostLikedReplies4.Ok[index].reply_id === replyId)).toBe(true)
+
+		// unlike "most liked reply"
+		const likeReply = mostLikedReplies4.Ok[0].likes.filter(([_, auth]) => auth.Ic.principal.toText() === principal.toText())
+		const [ likeReplyId ] = likeReply[0]
+		await actorBackendIc.unlike_reply(likeReplyId)
+		const mostLikedReplies5 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
+		expect(mostLikedReplies5.Ok[0].reply_id).toBe(replyIds[1])
 	})
 
 	test.skip('Should create, hide and restore a post', async () => {
@@ -259,7 +274,7 @@ describe('Testing with done', () => {
 		const postId = createdPost.Ok.post_id
 
 		const posts = await actorBackendIc.get_posts()
-		const userPosts = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
+		const userPosts = await actorBackendIc.get_most_recent_posts({Ic: { principal: principal}})
 		const post = await actorBackendIc.get_post(postId)
 		expect(posts.some(post => post.post_id === postId)).toBe(true)
 		expect(userPosts.Ok.some(post => post.post_id === postId)).toBe(true)
@@ -269,7 +284,7 @@ describe('Testing with done', () => {
 		await actorBackendIc.update_post_status(postId, {Hidden: null})
 
 		const posts1 = await actorBackendIc.get_posts()
-		const userPosts1 = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
+		const userPosts1 = await actorBackendIc.get_most_recent_posts({Ic: { principal: principal}})
 		const post1 = await actorBackendIc.get_post(postId)
 		expect(posts1.some(post => post.post_id === postId)).toBe(false)
 		expect(userPosts1.Ok.some(post => post.post_id === postId)).toBe(false)
@@ -280,7 +295,7 @@ describe('Testing with done', () => {
 
 		const posts2 = await actorBackendIc.get_posts()
 		const post2 = await actorBackendIc.get_post(postId)
-		const userPosts2 = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
+		const userPosts2 = await actorBackendIc.get_most_recent_posts({Ic: { principal: principal}})
 		expect(userPosts2.Ok.some(post => post.post_id === postId)).toBe(true)
 		expect(posts2.some(post => post.post_id === postId)).toBe(true)
 		expect(post2.Ok).toBeDefined()
@@ -297,7 +312,7 @@ describe('Testing with done', () => {
 		const replyId = createdReply.Ok.reply_id
 
 		const posts = await actorBackendIc.get_posts()
-		const userPosts = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
+		const userPosts = await actorBackendIc.get_most_recent_posts({Ic: { principal: principal}})
 		const post = await actorBackendIc.get_post(postId)
 		expect(posts.find(p => p.post_id === postId).replies_count).toBe(1n)
 		expect(userPosts.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)
@@ -307,7 +322,7 @@ describe('Testing with done', () => {
 		await actorBackendIc.update_reply_status(replyId, {Hidden: null})
 
 		const posts1 = await actorBackendIc.get_posts()
-		const userPosts1 = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
+		const userPosts1 = await actorBackendIc.get_most_recent_posts({Ic: { principal: principal}})
 		const post1 = await actorBackendIc.get_post(postId)
 		expect(posts1.find(p => p.post_id === postId).replies_count).toBe(0n)
 		expect(userPosts1.Ok.find(p => p.post_id === postId).replies_count).toBe(0n)
@@ -317,7 +332,7 @@ describe('Testing with done', () => {
 		await actorBackendIc.update_reply_status(replyId, {Visible: null})
 
 		const posts2 = await actorBackendIc.get_posts()
-		const userPosts2 = await actorBackendIc.get_posts_by_auth({Ic: { principal: principal}})
+		const userPosts2 = await actorBackendIc.get_most_recent_posts({Ic: { principal: principal}})
 		const post2 = await actorBackendIc.get_post(postId)
 		expect(posts2.find(p => p.post_id === postId).replies_count).toBe(1n)
 		expect(userPosts2.Ok.find(p => p.post_id === postId).replies_count).toBe(1n)

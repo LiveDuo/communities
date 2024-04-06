@@ -382,13 +382,11 @@ fn unlike_post(liked_post_id: u64) -> Result<(), String> {
         state.liked_posts.remove(&liked_post_id);
 
         let post_likes_otp = state.relations.post_id_to_liked_post_id.forward.get(post_id);
-        let likes = if post_likes_otp.is_none() { 0 } else { post_likes_otp.unwrap().len() as u64 };
         let mut most_liked_posts = state.indexes.most_liked_posts.get(profile_id).unwrap().clone();
+        most_liked_posts.retain(|a| {a.get().0 != post_id});
         
-        if likes == 0 {
-            most_liked_posts.retain(|a| {a.get().0 != post_id});
-        } else {
-            most_liked_posts.insert(ValueEntry::new(post_id.to_owned(), likes));
+        if post_likes_otp.is_some(){
+            most_liked_posts.insert(ValueEntry::new(post_id.to_owned(), post_likes_otp.unwrap().len() as u64));
         }
 
         state.indexes.most_liked_posts.insert(profile_id.to_owned(), most_liked_posts.to_owned());
@@ -466,14 +464,12 @@ fn unlike_reply(liked_reply_id: u64) -> Result<(), String> {
         state.liked_replies.remove(&liked_reply_id);
 
         let reply_likes_otp = state.relations.reply_id_to_liked_reply_id.forward.get(reply_id);
-        let likes = if reply_likes_otp.is_none() { 0 } else { reply_likes_otp.unwrap().len() as u64 };
         let mut most_liked_replies = state.indexes.most_liked_replies.get(profile_id).unwrap().clone();
-        if likes == 0 {
-            most_liked_replies.retain(|a| {a.get().0 != reply_id});
-        } else {
-            most_liked_replies.insert(ValueEntry::new(reply_id.to_owned(), likes));
+        most_liked_replies.retain(|a| {a.get().0 != reply_id});
+        if reply_likes_otp.is_some() {
+            most_liked_replies.insert(ValueEntry::new(reply_id.to_owned(), reply_likes_otp.unwrap().len() as u64));
         }
-        state.indexes.most_liked_posts.insert(profile_id.to_owned(), most_liked_replies.to_owned());
+        state.indexes.most_liked_replies.insert(profile_id.to_owned(), most_liked_replies.to_owned());
         Ok(())
     })
 }
@@ -652,7 +648,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
 
 #[query]
 #[candid_method(query)]
-fn get_posts_by_auth(authentication: AuthenticationWithAddress) -> Result<Vec<PostSummary>, String> {
+fn get_most_recent_posts(authentication: AuthenticationWithAddress) -> Result<Vec<PostSummary>, String> {
     STATE.with(|s| {
         let state = s.borrow();
         let profile_id_opt = state.indexes.profile.get(&authentication);
@@ -677,7 +673,7 @@ fn get_posts_by_auth(authentication: AuthenticationWithAddress) -> Result<Vec<Po
             None => false
         };
     
-        let user_post =  post_ids_opt
+        let mut user_post =  post_ids_opt
             .unwrap()
             .iter()
             .filter_map(|(post_id, _)| {
@@ -731,7 +727,10 @@ fn get_posts_by_auth(authentication: AuthenticationWithAddress) -> Result<Vec<Po
                     status: post.status.to_owned()
                 })
             }).collect::<Vec<_>>();
-        Ok(user_post)
+
+        user_post.sort_by(|a, b|b.timestamp.partial_cmp(&a.timestamp).unwrap());
+        let end = if user_post.len() > 10 {10} else {user_post.len()};
+        Ok(user_post[0..end].to_vec())
     })
 }
 
