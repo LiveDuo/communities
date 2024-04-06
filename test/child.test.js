@@ -200,6 +200,57 @@ describe('Testing with done', () => {
 		expect(postIds.every((postId, index)=> mostLikedPosts4.Ok[index].post_id === postId)).toBe(true)
 	})
 
+	test('Should create replies and get the most like replies', async () => {
+		// create 10 profiles
+		const actors = []
+		for (let _ of Array(10)) {
+			const identity = Ed25519KeyIdentity.generate()
+			const agentIc = getAgent('http://127.0.0.1:8000', identity)
+			const actor = Actor.createActor(childFactory, { agent: agentIc, canisterId: canisters.child.local })
+			await actor.create_profile({Ic: null})
+			actors.push(actor)
+			
+		}
+
+		// profile does not have posts
+		const principal = identityIc.getPrincipal()
+		const mostLikedReplies = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
+		expect(mostLikedReplies.Ok.length).toBe(0)
+
+		// create 10 replies and one like of each use
+		const createdPost = await actorBackendIc.create_post('hello', '')
+		const postId = createdPost.Ok.post_id
+		let replyIds = []
+		for (let index = 0; index <= 9; index++) {
+			const createdReply = await actorBackendIc.create_reply(postId, 'hello')
+			const replyId = createdReply.Ok.reply_id
+			await actors[index].like_reply(replyId)
+			replyIds.push(replyId)
+			
+		}
+		const mostLikedReplies1 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
+		expect(replyIds.every((replyId, index)=> mostLikedReplies1.Ok[index].reply_id === replyId)).toBe(true)
+
+		// like "most liked reply"
+		await actors[2].like_reply(replyIds[9])
+		replyIds = [replyIds[9], replyIds[0], ...replyIds.slice(1, 8)]
+		const mostLikedReplies2 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
+		expect(replyIds.every((replyId, index)=> mostLikedReplies2.Ok[index].reply_id === replyId)).toBe(true)
+		
+		// like not "most liked reply"
+		const createdReply = await actorBackendIc.create_reply(postId, 'hello')
+		const replyId = createdReply.Ok.reply_id
+		await actors[2].like_reply(replyId)
+		const mostLikedReplies3 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
+		expect(mostLikedReplies3.Ok.includes((reply)=> reply.reply_id !== replyId)).toBe(false)
+		
+		// like not "most liked reply" to "most liked reply"
+		await actors[3].like_reply(replyId)
+		const mostLikedReplies4 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
+		replyIds = [replyIds[0], replyId, ...replyIds.slice(1, 8)]
+		expect(replyIds.every((replyId, index)=> mostLikedReplies4.Ok[index].reply_id === replyId)).toBe(true)
+	})
+
 	test.skip('Should create, hide and restore a post', async () => {
 		const principal = identityIc.getPrincipal()
 

@@ -380,6 +380,19 @@ fn unlike_post(liked_post_id: u64) -> Result<(), String> {
         state.relations.profile_id_to_liked_post_id.remove(profile_id.to_owned(), liked_post_id.to_owned());
         state.indexes.has_liked_post.remove(&(profile_id.to_owned(), post_id.to_owned()));
         state.liked_posts.remove(&liked_post_id);
+
+        let post_likes_otp = state.relations.post_id_to_liked_post_id.forward.get(post_id);
+        let likes = if post_likes_otp.is_none() { 0 } else { post_likes_otp.unwrap().len() as u64 };
+        let mut most_liked_posts = state.indexes.most_liked_posts.get(profile_id).unwrap().clone();
+        
+        if likes == 0 {
+            most_liked_posts.retain(|a| {a.get().0 != post_id});
+        } else {
+            most_liked_posts.insert(ValueEntry::new(post_id.to_owned(), likes));
+        }
+
+        state.indexes.most_liked_posts.insert(profile_id.to_owned(), most_liked_posts.to_owned());
+
         Ok(())
     })
 }
@@ -409,6 +422,20 @@ fn like_reply(reply_id: u64) -> Result<u64, String> {
         state.relations.reply_id_to_liked_reply_id.insert(reply_id, liked_reply_id.to_owned());
         state.relations.profile_id_to_liked_reply_id.insert(profile_id, liked_reply_id.to_owned());
         state.indexes.has_liked_reply.insert((profile_id.to_owned(), reply_id.to_owned()), ());
+
+        let profile_ids = state.relations.profile_id_to_reply_id.backward.get(&reply_id).unwrap().to_owned();
+        let (profile_id, _) = profile_ids.first_key_value().unwrap(); 
+        let reply_likes = state.relations.reply_id_to_liked_reply_id.forward.get(&reply_id).unwrap().len() as u64;
+        let most_liked_reply_opt = state.indexes.most_liked_replies.get(profile_id);
+        if most_liked_reply_opt.is_none() {
+            let mut new_entry: BTreeSet<ValueEntry<u64, u64>> = BTreeSet::new();
+            new_entry.insert(ValueEntry::new(reply_id, reply_likes));
+            state.indexes.most_liked_replies.insert(profile_id.to_owned(), new_entry.to_owned());
+        } else {
+            let mut most_liked_reply = most_liked_reply_opt.unwrap().clone();
+            most_liked_reply.insert(ValueEntry::new(reply_id, reply_likes));
+            state.indexes.most_liked_replies.insert(profile_id.to_owned(), most_liked_reply.to_owned());
+        }
         Ok(liked_reply_id)
     })
 }
@@ -437,6 +464,16 @@ fn unlike_reply(liked_reply_id: u64) -> Result<(), String> {
         state.relations.profile_id_to_liked_reply_id.remove(profile_id.to_owned(), liked_reply_id.to_owned());
         state.indexes.has_liked_reply.remove(&(profile_id.to_owned(), reply_id.to_owned()));
         state.liked_replies.remove(&liked_reply_id);
+
+        let reply_likes_otp = state.relations.reply_id_to_liked_reply_id.forward.get(reply_id);
+        let likes = if reply_likes_otp.is_none() { 0 } else { reply_likes_otp.unwrap().len() as u64 };
+        let mut most_liked_replies = state.indexes.most_liked_replies.get(profile_id).unwrap().clone();
+        if likes == 0 {
+            most_liked_replies.retain(|a| {a.get().0 != reply_id});
+        } else {
+            most_liked_replies.insert(ValueEntry::new(reply_id.to_owned(), likes));
+        }
+        state.indexes.most_liked_posts.insert(profile_id.to_owned(), most_liked_replies.to_owned());
         Ok(())
     })
 }
@@ -776,12 +813,56 @@ fn get_most_liked_replies_mock(authentication: AuthenticationWithAddress) -> Res
 #[query]
 #[candid_method(query)]
 fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<Vec<ReplyResponse>, String> {
-    Ok(vec![
-        ReplyResponse {text: "Reply".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 0, likes: vec![], status: ReplyStatus::Visible },
-        ReplyResponse {text: "Reply 1".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 1, likes: vec![], status: ReplyStatus::Visible },
-        ReplyResponse {text: "Reply 2".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 2, likes: vec![], status: ReplyStatus::Visible },
-        ReplyResponse {text: "Reply 3".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 3, likes: vec![], status: ReplyStatus::Visible },
-    ])
+    STATE.with(|s| {
+        let state = s.borrow();
+        let profile_id_opt = state.indexes.profile.get(&authentication);
+        if profile_id_opt.is_none() {
+            return Err("Profile does not exists".to_owned());
+        }
+        let profile_id = profile_id_opt.unwrap();
+        
+        let most_liked_replies_opt = state.indexes.most_liked_replies.get(profile_id);
+        if most_liked_replies_opt.is_none() {
+            return Ok(vec![]);
+        }
+
+        let profile = state.profiles.get(profile_id).unwrap();
+        let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+        let most_liked_replies =  most_liked_replies_opt.unwrap();
+
+        let mut result = vec![];
+        let end = if most_liked_replies.len() > 10 { 10 } else { most_liked_replies.len() };
+
+        for i in 0..end {
+            let (reply_id, _) = most_liked_replies.iter().nth(i).unwrap().get();
+            let reply = state.replies.get(reply_id).unwrap();
+
+            let liked_reply_ids_opt =  state.relations.reply_id_to_liked_reply_id.forward.get(&reply_id);
+            let likes = if liked_reply_ids_opt.is_none() {
+                vec![]
+            } else  {
+                liked_reply_ids_opt.unwrap().to_owned().iter().map(|(liked_reply_id, _)| {
+                    let profile_ids_opt = state.relations.profile_id_to_liked_reply_id.backward.get(liked_reply_id).unwrap().to_owned();
+                    let (profile_id, _) = profile_ids_opt.first_key_value().unwrap();
+                    let profile = state.profiles.get(profile_id).unwrap();
+                    let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
+                    (liked_reply_id.to_owned(), authentication)
+                }).collect::<Vec<_>>()
+            };
+
+            let response = ReplyResponse {
+                text: reply.text.to_owned(),
+                timestamp: reply.timestamp.to_owned(),
+                authentication: authentication.to_owned(),
+                reply_id: reply_id.to_owned(),
+                likes: likes, 
+                status: reply.status.to_owned()
+            };
+            result.push(response)
+        }
+
+        Ok(result)
+    })
 }
 #[query]
 #[candid_method(query)]
