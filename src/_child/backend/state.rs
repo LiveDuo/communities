@@ -3,7 +3,7 @@ use candid::{CandidType, Deserialize, Principal};
 use std::hash::Hash;
 
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, BTreeSet};
 use crate::icrc7::Icrc7Token;
 use crate::icrc3::Transaction;
 
@@ -183,7 +183,34 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
         }
     }
 }
+#[derive(Debug, PartialEq, Eq, Clone, CandidType, Deserialize)]
+pub struct ValueEntry<K, V>((K, V)); // index key, index value
 
+impl <K: Eq + Ord, V: Eq + PartialOrd>Ord for ValueEntry<K, V> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if self.0.1 > other.0.1 { std::cmp::Ordering::Less }
+        else if self == other { std::cmp::Ordering::Equal }
+        else { std::cmp::Ordering::Greater }
+    }
+}
+
+impl <K: PartialEq + Ord, V: PartialEq + PartialOrd>PartialOrd for ValueEntry<K, V> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        if self.0.1 > other.0.1 { Some(std::cmp::Ordering::Less) }
+        else if self == other { Some(std::cmp::Ordering::Equal) }
+        else { Some(std::cmp::Ordering::Greater) }
+    }
+}
+
+impl <K: Eq + Ord, V: Eq + PartialOrd> ValueEntry<K, V> {
+    pub fn new(k: K, v: V) -> Self {
+        Self((k,v))
+    }
+
+    pub fn get(&self) -> (&K, &V) {
+        (&self.0.0, &self.0.1)
+    }
+}
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relations {
     pub profile_id_to_post_id: Relation<u64, u64>,
@@ -202,8 +229,8 @@ pub struct Indexes {
     pub active_principal: HashMap<Principal, u64>,
     pub has_liked_post: HashMap<(u64, u64), ()>,
     pub has_liked_reply: HashMap<(u64, u64), ()>,
-    pub most_liked_replies: HashMap<u64, Vec<(u64, u64)>>,
-    pub most_liked_posts: HashMap<u64, Vec<(u64, u64)>>,
+    pub most_liked_replies: HashMap<u64, BTreeSet<ValueEntry<u64, u64>>>,
+    pub most_liked_posts: HashMap<u64, BTreeSet<ValueEntry<u64, u64>>>,
 }
 #[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct Metadata {

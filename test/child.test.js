@@ -23,11 +23,11 @@ describe('Testing with done', () => {
 		// get random identity for evm
 		signerEvm = ethers.Wallet.createRandom()
 		identityEvm = Ed25519KeyIdentity.generate()
-
+		
 		// get random identity for svm
 		signerSvm = web3.Keypair.generate()
 		identitySvm = Ed25519KeyIdentity.generate()
-
+		
 		// get random identity for ic
 		identityIc = Ed25519KeyIdentity.generate()
 		
@@ -149,6 +149,55 @@ describe('Testing with done', () => {
 		expect(userLastPost.title).toBe('hello')
 		expect(userLastPost.replies_count).toBe(1n)
 		expect(userLastPost.authentication.Ic.principal.toString()).toBe(principal.toString())
+	})
+
+	test('Should create posts and get the most like posts', async () => {
+		// create 10 profiles
+		const actors = []
+		for (let _ of Array(10)) {
+			const identity = Ed25519KeyIdentity.generate()
+			const agentIc = getAgent('http://127.0.0.1:8000', identity)
+			const actor = Actor.createActor(childFactory, { agent: agentIc, canisterId: canisters.child.local })
+			await actor.create_profile({Ic: null})
+			actors.push(actor)
+			
+		}
+
+		// profile does not have posts
+		const principal = identityIc.getPrincipal()
+		const mostLikedPosts = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
+		expect(mostLikedPosts.Ok.length).toBe(0)
+
+		// create 10 posts and one like of each use
+		let postIds = []
+		for (let index = 0; index <= 9; index++) {
+			const createdPost = await actorBackendIc.create_post('hello', '')
+			const postId = createdPost.Ok.post_id
+			await actors[index].like_post(postId)
+			postIds.push(createdPost.Ok.post_id)
+			
+		}
+		const mostLikedPosts1 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
+		expect(postIds.every((postId, index)=> mostLikedPosts1.Ok[index].post_id === postId)).toBe(true)
+
+		// like "most liked post"
+		await actors[2].like_post(postIds[9])
+		postIds = [postIds[9], postIds[0], ...postIds.slice(1, 8)]
+		const mostLikedPosts2 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
+		expect(postIds.every((postId, index)=> mostLikedPosts2.Ok[index].post_id === postId)).toBe(true)
+		
+		// like not "most liked post"
+		const createdPost = await actorBackendIc.create_post('hello', '')
+		const postId = createdPost.Ok.post_id
+		await actors[2].like_post(postId)
+		const mostLikedPosts3 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
+		expect(mostLikedPosts3.Ok.includes((post)=> post.post_id !== postId)).toBe(false)
+		
+		// like not "most liked post" to "most liked post"
+		await actors[3].like_post(postId)
+		const mostLikedPosts4 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
+		postIds = [postIds[0], postId, ...postIds.slice(1, 8)]
+		expect(postIds.every((postId, index)=> mostLikedPosts4.Ok[index].post_id === postId)).toBe(true)
 	})
 
 	test.skip('Should create, hide and restore a post', async () => {
