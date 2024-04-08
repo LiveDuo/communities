@@ -134,8 +134,8 @@ const idlFactory = ({ IDL }) => {
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
 		get_most_recent_posts: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
-		get_most_liked_posts_mock: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
-		get_most_liked_replies_mock: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(ReplyResponse), Err: IDL.Text })], ["query"]),
+		get_most_liked_posts: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
+		get_most_liked_replies: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(ReplyResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
 		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
@@ -271,7 +271,7 @@ const ChildProvider = ({ children }) => {
 			auth[type] = {address} 
 		}
 
-		const response = await childActor.get_most_liked_posts_mock(auth)
+		const response = await childActor.get_most_liked_posts(auth)
 
 		return response.Ok.map(p => ({...p, timestamp: new Date(Number(p.timestamp / 1000n / 1000n))}))
 	}, [childActor])
@@ -284,7 +284,7 @@ const ChildProvider = ({ children }) => {
 			auth[type] = {address} 
 		}
 
-		const response = await childActor.get_most_liked_replies_mock(auth)
+		const response = await childActor.get_most_liked_replies(auth)
 		return response.Ok.map(p => ({...p, timestamp: new Date(Number(p.timestamp / 1000n / 1000n))}))
 	}, [childActor])
 
