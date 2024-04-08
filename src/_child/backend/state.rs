@@ -61,13 +61,17 @@ pub struct Profile {
     pub name: String,
     pub description: String,
     pub authentication: Authentication,
-    pub active_principal: Principal
+    pub active_principal: Principal,
+    pub timestamp: u64,
+    pub last_login: u64
+
 }
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
 pub enum PostStatus {
     Visible,
     Hidden
 }
+
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
 pub struct Post {
     pub title: String,
@@ -108,12 +112,26 @@ pub struct PostResponse {
     pub replies: Vec<ReplyResponse>,
 }
 #[derive(Clone, CandidType, Deserialize, Debug)]
+pub struct ProfileWithStatusResponse {
+    pub name: String,
+    pub description: String,
+    pub authentication: Authentication,
+    pub active_principal: Principal,
+    pub roles: Vec<UserRole>,
+    pub last_login: u64,
+    pub join_date: u64,
+    pub total_posts: u64,
+    pub total_replies: u64,
+    pub total_likes: u64
+}
+
+#[derive(Clone, CandidType, Deserialize, Debug)]
 pub struct ProfileResponse {
     pub name: String,
     pub description: String,
     pub authentication: Authentication,
     pub active_principal: Principal,
-    pub roles: Vec<UserRole>
+    pub roles: Vec<UserRole>,
 }
 
 #[derive(CandidType, Deserialize, Clone)]

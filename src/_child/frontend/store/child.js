@@ -61,7 +61,9 @@ const idlFactory = ({ IDL }) => {
 		name: IDL.Text,
 		description: IDL.Text,
 		authentication: Authentication,
-		active_principal: IDL.Principal
+		active_principal: IDL.Principal,
+		timestamp: IDL.Nat64,
+		last_login: IDL.Nat64,
 	});
 
 	const ProfileResponse = IDL.Record({
@@ -70,6 +72,19 @@ const idlFactory = ({ IDL }) => {
 		authentication: Authentication,
 		active_principal: IDL.Principal,
 		roles: IDL.Vec(UserRole)
+	});
+
+	const ProfileWithStatusResponse = IDL.Record({
+		name: IDL.Text,
+		description: IDL.Text,
+		authentication: Authentication,
+		active_principal: IDL.Principal,
+		roles: IDL.Vec(UserRole),
+		last_login: IDL.Nat64,
+		join_date: IDL.Nat64,
+		total_posts: IDL.Nat64,
+		total_replies: IDL.Nat64,
+		total_likes: IDL.Nat64
 	});
 
 	const PostSummary = IDL.Record({
@@ -135,10 +150,10 @@ const idlFactory = ({ IDL }) => {
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
 		get_most_recent_posts: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
 		get_most_liked_posts: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
-		get_most_liked_replies: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(ReplyResponse), Err: IDL.Text })], ["query"]),
+		get_most_liked_replies: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
 		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
-		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
+		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileWithStatusResponse)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),
@@ -259,7 +274,6 @@ const ChildProvider = ({ children }) => {
 			auth[type] = {address} 
 		}
 		const response = await childActor.get_most_recent_posts(auth)
-		console.log(response)
 		return response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
 	}, [childActor])
 
@@ -285,7 +299,7 @@ const ChildProvider = ({ children }) => {
 		}
 
 		const response = await childActor.get_most_liked_replies(auth)
-		return response.Ok.map(p => ({...p, timestamp: new Date(Number(p.timestamp / 1000n / 1000n))}))
+		return response.Ok.map(r => ({...r[1], postId: r[0], timestamp: new Date(Number(r[1].timestamp / 1000n / 1000n))}))
 	}, [childActor])
 
 	const getProfileByAuth = useCallback(async (address, type) => {
@@ -299,7 +313,8 @@ const ChildProvider = ({ children }) => {
 			auth[type] = {address} 
 		}
 		const response = await childActor.get_profile_by_auth(auth)
-		setProfileUser(response[0])
+		console.log("getProfileByAuth", response)
+		setProfileUser({...response[0], lastLogin: new Date(Number(response[0].last_login / 1000n / 1000n)), joinDate: new Date(Number(response[0].join_date / 1000n / 1000n))})
 	}, [childActor])
 
 	const getProfile = useCallback(async () => {

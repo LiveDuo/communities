@@ -16,7 +16,7 @@ const Profile = () => {
   const { address, type } = useParams()
   
   const { account } = useContext(IdentityContext)
-  const { getProfileByAuth, getMostRecentPosts, childActor,  getMostLikedPosts, getMostLikedReplies } = useContext(ChildContext)
+  const { profileUser, getProfileByAuth, getMostRecentPosts, childActor,  getMostLikedPosts, getMostLikedReplies } = useContext(ChildContext)
   
   const [mostLikedPosts, setMostLikedPosts] = useState() 
   const [mostLikedReplies, setMostLikedReplies] = useState() 
@@ -50,7 +50,7 @@ const Profile = () => {
       loadMostLikedReplies()
     }
   },[childActor, loadMostRecentPosts, address, type, loadMostLikedPosts, loadMostLikedReplies])
-
+  
   return (
     <Box>
       
@@ -68,11 +68,11 @@ const Profile = () => {
         </Box>
         <Box mb="40px">
           <Box display="inline">
-            <Badge mr="8px" fontSize={'xs'}>Last login: 2/2/22</Badge>
-            <Badge mr="8px" fontSize={'xs'}>Join date: 3/3/23</Badge>
-            <Badge mr="8px" fontSize={'xs'}>Total posts: 13</Badge>
-            <Badge mr="8px" fontSize={'xs'}>Total replies: 4</Badge>
-            <Badge fontSize={'xs'}>Total likes: 23</Badge>
+            <Badge mr="8px" fontSize={'xs'}>Last login: {profileUser ? profileUser.lastLogin.toLocaleDateString("en-GB") : ""}</Badge>
+            <Badge mr="8px" fontSize={'xs'}>Join date: {profileUser ? profileUser.joinDate.toLocaleDateString("en-GB") : ""}</Badge>
+            <Badge mr="8px" fontSize={'xs'}>Total posts: {profileUser ? profileUser.total_posts.toString() : ""}</Badge>
+            <Badge mr="8px" fontSize={'xs'}>Total replies: {profileUser ? profileUser.total_replies.toString() : ""}</Badge>
+            <Badge fontSize={'xs'}>Total likes: {profileUser ? profileUser.total_likes.toString() : ""}</Badge>
           </Box>
         </Box>
       </Box>

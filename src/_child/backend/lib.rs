@@ -48,7 +48,7 @@ fn create_profile_by_principal(principal: &Principal) -> u64 {
         let mut state = s.borrow_mut();
         let authentication = Authentication::Ic;
         let profile_id  = uuid(&principal.to_text());
-        let profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: principal.to_owned() };
+        let profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: principal.to_owned(), timestamp: ic_cdk::api::time(), last_login: ic_cdk::api::time() };
         state.profiles.insert(profile_id.to_owned(), profile);
         state.indexes.active_principal.insert(principal.to_owned(), profile_id);
         state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: principal.to_owned() }), profile_id);
@@ -114,13 +114,13 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
         if state.indexes.profile.contains_key(&authentication_with_address) {
             let profile_id = state.indexes.profile.get(&authentication_with_address).cloned().unwrap();
             let mut profile = state.profiles.get(&profile_id).cloned().unwrap();
-
             if Authentication::Ic != authentication_profile {
                 profile.active_principal = caller.clone();
                 state.indexes.active_principal.insert(caller.clone(), profile_id);
-                state.profiles.insert(profile_id.clone(), profile.clone());
             }
-
+            
+            profile.last_login = ic_cdk::api::time();
+            state.profiles.insert(profile_id.clone(), profile.clone());
             return Ok(profile);
         }
 
@@ -136,7 +136,9 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
             authentication: authentication_profile,
             name: "".to_owned(),
             description: "".to_owned(),
-            active_principal: caller
+            active_principal: caller,
+            last_login: ic_cdk::api::time(),
+            timestamp: ic_cdk::api::time()
         };
 
         state.profiles.insert(profile_id, profile.clone());
@@ -293,21 +295,34 @@ fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String>
 
 #[query]
 #[candid_method(query)]
-fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<ProfileResponse> {
+fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<ProfileWithStatusResponse> {
     STATE.with(|s| {
         let state = s.borrow();
         let profile_id_opt = state.indexes.profile.get(&authentication);
         if profile_id_opt == None {
             return None; 
         }
-        let profile  = state.profiles.get(&profile_id_opt.unwrap()).unwrap();
+        let profile_id = profile_id_opt.unwrap();
+        let profile  = state.profiles.get(profile_id).unwrap();
         let user_roles = get_user_roles(&profile.active_principal).unwrap();
-        Some(ProfileResponse {
+
+        let total_posts =  state.relations.profile_id_to_post_id.forward.get(profile_id).map(|x| x.len()).unwrap_or(0) as u64;
+        let total_replies =  state.relations.profile_id_to_reply_id.forward.get(profile_id).map(|x| x.len()).unwrap_or(0) as u64;
+        let posts_likes = state.relations.profile_id_to_liked_post_id.forward.get(profile_id).map(|x| x.len()).unwrap_or(0) as u64;
+        let replies_likes = state.relations.profile_id_to_liked_reply_id.forward.get(profile_id).map(|x| x.len()).unwrap_or(0) as u64;
+        let total_likes = replies_likes + posts_likes;
+
+        Some(ProfileWithStatusResponse {
             name: profile.name.to_owned(),
             description: profile.description.to_owned(),
             authentication: profile.authentication.to_owned(),
             active_principal: profile.active_principal.to_owned(),
-            roles: user_roles
+            roles: user_roles,
+            last_login: profile.last_login,
+            join_date: profile.timestamp,
+            total_likes,
+            total_posts,
+            total_replies
         })
     })
 }
@@ -736,16 +751,6 @@ fn get_most_recent_posts(authentication: AuthenticationWithAddress) -> Result<Ve
 
 #[query]
 #[candid_method(query)]
-fn get_most_liked_posts_mock(authentication: AuthenticationWithAddress) -> Result<Vec<PostResponse>, String> {
-    Ok(vec![
-        PostResponse {title: "Post".to_owned(), post_id: 0, description: "Post description".to_owned(), authentication: authentication.to_owned(), likes: vec![], timestamp: ic_cdk::api::time(), status: PostStatus::Visible, replies: vec![]},
-        PostResponse {title: "Post 1".to_owned(), post_id: 1, description: "Post description".to_owned(), authentication: authentication.to_owned(), likes: vec![], timestamp: ic_cdk::api::time(), status: PostStatus::Visible, replies: vec![]},
-        PostResponse {title: "Post 2".to_owned(), post_id: 2, description: "Post description".to_owned(), authentication: authentication.to_owned(), likes: vec![], timestamp: ic_cdk::api::time(), status: PostStatus::Visible, replies: vec![]},
-        PostResponse {title: "Post 3".to_owned(), post_id: 3, description: "Post description".to_owned(), authentication: authentication.to_owned(), likes: vec![], timestamp: ic_cdk::api::time(), status: PostStatus::Visible, replies: vec![]},
-    ])
-}
-#[query]
-#[candid_method(query)]
 fn get_most_liked_posts(authentication: AuthenticationWithAddress) -> Result<Vec<PostResponse>, String> {
 
     STATE.with(|s| {
@@ -801,17 +806,7 @@ fn get_most_liked_posts(authentication: AuthenticationWithAddress) -> Result<Vec
 
 #[query]
 #[candid_method(query)]
-fn get_most_liked_replies_mock(authentication: AuthenticationWithAddress) -> Result<Vec<ReplyResponse>, String> {
-    Ok(vec![
-        ReplyResponse {text: "Reply".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 0, likes: vec![], status: ReplyStatus::Visible },
-        ReplyResponse {text: "Reply 1".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 1, likes: vec![], status: ReplyStatus::Visible },
-        ReplyResponse {text: "Reply 2".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 2, likes: vec![], status: ReplyStatus::Visible },
-        ReplyResponse {text: "Reply 3".to_owned(), timestamp: ic_cdk::api::time(), authentication: authentication.to_owned(), reply_id: 3, likes: vec![], status: ReplyStatus::Visible },
-    ])
-}
-#[query]
-#[candid_method(query)]
-fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<Vec<ReplyResponse>, String> {
+fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<Vec<(u64, ReplyResponse)>, String> {
     STATE.with(|s| {
         let state = s.borrow();
         let profile_id_opt = state.indexes.profile.get(&authentication);
@@ -857,9 +852,9 @@ fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<V
                 likes: likes, 
                 status: reply.status.to_owned()
             };
-            result.push(response)
+            let (post_id, _) = state.relations.reply_id_to_post_id.forward.get(reply_id).unwrap().first_key_value().unwrap();
+            result.push((post_id.to_owned(), response))
         }
-
         Ok(result)
     })
 }
@@ -904,6 +899,7 @@ fn get_hidden_posts() -> Result<Vec<PostResponse>, String> {
         Ok(hidden_post)
     })
 }
+
 #[query]
 #[candid_method(query)]
 fn get_hidden_replies() -> Result<Vec<(u64,ReplyResponse)>, String> {

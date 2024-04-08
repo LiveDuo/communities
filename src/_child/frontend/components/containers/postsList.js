@@ -22,7 +22,7 @@ const PostsContainer = ({ posts }) => {
             <Text color="gray.500" ml="52px" mr="auto">Topic</Text>
             <Text color="gray.500" width="80px" textAlign="center">Replies</Text>
             <Text color="gray.500" width="80px" textAlign="center">Likes</Text>
-            <Text color="gray.500" mr="40px" width="120px" textAlign="center">Timestamp</Text>
+            <Text color="gray.500" mr="40px" width="120px" textAlign="center">Time</Text>
           </Flex>
           {posts.map((p, i) => 
             <Box opacity={p.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
@@ -35,7 +35,7 @@ const PostsContainer = ({ posts }) => {
                 </Flex>
                 <Text width="80px" textAlign="center">{p.replies?.length ?? 0}</Text>
                 <Text width="80px" textAlign="center">{p.likes?.length ?? 0}</Text>
-                <Text width="120px" textAlign="center">{timeSinceShort(p.timestamp)}</Text>
+                <Text width="120px" textAlign="center">{timeSinceShort(p.timestamp)} ago</Text>
               </Flex>
             </Box>)}
         </Box> : 

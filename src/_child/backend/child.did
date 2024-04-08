@@ -59,6 +59,8 @@ type Profile = record {
   name : text;
   description : text;
   active_principal : principal;
+  timestamp: nat64;
+  last_login: nat64;
 };
 type ProfileResponse = record {
   authentication : Authentication;
@@ -66,6 +68,18 @@ type ProfileResponse = record {
   description : text;
   active_principal : principal;
   roles : vec UserRole
+};
+type ProfileWithStatusResponse = record {
+  authentication : Authentication;
+  name : text;
+  description : text;
+  active_principal : principal;
+  roles : vec UserRole;
+  last_login: nat64;
+  join_date: nat64;
+  total_posts: nat64;
+  total_replies: nat64;
+  total_likes: nat64
 };
 type ReplyStatus = variant {
   Visible;
@@ -93,7 +107,7 @@ type UpdateReplyStatusResult = variant { Ok : null; Err : text };
 type GetHiddenPostsResult = variant { Ok : vec PostResponse; Err : text };
 type GetHiddenReplyResult = variant { Ok : vec record { nat64; ReplyResponse; }; Err : text };
 type GetMostPostsResult = variant { Ok : vec PostResponse; Err : text };
-type GetMostReplyResult = variant { Ok : vec ReplyResponse; Err : text };
+type GetMostReplyResult = variant { Ok : vec record { nat64; ReplyResponse; }; Err : text };
 type LikePostResult = variant { Ok : nat64; Err : text };
 type UnlikePostResult = variant { Ok : null; Err : text };
 type LikeReplyResult = variant { Ok : nat64; Err : text };

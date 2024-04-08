@@ -43,7 +43,9 @@ const childFactory = ({ IDL }) => {
 		name: IDL.Text,
 		description: IDL.Text,
 		authentication: Authentication,
-		active_principal: IDL.Principal
+		active_principal: IDL.Principal,
+		timestamp: IDL.Nat64,
+		last_login: IDL.Nat64,
 	});
 
 	const PostSummary = IDL.Record({
