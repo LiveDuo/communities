@@ -160,7 +160,6 @@ describe('Testing with done', () => {
 			const actor = Actor.createActor(childFactory, { agent: agentIc, canisterId: canisters.child.local })
 			await actor.create_profile({Ic: null})
 			actors.push(actor)
-			
 		}
 
 		// profile does not have posts
@@ -175,14 +174,13 @@ describe('Testing with done', () => {
 			const postId = createdPost.Ok.post_id
 			await actors[index].like_post(postId)
 			postIds.push(createdPost.Ok.post_id)
-			
 		}
 		const mostLikedPosts1 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
 		expect(postIds.every((postId, index)=> mostLikedPosts1.Ok[index].post_id === postId)).toBe(true)
 
 		// like "most liked post"
 		await actorBackendIc.like_post(postIds[9])
-		postIds = [postIds[9], postIds[0], ...postIds.slice(1, 8)]
+		postIds = [postIds[9], postIds[0], ...postIds.slice(1, 9)]
 		const mostLikedPosts2 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
 		expect(postIds.every((postId, index)=> mostLikedPosts2.Ok[index].post_id === postId)).toBe(true)
 		
@@ -191,20 +189,23 @@ describe('Testing with done', () => {
 		const postId = createdPost.Ok.post_id
 		await actors[2].like_post(postId)
 		const mostLikedPosts3 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
-		expect(mostLikedPosts3.Ok.includes((post)=> post.post_id !== postId)).toBe(false)
+		expect(mostLikedPosts3.Ok.includes((post)=> post.post_id === postId)).toBe(false)
 		
 		// like not "most liked post" to "most liked post"
 		await actors[3].like_post(postId)
 		const mostLikedPosts4 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
-		postIds = [postIds[0], postId, ...postIds.slice(1, 8)]
+		let removedPostId = postIds[9]
+		postIds = [postIds[0], postId, ...postIds.slice(1, 9)]
 		expect(postIds.every((postId, index)=> mostLikedPosts4.Ok[index].post_id === postId)).toBe(true)
+		expect(mostLikedPosts4.Ok.includes((post)=> post.post_id === removedPostId)).toBe(false)
 
 		// unlike "most liked reply"
 		const likePost = mostLikedPosts4.Ok[0].likes.filter(([_, auth]) => auth.Ic.principal.toText() === principal.toText())
 		const [ likePostId ] = likePost[0]
 		await actorBackendIc.unlike_post(likePostId)
 		const mostLikedPosts5 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
-		expect(mostLikedPosts5.Ok[0].post_id).toBe(postIds[1])
+		postIds = [...postIds.slice(1), removedPostId]
+		expect(postIds.every((postId, index)=> mostLikedPosts5.Ok[index].post_id === postId)).toBe(true)
 	})
 
 	test('Should create replies and get the most like replies', async () => {
@@ -216,7 +217,6 @@ describe('Testing with done', () => {
 			const actor = Actor.createActor(childFactory, { agent: agentIc, canisterId: canisters.child.local })
 			await actor.create_profile({Ic: null})
 			actors.push(actor)
-			
 		}
 
 		// profile does not have posts
@@ -233,7 +233,6 @@ describe('Testing with done', () => {
 			const replyId = createdReply.Ok.reply_id
 			await actors[index].like_reply(replyId)
 			replyIds.push(replyId)
-			
 		}
 		
 		const mostLikedReplies1 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
@@ -241,7 +240,7 @@ describe('Testing with done', () => {
 
 		// like "most liked reply"
 		await actorBackendIc.like_reply(replyIds[9])
-		replyIds = [replyIds[9], replyIds[0], ...replyIds.slice(1, 8)]
+		replyIds = [replyIds[9], replyIds[0], ...replyIds.slice(1, 9)]
 		const mostLikedReplies2 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
 		expect(replyIds.every((replyId, index)=> mostLikedReplies2.Ok[index].reply_id === replyId)).toBe(true)
 		
@@ -250,12 +249,13 @@ describe('Testing with done', () => {
 		const replyId = createdReply.Ok.reply_id
 		await actors[2].like_reply(replyId)
 		const mostLikedReplies3 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
-		expect(mostLikedReplies3.Ok.includes((reply)=> reply.reply_id !== replyId)).toBe(false)
+		expect(mostLikedReplies3.Ok.includes((reply)=> reply.reply_id === replyId)).toBe(false)
 		
 		// like not "most liked reply" to "most liked reply"
 		await actors[3].like_reply(replyId)
 		const mostLikedReplies4 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
-		replyIds = [replyIds[0], replyId, ...replyIds.slice(1, 8)]
+		let removedReplyId = replyIds[9]
+		replyIds = [replyIds[0], replyId, ...replyIds.slice(1, 9)]
 		expect(replyIds.every((replyId, index)=> mostLikedReplies4.Ok[index].reply_id === replyId)).toBe(true)
 
 		// unlike "most liked reply"
@@ -263,7 +263,8 @@ describe('Testing with done', () => {
 		const [ likeReplyId ] = likeReply[0]
 		await actorBackendIc.unlike_reply(likeReplyId)
 		const mostLikedReplies5 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
-		expect(mostLikedReplies5.Ok[0].reply_id).toBe(replyIds[1])
+		replyIds = [...replyIds.slice(1), removedReplyId]
+		expect(replyIds.every((replyId, index)=> mostLikedReplies5.Ok[index].reply_id === replyId)).toBe(true)
 	})
 
 	test.skip('Should create, hide and restore a post', async () => {
