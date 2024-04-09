@@ -16,7 +16,7 @@ const DEFAULT_TRACK: &str = "default";
 #[candid_method(init)]
 fn init() {
     ic_certified_assets::init();
-    add_track(DEFAULT_TRACK.to_owned(), ic_cdk::caller()).unwrap();
+    add_track(DEFAULT_TRACK.to_owned()).unwrap();
 }
 
 #[update]
@@ -71,7 +71,7 @@ async fn create_track(track_name: String) -> Result<(), String> {
     authorize(&caller).await?;
 
     // create track 
-    add_track(track_name, caller).unwrap();
+    add_track(track_name).unwrap();
 
     Ok(())
 }
@@ -497,7 +497,7 @@ async fn authorize(caller: &Principal) -> Result<(), String> {
     }
 }
 
-fn add_track(name: String, caller: Principal) -> Result<(), String> {
+fn add_track(name: String) -> Result<(), String> {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
