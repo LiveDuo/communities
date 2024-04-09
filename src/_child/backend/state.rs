@@ -112,7 +112,7 @@ pub struct PostResponse {
     pub replies: Vec<ReplyResponse>,
 }
 #[derive(Clone, CandidType, Deserialize, Debug)]
-pub struct ProfileWithStatusResponse {
+pub struct ProfileWithStatsResponse {
     pub name: String,
     pub description: String,
     pub authentication: Authentication,

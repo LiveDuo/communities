@@ -69,7 +69,7 @@ type ProfileResponse = record {
   active_principal : principal;
   roles : vec UserRole
 };
-type ProfileWithStatusResponse = record {
+type ProfileWithStatsResponse = record {
   authentication : Authentication;
   name : text;
   description : text;
@@ -107,7 +107,7 @@ type UpdateReplyStatusResult = variant { Ok : null; Err : text };
 type GetHiddenPostsResult = variant { Ok : vec PostResponse; Err : text };
 type GetHiddenReplyResult = variant { Ok : vec record { nat64; ReplyResponse; }; Err : text };
 type GetMostPostsResult = variant { Ok : vec PostResponse; Err : text };
-type GetMostReplyResult = variant { Ok : vec record { nat64; ReplyResponse; }; Err : text };
+type GetMostRepliesResult = variant { Ok : vec record { nat64; ReplyResponse; }; Err : text };
 type LikePostResult = variant { Ok : nat64; Err : text };
 type UnlikePostResult = variant { Ok : null; Err : text };
 type LikeReplyResult = variant { Ok : nat64; Err : text };
@@ -250,7 +250,7 @@ service : (opt principal, opt text, opt text ) -> {
   get_hidden_replies : () -> (GetHiddenReplyResult) query;
   get_most_recent_posts : (AuthenticationWithAddress) -> (GetPostsByAuthResult) query;
   get_profile : () -> (GetProfileResult) query;
-  get_profile_by_auth : (AuthenticationWithAddress) -> (opt ProfileResponse) query;
+  get_profile_by_auth : (AuthenticationWithAddress) -> (opt ProfileWithStatsResponse) query;
   get_metadata: () -> (GetMetadataResult) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
 

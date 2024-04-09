@@ -295,7 +295,7 @@ fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String>
 
 #[query]
 #[candid_method(query)]
-fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<ProfileWithStatusResponse> {
+fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<ProfileWithStatsResponse> {
     STATE.with(|s| {
         let state = s.borrow();
         let profile_id_opt = state.indexes.profile.get(&authentication);
@@ -312,7 +312,7 @@ fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<Prof
         let replies_likes = state.relations.profile_id_to_liked_reply_id.forward.get(profile_id).map(|x| x.len()).unwrap_or(0) as u64;
         let total_likes = replies_likes + posts_likes;
 
-        Some(ProfileWithStatusResponse {
+        Some(ProfileWithStatsResponse {
             name: profile.name.to_owned(),
             description: profile.description.to_owned(),
             authentication: profile.authentication.to_owned(),
@@ -396,12 +396,12 @@ fn unlike_post(liked_post_id: u64) -> Result<(), String> {
         state.indexes.has_liked_post.remove(&(profile_id.to_owned(), post_id.to_owned()));
         state.liked_posts.remove(&liked_post_id);
 
-        let post_likes_otp = state.relations.post_id_to_liked_post_id.forward.get(post_id);
+        let post_likes_opt = state.relations.post_id_to_liked_post_id.forward.get(post_id);
         let mut most_liked_posts = state.indexes.most_liked_posts.get(profile_id).unwrap().clone();
         most_liked_posts.retain(|a| {a.get().0 != post_id});
         
-        if post_likes_otp.is_some(){
-            most_liked_posts.insert(ValueEntry::new(post_id.to_owned(), post_likes_otp.unwrap().len() as u64));
+        if post_likes_opt.is_some(){
+            most_liked_posts.insert(ValueEntry::new(post_id.to_owned(), post_likes_opt.unwrap().len() as u64));
         }
 
         state.indexes.most_liked_posts.insert(profile_id.to_owned(), most_liked_posts.to_owned());

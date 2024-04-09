@@ -74,7 +74,7 @@ const idlFactory = ({ IDL }) => {
 		roles: IDL.Vec(UserRole)
 	});
 
-	const ProfileWithStatusResponse = IDL.Record({
+	const ProfileWithStatsResponse = IDL.Record({
 		name: IDL.Text,
 		description: IDL.Text,
 		authentication: Authentication,
@@ -153,7 +153,7 @@ const idlFactory = ({ IDL }) => {
 		get_most_liked_replies: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
 		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
-		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileWithStatusResponse)], ["query"]),
+		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileWithStatsResponse)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),
