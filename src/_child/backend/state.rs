@@ -271,6 +271,7 @@ pub struct State {
     pub track: Option<String>,
     pub tokens: BTreeMap<u128, Icrc7Token>,
     pub txn_log: BTreeMap<u128, Transaction>,
+    pub tx_count: u64
 }
 
 thread_local! {

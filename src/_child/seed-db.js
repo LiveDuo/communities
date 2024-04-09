@@ -18,30 +18,34 @@ const counts = argv.counts ?? 5
 	await mainActor.create_profile({Ic: null})
 	// create 10 profiles
 	const actors = []
+	const promisesProfile = []
 	for (let _ of Array(counts)) {
 		const identity = Ed25519KeyIdentity.generate()
 		const agentIc = getAgent('http://127.0.0.1:8000', identity)
 		const actor = Actor.createActor(childFactory, { agent: agentIc, canisterId: canisters.child.local })
-		await actor.create_profile({Ic: null})
+		const promise = actor.create_profile({Ic: null})
+		promisesProfile.push(promise)
 		actors.push(actor)
 	}
 
-	// create 10 posts and one like of each use
-	for (let index = 0; index < counts; index++) {
-		const createdPost = await mainActor.create_post('hello', '')
-		const postId = createdPost.Ok.post_id
-		await actors[index].like_post(postId)
-	}
+	await Promise.all(promisesProfile)
 
-	// create 10 replies and one like of each use
+	// create posts and one like of each use
+	const promisesPosts = []
+	for (const actor of actors) {
+		const promise = mainActor.create_post('hello', '').then(res => actor.like_post(res.Ok.post_id))
+		promisesPosts.push(promise)
+	}
+	await Promise.all(promisesPosts)
+
+	// create replies and one like of each use
 	const createdPost = await mainActor.create_post('hello', '')
 	const postId = createdPost.Ok.post_id
-	let replyIds = []
-	for (let index = 0; index < counts; index++) {
-		const createdReply = await mainActor.create_reply(postId, 'hello')
-		const replyId = createdReply.Ok.reply_id
-		await actors[index].like_reply(replyId)
-		replyIds.push(replyId)
+	const promisesReplies = []
+	for (const actor of actors) {
+		const promise = mainActor.create_reply(postId, 'hello').then(res =>  actor.like_reply(res.Ok.reply_id))
+		promisesReplies.push(promise)
 	}
 
+	await Promise.all(promisesReplies)
 })()

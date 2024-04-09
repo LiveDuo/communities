@@ -5,7 +5,7 @@ use std::iter::FromIterator;
 
 use sha2::Digest;
 
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::collections::{BTreeMap, HashMap};
 use std::convert::TryInto;
 
@@ -200,13 +200,14 @@ pub struct Relations {
     pub track_id_to_upgrade_id: Relation<u64, u64>,
 }
 
-pub fn uuid(seed: &str) -> u64 {
-    let timestamp: u64 = ic_cdk::api::time() * 1000 * 1000;
-    let str = format!("{}-{}", seed, timestamp);
+
+pub fn uuid(state: &mut RefMut<'_, State>) -> u64 {
+    state.tx_count += 1;
     let mut s = hash_map::DefaultHasher::new();
-    str.hash(&mut s);
+    state.tx_count.hash(&mut s);
     s.finish()
-  }
+}
+
 
 #[derive(Clone, CandidType, Deserialize, Hash, PartialEq, Eq, Debug)]
 pub enum Authentication {
@@ -233,6 +234,7 @@ pub struct State {
     pub canister_data: BTreeMap<u64, CanisterData>,
     pub indexes: Indexes,
     pub relations: Relations,
+    pub tx_count: u64
 }
 
 thread_local! {

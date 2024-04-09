@@ -365,7 +365,7 @@ async fn mint(mut arg: MintArg) -> MintResult {
             let name = format!("{}", arg.token_id);
             name
         });
-        let token_id = uuid(&caller.to_text()) as u128;
+        let token_id = uuid(&mut state) as u128;
         let token = Icrc7Token::new(
             token_id,
             token_name.clone(),
@@ -693,7 +693,7 @@ async fn reset_tokens() -> Result<(), String> {
 
         for controller in canister_status.settings.controllers.iter() {
             if controller == &ic_cdk::id() { continue; }
-            let token_id = uuid(&controller.to_text()) as u128;
+            let token_id = uuid(&mut state) as u128;
             let token_name = format!("{}", token_id);
             let token = Icrc7Token::new(token_id, token_name.to_owned(), None, None, default_account(controller));
             state.tokens.insert(token_id, token);

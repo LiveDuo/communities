@@ -47,7 +47,7 @@ fn create_profile_by_principal(principal: &Principal) -> u64 {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
         let authentication = Authentication::Ic;
-        let profile_id  = uuid(&principal.to_text());
+        let profile_id  = uuid(&mut state);
         let profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication, active_principal: principal.to_owned(), timestamp: ic_cdk::api::time(), last_login: ic_cdk::api::time() };
         state.profiles.insert(profile_id.to_owned(), profile);
         state.indexes.active_principal.insert(principal.to_owned(), profile_id);
@@ -59,7 +59,7 @@ fn create_profile_by_principal(principal: &Principal) -> u64 {
 fn add_profile_role(profile_id: u64, role: UserRole) {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        let role_id = uuid(&profile_id.to_string());
+        let role_id = uuid(&mut state);
         let role = Role{timestamp: ic_cdk::api::time(), role};
         state.roles.insert(role_id.to_owned(), role);
         state.relations.profile_id_to_role_id.insert(profile_id, role_id)
@@ -69,7 +69,7 @@ fn add_profile_role(profile_id: u64, role: UserRole) {
 fn add_icrc7_token(principal: &Principal) {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
-        let token_id = uuid(&principal.to_text()) as u128;
+        let token_id = uuid(&mut state) as u128;
         let admin_account = default_account(&principal);
         let minter_account = default_account(&ic_cdk::caller());
         let token_name = format!("{}", token_id);
@@ -124,7 +124,7 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
             return Ok(profile);
         }
 
-        let profile_id = uuid(&caller.to_text());
+        let profile_id = uuid(&mut state);
 
         state.indexes.profile.insert(authentication_with_address.to_owned(), profile_id.to_owned());
 
@@ -161,7 +161,7 @@ fn create_post(title: String, description: String) -> Result<PostSummary, String
         }
         let profile_id = profile_id_opt.cloned().unwrap();
 
-        let post_id = uuid(&caller.to_text());
+        let post_id = uuid(&mut state);
 
         let post = Post {
             title,
@@ -215,7 +215,7 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 
         let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
         
-        let reply_id = uuid(&caller.to_text());
+        let reply_id = uuid(&mut state);
         
         state.replies.insert(reply_id, reply.clone());
         
@@ -346,7 +346,7 @@ fn like_post(post_id: u64) -> Result<u64, String> {
             return Err("Liked already".to_owned());
         }
         // insert like
-        let liked_post_id = uuid(&caller.to_text());
+        let liked_post_id = uuid(&mut state);
         let liked_post = LikedPost {timestamp: ic_cdk::api::time() };
         state.liked_posts.insert(liked_post_id.to_owned(), liked_post);
         state.relations.post_id_to_liked_post_id.insert(post_id, liked_post_id.to_owned());
@@ -429,7 +429,7 @@ fn like_reply(reply_id: u64) -> Result<u64, String> {
             return Err("Liked already".to_owned());
         }
         // insert like 
-        let liked_reply_id = uuid(&caller.to_text());
+        let liked_reply_id = uuid(&mut state);
         let liked_reply = LikedReply {timestamp: ic_cdk::api::time() };
         state.liked_replies.insert(liked_reply_id.to_owned(), liked_reply);
         state.relations.reply_id_to_liked_reply_id.insert(reply_id, liked_reply_id.to_owned());
