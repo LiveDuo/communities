@@ -25,10 +25,10 @@ const PostsContainer = ({ posts }) => {
             <Text color="gray.500" mr="40px" width="120px" textAlign="center">Time</Text>
           </Flex>
           {posts.map((p, i) => 
-            <Box opacity={p.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
+            <Box key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
               <Flex alignItems="center">
                 <Flex alignItems={'center'} mr="auto" _hover={{cursor: 'pointer', opacity: 0.7}} >
-                  <Link href={!p.post_id ? '' : `/post/${p.post_id.toString()}`} onClick={(e) => {e.preventDefault(); !!p.post_id && goToPost(p.post_id.toString())}} _hover={{textDecor: 'none'}}  cursor={!p.post_id && 'not-allowed'}>
+                  <Link href={`/post/${p.post_id.toString()}`} onClick={(e) => {e.preventDefault(); goToPost(p.post_id.toString())}} _hover={{textDecor: 'none'}}  cursor={!p.post_id && 'not-allowed'}>
                     <Heading noOfLines={1} size="sm">{p.title}</Heading>
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>

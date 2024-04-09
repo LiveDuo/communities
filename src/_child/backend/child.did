@@ -245,7 +245,7 @@ service : (opt principal, opt text, opt text ) -> {
   get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
   get_most_liked_posts : (AuthenticationWithAddress) -> (GetMostPostsResult) query;
-  get_most_liked_replies : (AuthenticationWithAddress) -> (GetMostReplyResult) query;
+  get_most_liked_replies : (AuthenticationWithAddress) -> (GetMostRepliesResult) query;
   get_hidden_posts : () -> (GetHiddenPostsResult) query;
   get_hidden_replies : () -> (GetHiddenReplyResult) query;
   get_most_recent_posts : (AuthenticationWithAddress) -> (GetPostsByAuthResult) query;

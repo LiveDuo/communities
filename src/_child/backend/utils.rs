@@ -38,9 +38,9 @@ pub fn get_asset(key: String) -> Vec<u8> {
 
 
 pub fn uuid(state: &mut RefMut<'_, State>) -> u64 {
-    state.tx_count += 1;
+    state.uuid_count += 1;
     let mut s = hash_map::DefaultHasher::new();
-    state.tx_count.hash(&mut s);
+    state.uuid_count.hash(&mut s);
     s.finish()
 }
 

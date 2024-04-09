@@ -152,7 +152,7 @@ describe('Testing with done', () => {
 	})
 
 	test('Should create posts and get the most like posts', async () => {
-		// create 10 profiles
+		// create profiles
 		const actors = []
 		const promisesProfiles = []
 		for (let _ of Array(10)) {
@@ -165,12 +165,12 @@ describe('Testing with done', () => {
 		}
 		await Promise.all(promisesProfiles)
 
-		// profile does not have posts
+		// check profile posts
 		const principal = identityIc.getPrincipal()
 		const mostLikedPosts = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
 		expect(mostLikedPosts.Ok.length).toBe(0)
 
-		// create 10 posts and one like of each use
+		// create and like one post for each profile
 		const promisesPosts = []
 		for (const actor of actors) {
 			const promise = actorBackendIc.create_post('hello', '')
@@ -215,7 +215,7 @@ describe('Testing with done', () => {
 	})
 
 	test('Should create replies and get the most like replies', async () => {
-		// create 10 profiles
+		// create profiles
 		const actors = []
 		const promisesProfiles = []
 		for (let _ of Array(10)) {
@@ -229,12 +229,12 @@ describe('Testing with done', () => {
 
 		await Promise.all(promisesProfiles)
 
-		// profile does not have posts
+		// check profile posts
 		const principal = identityIc.getPrincipal()
 		const mostLikedReplies = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
 		expect(mostLikedReplies.Ok.length).toBe(0)
 
-		// create 10 replies and one like of each use
+		// create and like one reply for each profile
 		const createdPost = await actorBackendIc.create_post('hello', '')
 		const postId = createdPost.Ok.post_id
 		const promisesReplies = []

@@ -24,10 +24,10 @@ const RepliesContainer = ({ replies }) => {
             <Text color="gray.500" mr="40px" width="120px" textAlign="center">Time</Text>
           </Flex>
           {replies.map((p, i) => 
-            <Box opacity={p.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
+            <Box  key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
               <Flex alignItems="center">
                 <Flex alignItems={'center'} mr="auto" _hover={{cursor: 'pointer', opacity: 0.7}} >
-                  <Link href={!p.postId ? '' : `/post/${p.postId.toString()}`} onClick={(e) => {e.preventDefault(); !!p.postId && goToPost(p.postId.toString())}} _hover={{textDecor: 'none'}}  cursor={!p.postId && 'not-allowed'}>
+                  <Link href={`/post/${p.postId.toString()}`} onClick={(e) => {e.preventDefault(); goToPost(p.postId.toString())}} _hover={{textDecor: 'none'}}  cursor={!p.postId && 'not-allowed'}>
                     <Text noOfLines={1}>{p.text}</Text>
                   </Link>
                 </Flex>

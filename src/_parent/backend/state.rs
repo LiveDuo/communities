@@ -202,9 +202,9 @@ pub struct Relations {
 
 
 pub fn uuid(state: &mut RefMut<'_, State>) -> u64 {
-    state.tx_count += 1;
+    state.uuid_count += 1;
     let mut s = hash_map::DefaultHasher::new();
-    state.tx_count.hash(&mut s);
+    state.uuid_count.hash(&mut s);
     s.finish()
 }
 
@@ -234,7 +234,7 @@ pub struct State {
     pub canister_data: BTreeMap<u64, CanisterData>,
     pub indexes: Indexes,
     pub relations: Relations,
-    pub tx_count: u64
+    pub uuid_count: u64
 }
 
 thread_local! {

@@ -8,7 +8,6 @@ import PostsContainer from '../components/containers/postsList'
 import RepliesContainer from '../components/containers/repliesList'
 import { IdentityContext } from '../store/identity'
 import { ChildContext } from '../store/child'
-// import { timeSince } from '../utils/time'
 
 import Jazzicon from 'react-jazzicon'
 

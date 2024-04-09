@@ -303,7 +303,6 @@ const ChildProvider = ({ children }) => {
 	}, [childActor])
 
 	const getProfileByAuth = useCallback(async (address, type) => {
-
 		if(!childActor) return
 		
 		const auth = {}
@@ -313,7 +312,6 @@ const ChildProvider = ({ children }) => {
 			auth[type] = {address} 
 		}
 		const response = await childActor.get_profile_by_auth(auth)
-		console.log("getProfileByAuth", response)
 		setProfileUser({...response[0], lastLogin: new Date(Number(response[0].last_login / 1000n / 1000n)), joinDate: new Date(Number(response[0].join_date / 1000n / 1000n))})
 	}, [childActor])
 
