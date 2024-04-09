@@ -38,7 +38,7 @@ exports.getCanisters = getCanisters
 const setupTests = () => {
     global.fetch = require('node-fetch')
 
-    jest.setTimeout(200000)
+    jest.setTimeout(30000)
     // console.log = () => { }
 }
 exports.setupTests = setupTests

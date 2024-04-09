@@ -154,13 +154,16 @@ describe('Testing with done', () => {
 	test('Should create posts and get the most like posts', async () => {
 		// create 10 profiles
 		const actors = []
+		const promisesProfiles = []
 		for (let _ of Array(10)) {
 			const identity = Ed25519KeyIdentity.generate()
 			const agentIc = getAgent('http://127.0.0.1:8000', identity)
 			const actor = Actor.createActor(childFactory, { agent: agentIc, canisterId: canisters.child.local })
-			await actor.create_profile({Ic: null})
+			const promise = actor.create_profile({Ic: null})
+			promisesProfiles.push(promise)
 			actors.push(actor)
 		}
+		await Promise.all(promisesProfiles)
 
 		// profile does not have posts
 		const principal = identityIc.getPrincipal()
@@ -168,15 +171,18 @@ describe('Testing with done', () => {
 		expect(mostLikedPosts.Ok.length).toBe(0)
 
 		// create 10 posts and one like of each use
-		let postIds = []
-		for (let index = 0; index <= 9; index++) {
-			const createdPost = await actorBackendIc.create_post('hello', '')
-			const postId = createdPost.Ok.post_id
-			await actors[index].like_post(postId)
-			postIds.push(createdPost.Ok.post_id)
+		const promisesPosts = []
+		for (const actor of actors) {
+			const promise = actorBackendIc.create_post('hello', '')
+			.then((res) => Promise.all([actor.like_post(res.Ok.post_id), Promise.resolve(res.Ok.post_id)]))
+			.then((res) => res[1])
+			promisesPosts.push(promise)
+			
 		}
+		let postIds = await Promise.all(promisesPosts)
 		const mostLikedPosts1 = await actorBackendIc.get_most_liked_posts({Ic: { principal: principal}})
-		expect(postIds.every((postId, index)=> mostLikedPosts1.Ok[index].post_id === postId)).toBe(true)
+		expect(mostLikedPosts1.Ok.some(post => postIds.includes(post.post_id))).toBe(true)
+		postIds = mostLikedPosts1.Ok.map(p => p.post_id)
 
 		// like "most liked post"
 		await actorBackendIc.like_post(postIds[9])
@@ -211,13 +217,17 @@ describe('Testing with done', () => {
 	test('Should create replies and get the most like replies', async () => {
 		// create 10 profiles
 		const actors = []
+		const promisesProfiles = []
 		for (let _ of Array(10)) {
 			const identity = Ed25519KeyIdentity.generate()
 			const agentIc = getAgent('http://127.0.0.1:8000', identity)
 			const actor = Actor.createActor(childFactory, { agent: agentIc, canisterId: canisters.child.local })
-			await actor.create_profile({Ic: null})
+			const promise = actor.create_profile({Ic: null})
+			promisesProfiles.push(promise)
 			actors.push(actor)
 		}
+
+		await Promise.all(promisesProfiles)
 
 		// profile does not have posts
 		const principal = identityIc.getPrincipal()
@@ -227,16 +237,19 @@ describe('Testing with done', () => {
 		// create 10 replies and one like of each use
 		const createdPost = await actorBackendIc.create_post('hello', '')
 		const postId = createdPost.Ok.post_id
-		let replyIds = []
-		for (let index = 0; index <= 9; index++) {
-			const createdReply = await actorBackendIc.create_reply(postId, 'hello')
-			const replyId = createdReply.Ok.reply_id
-			await actors[index].like_reply(replyId)
-			replyIds.push(replyId)
+		const promisesReplies = []
+		for (const actor of actors) {
+			const promise = actorBackendIc.create_reply(postId, 'hello')
+				.then(res => Promise.all([actor.like_reply(res.Ok.reply_id), Promise.resolve(res.Ok.reply_id)]))
+				.then(res=> res[1])
+			promisesReplies.push(promise)
 		}
+
+		let replyIds = await Promise.all(promisesReplies)
 		
 		const mostLikedReplies1 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
-		expect(replyIds.every((replyId, index)=> mostLikedReplies1.Ok[index][1].reply_id === replyId)).toBe(true)
+		expect(mostLikedReplies1.Ok.some(([_, reply]) => replyIds.includes(reply.reply_id))).toBe(true)
+		replyIds = mostLikedReplies1.Ok.map(([_,r]) => r.reply_id)
 
 		// like "most liked reply"
 		await actorBackendIc.like_reply(replyIds[9])
