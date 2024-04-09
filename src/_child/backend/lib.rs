@@ -440,16 +440,16 @@ fn like_reply(reply_id: u64) -> Result<u64, String> {
         let profile_ids = state.relations.profile_id_to_reply_id.backward.get(&reply_id).unwrap().to_owned();
         let (profile_id, _) = profile_ids.first_key_value().unwrap(); 
         let reply_likes = state.relations.reply_id_to_liked_reply_id.forward.get(&reply_id).unwrap().len() as u64;
-        let most_liked_reply_opt = state.indexes.most_liked_replies.get(profile_id);
-        if most_liked_reply_opt.is_none() {
+        let most_liked_replies_opt = state.indexes.most_liked_replies.get(profile_id);
+        if most_liked_replies_opt.is_none() {
             let mut new_entry: BTreeSet<ValueEntry<u64, u64>> = BTreeSet::new();
             new_entry.insert(ValueEntry::new(reply_id, reply_likes));
             state.indexes.most_liked_replies.insert(profile_id.to_owned(), new_entry.to_owned());
         } else {
-            let mut most_liked_reply = most_liked_reply_opt.unwrap().clone();
-            most_liked_reply.retain(|r|r.get().0 != &reply_id);
-            most_liked_reply.insert(ValueEntry::new(reply_id, reply_likes));
-            state.indexes.most_liked_replies.insert(profile_id.to_owned(), most_liked_reply.to_owned());
+            let mut most_liked_replies = most_liked_replies_opt.unwrap().clone();
+            most_liked_replies.retain(|r|r.get().0 != &reply_id);
+            most_liked_replies.insert(ValueEntry::new(reply_id, reply_likes));
+            state.indexes.most_liked_replies.insert(profile_id.to_owned(), most_liked_replies.to_owned());
         }
         Ok(liked_reply_id)
     })
