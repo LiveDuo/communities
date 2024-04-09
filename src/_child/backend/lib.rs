@@ -688,7 +688,7 @@ fn get_most_recent_posts(authentication: AuthenticationWithAddress) -> Result<Ve
             None => false
         };
     
-        let mut user_post =  post_ids_opt
+        let mut user_posts =  post_ids_opt
             .unwrap()
             .iter()
             .filter_map(|(post_id, _)| {
@@ -743,9 +743,8 @@ fn get_most_recent_posts(authentication: AuthenticationWithAddress) -> Result<Ve
                 })
             }).collect::<Vec<_>>();
 
-        user_post.sort_by(|a, b|b.timestamp.partial_cmp(&a.timestamp).unwrap());
-        let end = if user_post.len() > 10 {10} else {user_post.len()};
-        Ok(user_post[0..end].to_vec())
+        user_posts.sort_by(|a, b|b.timestamp.partial_cmp(&a.timestamp).unwrap());
+        Ok(user_posts.iter().take(10).map(|u| u.to_owned()).collect::<Vec<_>>())
     })
 }
 
@@ -769,9 +768,8 @@ fn get_most_liked_posts(authentication: AuthenticationWithAddress) -> Result<Vec
         let most_liked_posts = most_liked_posts_opt.unwrap();
 
         let mut result = vec![];
-        let end = if most_liked_posts.len() > 10 { 10 } else { most_liked_posts.len() };
-        for i in 0..end {
-            let (post_id, _) = most_liked_posts.iter().nth(i).unwrap().get();
+        for entry in most_liked_posts.iter().take(10) {
+            let (post_id, _) = entry.get();
             let posts = state.posts.get(&post_id).unwrap();
 
             let liked_post_ids_opt =  state.relations.post_id_to_liked_post_id.forward.get(&post_id);
@@ -827,8 +825,8 @@ fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<V
         let mut result = vec![];
         let end = if most_liked_replies.len() > 10 { 10 } else { most_liked_replies.len() };
 
-        for i in 0..end {
-            let (reply_id, _) = most_liked_replies.iter().nth(i).unwrap().get();
+        for entry in most_liked_replies.iter().take(10) {
+            let (reply_id, _) = entry.get();
             let reply = state.replies.get(reply_id).unwrap();
 
             let liked_reply_ids_opt =  state.relations.reply_id_to_liked_reply_id.forward.get(&reply_id);
