@@ -236,13 +236,13 @@ describe('Testing with done', () => {
 		}
 		
 		const mostLikedReplies1 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
-		expect(replyIds.every((replyId, index)=> mostLikedReplies1.Ok[index].reply_id === replyId)).toBe(true)
+		expect(replyIds.every((replyId, index)=> mostLikedReplies1.Ok[index][1].reply_id === replyId)).toBe(true)
 
 		// like "most liked reply"
 		await actorBackendIc.like_reply(replyIds[9])
 		replyIds = [replyIds[9], replyIds[0], ...replyIds.slice(1, 9)]
 		const mostLikedReplies2 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
-		expect(replyIds.every((replyId, index)=> mostLikedReplies2.Ok[index].reply_id === replyId)).toBe(true)
+		expect(replyIds.every((replyId, index)=> mostLikedReplies2.Ok[index][1].reply_id === replyId)).toBe(true)
 		
 		// like not "most liked reply"
 		const createdReply = await actorBackendIc.create_reply(postId, 'hello')
@@ -256,15 +256,15 @@ describe('Testing with done', () => {
 		const mostLikedReplies4 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
 		let removedReplyId = replyIds[9]
 		replyIds = [replyIds[0], replyId, ...replyIds.slice(1, 9)]
-		expect(replyIds.every((replyId, index)=> mostLikedReplies4.Ok[index].reply_id === replyId)).toBe(true)
+		expect(replyIds.every((replyId, index)=> mostLikedReplies4.Ok[index][1].reply_id === replyId)).toBe(true)
 
 		// unlike "most liked reply"
-		const likeReply = mostLikedReplies4.Ok[0].likes.filter(([_, auth]) => auth.Ic.principal.toText() === principal.toText())
+		const likeReply = mostLikedReplies4.Ok[0][1].likes.filter(([_, auth]) => auth.Ic.principal.toText() === principal.toText())
 		const [ likeReplyId ] = likeReply[0]
 		await actorBackendIc.unlike_reply(likeReplyId)
 		const mostLikedReplies5 = await actorBackendIc.get_most_liked_replies({Ic: { principal: principal}})
 		replyIds = [...replyIds.slice(1), removedReplyId]
-		expect(replyIds.every((replyId, index)=> mostLikedReplies5.Ok[index].reply_id === replyId)).toBe(true)
+		expect(replyIds.every((replyId, index)=> mostLikedReplies5.Ok[index][1].reply_id === replyId)).toBe(true)
 	})
 
 	test.skip('Should create, hide and restore a post', async () => {
