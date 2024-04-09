@@ -363,6 +363,7 @@ fn like_post(post_id: u64) -> Result<u64, String> {
             state.indexes.most_liked_posts.insert(profile_id.to_owned(), new_entry.to_owned());
         } else {
             let mut most_liked_posts = most_liked_posts_opt.unwrap().clone();
+            most_liked_posts.retain(|a| {a.get().0 != &post_id});
             most_liked_posts.insert(ValueEntry::new(post_id, post_likes));
             state.indexes.most_liked_posts.insert(profile_id.to_owned(), most_liked_posts.to_owned());
         }
@@ -398,7 +399,7 @@ fn unlike_post(liked_post_id: u64) -> Result<(), String> {
 
         let post_likes_opt = state.relations.post_id_to_liked_post_id.forward.get(post_id);
         let mut most_liked_posts = state.indexes.most_liked_posts.get(profile_id).unwrap().clone();
-        most_liked_posts.retain(|a| {a.get().0 != post_id});
+        most_liked_posts.retain(|a| {&a.get().0 != &post_id});
         
         if post_likes_opt.is_some(){
             most_liked_posts.insert(ValueEntry::new(post_id.to_owned(), post_likes_opt.unwrap().len() as u64));
@@ -446,6 +447,7 @@ fn like_reply(reply_id: u64) -> Result<u64, String> {
             state.indexes.most_liked_replies.insert(profile_id.to_owned(), new_entry.to_owned());
         } else {
             let mut most_liked_reply = most_liked_reply_opt.unwrap().clone();
+            most_liked_reply.retain(|r|r.get().0 != &reply_id);
             most_liked_reply.insert(ValueEntry::new(reply_id, reply_likes));
             state.indexes.most_liked_replies.insert(profile_id.to_owned(), most_liked_reply.to_owned());
         }
@@ -480,7 +482,7 @@ fn unlike_reply(liked_reply_id: u64) -> Result<(), String> {
 
         let reply_likes_otp = state.relations.reply_id_to_liked_reply_id.forward.get(reply_id);
         let mut most_liked_replies = state.indexes.most_liked_replies.get(profile_id).unwrap().clone();
-        most_liked_replies.retain(|a| {a.get().0 != reply_id});
+        most_liked_replies.retain(|a| {&a.get().0 != &reply_id});
         if reply_likes_otp.is_some() {
             most_liked_replies.insert(ValueEntry::new(reply_id.to_owned(), reply_likes_otp.unwrap().len() as u64));
         }
@@ -766,7 +768,6 @@ fn get_most_liked_posts(authentication: AuthenticationWithAddress) -> Result<Vec
         let profile = state.profiles.get(profile_id).unwrap();
         let authentication  = get_authentication_with_address(&profile.authentication, &profile.active_principal);
         let most_liked_posts = most_liked_posts_opt.unwrap();
-
         let mut result = vec![];
         for entry in most_liked_posts.iter().take(10) {
             let (post_id, _) = entry.get();
@@ -823,8 +824,6 @@ fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<V
         let most_liked_replies =  most_liked_replies_opt.unwrap();
 
         let mut result = vec![];
-        let end = if most_liked_replies.len() > 10 { 10 } else { most_liked_replies.len() };
-
         for entry in most_liked_replies.iter().take(10) {
             let (reply_id, _) = entry.get();
             let reply = state.replies.get(reply_id).unwrap();
