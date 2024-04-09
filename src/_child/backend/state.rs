@@ -1,9 +1,10 @@
 use candid::{CandidType, Deserialize, Principal};
 
 use std::hash::Hash;
-
+use std::cmp::Ordering;
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, BTreeSet};
+
 use crate::icrc7::Icrc7Token;
 use crate::icrc3::Transaction;
 
@@ -61,13 +62,17 @@ pub struct Profile {
     pub name: String,
     pub description: String,
     pub authentication: Authentication,
-    pub active_principal: Principal
+    pub active_principal: Principal,
+    pub timestamp: u64,
+    pub last_login: u64
+
 }
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
 pub enum PostStatus {
     Visible,
     Hidden
 }
+
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq)]
 pub struct Post {
     pub title: String,
@@ -108,12 +113,26 @@ pub struct PostResponse {
     pub replies: Vec<ReplyResponse>,
 }
 #[derive(Clone, CandidType, Deserialize, Debug)]
+pub struct ProfileWithStatsResponse {
+    pub name: String,
+    pub description: String,
+    pub authentication: Authentication,
+    pub active_principal: Principal,
+    pub roles: Vec<UserRole>,
+    pub last_login: u64,
+    pub join_date: u64,
+    pub total_posts: u64,
+    pub total_replies: u64,
+    pub total_likes: u64
+}
+
+#[derive(Clone, CandidType, Deserialize, Debug)]
 pub struct ProfileResponse {
     pub name: String,
     pub description: String,
     pub authentication: Authentication,
     pub active_principal: Principal,
-    pub roles: Vec<UserRole>
+    pub roles: Vec<UserRole>,
 }
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -184,6 +203,32 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, CandidType, Deserialize)]
+pub struct ValueEntry<K, V>((K, V)); // index key, index value
+
+impl <K: Ord, V: Eq + PartialOrd + Ord>Ord for ValueEntry<K, V> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self == other { Ordering::Equal } // same entry
+        else if self.0.1 == other.0.1 { Ordering::Greater } // diffent entry with same values
+        else { self.0.1.cmp(&other.0.1).reverse() } // different entry with different values
+    }
+}
+
+impl <K: PartialEq + Ord, V: Eq + Ord>PartialOrd for ValueEntry<K, V> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl <K: Eq + Ord, V: Eq + PartialOrd> ValueEntry<K, V> {
+    pub fn new(k: K, v: V) -> Self {
+        Self((k,v))
+    }
+
+    pub fn get(&self) -> (&K, &V) {
+        (&self.0.0, &self.0.1)
+    }
+}
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relations {
     pub profile_id_to_post_id: Relation<u64, u64>,
@@ -201,7 +246,9 @@ pub struct Indexes {
     pub profile: HashMap<AuthenticationWithAddress, u64>,
     pub active_principal: HashMap<Principal, u64>,
     pub has_liked_post: HashMap<(u64, u64), ()>,
-    pub has_liked_reply: HashMap<(u64, u64), ()>
+    pub has_liked_reply: HashMap<(u64, u64), ()>,
+    pub most_liked_replies: HashMap<u64, BTreeSet<ValueEntry<u64, u64>>>,
+    pub most_liked_posts: HashMap<u64, BTreeSet<ValueEntry<u64, u64>>>,
 }
 #[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct Metadata {
@@ -224,6 +271,7 @@ pub struct State {
     pub track: Option<String>,
     pub tokens: BTreeMap<u128, Icrc7Token>,
     pub txn_log: BTreeMap<u128, Transaction>,
+    pub uuid_count: u64
 }
 
 thread_local! {

@@ -14,7 +14,7 @@ const LikesModal = ({ isOpen, onClose, likes, title }) => {
 				<ModalCloseButton />
 				<ModalBody>
 					{likes.map((l, i) => (
-						<Link key={i} href={`/user/${getAddress(l[1])}/${getAuthenticationType(l[1])}`} onClick={()=> navigate(`/user/${getAddress(l[1])}/${getAuthenticationType(l[1])}`)}>
+						<Link key={i} href={`/user/${getAuthenticationType(l[1]).toLowerCase()}/${getAddress(l[1])}`} onClick={()=> navigate(`/user/${getAuthenticationType(l[1]).toLowerCase()}/${getAddress(l[1])}`)}>
 							<Flex borderBottom={i < likes.length - 1 ? "1px solid #dcdedc" : 'none'} alignItems="center" paddingTop="10px" paddingBottom="10px">
 								<Jazzicon diameter={20} seed={getSeedFromAuthentication(l[1])} />
 								<Text ml="20px">{addressShort(getAddress(l[1]))}</Text>

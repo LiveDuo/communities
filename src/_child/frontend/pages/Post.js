@@ -1,7 +1,7 @@
 import { Box } from '@chakra-ui/react'
 import PostContainer from '../components/containers/post'
 
-const Posts = () => {
+const Post = () => {
 
   return (
     <Box>
@@ -9,4 +9,4 @@ const Posts = () => {
     </Box>
   )
 }
-export default Posts
+export default Post

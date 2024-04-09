@@ -32,7 +32,7 @@ async fn create_child() -> Result<Principal, String> {
     }
 
     // mint cycles
-    let canister_data_id = uuid(&caller.to_text());
+    let canister_data_id =  STATE.with(|s| uuid(&mut s.borrow_mut()));
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<u64, String>,)>(id, "create_canister_data_callback", (caller, canister_data_id)).await.unwrap().0.unwrap();});
 
     if LEDGER_CANISTER.is_some() && CMC_CANISTER.is_some() {
@@ -165,7 +165,7 @@ fn create_canister_data_callback(caller: Principal, canister_data_id: u64) -> Re
         let user_id = if user_opt != None {
             *user_opt.unwrap()
         } else {
-            let user_id = uuid(&caller.to_text());
+            let user_id = uuid(&mut state);
             let profile = Profile {
                 authentication: Authentication::Ic,
                 active_principal: caller,
@@ -336,9 +336,9 @@ async fn create_upgrade(version: String, upgrade_from_opt: Option<UpgradeFrom>, 
         assets: assets.clone(),
         description: description.to_owned()
     };
-    let upgrade_id = uuid(&caller.to_text());
     STATE.with(|s| {
         let mut state = s.borrow_mut();
+        let upgrade_id = uuid(&mut state);
         state.upgrades.insert(upgrade_id, upgrade);
         state.indexes.version.insert((track.to_owned(), version), upgrade_id);
 
@@ -507,7 +507,7 @@ fn add_track(name: String, caller: Principal) -> Result<(), String> {
         }
 
         // add track
-        let track_id = uuid(&caller.to_string());
+        let track_id = uuid(&mut state);
         let track =  Track { name:  name.to_owned(), timestamp: ic_cdk::api::time()};
         state.tracks.insert(track_id, track);
         state.indexes.track.insert(name, track_id);

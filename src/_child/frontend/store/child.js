@@ -61,7 +61,9 @@ const idlFactory = ({ IDL }) => {
 		name: IDL.Text,
 		description: IDL.Text,
 		authentication: Authentication,
-		active_principal: IDL.Principal
+		active_principal: IDL.Principal,
+		timestamp: IDL.Nat64,
+		last_login: IDL.Nat64,
 	});
 
 	const ProfileResponse = IDL.Record({
@@ -70,6 +72,19 @@ const idlFactory = ({ IDL }) => {
 		authentication: Authentication,
 		active_principal: IDL.Principal,
 		roles: IDL.Vec(UserRole)
+	});
+
+	const ProfileWithStatsResponse = IDL.Record({
+		name: IDL.Text,
+		description: IDL.Text,
+		authentication: Authentication,
+		active_principal: IDL.Principal,
+		roles: IDL.Vec(UserRole),
+		last_login: IDL.Nat64,
+		join_date: IDL.Nat64,
+		total_posts: IDL.Nat64,
+		total_replies: IDL.Nat64,
+		total_likes: IDL.Nat64
 	});
 
 	const PostSummary = IDL.Record({
@@ -133,10 +148,12 @@ const idlFactory = ({ IDL }) => {
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
-		get_posts_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_most_recent_posts: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostSummary), Err: IDL.Text })], ["query"]),
+		get_most_liked_posts: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
+		get_most_liked_replies: IDL.Func([AuthenticationWithAddress], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
 		get_hidden_posts: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(PostResponse), Err: IDL.Text })], ["query"]),
 		get_hidden_replies: IDL.Func([], [IDL.Variant({ Ok: IDL.Vec(IDL.Tuple(IDL.Nat64, ReplyResponse)), Err: IDL.Text })], ["query"]),
-		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileResponse)], ["query"]),
+		get_profile_by_auth: IDL.Func([AuthenticationWithAddress], [IDL.Opt(ProfileWithStatsResponse)], ["query"]),
 		upgrade_canister: IDL.Func([IDL.Text, IDL.Text], [], ["update"]),
 		get_next_upgrades: IDL.Func([],[IDL.Variant({ 'Ok': IDL.Vec(UpgradeWithTrack), 'Err': IDL.Text })], ["update"]),
 		get_metadata: IDL.Func([],[IDL.Variant({ 'Ok': Metadata, 'Err': IDL.Text })], ["query"]),
@@ -151,7 +168,6 @@ const ChildProvider = ({ children }) => {
 
 	const [childActor, setChildActor] = useState()
 	const [posts, setPosts] = useState()
-	const [postsUser, setPostsUser] = useState()
 	const [loading, setLoading] = useState()
 	const [profile, setProfile] = useState()
 	const [profileUser, setProfileUser] = useState()
@@ -228,7 +244,6 @@ const ChildProvider = ({ children }) => {
 	const getPosts = useCallback(async () => {
 		const response = await childActor.get_posts()
 		const _posts = response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
-		console.log(_posts)
 		_posts.sort((a, b) => b.timestamp - a.timestamp)
 		setPosts(_posts)
 	}, [childActor])
@@ -251,19 +266,43 @@ const ChildProvider = ({ children }) => {
 		return _hiddenReplies
 	}, [childActor])
 
-	const getPostsByAuth = useCallback(async (address, type) => {
+	const getMostRecentPosts = useCallback(async (address, type) => {
 		const auth = {}
 		if (type === 'Ic') {
 			auth[type] = {principal: Principal.fromText(address)} 
 		} else if(type === 'Evm' || type === 'Svm') {
 			auth[type] = {address} 
 		}
-		const response = await childActor.get_posts_by_auth(auth)
-		setPostsUser(response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count})))
+		const response = await childActor.get_most_recent_posts(auth)
+		return response.Ok.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
+	}, [childActor])
+
+	const getMostLikedPosts = useCallback(async (address, type) => {
+		const auth = {}
+		if (type === 'Ic') {
+			auth[type] = {principal: Principal.fromText(address)} 
+		} else if(type === 'Evm' || type === 'Svm') {
+			auth[type] = {address} 
+		}
+
+		const response = await childActor.get_most_liked_posts(auth)
+
+		return response.Ok.map(p => ({...p, timestamp: new Date(Number(p.timestamp / 1000n / 1000n))}))
+	}, [childActor])
+
+	const getMostLikedReplies = useCallback(async (address, type) => {
+		const auth = {}
+		if (type === 'Ic') {
+			auth[type] = {principal: Principal.fromText(address)} 
+		} else if(type === 'Evm' || type === 'Svm') {
+			auth[type] = {address} 
+		}
+
+		const response = await childActor.get_most_liked_replies(auth)
+		return response.Ok.map(r => ({...r[1], postId: r[0], timestamp: new Date(Number(r[1].timestamp / 1000n / 1000n))}))
 	}, [childActor])
 
 	const getProfileByAuth = useCallback(async (address, type) => {
-
 		if(!childActor) return
 		
 		const auth = {}
@@ -273,7 +312,7 @@ const ChildProvider = ({ children }) => {
 			auth[type] = {address} 
 		}
 		const response = await childActor.get_profile_by_auth(auth)
-		setProfileUser(response[0])
+		setProfileUser({...response[0], lastLogin: new Date(Number(response[0].last_login / 1000n / 1000n)), joinDate: new Date(Number(response[0].join_date / 1000n / 1000n))})
 	}, [childActor])
 
 	const getProfile = useCallback(async () => {
@@ -367,7 +406,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, profileUser, setProfile, postsUser , getProfileByAuth, getProfile, getPostsByAuth, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
+	const value = {childActor, profile, profileUser, setProfile , getProfileByAuth, getMostLikedPosts, getMostLikedReplies, getMostRecentPosts, getProfile, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

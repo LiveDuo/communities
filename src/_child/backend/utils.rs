@@ -2,11 +2,12 @@ use candid::{Nat, Principal};
 use ic_certified_assets::types::{GetArg, GetChunkArg};
 use icrc_ledger_types::icrc1::account::{Account, Subaccount, DEFAULT_SUBACCOUNT};
 use num_traits::ToPrimitive;
+use std::cell::RefMut;
 use std::collections::hash_map;
 use std::hash::{Hash, Hasher};
 use std::ops::Div;
 
-use crate::state::{STATE, UserRole};
+use crate::state::{STATE, UserRole, State};
 
 pub fn get_asset(key: String) -> Vec<u8> {
     // get asset length
@@ -36,12 +37,11 @@ pub fn get_asset(key: String) -> Vec<u8> {
 }
 
 
-pub fn uuid(seed: &str) -> u64 {
-  let timestamp: u64 = ic_cdk::api::time() * 1000 * 1000;
-  let str = format!("{}-{}", seed, timestamp);
-  let mut s = hash_map::DefaultHasher::new();
-  str.hash(&mut s);
-  s.finish()
+pub fn uuid(state: &mut RefMut<'_, State>) -> u64 {
+    state.uuid_count += 1;
+    let mut s = hash_map::DefaultHasher::new();
+    state.uuid_count.hash(&mut s);
+    s.finish()
 }
 
 
@@ -110,6 +110,7 @@ pub fn burn_account() -> Account {
         subaccount: Some(burn_subaccount()),
     }
 }
+
 pub fn account_transformer(account: Account) -> Account {
     if let Some(_) = account.subaccount {
         account

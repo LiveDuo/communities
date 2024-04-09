@@ -8,9 +8,9 @@ import { ChildProvider } from './store/child'
 
 import Layout from './components/layout'
 
-import UserPosts from './pages/UserPosts'
+import Profile from './pages/Profile'
 import Post from './pages/Post'
-import Posts from './pages/Posts'
+import Home from './pages/Home'
 import Admin from './pages/Admin'
 
 const App = () => (
@@ -20,8 +20,8 @@ const App = () => (
           <ChildProvider>
             <BrowserRouter>
                 <Routes>
-                  <Route exact path="/" element={<Layout><Posts /></Layout>}/>
-                  <Route path="/user/:address/:type" element={<Layout><UserPosts /></Layout>}/>
+                  <Route exact path="/" element={<Layout><Home /></Layout>}/>
+                  <Route path="/user/:type/:address" element={<Layout><Profile /></Layout>}/>
                   <Route path="/post/:index" element={<Layout><Post /></Layout>}/>
                   <Route path="/admin" element={<Layout><Admin /></Layout>}/>
                 </Routes>
