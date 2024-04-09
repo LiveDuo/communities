@@ -1,9 +1,10 @@
 use candid::{CandidType, Deserialize, Principal};
 
 use std::hash::Hash;
-
+use std::cmp::Ordering;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, BTreeSet};
+
 use crate::icrc7::Icrc7Token;
 use crate::icrc3::Transaction;
 
@@ -205,18 +206,18 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
 pub struct ValueEntry<K, V>((K, V)); // index key, index value
 
 impl <K: Eq + Ord, V: Eq + PartialOrd>Ord for ValueEntry<K, V> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        if self.0.1 > other.0.1 { std::cmp::Ordering::Less }
-        else if self == other { std::cmp::Ordering::Equal }
-        else { std::cmp::Ordering::Greater }
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self == other { Ordering::Equal }
+        else if self.0.1 > other.0.1 { Ordering::Less }
+        else { Ordering::Greater }
     }
 }
 
 impl <K: PartialEq + Ord, V: PartialEq + PartialOrd>PartialOrd for ValueEntry<K, V> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        if self.0.1 > other.0.1 { Some(std::cmp::Ordering::Less) }
-        else if self == other { Some(std::cmp::Ordering::Equal) }
-        else { Some(std::cmp::Ordering::Greater) }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self == other { Some(Ordering::Equal) }
+        else if self.0.1 > other.0.1 { Some(Ordering::Less) }
+        else { Some(Ordering::Greater) }
     }
 }
 
