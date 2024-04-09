@@ -202,10 +202,11 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
         }
     }
 }
+
 #[derive(Debug, PartialEq, Eq, Clone, CandidType, Deserialize)]
 pub struct ValueEntry<K, V>((K, V)); // index key, index value
 
-impl <K: Eq + Ord, V: Eq + PartialOrd + Ord>Ord for ValueEntry<K, V> {
+impl <K: Ord, V: Eq + PartialOrd + Ord>Ord for ValueEntry<K, V> {
     fn cmp(&self, other: &Self) -> Ordering {
         if self == other { Ordering::Equal }
         else if self.0.1 > other.0.1 { Ordering::Less }

@@ -80,6 +80,7 @@ describe('Testing with done', () => {
 		expect(userPosts2.Ok.length).toBe(2)
 		
 	})
+	
 	test("Should sign in with solana", async () => {
 		
 		// link address
@@ -110,7 +111,8 @@ describe('Testing with done', () => {
 		await actorBackendSvm.create_post('hello', '')
 		const userPosts2 = await actorBackendSvm.get_most_recent_posts({Svm: { address: signerSvm.publicKey.toString()}})
 		expect(userPosts2.Ok.length).toBe(2)
-  	});
+  	})
+
 	test("Should sign in with internet computer", async () => {
 		// link address
 		const profile = await actorBackendIc.create_profile({Ic: null})
@@ -120,7 +122,6 @@ describe('Testing with done', () => {
 		await actorBackendIc.create_post('hello', '')
 		const userPosts = await actorBackendIc.get_most_recent_posts({Ic: {principal: principal}})
 		expect(userPosts.Ok.length).toBe(1)
-
 
 		// logout and login
 		const profile1 = await actorBackendIc.create_profile({Ic: null});
