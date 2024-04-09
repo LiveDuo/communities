@@ -1,5 +1,5 @@
 import { Spinner, Box, Link, Heading } from '@chakra-ui/react'
-import { Text, Flex } from '@chakra-ui/react'
+import { Text, Flex, Tag } from '@chakra-ui/react'
 
 import { useNavigate } from 'react-router-dom'
 
@@ -25,11 +25,11 @@ const PostsContainer = ({ posts }) => {
             <Text color="gray.500" mr="40px" width="120px" textAlign="center">Time</Text>
           </Flex>
           {posts.map((p, i) => 
-            <Box key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
+            <Box opacity={p.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={i} margin="0 auto" mb="8px" borderBottom="1px solid #00000010" textAlign="start" padding="10px 40px" alignItems="center">
               <Flex alignItems="center">
                 <Flex alignItems={'center'} mr="auto" _hover={{cursor: 'pointer', opacity: 0.7}} >
                   <Link href={`/post/${p.post_id.toString()}`} onClick={(e) => {e.preventDefault(); goToPost(p.post_id.toString())}} _hover={{textDecor: 'none'}}  cursor={!p.post_id && 'not-allowed'}>
-                    <Heading noOfLines={1} size="sm">{p.title}</Heading>
+                    <Heading noOfLines={1} size="sm">{p.title}{p.status.hasOwnProperty('Hidden') && <Tag ml="10px" colorScheme='orange' size={'md'}> Hidden</Tag>}</Heading>
                     <Text noOfLines={1}>{p.description}</Text>
                   </Link>
                 </Flex>

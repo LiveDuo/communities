@@ -1,5 +1,5 @@
 import { Spinner, Box, Link } from '@chakra-ui/react'
-import { Text, Flex } from '@chakra-ui/react'
+import { Text, Flex, Tag } from '@chakra-ui/react'
 
 import { timeSinceShort } from '../../utils/time'
 
@@ -28,7 +28,7 @@ const RepliesContainer = ({ replies }) => {
               <Flex alignItems="center">
                 <Flex alignItems={'center'} mr="auto" _hover={{cursor: 'pointer', opacity: 0.7}} >
                   <Link href={`/post/${p.postId.toString()}`} onClick={(e) => {e.preventDefault(); goToPost(p.postId.toString())}} _hover={{textDecor: 'none'}}  cursor={!p.postId && 'not-allowed'}>
-                    <Text noOfLines={1}>{p.text}</Text>
+                    <Text noOfLines={1}>{p.text}{p.status.hasOwnProperty('Hidden') && <Tag ml="10px" colorScheme='orange' size={'md'}> Hidden</Tag>}</Text>
                   </Link>
                 </Flex>
                 <Text width="80px" textAlign="center">{p.likes.length}</Text>
