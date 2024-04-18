@@ -4,6 +4,7 @@ import Header from '../header'
 import WalletModal from '../modals/WalletModal'
 import IcWalletModal from '../modals/IcWalletModal'
 import UpgradeModal from '../modals/UpgradeModal'
+import SetupDomainModal from '../modals/SetupDomainModal'
 
 const Layout = ({children}) => (
   <Box>
@@ -14,6 +15,7 @@ const Layout = ({children}) => (
     <IcWalletModal/>
     <WalletModal/>
     <UpgradeModal/>
+    <SetupDomainModal/>
   </Box>
 )
 export default Layout

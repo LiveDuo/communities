@@ -26,7 +26,7 @@
     "start:parent": "serve -s build/parent"
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.2.4",
+    "@chakra-ui/react": "^2.8.2",
     "@dfinity/agent": "^0.11.3",
     "@dfinity/candid": "^0.11.3",
     "@dfinity/identity": "^0.11.3",
