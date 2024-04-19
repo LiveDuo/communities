@@ -20,9 +20,11 @@ use icrc_ledger_types::icrc::generic_metadata_value::MetadataValue;
 use crate::state::{*, STATE};
 use upgrade::{update_metadata, check_canister_cycles_balance, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::UpgradeWithTrack;
-use utils::{uuid, get_asset, get_user_roles, default_account};
+use utils::{uuid, get_asset, get_user_roles, default_account, get_content_type};
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 use candid::{Encode, Decode};
+use serde_bytes::ByteBuf;
+use ic_certified_assets::types::StoreArg;
 
 #[init]
 #[candid_method(init)]
@@ -490,6 +492,42 @@ fn unlike_reply(liked_reply_id: u64) -> Result<(), String> {
         Ok(())
     })
 }
+
+#[update]
+#[candid_method(update)]
+async fn register_domain(domain: String) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+    authorize(&caller).await?;
+
+    let content = format!("{}\nwww.{}", domain, domain);
+    let content = ByteBuf::from(content.as_bytes().to_vec());
+    let key = format!("/index.txt");
+    let store_args = StoreArg {
+      key: key.to_owned(),
+      content_type: get_content_type(&key),
+      content_encoding: "identity".to_owned(),
+      content,
+      sha256: None
+    };
+    ic_certified_assets::store(store_args);
+    
+    Ok(())
+}
+
+#[query]
+#[candid_method(query)]
+fn get_domain() -> Option<String> {
+    let key = "/index.txt".to_owned();
+    if !ic_certified_assets::exists(key.to_owned()) {
+        return None;
+    }
+
+    let domain_vec = get_asset(key);
+    let domain_content =  String::from_utf8(domain_vec).unwrap();
+    let domain_content_splitted =  domain_content.split('\n').collect::<Vec<_>>();
+    Some(domain_content_splitted[0].to_owned())
+}
+
 #[query]
 #[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
