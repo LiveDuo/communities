@@ -156,7 +156,8 @@ pub fn replace_assets_from_temp() {
   // cleanup previous assets
   let prev_assets = &assets.iter().filter(|k| !k.key.starts_with("/temp")).collect::<Vec<_>>();
   for asset  in prev_assets {
-      ic_certified_assets::delete_asset(DeleteAssetArguments { key: asset.key.to_owned() });
+    if asset.key == "index.txt".to_owned() { continue; }
+    ic_certified_assets::delete_asset(DeleteAssetArguments { key: asset.key.to_owned() });
   }
 
   // store new assets
