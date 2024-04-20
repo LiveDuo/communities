@@ -11,40 +11,38 @@ import { isValidDomainName } from '../../utils/domain'
 
 const DnsRecords = ({domain}) => {
   return (
-    <Flex flexDirection={"column"}>
-      <TableContainer>
-      <Table variant='simple'>
-        <Thead>
-          <Tr>
-            <Th>Record Type</Th>
-            <Th>Host</Th>
-            <Th>Value</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          <Tr>
-            <Td>CNAME</Td>
-            <Td>@</Td>
-            <Td>{domain}.icp1.io</Td>
-          </Tr>
-          <Tr>
-            <Td>TXT</Td>
-            <Td>_canister-id</Td>
-            <Td>{CHILD_CANISTER_ID}</Td>
-          </Tr>
-          <Tr>
-            <Td>CNAME</Td>
-            <Td>_acme-challenge</Td>
-            <Td>_acme-challenge.{domain}.icp2.io</Td>
-          </Tr>
-        </Tbody>
-      </Table>
-    </TableContainer>
-  </Flex>
+    <TableContainer>
+    <Table variant='simple'>
+      <Thead>
+        <Tr>
+          <Th>Record Type</Th>
+          <Th>Host</Th>
+          <Th>Value</Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        <Tr>
+          <Td>CNAME</Td>
+          <Td>@</Td>
+          <Td>{domain}.icp1.io</Td>
+        </Tr>
+        <Tr>
+          <Td>TXT</Td>
+          <Td>_canister-id</Td>
+          <Td>{CHILD_CANISTER_ID}</Td>
+        </Tr>
+        <Tr>
+          <Td>CNAME</Td>
+          <Td>_acme-challenge</Td>
+          <Td>_acme-challenge.{domain}.icp2.io</Td>
+        </Tr>
+      </Tbody>
+    </Table>
+  </TableContainer>
   )
 }
 
-const AllReadyDone = ({domain, setUserFlowStep, setDomain}) => {
+const AllReadyDone = ({domain, setUserFlowStep}) => {
   return (
     <Card>
       <CardBody minW={"450px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
@@ -52,7 +50,7 @@ const AllReadyDone = ({domain, setUserFlowStep, setDomain}) => {
           <Heading ml="4px" size={"md"}>{domain}</Heading>
           <Text>{CHILD_CANISTER_ID}</Text>
         </Box>
-        <Button ml={'auto'} onClick={() => {setUserFlowStep("dns-records"); setDomain("")}}>DNS</Button>
+        <Button ml={'auto'} onClick={() => {setUserFlowStep("dns-records");}}>DNS</Button>
       </CardBody>
     </Card>
   )
@@ -124,7 +122,7 @@ const SetupDomainModal = () =>  {
             {userFlowStep === "enter-domain" && <Input placeholder='eg. example.com' size='md' onChange={(e) => setDomainName(e.target.value)} />}
             {userFlowStep === "waiting-registration" && <Text>Waiting for registration</Text>}
             {userFlowStep === "dns-records" && <DnsRecords domain={domainName}/>}
-            {userFlowStep === "already-setup" && <AllReadyDone domain={domainName} setDomain={setDomainName} setUserFlowStep={setUserFlowStep}/>}
+            {userFlowStep === "already-setup" && <AllReadyDone domain={domainName} setUserFlowStep={setUserFlowStep}/>}
           </Flex>
         </ModalBody>
         <ModalFooter>
