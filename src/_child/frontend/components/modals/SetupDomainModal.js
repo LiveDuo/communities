@@ -3,11 +3,11 @@ import { useContext, useCallback, useState, useEffect } from 'react'
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, ModalFooter, Box } from '@chakra-ui/react'
 import { TableContainer, Table, Thead, Tr, Th, Tbody, Td  } from '@chakra-ui/react'
 import { Card, CardBody } from '@chakra-ui/react'
-import { Flex, Button, Text, Input, Heading, Spinner, useToast } from '@chakra-ui/react'
+import { Flex, Button, Text, Input, Heading, Spinner, useToast, Tag, Tooltip } from '@chakra-ui/react'
 
 import { IdentityContext } from '../../store/identity'
 import { CHILD_CANISTER_ID, ChildContext } from '../../store/child'
-import { isValidDomainName } from '../../utils/domain'
+import { isValidDomainName, getDomainLastStatus } from '../../utils/domain'
 
 const DnsRecords = ({domain}) => {
   return (
@@ -42,12 +42,21 @@ const DnsRecords = ({domain}) => {
   )
 }
 
-const AllReadyDone = ({domain, setUserFlowStep}) => {
+const AllReadyDone = ({domainName, setUserFlowStep, domainStatus}) => {
   return (
     <Card>
-      <CardBody minW={"450px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
+      <CardBody minW={"460px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
         <Box>
-          <Heading ml="4px" size={"md"}>{domain}</Heading>
+          <Flex>
+            <Heading ml="4px" size={"md"}>{domainName}</Heading>
+            {domainStatus.isError ? 
+              <Tooltip label={domainStatus.message}>
+                <Tag ml="12px" variant='solid' colorScheme={domainStatus.color}>Error</Tag>
+              </Tooltip> :
+              <Tag ml="12px" variant='solid' colorScheme={domainStatus.color}>{domainStatus.message}</Tag>
+            }
+            
+          </Flex>
           <Text>{CHILD_CANISTER_ID}</Text>
         </Box>
         <Button ml={'auto'} onClick={() => {setUserFlowStep("dns-records");}}>DNS</Button>
@@ -60,6 +69,7 @@ const SetupDomainModal = () =>  {
   const toast = useToast()
   const [userFlowStep, setUserFlowStep] = useState("checking-domain")
   const [domainName, setDomainName] = useState()
+  const [domainStatus, setDomainStatus] = useState()
   const { setupCustomDomainDisclosure, principal } = useContext(IdentityContext)
   const { getDomain, childActor, registerDomain } = useContext(ChildContext)
 
@@ -74,6 +84,7 @@ const SetupDomainModal = () =>  {
 			const domain = await getDomain()
       setUserFlowStep(!domain[0] ? "enter-domain" : "already-setup")
       setDomainName(domain[0] && domain[0].domain_name)
+      setDomainStatus(domain[0] && getDomainLastStatus(domain[0].last_status))
 		} catch (err) {
 			console.log(err)
 		}
@@ -122,7 +133,7 @@ const SetupDomainModal = () =>  {
             {userFlowStep === "enter-domain" && <Input placeholder='eg. example.com' size='md' onChange={(e) => setDomainName(e.target.value)} />}
             {userFlowStep === "waiting-registration" && <Text>Waiting for registration</Text>}
             {userFlowStep === "dns-records" && <DnsRecords domain={domainName}/>}
-            {userFlowStep === "already-setup" && <AllReadyDone domain={domainName} setUserFlowStep={setUserFlowStep}/>}
+            {userFlowStep === "already-setup" && <AllReadyDone domainName={domainName} domainStatus={domainStatus} setUserFlowStep={setUserFlowStep}/>}
           </Flex>
         </ModalBody>
         <ModalFooter>
