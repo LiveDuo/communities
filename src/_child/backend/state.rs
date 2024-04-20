@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, HashMap, BTreeSet};
 
 use crate::icrc7::Icrc7Token;
 use crate::icrc3::Transaction;
+use crate::domain::Domain;
 
 
 #[derive(Clone, CandidType, Deserialize, Default, Hash, PartialEq, Eq, Debug)]
@@ -271,7 +272,8 @@ pub struct State {
     pub track: Option<String>,
     pub tokens: BTreeMap<u128, Icrc7Token>,
     pub txn_log: BTreeMap<u128, Transaction>,
-    pub uuid_count: u64
+    pub uuid_count: u64,
+    pub domain: Option<Domain>
 }
 
 thread_local! {

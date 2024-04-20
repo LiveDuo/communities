@@ -230,6 +230,21 @@ type TransferError = variant {
   TooOld;
 };
 
+type DomainStatus  = variant {
+  NotStarted;
+  PendingOrder;
+  PendingChallengeResponse;
+  PendingAcmeApproval;
+  Available;
+  Failed: text;
+};
+
+type Domain = record {
+  start_time: nat64;
+  domain_name: text;
+  last_status: variant { Ok : DomainStatus; Err : text };
+  timer_key: nat64;
+};
 service : (opt principal, opt text, opt text ) -> {
   create_post : (text, text) -> (CreatePostResult);
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
@@ -244,7 +259,7 @@ service : (opt principal, opt text, opt text ) -> {
   get_next_upgrades : () -> (GetNextUpgradesResult);
   canister_status : () -> (CanisterStatusResponse);
   register_domain : (text) -> (RegisterDomainResult);
-  get_domain : () -> (opt text) query;
+  get_registration : () -> (opt Domain) query;
   get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
   get_most_liked_posts : (AuthenticationWithAddress) -> (GetMostPostsResult) query;
