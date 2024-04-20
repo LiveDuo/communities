@@ -14,12 +14,13 @@ use crate::STATE;
 use crate::upgrade::authorize;
 use crate::utils::get_content_type;
 
-const EXPIRE_TIME: u64 = 2 * 60 * 1000 * 1000 * 1000 ; // 2 mins
+const EXPIRE_TIME: u64 = 1 * 60 * 1000 * 1000 * 1000 ; // 2 mins
 const REGISTRATIONS_URL: &str = "https://icp0.io/registrations";
 const INTERVAL_TIME: u64 = 30; // 30 sec
 
 #[derive(Serialize, Deserialize, Debug, CandidType, Clone, PartialEq, Eq)]
 enum DomainStatus {
+    ExpireTimer,
     NotStarted,
     PendingOrder,
     PendingChallengeResponse,
@@ -34,6 +35,11 @@ pub struct Domain {
     timer_key: u64,
     start_time: u64,
     last_status: Result<DomainStatus, String>,
+}
+fn clear_timer(timer_key: u64) {
+    let key = KeyData::from_ffi(timer_key);
+    let timer_id = TimerId::from(key);
+    ic_cdk_timers::clear_timer(timer_id);
 }
 
 #[update]
@@ -113,22 +119,29 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
     let interval = std::time::Duration::from_secs(INTERVAL_TIME);
 
     let timer_id = ic_cdk_timers::set_timer_interval(interval,  || {
-        ic_cdk::println!("set_timer_interval");
-
+        
         STATE.with(|s| {
-            let state = s.borrow();
-
+            let mut state = s.borrow_mut();
+            
             if state.domain.is_none() {
                 return;
             }
 
-            let domain = state.domain.as_ref().unwrap();
-            if ic_cdk::api::time() > domain.start_time + EXPIRE_TIME || domain.last_status == Ok(DomainStatus::Available) {
+            let mut domain = state.domain.clone().unwrap();
 
-                let key = KeyData::from_ffi(domain.timer_key);
-                let timer_id = TimerId::from(key);
-                ic_cdk_timers::clear_timer(timer_id);
-                
+            ic_cdk::println!("set_timer_interval {}", domain.domain_name);
+
+            if domain.last_status == Ok(DomainStatus::Available) {
+                clear_timer(domain.timer_key);                
+                return;
+            }
+
+            if ic_cdk::api::time() > domain.start_time + EXPIRE_TIME {
+
+                domain.last_status = Ok(DomainStatus::ExpireTimer);
+                state.domain =  Some(domain.to_owned());
+
+                clear_timer(domain.timer_key);
                 return;
             }
 
@@ -153,6 +166,11 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
     
     STATE.with(|s| {
         let mut state = s.borrow_mut();
+
+        if let Some(domain) = &state.domain {
+            clear_timer(domain.timer_key);
+        }
+
         let domain = Domain {
             start_time: ic_cdk::api::time(),
             domain_name: format!("www.{}", domain_name),

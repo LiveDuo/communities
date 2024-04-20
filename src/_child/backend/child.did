@@ -231,6 +231,7 @@ type TransferError = variant {
 };
 
 type DomainStatus  = variant {
+  ExpireTimer;
   NotStarted;
   PendingOrder;
   PendingChallengeResponse;
