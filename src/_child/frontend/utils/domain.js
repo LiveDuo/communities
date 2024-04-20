@@ -6,7 +6,11 @@ export { isValidDomainName }
 
 const getDomainLastStatus  = (domainStatus) => {
     if (domainStatus.hasOwnProperty('Err')) {
-        return {color:  'red', message: domainStatus.Err, isError: true}
+        if(domainStatus.Err.startsWith("missing dns cname record from")) {
+            return {color:  'yellow', message: "Waiting DNS", isError: false}
+        } else {
+            return {color:  'red', message: domainStatus.Err, isError: true}
+        }
     } else if (domainStatus.Ok.hasOwnProperty('TimerExpired')) {
         return {color:  'red', message: "Timeout", isError: false}
     } else if (domainStatus.Ok.hasOwnProperty('NotStarted')) {
