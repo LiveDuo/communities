@@ -8,6 +8,7 @@ use serde::{Serialize, Deserialize};
 use slotmap::{Key, KeyData};
 use serde_bytes::ByteBuf;
 use ic_certified_assets::types::StoreArg;
+use addr::parse_domain_name;
 
 use crate::STATE;
 use crate::upgrade::authorize;
@@ -104,6 +105,11 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
+    let parsed_domain_name = parse_domain_name(&domain_name);
+    if parsed_domain_name.is_err() {
+        return Err("Invalid domain name".to_owned());
+    }
+    
     let interval = std::time::Duration::from_secs(INTERVAL_TIME);
 
     let timer_id = ic_cdk_timers::set_timer_interval(interval,  || {
@@ -130,6 +136,8 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
         });
     });
 
+    let domain_name = parsed_domain_name.unwrap().root().unwrap();
+
     // store domain file 
     let content = format!("{}\nwww.{}", domain_name, domain_name);
     let content = ByteBuf::from(content.as_bytes().to_vec());
@@ -147,7 +155,7 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
         let mut state = s.borrow_mut();
         let domain = Domain {
             start_time: ic_cdk::api::time(),
-            domain_name,
+            domain_name: format!("www.{}", domain_name),
             last_status: Ok(DomainStatus::NotStarted),
             timer_key: timer_id.data().as_ffi()
         };

@@ -136,6 +136,22 @@ const idlFactory = ({ IDL }) => {
 		module_hash: IDL.Opt(IDL.Vec(IDL.Nat8)),
 	})
 
+	const DomainStatus = IDL.Variant({
+		NotStarted: IDL.Null,
+		PendingOrder: IDL.Null,
+		PendingChallengeResponse: IDL.Null,
+		PendingAcmeApproval: IDL.Null,
+		Available: IDL.Null,
+		Failed: IDL.Text,
+	  })
+	  
+	const Domain = IDL.Record ({
+		start_time: IDL.Nat64,
+		domain_name: IDL.Text,
+		last_status: IDL.Variant({ Ok: DomainStatus, Err : IDL.Text }),
+		timer_key: IDL.Nat64,
+	})
+
 	return IDL.Service({
 		create_profile: IDL.Func([authenticationWith], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["update"]),
 		create_post: IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ Ok: PostSummary, Err: IDL.Text })], ["update"]),
@@ -146,7 +162,7 @@ const idlFactory = ({ IDL }) => {
 		like_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
 		unlike_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		register_domain: IDL.Func([IDL.Text], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
-		get_domain: IDL.Func([], [IDL.Opt(IDL.Text)], ["query"]),
+		get_registration: IDL.Func([], [IDL.Opt(Domain)], ["query"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
@@ -273,7 +289,7 @@ const ChildProvider = ({ children }) => {
 	}, [childActor])
 
 	const getDomain = useCallback(async () => {
-		const response = await childActor.get_domain()
+		const response = await childActor.get_registration()
 		return response
 	}, [childActor])
 
