@@ -42,7 +42,7 @@ const DnsRecords = ({domain}) => {
   )
 }
 
-const AllReadyDone = ({domainName, setUserFlowStep, domainStatus}) => {
+const AllReadyDone = ({domainName, setUserFlowStep, domainStatus, setIsSetup}) => {
   return (
     <Card>
       <CardBody minW={"460px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
@@ -59,7 +59,7 @@ const AllReadyDone = ({domainName, setUserFlowStep, domainStatus}) => {
           </Flex>
           <Text>{CHILD_CANISTER_ID}</Text>
         </Box>
-        <Button ml={'auto'} onClick={() => {setUserFlowStep("dns-records");}}>DNS</Button>
+        <Button ml={'auto'} onClick={() => {setUserFlowStep("dns-records"); setIsSetup(true)}}>DNS</Button>
       </CardBody>
     </Card>
   )
@@ -69,6 +69,7 @@ const SetupDomainModal = () =>  {
   const toast = useToast()
   const [userFlowStep, setUserFlowStep] = useState("checking-domain")
   const [domainName, setDomainName] = useState()
+  const [isSetUp, setIsSetup] = useState(false)
   const [domainStatus, setDomainStatus] = useState()
   const { setupCustomDomainDisclosure, principal } = useContext(IdentityContext)
   const { getDomain, childActor, registerDomain } = useContext(ChildContext)
@@ -132,19 +133,20 @@ const SetupDomainModal = () =>  {
             {userFlowStep === "checking-domain" && <Spinner m="0 auto"/>}
             {userFlowStep === "enter-domain" && <Input placeholder='eg. example.com' size='md' onChange={(e) => setDomainName(e.target.value)} />}
             {userFlowStep === "waiting-registration" && <Text>Waiting for registration</Text>}
-            {userFlowStep === "dns-records" && <DnsRecords domain={domainName}/>}
-            {userFlowStep === "already-setup" && <AllReadyDone domainName={domainName} domainStatus={domainStatus} setUserFlowStep={setUserFlowStep}/>}
+            {userFlowStep === "dns-records" && <DnsRecords domain={domainName} />}
+            {userFlowStep === "already-setup" && <AllReadyDone domainName={domainName} domainStatus={domainStatus} setUserFlowStep={setUserFlowStep} setIsSetup={setIsSetup}/>}
           </Flex>
         </ModalBody>
         <ModalFooter>
           {userFlowStep === "enter-domain" && <Button isDisabled={!domainName || domainName.length < 0} onClick={register} variant='solid'>Register</Button>}
-          {userFlowStep === "dns-records" && (
+          {(userFlowStep === "dns-records" && !isSetUp) && (
             <>
               <Button mr="auto" variant={"ghost"} onClick={() => {setUserFlowStep("enter-domain"); setDomainName("")}}>Reset</Button>
-              <Button onClick={() => {setupCustomDomainDisclosure.onClose(); setUserFlowStep("checking-domain")}} variant='solid'>Done</Button>
+              <Button onClick={() => {setUserFlowStep("already-setup"); setDomainStatus({color:  'yellow', message: "Waiting DNS", isError: false}); setIsSetup(true)}} variant='solid'>Done</Button>
             </>
           )}
-          {userFlowStep === "already-setup" && (<Button mr="auto" variant={"ghost"} onClick={() => {setUserFlowStep("enter-domain"); setDomainName("")}}>Reset</Button>)}
+          {(userFlowStep === "dns-records" && isSetUp) && <Button mr="auto" variant={"ghost"} onClick={() => setUserFlowStep("already-setup")}>Back</Button>}
+          {userFlowStep === "already-setup" && (<Button mr="auto" variant={"ghost"} onClick={() => {setUserFlowStep("enter-domain"); setDomainName(""); setIsSetup(false)}}>Reset</Button>)}
         </ModalFooter>
       </ModalContent>
     </Modal>
