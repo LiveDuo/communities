@@ -73,7 +73,6 @@ const SetupDomainModal = () =>  {
 
 			if (!_isController) return
 
-			// get next upgrade
 			const domain = await getDomain()
       setUserFlowStep(!domain[0] ? "enter-domain" : "already-setup")
       setDomainName(domain[0] && domain[0].domain_name)

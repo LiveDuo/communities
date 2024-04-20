@@ -137,6 +137,7 @@ const idlFactory = ({ IDL }) => {
 	})
 
 	const DomainStatus = IDL.Variant({
+		TimerExpired: IDL.Null,
 		NotStarted: IDL.Null,
 		PendingOrder: IDL.Null,
 		PendingChallengeResponse: IDL.Null,

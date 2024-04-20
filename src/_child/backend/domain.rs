@@ -20,7 +20,7 @@ const INTERVAL_TIME: u64 = 30; // 30 sec
 
 #[derive(Serialize, Deserialize, Debug, CandidType, Clone, PartialEq, Eq)]
 enum DomainStatus {
-    ExpireTimer,
+    TimerExpired,
     NotStarted,
     PendingOrder,
     PendingChallengeResponse,
@@ -111,14 +111,14 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
-    let parsed_domain_name = parse_domain_name(&domain_name);
-    if parsed_domain_name.is_err() {
+    if parse_domain_name(&domain_name).is_err() {
         return Err("Invalid domain name".to_owned());
     }
     
     let interval = std::time::Duration::from_secs(INTERVAL_TIME);
 
     let timer_id = ic_cdk_timers::set_timer_interval(interval,  || {
+        ic_cdk::println!("set_timer_interval");
         
         STATE.with(|s| {
             let mut state = s.borrow_mut();
@@ -129,7 +129,6 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
 
             let mut domain = state.domain.clone().unwrap();
 
-            ic_cdk::println!("set_timer_interval {}", domain.domain_name);
 
             if domain.last_status == Ok(DomainStatus::Available) {
                 clear_timer(domain.timer_key);                
@@ -138,7 +137,7 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
 
             if ic_cdk::api::time() > domain.start_time + EXPIRE_TIME {
 
-                domain.last_status = Ok(DomainStatus::ExpireTimer);
+                domain.last_status = Ok(DomainStatus::TimerExpired);
                 state.domain =  Some(domain.to_owned());
 
                 clear_timer(domain.timer_key);
@@ -149,12 +148,10 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
         });
     });
 
-    let domain_name = parsed_domain_name.unwrap().root().unwrap();
-
     // store domain file 
-    let content = format!("{}\nwww.{}", domain_name, domain_name);
+    let content = format!("{}", domain_name);
     let content = ByteBuf::from(content.as_bytes().to_vec());
-    let key = format!("/index.txt");
+    let key = format!("/.well-known/ic-domains");
     let store_args = StoreArg {
       key: key.to_owned(),
       content_type: get_content_type(&key),
@@ -173,7 +170,7 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
 
         let domain = Domain {
             start_time: ic_cdk::api::time(),
-            domain_name: format!("www.{}", domain_name),
+            domain_name: domain_name.to_owned(),
             last_status: Ok(DomainStatus::NotStarted),
             timer_key: timer_id.data().as_ffi()
         };
