@@ -34,7 +34,7 @@ Today, creators build and interact with their fan base on third-party platforms.
 - Database (Btreemaps)
 - Custom domains (DNS IC nodes)
 - Upgrades (parent structs)
-- Web3 login (EThereum / Solana)
+- Web3 login (Ethereum / Solana)
 - ICRC Compliance (ICRC3/7)
 
 + Include diagrams
