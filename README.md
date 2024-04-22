@@ -10,22 +10,22 @@
   <a href="#faq">FAQ</a>
 </p>
 
-![image](./.notes/assets/hero.png)
+![image](./.notes/assets/landing/hero.png)
 
 "Communities" is a tool that creates online communities owned by the creators. They can invite their followers, fans or readers to their community to discuss, share ideas and interact. Users can login with their Ethereum, Solana or IC account using the standard browser extensions.
 
-![image](./.notes/assets/features.png)
+![image](./.notes/assets/landing/features.png)
 
 Today, creators build and interact with their fan base on third-party platforms. We believe they should truly own the space they created, literally, in their wallet.
 
 ## Screenshots
 
 <p>
-  <img src="./.notes/assets/community.png" width="48%" />
-  <img src="./.notes/assets/sign-in.png" width="48%" />
+  <img src="./.notes/assets/screenshots/community.png" width="48%" />
+  <img src="./.notes/assets/screenshots/sign-in.png" width="48%" />
   <br/>
-  <img src="./.notes/assets/community.png" width="48%" />
-  <img src="./.notes/assets/sign-in.png" width="48%" /> 
+  <img src="./.notes/assets/screenshots/community.png" width="48%" />
+  <img src="./.notes/assets/screenshots/sign-in.png" width="48%" /> 
 </p>
 
 ## How it works (TODO)
@@ -34,6 +34,7 @@ Today, creators build and interact with their fan base on third-party platforms.
 - Database (Btreemaps)
 - Custom domains (DNS IC nodes)
 - Upgrades (parent structs)
+- Web3 login (EThereum / Solana)
 - ICRC Compliance (ICRC3/7)
 
 + Include diagrams
