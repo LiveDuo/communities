@@ -18,7 +18,7 @@
 
 Today, creators build and interact with their fan base on third-party platforms. We believe they should truly own the space they created, literally, in their wallet.
 
-### Screenshots
+## Screenshots
 
 <p>
   <img src="./.notes/assets/community.png" width="48%" />
@@ -28,7 +28,7 @@ Today, creators build and interact with their fan base on third-party platforms.
   <img src="./.notes/assets/sign-in.png" width="48%" /> 
 </p>
 
-### How it works (TODO)
+## How it works (TODO)
 
 - Deployment (parent-child wasm + frontend)
 - Database (Btreemaps)
@@ -39,7 +39,7 @@ Today, creators build and interact with their fan base on third-party platforms.
 + Include diagrams
 + Include links to code
 
-### Run locally
+## Run locally
 
 This project depends on:
 - `node/npm`
@@ -69,7 +69,7 @@ dfx deploy child
 npm run dev:child
 ```
 
-### FAQ
+## FAQ
 
 <details>
 <summary>What does community ownership means?</summary>
@@ -105,6 +105,14 @@ They will be able to hide replies they deemed inappropriate, lock posts and assi
 </details>
 <br/>
 
-### Acknowledgments
+## Contributors
+
+<a href="https://github.com/liveduo/communities/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=LiveDuo/communities" />
+</a>  
+
+Made with [contributors-img](https://contrib.rocks).  
+
+## Acknowledgments
 
 We maintained a fork of [`ic-certified`](https://github.com/dfinity/sdk/tree/master/src/canisters/frontend/ic-frontend-canister) (renamed to `ic-frontend-canister`). Credits go to its original creators.
