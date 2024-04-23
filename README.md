@@ -1,6 +1,6 @@
 <h1 align="center">Communities.ooo</h1>
 
-<h4 align="center">A tool that creates online communities on the <a href="https://internetcomputer.org/" target="_blank">Internet Computer</a>.</h4>
+<h4 align="center">Create communities on the <a href="https://internetcomputer.org/" target="_blank">Internet Computer</a>.</h4>
 
 <p align="center">
   <a href="#features">Features</a> •
@@ -14,7 +14,7 @@
 
 "Communities" is a tool that creates online communities owned by the creators. They can invite their followers, fans or readers to their community to discuss, share ideas and interact. Users can login with their Ethereum, Solana or IC account using the standard browser extensions.
 
-![image](./.notes/assets/landing/features.png)
+[![Get Started](./.notes/assets/landing/features.png)](https://www.communities.ooo/)
 
 Today, creators build and interact with their fan base on third-party platforms. We believe they should truly own the space they created, literally, in their wallet.
 
@@ -61,21 +61,21 @@ To assign a custom domain a creator has to enter that domain from "Custom domain
 
 
 <details>
-<summary>[TODO] Community upgrades</summary>
+<summary>Community upgrades</summary>
 
 <br/>
 
-... parent structs
+As every creator deploys their own canister we built a system to coordinate opt-in upgrades through the parent canister which works as follows. Upgrades are uploaded to the parent canister and creators can see new upgrades in the "Upgrade Modal" and decide if they want to upgrade their communities. If they do, the community canister requests from parent canister and stores the upgrade files including the new frontend assets and the new canister wasm file. Then the upgrade starts in the background which calls the management canister to perform the upgrade with the new wasm file. Lastly, After the upgrade is done the frontend assets are replaced with the new frontend assets. Note that one version can have multiple upgrade paths that we call tracks.
 
 </details>
 
 
 <details>
-<summary>[TODO] Web3 logins</summary>
+<summary>Web3 logins</summary>
 
 <br/>
 
-... Ethereum / Solana
+To make communities accessible from end users this project supports authentication with Ethereum and Solana browser extensions. When a user clicks the login button a new principal is created for them in the background and the credentials of this principal are stored in their browser. Then their wallet extension pops up requiring them to sign a specific message with their wallet. When they do, that message is send to the backend where both the content of the message is checked and the address that signed it. If a user clear their cookies or want to sign in from another divide they just have to start this process again and a new principal is created for them but is linked to the same profile.
 
 </details>
 
