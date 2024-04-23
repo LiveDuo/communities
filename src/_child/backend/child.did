@@ -104,6 +104,7 @@ type UpgradeCanisterResult = variant { Ok : null; Err : text };
 type GetMetadataResult = variant { Ok : Metadata; Err : text };
 type UpdatePostStatusResult = variant { Ok : null; Err : text };
 type UpdateReplyStatusResult = variant { Ok : null; Err : text };
+type RegisterDomainResult = variant { Ok : null; Err : text };
 type GetHiddenPostsResult = variant { Ok : vec PostResponse; Err : text };
 type GetHiddenReplyResult = variant { Ok : vec record { nat64; ReplyResponse; }; Err : text };
 type GetMostPostsResult = variant { Ok : vec PostResponse; Err : text };
@@ -229,6 +230,22 @@ type TransferError = variant {
   TooOld;
 };
 
+type DomainStatus  = variant {
+  ExpireTimer;
+  NotStarted;
+  PendingOrder;
+  PendingChallengeResponse;
+  PendingAcmeApproval;
+  Available;
+  Failed: text;
+};
+
+type Domain = record {
+  start_time: nat64;
+  domain_name: text;
+  last_status: variant { Ok : DomainStatus; Err : text };
+  timer_key: nat64;
+};
 service : (opt principal, opt text, opt text ) -> {
   create_post : (text, text) -> (CreatePostResult);
   create_profile : (AuthenticationWith) -> (CreateProfileResult);
@@ -242,6 +259,8 @@ service : (opt principal, opt text, opt text ) -> {
   upgrade_canister : (text, text) -> (UpgradeCanisterResult);
   get_next_upgrades : () -> (GetNextUpgradesResult);
   canister_status : () -> (CanisterStatusResponse);
+  register_domain : (text) -> (RegisterDomainResult);
+  get_registration : () -> (opt Domain) query;
   get_post : (nat64) -> (GetPostResult) query;
   get_posts : () -> (vec PostSummary) query;
   get_most_liked_posts : (AuthenticationWithAddress) -> (GetMostPostsResult) query;

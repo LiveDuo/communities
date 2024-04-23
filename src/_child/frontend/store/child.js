@@ -136,6 +136,22 @@ const idlFactory = ({ IDL }) => {
 		module_hash: IDL.Opt(IDL.Vec(IDL.Nat8)),
 	})
 
+	const DomainStatus = IDL.Variant({
+		NotStarted: IDL.Null,
+		PendingOrder: IDL.Null,
+		PendingChallengeResponse: IDL.Null,
+		PendingAcmeApproval: IDL.Null,
+		Available: IDL.Null,
+		Failed: IDL.Text,
+	  })
+	  
+	const Domain = IDL.Record ({
+		start_time: IDL.Nat64,
+		domain_name: IDL.Text,
+		last_status: IDL.Variant({ Ok: DomainStatus, Err : IDL.Text }),
+		timer_key: IDL.Nat64,
+	})
+
 	return IDL.Service({
 		create_profile: IDL.Func([authenticationWith], [IDL.Variant({ Ok: Profile, Err: IDL.Text })], ["update"]),
 		create_post: IDL.Func([IDL.Text, IDL.Text], [IDL.Variant({ Ok: PostSummary, Err: IDL.Text })], ["update"]),
@@ -145,6 +161,8 @@ const idlFactory = ({ IDL }) => {
 		unlike_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		like_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
 		unlike_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		register_domain: IDL.Func([IDL.Text], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		get_registration: IDL.Func([], [IDL.Opt(Domain)], ["query"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
 		get_posts: IDL.Func([], [IDL.Vec(PostSummary)], ["query"]),
@@ -241,6 +259,10 @@ const ChildProvider = ({ children }) => {
 		await childActor.unlike_reply(BigInt(likedPostId))
 	},[childActor])
 
+	const registerDomain = useCallback(async (domain) => {
+		await childActor.register_domain(domain)
+	},[childActor])
+
 	const getPosts = useCallback(async () => {
 		const response = await childActor.get_posts()
 		const _posts = response.map(p => ({...p, last_activity: new Date(Number(p.timestamp / 1000n / 1000n)), timestamp: new Date(Number(p.timestamp / 1000n / 1000n)), replies_count: p.replies_count}))
@@ -264,6 +286,11 @@ const ChildProvider = ({ children }) => {
 		const response = await childActor.get_hidden_replies().then(r =>  r.Ok)
 		const _hiddenReplies = response.map(r => ({...r[1], postId: r[0], timestamp: new Date(Number(r[1]?.timestamp / 1000n / 1000n))}))
 		return _hiddenReplies
+	}, [childActor])
+
+	const getDomain = useCallback(async () => {
+		const response = await childActor.get_registration()
+		return response
 	}, [childActor])
 
 	const getMostRecentPosts = useCallback(async (address, type) => {
@@ -321,6 +348,9 @@ const ChildProvider = ({ children }) => {
 		const response = await childActor.get_profile()
 		setProfile(response.Ok)
 	}, [childActor])
+
+
+
 
 	const loginWithEvm = useCallback(async () => {
 		try {
@@ -406,7 +436,7 @@ const ChildProvider = ({ children }) => {
     }
   }
 
-	const value = {childActor, profile, profileUser, setProfile , getProfileByAuth, getMostLikedPosts, getMostLikedReplies, getMostRecentPosts, getProfile, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply }
+	const value = {childActor, profile, profileUser, setProfile , getProfileByAuth, getMostLikedPosts, getMostLikedReplies, getMostRecentPosts, getProfile, loading, setLoading, posts, getPosts, getPost, createPost, createReply, login, updatePostStatus, updateReplyStatus, getHiddenPosts, getHiddenReplies, likePost, unlikePost, likeReply, unlikeReply, registerDomain, getDomain }
 	return <ChildContext.Provider value={value}>{children}</ChildContext.Provider>
 }
 

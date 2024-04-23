@@ -5,6 +5,7 @@ mod upgrade;
 mod auth;
 mod icrc7;
 mod icrc3;
+mod domain;
 
 use std::collections::BTreeSet;
 
@@ -20,9 +21,10 @@ use icrc_ledger_types::icrc::generic_metadata_value::MetadataValue;
 use crate::state::{*, STATE};
 use upgrade::{update_metadata, check_canister_cycles_balance, replace_assets_from_temp, authorize, store_assets_to_temp, upgrade_canister_cb};
 use upgrade::UpgradeWithTrack;
-use utils::{uuid, get_asset, get_user_roles, default_account};
+use utils::{uuid, get_asset, get_user_roles, default_account };
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 use candid::{Encode, Decode};
+
 
 #[init]
 #[candid_method(init)]
@@ -490,6 +492,7 @@ fn unlike_reply(liked_reply_id: u64) -> Result<(), String> {
         Ok(())
     })
 }
+
 #[query]
 #[candid_method(query)]
 fn get_posts() -> Vec<PostSummary> {
@@ -1060,6 +1063,7 @@ async fn upgrade_canister(version: String, track: String) -> Result<(), String> 
 #[test]
 fn candid_interface_compatibility() {
     use candid_parser::utils::{service_compatible, CandidSource};
+    use crate::domain::Domain;
     use crate::icrc7::*;
     use icrc_ledger_types::icrc1::account::Account;
     use std::path::PathBuf;
