@@ -92,12 +92,6 @@ Since one of that major goals of the project was to own communities as NFTs, we 
 </details>
 
 
-<br/>
-
-- TODO Include diagrams
-- TODO Include links to code
-
-
 
 ## Run locally
 
