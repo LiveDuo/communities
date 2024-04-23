@@ -32,6 +32,7 @@ enum DomainStatus {
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct Domain {
     domain_name: String,
+    subdomain: String,
     timer_key: u64,
     start_time: u64,
     last_status: Result<DomainStatus, String>,
@@ -107,11 +108,12 @@ async fn update_registration(domain_name: String) {
 
 #[update]
 #[candid_method(update)]
-async fn register_domain(domain_name: String) -> Result<(), String> {
+async fn register_domain(domain_name: String) -> Result<Domain, String> {
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
-    if parse_domain_name(&domain_name).is_err() {
+    let parse_domain_result = parse_domain_name(&domain_name);
+    if parse_domain_result.is_err() {
         return Err("Invalid domain name".to_owned());
     }
     
@@ -147,9 +149,10 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
             ic_cdk::spawn(update_registration(domain.domain_name.to_owned()))
         });
     });
-
+    let parse_domain = parse_domain_result.unwrap();
+    let domain_name = if parse_domain.prefix().is_none() { format!("www.{}",parse_domain.as_str()) } else { parse_domain.as_str().to_owned() };
     // store domain file 
-    let content = format!("{}", domain_name);
+    let content = domain_name.to_owned();
     let content = ByteBuf::from(content.as_bytes().to_vec());
     let key = format!("/.well-known/ic-domains");
     let store_args = StoreArg {
@@ -161,7 +164,7 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
     };
     ic_certified_assets::store(store_args);
     
-    STATE.with(|s| {
+    let domain = STATE.with(|s| {
         let mut state = s.borrow_mut();
 
         if let Some(domain) = &state.domain {
@@ -172,12 +175,14 @@ async fn register_domain(domain_name: String) -> Result<(), String> {
             start_time: ic_cdk::api::time(),
             domain_name: domain_name.to_owned(),
             last_status: Ok(DomainStatus::NotStarted),
-            timer_key: timer_id.data().as_ffi()
+            timer_key: timer_id.data().as_ffi(),
+            subdomain: parse_domain_name(&domain_name).unwrap().prefix().unwrap().to_owned()
         };
-        state.domain = Some(domain)
+        state.domain = Some(domain);
+        state.domain.clone()
     });
 
-    Ok(())
+    Ok(domain.unwrap())
 }
 
 #[query]

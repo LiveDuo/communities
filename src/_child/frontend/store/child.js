@@ -151,6 +151,7 @@ const idlFactory = ({ IDL }) => {
 		domain_name: IDL.Text,
 		last_status: IDL.Variant({ Ok: DomainStatus, Err : IDL.Text }),
 		timer_key: IDL.Nat64,
+		subdomain: IDL.Text
 	})
 
 	return IDL.Service({
@@ -162,7 +163,7 @@ const idlFactory = ({ IDL }) => {
 		unlike_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
 		like_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Nat64, Err: IDL.Text })], ["update"]),
 		unlike_reply: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
-		register_domain: IDL.Func([IDL.Text], [IDL.Variant({ Ok: IDL.Null, Err: IDL.Text })], ["update"]),
+		register_domain: IDL.Func([IDL.Text], [IDL.Variant({ Ok: Domain, Err: IDL.Text })], ["update"]),
 		get_registration: IDL.Func([], [IDL.Opt(Domain)], ["query"]),
 		get_profile: IDL.Func([], [IDL.Variant({ Ok: ProfileResponse, Err: IDL.Text })], ["query"]),
 		get_post: IDL.Func([IDL.Nat64], [IDL.Variant({ Ok: PostResponse, Err: IDL.Text })], ["query"]),
@@ -261,7 +262,7 @@ const ChildProvider = ({ children }) => {
 	},[childActor])
 
 	const registerDomain = useCallback(async (domain) => {
-		await childActor.register_domain(domain)
+		return await childActor.register_domain(domain).then(res => res.Ok)
 	},[childActor])
 
 	const getPosts = useCallback(async () => {

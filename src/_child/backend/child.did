@@ -245,6 +245,7 @@ type Domain = record {
   domain_name: text;
   last_status: variant { Ok : DomainStatus; Err : text };
   timer_key: nat64;
+  subdomain: text;
 };
 service : (opt principal, opt text, opt text ) -> {
   create_post : (text, text) -> (CreatePostResult);

@@ -9,7 +9,7 @@ import { IdentityContext } from '../../store/identity'
 import { CHILD_CANISTER_ID, ChildContext } from '../../store/child'
 import { isValidDomainName, getDomainLastStatus } from '../../utils/domain'
 
-const DnsRecords = ({domain}) => {
+const DnsRecords = ({domain, subdomain}) => {
   return (
     <TableContainer>
     <Table variant='simple'>
@@ -23,7 +23,7 @@ const DnsRecords = ({domain}) => {
       <Tbody>
         <Tr>
           <Td>CNAME</Td>
-          <Td>@</Td>
+          <Td>{subdomain}</Td>
           <Td>{domain}.icp1.io</Td>
         </Tr>
         <Tr>
@@ -69,6 +69,7 @@ const SetupDomainModal = () =>  {
   const toast = useToast()
   const [userFlowStep, setUserFlowStep] = useState("checking-domain")
   const [domainName, setDomainName] = useState()
+  const [subdomain, setSubdomain] = useState()
   const [isSetUp, setIsSetup] = useState(false)
   const [domainStatus, setDomainStatus] = useState()
   const { setupCustomDomainDisclosure, principal } = useContext(IdentityContext)
@@ -86,6 +87,8 @@ const SetupDomainModal = () =>  {
       setUserFlowStep(!domain[0] ? "enter-domain" : "already-setup")
       setDomainName(domain[0] && domain[0].domain_name)
       setDomainStatus(domain[0] && getDomainLastStatus(domain[0].last_status))
+      setDomainStatus(domain[0] && getDomainLastStatus(domain[0].last_status))
+      setSubdomain(domain[0] && domain[0].subdomain)
 		} catch (err) {
 			console.log(err)
 		}
@@ -118,9 +121,12 @@ const SetupDomainModal = () =>  {
     }
     
     setUserFlowStep("waiting-registration")
-    await registerDomain(domainName)
+    const domain = await registerDomain(domainName)
+    setDomainName(domain.domain_name)
+    setDomainStatus(getDomainLastStatus(domain.last_status))
+    setSubdomain(domain.subdomain)
     setUserFlowStep("dns-records")
-  }, [registerDomain, domainName, setUserFlowStep, toast])
+  }, [registerDomain, domainName, setUserFlowStep, setDomainName, setDomainStatus, setSubdomain, toast])
 
   return (
     <Modal isOpen={setupCustomDomainDisclosure.isOpen} onClose={() => {setupCustomDomainDisclosure.onClose(); setUserFlowStep("checking-domain")}} isCentered>
@@ -133,7 +139,7 @@ const SetupDomainModal = () =>  {
             {userFlowStep === "checking-domain" && <Spinner m="0 auto"/>}
             {userFlowStep === "enter-domain" && <Input placeholder='eg. example.com' size='md' onChange={(e) => setDomainName(e.target.value)} />}
             {userFlowStep === "waiting-registration" && <Text>Waiting for registration</Text>}
-            {userFlowStep === "dns-records" && <DnsRecords domain={domainName} />}
+            {userFlowStep === "dns-records" && <DnsRecords domain={domainName} subdomain={subdomain}/>}
             {userFlowStep === "already-setup" && <AllReadyDone domainName={domainName} domainStatus={domainStatus} setUserFlowStep={setUserFlowStep} setIsSetup={setIsSetup}/>}
           </Flex>
         </ModalBody>
@@ -142,7 +148,7 @@ const SetupDomainModal = () =>  {
           {(userFlowStep === "dns-records" && !isSetUp) && (
             <>
               <Button mr="auto" variant={"ghost"} onClick={() => {setUserFlowStep("enter-domain"); setDomainName("")}}>Reset</Button>
-              <Button onClick={() => {setUserFlowStep("already-setup"); setDomainStatus({color:  'yellow', message: "Waiting DNS", isError: false}); setIsSetup(true)}} variant='solid'>Done</Button>
+              <Button onClick={() => {setUserFlowStep("already-setup"); setIsSetup(true)}} variant='solid'>Done</Button>
             </>
           )}
           {(userFlowStep === "dns-records" && isSetUp) && <Button mr="auto" variant={"ghost"} onClick={() => setUserFlowStep("already-setup")}>Back</Button>}
