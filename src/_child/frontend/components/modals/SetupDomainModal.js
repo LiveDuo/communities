@@ -45,7 +45,7 @@ const DnsRecords = ({domain, subdomain}) => {
 const AllReadyDone = ({domainName, setUserFlowStep, domainStatus, setIsSetup}) => {
   return (
     <Card>
-      <CardBody minW={"460px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
+      <CardBody minW={"550px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
         <Box>
           <Flex>
             <Heading ml="4px" size={"md"}>{domainName}</Heading>
@@ -131,7 +131,7 @@ const SetupDomainModal = () =>  {
   return (
     <Modal isOpen={setupCustomDomainDisclosure.isOpen} onClose={() => {setupCustomDomainDisclosure.onClose(); setUserFlowStep("checking-domain")}} isCentered>
       <ModalOverlay />
-      <ModalContent minW={userFlowStep === "dns-records" ? "700px": "500px"}>
+      <ModalContent minW={userFlowStep === "dns-records" ? "700px": "600px"}>
       <ModalHeader>{getTitle()}</ModalHeader>
       <ModalCloseButton />
         <ModalBody>
