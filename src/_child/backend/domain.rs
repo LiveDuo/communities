@@ -14,9 +14,9 @@ use crate::STATE;
 use crate::upgrade::authorize;
 use crate::utils::get_content_type;
 
-const EXPIRE_TIME: u64 = 1 * 60 * 1000 * 1000 * 1000 ; // 2 mins
+const EXPIRE_TIME: u64 = 3 * 24 * 60 * 60 * 1000 * 1000 * 1000 ; // 3 days
 const REGISTRATIONS_URL: &str = "https://icp0.io/registrations";
-const INTERVAL_TIME: u64 = 30; // 30 sec
+const INTERVAL_TIME: u64 = 4 * 60 * 60; // 4 hours
 
 #[derive(Serialize, Deserialize, Debug, CandidType, Clone, PartialEq, Eq)]
 enum DomainStatus {
