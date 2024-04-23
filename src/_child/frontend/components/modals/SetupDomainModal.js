@@ -138,7 +138,7 @@ const SetupDomainModal = () =>  {
           <Flex>
             {userFlowStep === "checking-domain" && <Spinner m="0 auto"/>}
             {userFlowStep === "enter-domain" && <Input placeholder='eg. example.com' size='md' onChange={(e) => setDomainName(e.target.value)} />}
-            {userFlowStep === "waiting-registration" && <Text>Waiting for registration</Text>}
+            {userFlowStep === "waiting-registration" && <Spinner m="0 auto"/>}
             {userFlowStep === "dns-records" && <DnsRecords domain={domainName} subdomain={subdomain}/>}
             {userFlowStep === "already-setup" && <AllReadyDone domainName={domainName} domainStatus={domainStatus} setUserFlowStep={setUserFlowStep} setIsSetup={setIsSetup}/>}
           </Flex>
