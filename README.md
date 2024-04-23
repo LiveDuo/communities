@@ -3,12 +3,14 @@
 <h4 align="center">Create communities on the <a href="https://internetcomputer.org/" target="_blank">Internet Computer</a>.</h4>
 
 <p align="center">
-  <a href="#features">Features</a> •
-  <a href="#screenshots">Download</a> •
+  <a href="#overview">Overview</a> •
+  <a href="#screenshots">Screenshots</a> •
   <a href="#how-it-works">How it works</a> •
-  <a href="#development">Development</a> •
+  <a href="#run-locally">Run locally</a> •
   <a href="#faq">FAQ</a>
 </p>
+
+## Overview
 
 ![image](./.notes/assets/landing/hero.png)
 
