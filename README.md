@@ -24,8 +24,8 @@ Today, creators build and interact with their fan base on third-party platforms.
   <img src="./.notes/assets/screenshots/community.png" width="48%" />
   <img src="./.notes/assets/screenshots/sign-in.png" width="48%" />
   <br/>
-  <img src="./.notes/assets/screenshots/community.png" width="48%" />
-  <img src="./.notes/assets/screenshots/sign-in.png" width="48%" /> 
+  <img src="./.notes/assets/screenshots/reply-editor.png" width="48%" />
+  <img src="./.notes/assets/screenshots/moderation-page.png" width="48%" /> 
 </p>
 
 ## How it works (TODO)
