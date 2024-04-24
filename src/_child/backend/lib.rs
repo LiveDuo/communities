@@ -25,7 +25,6 @@ use utils::{uuid, get_asset, get_user_roles, default_account };
 use auth::{get_authentication_with_address, login_message_hex_svm, login_message_hex_evm};
 use candid::{Encode, Decode};
 
-
 #[init]
 #[candid_method(init)]
 fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Option<String>) {
@@ -1067,6 +1066,8 @@ fn candid_interface_compatibility() {
     use crate::icrc7::*;
     use icrc_ledger_types::icrc1::account::Account;
     use std::path::PathBuf;
+    use ic_cdk::api::management_canister::http_request::TransformArgs;
+    use ic_cdk::api::management_canister::http_request::HttpResponse;
 
     candid::export_service!();
     let new_interface = __export_service();

@@ -67,7 +67,7 @@ const Admin = () => {
                 <Box key={post.post_id} mt="20px" border="1px" borderColor="gray.300" borderRadius="base">
                   <Box _hover={{opacity: 0.7, cursor: 'pointer'}} onClick={() => goToPost(post.post_id)}>
                     <Flex mt="40px" mb="28px" justifyContent="center" alignItems="center">
-                      <Heading ml="40px" display="inline-block">{post.title}</Heading>
+                      <Heading size={"lg"} ml="40px" display="inline-block">{post.title}</Heading>
                       <Tag ml="10px" colorScheme='orange' size={'md'}>Hidden</Tag>
                       <Flex ml="auto" alignItems="center">
                         <Jazzicon diameter={20} seed={getSeedFromAuthentication(post.authentication)} />

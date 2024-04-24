@@ -3,56 +3,63 @@ import { useContext, useCallback, useState, useEffect } from 'react'
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, ModalFooter, Box } from '@chakra-ui/react'
 import { TableContainer, Table, Thead, Tr, Th, Tbody, Td  } from '@chakra-ui/react'
 import { Card, CardBody } from '@chakra-ui/react'
-import { Flex, Button, Text, Input, Heading, Spinner, useToast } from '@chakra-ui/react'
+import { Flex, Button, Text, Input, Heading, Spinner, useToast, Tag, Tooltip } from '@chakra-ui/react'
 
 import { IdentityContext } from '../../store/identity'
 import { CHILD_CANISTER_ID, ChildContext } from '../../store/child'
-import { isValidDomainName } from '../../utils/domain'
+import { isValidDomainName, getDomainLastStatus } from '../../utils/domain'
 
-const DnsRecords = ({domain}) => {
+const DnsRecords = ({domain, subdomain}) => {
   return (
-    <Flex flexDirection={"column"}>
-      <TableContainer>
-      <Table variant='simple'>
-        <Thead>
-          <Tr>
-            <Th>Record Type</Th>
-            <Th>Host</Th>
-            <Th>Value</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          <Tr>
-            <Td>CNAME</Td>
-            <Td>@</Td>
-            <Td>{domain}.icp1.io</Td>
-          </Tr>
-          <Tr>
-            <Td>TXT</Td>
-            <Td>_canister-id</Td>
-            <Td>{CHILD_CANISTER_ID}</Td>
-          </Tr>
-          <Tr>
-            <Td>CNAME</Td>
-            <Td>_acme-challenge</Td>
-            <Td>_acme-challenge.{domain}.icp2.io</Td>
-          </Tr>
-        </Tbody>
-      </Table>
-    </TableContainer>
-  </Flex>
+    <TableContainer>
+    <Table variant='simple'>
+      <Thead>
+        <Tr>
+          <Th>Record Type</Th>
+          <Th>Host</Th>
+          <Th>Value</Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        <Tr>
+          <Td>CNAME</Td>
+          <Td>{subdomain}</Td>
+          <Td>{domain}.icp1.io</Td>
+        </Tr>
+        <Tr>
+          <Td>TXT</Td>
+          <Td>_canister-id</Td>
+          <Td>{CHILD_CANISTER_ID}</Td>
+        </Tr>
+        <Tr>
+          <Td>CNAME</Td>
+          <Td>_acme-challenge</Td>
+          <Td>_acme-challenge.{domain}.icp2.io</Td>
+        </Tr>
+      </Tbody>
+    </Table>
+  </TableContainer>
   )
 }
 
-const AllReadyDone = ({domain, setUserFlowStep, setDomain}) => {
+const AlreadySetup = ({domainName, setUserFlowStep, domainStatus, setIsSetup}) => {
   return (
     <Card>
-      <CardBody minW={"450px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
+      <CardBody minW={"550px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
         <Box>
-          <Heading ml="4px" size={"md"}>{domain}</Heading>
+          <Flex>
+            <Heading ml="4px" size={"md"}>{domainName}</Heading>
+            {domainStatus.isError ? 
+              <Tooltip label={domainStatus.message}>
+                <Tag ml="12px" variant='solid' colorScheme={domainStatus.color}>Error</Tag>
+              </Tooltip> :
+              <Tag ml="12px" variant='solid' colorScheme={domainStatus.color}>{domainStatus.message}</Tag>
+            }
+            
+          </Flex>
           <Text>{CHILD_CANISTER_ID}</Text>
         </Box>
-        <Button ml={'auto'} onClick={() => {setUserFlowStep("dns-records"); setDomain("")}}>DNS</Button>
+        <Button ml={'auto'} onClick={() => {setUserFlowStep("dns-records"); setIsSetup(true)}}>DNS</Button>
       </CardBody>
     </Card>
   )
@@ -60,12 +67,15 @@ const AllReadyDone = ({domain, setUserFlowStep, setDomain}) => {
 
 const SetupDomainModal = () =>  {
   const toast = useToast()
-  const [userFlowStep, setUserFlowStep] = useState("checking-domain")
+  const [userFlowStep, setUserFlowStep] = useState("loading-domain")
   const [domainName, setDomainName] = useState()
+  const [subdomain, setSubdomain] = useState()
+  const [isSetUp, setIsSetup] = useState(false)
+  const [domainStatus, setDomainStatus] = useState()
   const { setupCustomDomainDisclosure, principal } = useContext(IdentityContext)
   const { getDomain, childActor, registerDomain } = useContext(ChildContext)
 
-  const checkForDomainName = useCallback(async () => {
+  const getCustomDomain = useCallback(async () => {
 		try {
 			// get canister controllers
 			const res = await childActor.canister_status()
@@ -73,10 +83,12 @@ const SetupDomainModal = () =>  {
 
 			if (!_isController) return
 
-			// get next upgrade
 			const domain = await getDomain()
       setUserFlowStep(!domain[0] ? "enter-domain" : "already-setup")
       setDomainName(domain[0] && domain[0].domain_name)
+      setDomainStatus(domain[0] && getDomainLastStatus(domain[0].last_status))
+      setDomainStatus(domain[0] && getDomainLastStatus(domain[0].last_status))
+      setSubdomain(domain[0] && domain[0].subdomain)
 		} catch (err) {
 			console.log(err)
 		}
@@ -84,13 +96,13 @@ const SetupDomainModal = () =>  {
 
   useEffect(() => {
 		if (childActor && setupCustomDomainDisclosure.isOpen) {
-			checkForDomainName()
+			getCustomDomain()
 		}
-	},[childActor, checkForDomainName, setupCustomDomainDisclosure.isOpen])
+	},[childActor, getCustomDomain, setupCustomDomainDisclosure.isOpen])
 
   const getTitle = useCallback(() => {
-    if (userFlowStep === "checking-domain") {
-      return "Checking For Domain"
+    if (userFlowStep === "loading-domain") {
+      return "Loading Domain"
     } else if (userFlowStep === "enter-domain") {
       return "Enter Domain Name"
     } else if (userFlowStep === "waiting-registration") {
@@ -109,34 +121,43 @@ const SetupDomainModal = () =>  {
     }
     
     setUserFlowStep("waiting-registration")
-    await registerDomain(domainName)
-    setUserFlowStep("dns-records")
-  }, [registerDomain, domainName, setUserFlowStep, toast])
+    const res = await registerDomain(domainName)
+    if(res.Ok) {
+      setDomainName(res.Ok.domain_name)
+      setDomainStatus(getDomainLastStatus(res.Ok.last_status))
+      setSubdomain(res.Ok.subdomain)
+      setUserFlowStep("dns-records")
+    } else {
+      setUserFlowStep("enter-domain")
+      toast({ description: res.Err, status: 'error' })
+    }
+  }, [registerDomain, domainName, setUserFlowStep, setDomainName, setDomainStatus, setSubdomain, toast])
 
   return (
-    <Modal isOpen={setupCustomDomainDisclosure.isOpen} onClose={() => {setupCustomDomainDisclosure.onClose(); setUserFlowStep("checking-domain")}} isCentered>
+    <Modal isOpen={setupCustomDomainDisclosure.isOpen} onClose={() => {setupCustomDomainDisclosure.onClose(); setUserFlowStep("loading-domain")}} isCentered>
       <ModalOverlay />
-      <ModalContent minW={userFlowStep === "dns-records" ? "700px": "500px"}>
+      <ModalContent minW={userFlowStep === "dns-records" ? "700px": "600px"}>
       <ModalHeader>{getTitle()}</ModalHeader>
       <ModalCloseButton />
         <ModalBody>
           <Flex>
-            {userFlowStep === "checking-domain" && <Spinner m="0 auto"/>}
+            {userFlowStep === "loading-domain" && <Spinner m="0 auto"/>}
             {userFlowStep === "enter-domain" && <Input placeholder='eg. example.com' size='md' onChange={(e) => setDomainName(e.target.value)} />}
-            {userFlowStep === "waiting-registration" && <Text>Waiting for registration</Text>}
-            {userFlowStep === "dns-records" && <DnsRecords domain={domainName}/>}
-            {userFlowStep === "already-setup" && <AllReadyDone domain={domainName} setDomain={setDomainName} setUserFlowStep={setUserFlowStep}/>}
+            {userFlowStep === "waiting-registration" && <Spinner m="0 auto"/>}
+            {userFlowStep === "dns-records" && <DnsRecords domain={domainName} subdomain={subdomain}/>}
+            {userFlowStep === "already-setup" && <AlreadySetup domainName={domainName} domainStatus={domainStatus} setUserFlowStep={setUserFlowStep} setIsSetup={setIsSetup}/>}
           </Flex>
         </ModalBody>
         <ModalFooter>
           {userFlowStep === "enter-domain" && <Button isDisabled={!domainName || domainName.length < 0} onClick={register} variant='solid'>Register</Button>}
-          {userFlowStep === "dns-records" && (
+          {(userFlowStep === "dns-records" && !isSetUp) && (
             <>
               <Button mr="auto" variant={"ghost"} onClick={() => {setUserFlowStep("enter-domain"); setDomainName("")}}>Reset</Button>
-              <Button onClick={() => {setupCustomDomainDisclosure.onClose(); setUserFlowStep("checking-domain")}} variant='solid'>Done</Button>
+              <Button onClick={() => {setUserFlowStep("already-setup"); setIsSetup(true)}} variant='solid'>Done</Button>
             </>
           )}
-          {userFlowStep === "already-setup" && (<Button mr="auto" variant={"ghost"} onClick={() => {setUserFlowStep("enter-domain"); setDomainName("")}}>Reset</Button>)}
+          {(userFlowStep === "dns-records" && isSetUp) && <Button mr="auto" variant={"ghost"} onClick={() => setUserFlowStep("already-setup")}>Back</Button>}
+          {userFlowStep === "already-setup" && (<Button mr="auto" variant={"ghost"} onClick={() => {setUserFlowStep("enter-domain"); setDomainName(""); setIsSetup(false)}}>Reset</Button>)}
         </ModalFooter>
       </ModalContent>
     </Modal>
