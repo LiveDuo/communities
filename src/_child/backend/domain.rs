@@ -18,10 +18,10 @@ use crate::STATE;
 use crate::upgrade::authorize;
 use crate::utils::{ get_content_type, format_number, uuid };
 
-const EXPIRE_TIME: u64 = 2 * 24 * 60 * 60 * 1000 * 1000 * 1000 ; // 2 days
+const EXPIRE_TIME_NANOSECS: u64 = 2 * 24 * 60 * 60 * 1000 * 1000 * 1000 ; // 2 days
 const REGISTRATIONS_URL: &str = "https://icp0.io/registrations";
-const INTERVAL_TIME: u64 = 8 * 60 * 60; // 8 hours
-const CYCLES_HTTP_REQUEST: u128 = 21_000_000_000;
+const INTERVAL_TIME_SECS: u64 = 8 * 60 * 60; // 8 hours
+const HTTP_REQUEST_CYCLES: u128 = 21_000_000_000;
 const SET_UP_DOMAIN_THRESHOLD_CYCLES: u64 = 126_000_000_000; // 126b cycles
 
 
@@ -50,10 +50,9 @@ fn clear_timer(timer_key: u64) {
     ic_cdk_timers::clear_timer(timer_id);
 }
 
+async fn update_registration() {
+    let domain = STATE.with(|s|s.borrow().domain.clone().unwrap());
 
-#[update]
-#[candid_method(update)]
-async fn update_registration(domain_name: String) {
     let request_uuid =  STATE.with(|s| uuid(&mut s.borrow_mut()));
     let request_headers = vec![
         HttpHeader { name: "Content-Type".to_string(), value: "application/json".to_string(), },
@@ -61,7 +60,7 @@ async fn update_registration(domain_name: String) {
         HttpHeader { name: "Idempotency-Key".to_string(), value: format!("UUID-{}", request_uuid) },
     ];
 
-    let body = serde_json::json!({"name": domain_name}).to_string().as_bytes().to_vec();
+    let body = serde_json::json!({"name": domain.domain_name}).to_string().as_bytes().to_vec();
 
     let request = CanisterHttpRequestArgument {
         url: REGISTRATIONS_URL.to_string(),
@@ -72,7 +71,7 @@ async fn update_registration(domain_name: String) {
         headers: request_headers,
     };
 
-    let (response, ) = http_request(request, CYCLES_HTTP_REQUEST).await.map_err(|(code, message)| format!("http error: {}-{:?}", message, code)).unwrap();
+    let (response, ) = http_request(request, HTTP_REQUEST_CYCLES).await.map_err(|(code, message)| format!("http error: {}-{:?}", message, code)).unwrap();
     if response.status != candid::Nat::from(200u64) {
         STATE.with(|s| {
             let mut state = s.borrow_mut();
@@ -101,7 +100,7 @@ async fn update_registration(domain_name: String) {
         headers: request_headers,
     };
 
-    let (response, ) = http_request(request, CYCLES_HTTP_REQUEST).await.map_err(|(code, message)| format!("http error: {}-{:?}", message, code)).unwrap();
+    let (response, ) = http_request(request, HTTP_REQUEST_CYCLES).await.map_err(|(code, message)| format!("http error: {}-{:?}", message, code)).unwrap();
     if response.status != candid::Nat::from(200u64) {
         STATE.with(|s| { 
             let mut state = s.borrow_mut();
@@ -129,8 +128,9 @@ async fn register_domain(domain_name: String) -> Result<Domain, String> {
     authorize(&caller).await?;
 
     let canister_balance = canister_balance();
+    let threshold_cycles = ((HTTP_REQUEST_CYCLES * 2) * 6) as u64;
 
-    if !canister_balance.ge(&SET_UP_DOMAIN_THRESHOLD_CYCLES) {
+    if !canister_balance.ge(&threshold_cycles) {
         return Err(format!("Not enough cycles to upgrade. Top up the canister with {} additional cycles.", format_number(SET_UP_DOMAIN_THRESHOLD_CYCLES.sub(canister_balance))));
     }
 
@@ -139,7 +139,7 @@ async fn register_domain(domain_name: String) -> Result<Domain, String> {
         return Err("Invalid domain name".to_owned());
     }
     
-    let interval = std::time::Duration::from_secs(INTERVAL_TIME);
+    let interval = std::time::Duration::from_secs(INTERVAL_TIME_SECS);
 
     let timer_id = ic_cdk_timers::set_timer_interval(interval,  || {
         ic_cdk::println!("set_timer_interval");
@@ -159,7 +159,7 @@ async fn register_domain(domain_name: String) -> Result<Domain, String> {
                 return;
             }
 
-            if ic_cdk::api::time() > domain.start_time + EXPIRE_TIME {
+            if ic_cdk::api::time() > domain.start_time + EXPIRE_TIME_NANOSECS {
 
                 domain.last_status = Ok(DomainStatus::TimerExpired);
                 state.domain =  Some(domain.to_owned());
@@ -168,7 +168,7 @@ async fn register_domain(domain_name: String) -> Result<Domain, String> {
                 return;
             }
 
-            ic_cdk::spawn(update_registration(domain.domain_name.to_owned()))
+            ic_cdk::spawn(update_registration())
         });
     });
     let parse_domain = parse_domain_result.unwrap();

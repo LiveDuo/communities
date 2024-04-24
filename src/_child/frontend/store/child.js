@@ -351,9 +351,6 @@ const ChildProvider = ({ children }) => {
 		setProfile(response.Ok)
 	}, [childActor])
 
-
-
-
 	const loginWithEvm = useCallback(async () => {
 		try {
 			// get identity

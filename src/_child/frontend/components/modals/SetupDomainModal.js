@@ -42,7 +42,7 @@ const DnsRecords = ({domain, subdomain}) => {
   )
 }
 
-const AllReadyDone = ({domainName, setUserFlowStep, domainStatus, setIsSetup}) => {
+const AlreadySetup = ({domainName, setUserFlowStep, domainStatus, setIsSetup}) => {
   return (
     <Card>
       <CardBody minW={"550px"} display={"flex"} flexDirection={"row"} alignItems={'center'}>
@@ -67,7 +67,7 @@ const AllReadyDone = ({domainName, setUserFlowStep, domainStatus, setIsSetup}) =
 
 const SetupDomainModal = () =>  {
   const toast = useToast()
-  const [userFlowStep, setUserFlowStep] = useState("checking-domain")
+  const [userFlowStep, setUserFlowStep] = useState("loading-domain")
   const [domainName, setDomainName] = useState()
   const [subdomain, setSubdomain] = useState()
   const [isSetUp, setIsSetup] = useState(false)
@@ -75,7 +75,7 @@ const SetupDomainModal = () =>  {
   const { setupCustomDomainDisclosure, principal } = useContext(IdentityContext)
   const { getDomain, childActor, registerDomain } = useContext(ChildContext)
 
-  const checkForDomainName = useCallback(async () => {
+  const getCustomDomain = useCallback(async () => {
 		try {
 			// get canister controllers
 			const res = await childActor.canister_status()
@@ -96,13 +96,13 @@ const SetupDomainModal = () =>  {
 
   useEffect(() => {
 		if (childActor && setupCustomDomainDisclosure.isOpen) {
-			checkForDomainName()
+			getCustomDomain()
 		}
-	},[childActor, checkForDomainName, setupCustomDomainDisclosure.isOpen])
+	},[childActor, getCustomDomain, setupCustomDomainDisclosure.isOpen])
 
   const getTitle = useCallback(() => {
-    if (userFlowStep === "checking-domain") {
-      return "Checking For Domain"
+    if (userFlowStep === "loading-domain") {
+      return "Loading Domain"
     } else if (userFlowStep === "enter-domain") {
       return "Enter Domain Name"
     } else if (userFlowStep === "waiting-registration") {
@@ -134,18 +134,18 @@ const SetupDomainModal = () =>  {
   }, [registerDomain, domainName, setUserFlowStep, setDomainName, setDomainStatus, setSubdomain, toast])
 
   return (
-    <Modal isOpen={setupCustomDomainDisclosure.isOpen} onClose={() => {setupCustomDomainDisclosure.onClose(); setUserFlowStep("checking-domain")}} isCentered>
+    <Modal isOpen={setupCustomDomainDisclosure.isOpen} onClose={() => {setupCustomDomainDisclosure.onClose(); setUserFlowStep("loading-domain")}} isCentered>
       <ModalOverlay />
       <ModalContent minW={userFlowStep === "dns-records" ? "700px": "600px"}>
       <ModalHeader>{getTitle()}</ModalHeader>
       <ModalCloseButton />
         <ModalBody>
           <Flex>
-            {userFlowStep === "checking-domain" && <Spinner m="0 auto"/>}
+            {userFlowStep === "loading-domain" && <Spinner m="0 auto"/>}
             {userFlowStep === "enter-domain" && <Input placeholder='eg. example.com' size='md' onChange={(e) => setDomainName(e.target.value)} />}
             {userFlowStep === "waiting-registration" && <Spinner m="0 auto"/>}
             {userFlowStep === "dns-records" && <DnsRecords domain={domainName} subdomain={subdomain}/>}
-            {userFlowStep === "already-setup" && <AllReadyDone domainName={domainName} domainStatus={domainStatus} setUserFlowStep={setUserFlowStep} setIsSetup={setIsSetup}/>}
+            {userFlowStep === "already-setup" && <AlreadySetup domainName={domainName} domainStatus={domainStatus} setUserFlowStep={setUserFlowStep} setIsSetup={setIsSetup}/>}
           </Flex>
         </ModalBody>
         <ModalFooter>
