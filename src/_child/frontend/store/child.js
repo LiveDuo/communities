@@ -262,7 +262,7 @@ const ChildProvider = ({ children }) => {
 	},[childActor])
 
 	const registerDomain = useCallback(async (domain) => {
-		return await childActor.register_domain(domain).then(res => res.Ok)
+		return await childActor.register_domain(domain)
 	},[childActor])
 
 	const getPosts = useCallback(async () => {

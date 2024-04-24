@@ -1,6 +1,8 @@
 
 use ic_cdk::api::management_canister::http_request::{http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod};
+use ic_cdk::api::canister_balance;
 use candid::{CandidType, candid_method};
+use std::ops::Sub;
 
 use ic_cdk_timers::TimerId;
 use ic_cdk::{update, query};
@@ -12,11 +14,14 @@ use addr::parse_domain_name;
 
 use crate::STATE;
 use crate::upgrade::authorize;
-use crate::utils::get_content_type;
+use crate::utils::{get_content_type, format_number};
 
-const EXPIRE_TIME: u64 = 3 * 24 * 60 * 60 * 1000 * 1000 * 1000 ; // 3 days
+const EXPIRE_TIME: u64 = 2 * 24 * 60 * 60 * 1000 * 1000 * 1000 ; // 2 days
 const REGISTRATIONS_URL: &str = "https://icp0.io/registrations";
-const INTERVAL_TIME: u64 = 4 * 60 * 60; // 4 hours
+const INTERVAL_TIME: u64 = 8 * 60 * 60; // 8 hours
+const CYCLES_HTTP_REQUEST: u128 = 21_000_000_000;
+const SET_UP_DOMAIN_THRESHOLD_CYCLES: u64 = 126_000_000_000; // 126b cycles
+
 
 #[derive(Serialize, Deserialize, Debug, CandidType, Clone, PartialEq, Eq)]
 enum DomainStatus {
@@ -62,7 +67,7 @@ async fn update_registration(domain_name: String) {
         headers: request_headers,
     };
 
-    let (response, ) = http_request(request, 0).await.unwrap();
+    let (response, ) = http_request(request, CYCLES_HTTP_REQUEST).await.unwrap();
     if response.status != candid::Nat::from(200u64) {
         STATE.with(|s| {
             let mut state = s.borrow_mut();
@@ -85,7 +90,7 @@ async fn update_registration(domain_name: String) {
         headers: vec![],
     };
 
-    let (response, ) = http_request(request, 0).await.unwrap();
+    let (response, ) = http_request(request, CYCLES_HTTP_REQUEST).await.unwrap();
     if response.status != candid::Nat::from(200u64) {
         STATE.with(|s| { 
             let mut state = s.borrow_mut();
@@ -111,6 +116,12 @@ async fn update_registration(domain_name: String) {
 async fn register_domain(domain_name: String) -> Result<Domain, String> {
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
+
+    let canister_balance = canister_balance();
+
+    if !canister_balance.ge(&SET_UP_DOMAIN_THRESHOLD_CYCLES) {
+        return Err(format!("Not enough cycles to upgrade. Top up the canister with {} additional cycles.", format_number(SET_UP_DOMAIN_THRESHOLD_CYCLES.sub(canister_balance))));
+    }
 
     let parse_domain_result = parse_domain_name(&domain_name);
     if parse_domain_result.is_err() {

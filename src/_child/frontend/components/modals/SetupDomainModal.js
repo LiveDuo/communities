@@ -121,11 +121,16 @@ const SetupDomainModal = () =>  {
     }
     
     setUserFlowStep("waiting-registration")
-    const domain = await registerDomain(domainName)
-    setDomainName(domain.domain_name)
-    setDomainStatus(getDomainLastStatus(domain.last_status))
-    setSubdomain(domain.subdomain)
-    setUserFlowStep("dns-records")
+    const res = await registerDomain(domainName)
+    if(res.Ok) {
+      setDomainName(res.Ok.domain_name)
+      setDomainStatus(getDomainLastStatus(res.Ok.last_status))
+      setSubdomain(res.Ok.subdomain)
+      setUserFlowStep("dns-records")
+    } else {
+      setUserFlowStep("enter-domain")
+      toast({ description: res.Err, status: 'error' })
+    }
   }, [registerDomain, domainName, setUserFlowStep, setDomainName, setDomainStatus, setSubdomain, toast])
 
   return (
