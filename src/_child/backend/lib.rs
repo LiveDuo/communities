@@ -1067,6 +1067,8 @@ fn candid_interface_compatibility() {
     use crate::icrc7::*;
     use icrc_ledger_types::icrc1::account::Account;
     use std::path::PathBuf;
+    use ic_cdk::api::management_canister::http_request::TransformArgs;
+    use ic_cdk::api::management_canister::http_request::HttpResponse;
 
     candid::export_service!();
     let new_interface = __export_service();
