@@ -8,7 +8,7 @@ https://github.com/LiveDuo/communities/raw/master/.notes/assets/landing/features
 
 ### Decentralization
 
-This works well with the canister-model on the Internet computer. Communities ownership is transferred to creators right after the new canister is created and creators can in turned manage this communities as canister controllers. Moreover, the deployed canisters follow the ICRC-7 standard that allows creators to see these canisters as NFTs in their wallets and top up or transfer them to another user if needed. Canister upgrades are opt-in and can be done through the admin panel in the canister frontend only by the owner of that community.
+The canister-model of the Internet computer fits the design described above. New communities are deployed as new canisters and community ownership is transferred to creators right after the new canister is created by assigning the creator as the canister controller. Moreover, the deployed canisters follow the ICRC-7 standard that allows creators to see these canisters as NFTs in their wallets and transfer to a different user or account if needed. Opt-in community upgrades are canister upgrades where the community canister requests the upgrade data from the parent canister and then it upgrade itself by calling the management canister.
 
 ### How it works
 
