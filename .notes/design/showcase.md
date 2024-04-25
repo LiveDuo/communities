@@ -35,7 +35,7 @@ We welcome feedback on both the user experience and technical design of the proj
 
 At this point we want to assess how different users see this idea that based on a different architecture and we either decentralize the parent canister or maintain it as an open source project.
 
-### Resources
+### Links
 
 1. https://www.communities.ooo
 2. https://example.communities.ooo (example community to test it out)
