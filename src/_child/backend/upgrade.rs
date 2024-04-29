@@ -56,13 +56,12 @@ pub async fn check_canister_cycles_balance() -> Result<(), String> {
 pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, version: &str, track: &String) -> Result<(), String> {
   let canister_id = ic_cdk::id();
 
-  let mut request_assets = assets.clone();
-  let mut request_index = 0;
+  let mut request_assets = assets.iter().map(|a| (a, 0 as u32)).collect::<Vec<_>>();
   let mut retrieved_assets: Vec<(String, Vec<u8>)> = vec![];
   // NOTE the check request_index < assets.len() is used to prevent infinity requests bugs
-  while !request_assets.is_empty() && request_index < assets.len() {
+  while !request_assets.is_empty() {
     let (stored_assets,) = 
-      ic_cdk::call::<_, (Vec<(String, Vec<u8>)>, )>(
+      ic_cdk::call::<_, (Vec<(String, bool, Vec<u8>)>, )>(
         parent_canister,
         "retrieve_batch",
         (request_assets.to_owned(),))
@@ -73,12 +72,25 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
       break;
     }
    
-    for (key, asset) in stored_assets.iter() {
-      retrieved_assets.push((key.to_owned(), asset.to_owned()));
-      let removed_index = request_assets.iter().position(|k| k == key).unwrap();
-      request_assets.remove(removed_index);
+    for (key, more_chucks,  asset) in stored_assets.iter() {
+
+      let index_opt = retrieved_assets.iter().position(|(k, _)| k == key);
+      if let Some(index) = index_opt {
+        let content = [retrieved_assets[index].1.clone(), asset.clone()].concat();
+        retrieved_assets[index] = (retrieved_assets[index].0.to_owned(), content);
+      } else {
+        retrieved_assets.push((key.to_owned(), asset.to_owned()));
+      }
+
+      if !more_chucks {
+        let removed_index = request_assets.iter().position(|(k, _)| k.to_owned() == key).unwrap();
+        request_assets.remove(removed_index);
+      } else {
+        let index = request_assets.iter().position(|(k, _)| k.to_owned() == key).unwrap();
+        request_assets[index] = (request_assets[index].0, request_assets[index].1 + 1);
+      }
+
     }
-    request_index+= 1;
   };
 
   for (key_asset, content_asset) in retrieved_assets {

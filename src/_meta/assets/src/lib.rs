@@ -44,25 +44,40 @@ pub fn retrieve(key: Key) -> RcBytes {
 
 #[query]
 #[candid_method(query)]
-pub fn retrieve_batch(keys: Vec<Key>) -> Vec<(Key, Vec<u8>)> {
+pub fn retrieve_batch(keys: Vec<(Key, u32)>) -> Vec<(Key, bool, Vec<u8>)> {
     STATE.with(|s| {
         let state = s.borrow();
 
         // get batches
-        let mut batches: Vec<(u32, Vec<(Key, Vec<u8>)>)> = vec![(0, vec![])];
-        for key  in keys {
+        let mut batches: Vec<(u32, Vec<(Key, bool, Vec<u8>)>)> = vec![(0, vec![])];
+        for (key, chuck_id)  in keys {
             let content = state.retrieve(&key).unwrap().to_vec();
+            let mut has_more_chunks = false;
+            let content = if content.len() > MAX_MESSAGE_SIZE as usize {
+                let start = chuck_id * MAX_MESSAGE_SIZE;
+
+                let end =  if (start + MAX_MESSAGE_SIZE) as usize > content.len() {
+                    content.len()
+                } else { 
+                    has_more_chunks = true;
+                    (start + MAX_MESSAGE_SIZE) as usize
+                };
+                
+                content[start as usize..end].to_vec()
+            } else {
+                content
+            };
             let mut is_stored_already = false;
             for (batch_size, batch) in batches.iter_mut() {
                 if *batch_size + content.len() as u32 <= MAX_MESSAGE_SIZE  {
                     *batch_size+= content.len() as u32;
-                    batch.push((key.to_owned(), content.to_owned()));
+                    batch.push((key.to_owned(),has_more_chunks, content.to_owned()));
                     is_stored_already = true;
                     break;
                 }
             }
             if !is_stored_already  {
-                batches.push((content.len() as u32, vec![(key, content)]));
+                batches.push((content.len() as u32, vec![(key, has_more_chunks, content)]));
             }
         }
 
