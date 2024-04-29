@@ -51,22 +51,12 @@ pub fn retrieve_batch(keys: Vec<(Key, u32)>) -> Vec<(Key, bool, Vec<u8>)> {
         // get batches
         let mut batches: Vec<(u32, Vec<(Key, bool, Vec<u8>)>)> = vec![(0, vec![])];
         for (key, chuck_id)  in keys {
-            let content = state.retrieve(&key).unwrap().to_vec();
-            let mut has_more_chunks = false;
-            let content = if content.len() > MAX_MESSAGE_SIZE as usize {
-                let start = chuck_id * MAX_MESSAGE_SIZE;
 
-                let end =  if (start + MAX_MESSAGE_SIZE) as usize > content.len() {
-                    content.len()
-                } else { 
-                    has_more_chunks = true;
-                    (start + MAX_MESSAGE_SIZE) as usize
-                };
-                
-                content[start as usize..end].to_vec()
-            } else {
-                content
-            };
+            let content = state.retrieve(&key).unwrap().to_vec();
+            let mut iter_content = content.chunks(MAX_MESSAGE_SIZE as usize);
+            let has_more_chunks = iter_content.len() - 1  > chuck_id as usize;
+            let content = iter_content.nth(chuck_id as usize).unwrap().to_vec();
+
             let mut is_stored_already = false;
             for (batch_size, batch) in batches.iter_mut() {
                 if *batch_size + content.len() as u32 <= MAX_MESSAGE_SIZE  {
