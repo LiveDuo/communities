@@ -141,5 +141,5 @@ service: {
   authorize: (principal) -> ();
   execute_batch: (vec BatchOperationKind) -> ();
 
-  retrieve_batch: (vec Key) -> (vec record { Key; vec nat8; }) query;
+  retrieve_batch: (vec  record { Key; nat32; }) -> (vec record { Key; bool; vec nat8; }) query;
 }

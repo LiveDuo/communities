@@ -8,6 +8,7 @@ use serde_bytes::ByteBuf;
 use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
 
 const UPGRADE_THRESHOLD_CYCLES: u64 = 100_000_000_000; // 100b cycles
+const MAX_REQUEST_RETRIES: u32 = 30;
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UpgradeFrom {
@@ -56,13 +57,13 @@ pub async fn check_canister_cycles_balance() -> Result<(), String> {
 pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, version: &str, track: &String) -> Result<(), String> {
   let canister_id = ic_cdk::id();
 
-  let mut request_assets = assets.clone();
-  let mut request_index = 0;
+  let mut request_assets = assets.iter().map(|a| (a, 0 as u32)).collect::<Vec<_>>();
   let mut retrieved_assets: Vec<(String, Vec<u8>)> = vec![];
+  let mut request_index = 0;
   // NOTE the check request_index < assets.len() is used to prevent infinity requests bugs
-  while !request_assets.is_empty() && request_index < assets.len() {
+  while !request_assets.is_empty() && request_index < MAX_REQUEST_RETRIES  {
     let (stored_assets,) = 
-      ic_cdk::call::<_, (Vec<(String, Vec<u8>)>, )>(
+      ic_cdk::call::<_, (Vec<(String, bool, Vec<u8>)>, )>(
         parent_canister,
         "retrieve_batch",
         (request_assets.to_owned(),))
@@ -73,10 +74,23 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
       break;
     }
    
-    for (key, asset) in stored_assets.iter() {
-      retrieved_assets.push((key.to_owned(), asset.to_owned()));
-      let removed_index = request_assets.iter().position(|k| k == key).unwrap();
-      request_assets.remove(removed_index);
+    for (key, more_chucks,  asset) in stored_assets.iter() {
+
+      // if existing asset extend else  add to requested
+      if let Some(existing_asset) = retrieved_assets.iter_mut().find(|(k, _)| k == key) {
+        existing_asset.1.extend_from_slice(asset);
+      } else {
+        retrieved_assets.push((key.to_owned(), asset.to_owned()));
+      }
+
+      // if more chunks increase id else remove
+      if *more_chucks {
+        let request_asset = request_assets.iter_mut().find(|(k, _)| k.to_owned() == key).unwrap();
+        request_asset.1 = request_asset.1 + 1;
+      } else {
+        let removed_index = request_assets.iter().position(|(k, _)| k.to_owned() == key).unwrap();
+        request_assets.remove(removed_index);
+      }
     }
     request_index+= 1;
   };
