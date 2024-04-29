@@ -3,7 +3,7 @@ const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')	
 
 const { getCanisters, getAgent, getHost } = require('../_meta/shared/utils')
-const { getFiles, addItemToBatches, executeBatch } = require('../_meta/shared/assets')
+const { getFiles, addItemToBatches, executeStoreBatch, MAX_MESSAGE_SIZE, executeChunkedUpload } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { parentFactory, assetFactory } = require('../_meta/shared/idl')
 
@@ -36,15 +36,21 @@ const filter = argv.filter ?? null
 	if (upgradeExists) { console.log('Version already exist\n'); return }
 
 	const batches = [{batchSize: 0, items: []}]
+	const chunked = []
 
 	// upload upgrade assets
 	const assets = await getFiles(`${path}/${version}`).then(e => e.filter(f => filter === f || filter === null))
 	for (let asset of assets) {
 		const assetBuf = await fs.readFile(`${path}/${version}/${asset}`)
-		addItemToBatches(batches, assetBuf,`/upgrades/${track}/${version}/${asset}`)
+		if (assetBuf.length > MAX_MESSAGE_SIZE) {
+			chunked.push({content: assetBuf, key: `/upgrades/${track}/${version}/${asset}`})
+		} else {
+			addItemToBatches(batches, assetBuf,`/upgrades/${track}/${version}/${asset}`)
+		}
 	}
 
-	await executeBatch(actorAsset, batches)
+	await executeStoreBatch(actorAsset, batches)
+	await executeChunkedUpload(actorAsset, chunked)
 
 	// create upgrade
 	const upgradeFrom = upgradeFromVersion && upgradeFromTrack ? [ {version: upgradeFromVersion, track: upgradeFromTrack} ] : []

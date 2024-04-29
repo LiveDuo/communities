@@ -1,11 +1,11 @@
 use std::ops::Sub;
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Nat, Principal};
 use crate::utils::{get_asset, get_content_type, format_number};
 use crate::state::STATE;
 use ic_cdk::api::management_canister::main::*;
 use ic_cdk::api::canister_balance;
 use serde_bytes::ByteBuf;
-use ic_certified_assets::types::{StoreArg, DeleteAssetArguments};
+use ic_certified_assets::types::{StoreArg, DeleteAssetArguments, GetChunkArg};
 
 const UPGRADE_THRESHOLD_CYCLES: u64 = 100_000_000_000; // 100b cycles
 const MAX_REQUEST_RETRIES: u32 = 30;
@@ -57,7 +57,7 @@ pub async fn check_canister_cycles_balance() -> Result<(), String> {
 pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<String>, version: &str, track: &String) -> Result<(), String> {
   let canister_id = ic_cdk::id();
 
-  let mut request_assets = assets.iter().map(|a| (a, 0 as u32)).collect::<Vec<_>>();
+  let mut request_assets = assets.iter().map(|k| GetChunkArg{key: k.to_owned(), content_encoding: "identity".to_owned(), index: Nat::from(0u64), sha256: None}).collect::<Vec<_>>();
   let mut retrieved_assets: Vec<(String, Vec<u8>)> = vec![];
   let mut request_index = 0;
   // NOTE the check request_index < assets.len() is used to prevent infinity requests bugs
@@ -85,10 +85,10 @@ pub async fn store_assets_to_temp(parent_canister: Principal, assets: &Vec<Strin
 
       // if more chunks increase id else remove
       if *more_chucks {
-        let request_asset = request_assets.iter_mut().find(|(k, _)| k.to_owned() == key).unwrap();
-        request_asset.1 = request_asset.1 + 1;
+        let request_asset = request_assets.iter_mut().find(|asset| &asset.key == key).unwrap();
+        request_asset.index = request_asset.index.clone() +  Nat::from(1u64);
       } else {
-        let removed_index = request_assets.iter().position(|(k, _)| k.to_owned() == key).unwrap();
+        let removed_index = request_assets.iter().position(|asset| &asset.key.to_owned() == key).unwrap();
         request_assets.remove(removed_index);
       }
     }

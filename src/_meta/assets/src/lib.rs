@@ -13,7 +13,7 @@ use crate::{
     state_machine::{AssetDetails, EncodedAsset, State},
     types::*,
 };
-use candid::{candid_method, Principal};
+use candid::{candid_method, Principal, Nat};
 use ic_cdk::api::{caller, data_certificate, set_certified_data, time, trap};
 use ic_cdk::{query, update};
 use std::cell::RefCell;
@@ -44,30 +44,29 @@ pub fn retrieve(key: Key) -> RcBytes {
 
 #[query]
 #[candid_method(query)]
-pub fn retrieve_batch(keys: Vec<(Key, u32)>) -> Vec<(Key, bool, Vec<u8>)> {
+pub fn retrieve_batch(assets: Vec<GetChunkArg>) -> Vec<(Key, bool, Vec<u8>)> {
     STATE.with(|s| {
         let state = s.borrow();
 
         // get batches
         let mut batches: Vec<(u32, Vec<(Key, bool, Vec<u8>)>)> = vec![(0, vec![])];
-        for (key, chuck_id)  in keys {
-
-            let content = state.retrieve(&key).unwrap().to_vec();
-            let mut iter_content = content.chunks(MAX_MESSAGE_SIZE as usize);
-            let has_more_chunks = iter_content.len() - 1  > chuck_id as usize;
-            let content = iter_content.nth(chuck_id as usize).unwrap().to_vec();
-
+        for asset  in assets {
+            
+            let content = state.get_chunk(asset.to_owned()).unwrap().to_vec();
+            let chuck_len = state.get_chunk_len(&asset.key, &asset.content_encoding).unwrap();
+            let has_more_chunks = Nat::from(chuck_len - 1) > asset.index;
+            
             let mut is_stored_already = false;
             for (batch_size, batch) in batches.iter_mut() {
                 if *batch_size + content.len() as u32 <= MAX_MESSAGE_SIZE  {
                     *batch_size+= content.len() as u32;
-                    batch.push((key.to_owned(),has_more_chunks, content.to_owned()));
+                    batch.push((asset.key.clone(),has_more_chunks, content.to_owned()));
                     is_stored_already = true;
                     break;
                 }
             }
             if !is_stored_already  {
-                batches.push((content.len() as u32, vec![(key, has_more_chunks, content)]));
+                batches.push((content.len() as u32, vec![(asset.key, has_more_chunks, content)]));
             }
         }
 

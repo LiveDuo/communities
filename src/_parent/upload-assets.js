@@ -3,7 +3,7 @@ const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')
 
 const { getCanisters, getAgent, getHost } = require('../_meta/shared/utils')
-const { getFiles, addItemToBatches, executeBatch } = require('../_meta/shared/assets')
+const { getFiles, addItemToBatches, executeStoreBatch, MAX_MESSAGE_SIZE, executeChunkedUpload } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { assetFactory, parentFactory } = require('../_meta/shared/idl')
 
@@ -26,24 +26,40 @@ const description = argv.description ?? 'upgrade to 0.0.1'
 	const actorParent = Actor.createActor(parentFactory, { agent, canisterId: canisters.parent[network] })
 
 	const batches = [{batchSize: 0, items: []}]
+	const chunked = []
+
 	// upload domain file
 	const domains = await fs.readFile('./build/domains/index.txt')
-	addItemToBatches(batches, domains, '/.well-known/ic-domains')
+	if (domains.length > MAX_MESSAGE_SIZE) {
+		chunked.push({content: domains, key: '/.well-known/ic-domains'})
+	} else {
+		addItemToBatches(batches, domains, '/.well-known/ic-domains')
+	}
+
 
 	// upload parent assets
 	const assetsParent = await getFiles('./build/parent')
 	for (let asset of assetsParent) {
 		const assetBuf = await fs.readFile(`build/parent/${asset}`)
-		addItemToBatches(batches, assetBuf, `/${asset}`)
+		if (assetBuf.length > MAX_MESSAGE_SIZE) {
+			chunked.push({content: assetBuf, key: `/${asset}`})
+		} else {
+			addItemToBatches(batches, assetBuf, `/${asset}`)
+		}
 	}
 	// upload child assets
 	const assetsChild = await getFiles(`./build/child/${version}`)
 	for (let asset of assetsChild) {
 		const assetBuf = await fs.readFile(`./build/child/${version}/${asset}`)
-		addItemToBatches(batches, assetBuf, `/upgrades/${track}/${version}/${asset}`)
+		if (assetBuf.length > MAX_MESSAGE_SIZE) {
+			chunked.push({content: assetBuf, key: `/upgrades/${track}/${version}/${asset}`})
+		} else {
+			addItemToBatches(batches, assetBuf, `/upgrades/${track}/${version}/${asset}`)
+		}
 	}
 
-	await executeBatch(actorAsset, batches)
+	await executeStoreBatch(actorAsset, batches)
+	await executeChunkedUpload(actorAsset, chunked)
 	
 	// create upgrade
 	const assetsWithPath = assetsChild.map(a => `/upgrades/${track}/${version}/${a}`)

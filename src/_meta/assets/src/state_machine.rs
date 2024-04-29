@@ -384,6 +384,19 @@ impl State {
 
         Ok(enc.content_chunks[index].clone())
     }
+    pub fn get_chunk_len(&self, key: &String, content_encoding: &String) -> Result<usize, String> {
+        let asset = self
+            .assets
+            .get(key)
+            .ok_or_else(|| "asset not found".to_string())?;
+
+        let enc = asset
+            .encodings
+            .get(content_encoding)
+            .ok_or_else(|| "no such encoding".to_string())?;
+
+        Ok(enc.content_chunks.len())
+    }
 
     fn build_http_response(
         &self,

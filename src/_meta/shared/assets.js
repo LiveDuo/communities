@@ -4,6 +4,7 @@ const path = require('path')
 global.fetch = require('node-fetch')
 
 const MAX_MESSAGE_SIZE = 2097152 - 20000 // 2mb max message size - 20kb padding
+exports.MAX_MESSAGE_SIZE = MAX_MESSAGE_SIZE
 
 const getContentType = (k) => {
 	if (k.endsWith('.html')) return 'text/html'
@@ -57,13 +58,37 @@ const addItemToBatches= (batches, item, key) => {
 
 exports.addItemToBatches = addItemToBatches
 
-const executeBatch = async (actorAsset, batches) => {
+const executeStoreBatch = async (actorAsset, batches) => {
 	for (const [index, batch] of batches.entries()) {
 		await actorAsset.execute_batch(batch.items)
 		console.log("executed batch", index + 1)
 	}
 }
 
-exports.executeBatch = executeBatch
+exports.executeStoreBatch = executeStoreBatch
+
+
+const getChunks = (arr, size) => Array.from({ length: Math.ceil(arr.length / size) }, (v, i) => arr.slice(i * size, i * size + size));
+
+
+const executeChunkedUpload = async (actorAsset, chunked) => {
+	for (const asset of chunked) {
+		const batchId = await actorAsset.create_batch().then(res => res.batch_id)
+
+		const chunkIds = []
+		const chunks = getChunks(asset.content, MAX_MESSAGE_SIZE)
+		for (const chunk of chunks) {
+			const chunkId = await actorAsset.create_chunk({ content: chunk, batch_id : batchId }).then(res => res.chunk_id)
+			chunkIds.push(chunkId)
+		}
+
+		const operations = [
+			{ CreateAsset: { key : asset.key, content_type : getContentType(asset.key), headers : [], max_age: [] } },
+			{ SetAssetContent: { key: asset.key, content_encoding: 'identity', chunk_ids: chunkIds, sha256: []} }
+		]
+		await actorAsset.commit_batch({batch_id: batchId, operations: operations})
+	}
+}
+exports.executeChunkedUpload = executeChunkedUpload
 
 

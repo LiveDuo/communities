@@ -122,6 +122,7 @@ const assetFactory = ({ IDL }) => {
 	const StoreArgs = IDL.Record({ 'key': IDL.Text, 'content_type': IDL.Text, 'content_encoding': IDL.Text, 'content': IDL.Vec(IDL.Nat8) })
 	const ClearArguments = IDL.Record({});
 	const Key = IDL.Text;
+	const BatchId = IDL.Nat;
 	const HeaderField = IDL.Tuple(IDL.Text, IDL.Text);
 	const CreateAssetArguments = IDL.Record({ 'key' : Key, 'content_type' : IDL.Text, 'headers' : IDL.Opt(IDL.Vec(HeaderField)), 'max_age' : IDL.Opt(IDL.Nat64), });
 	const StoreArg = IDL.Record({ 'key' : Key, 'content' : IDL.Vec(IDL.Nat8), 'sha256' : IDL.Opt(IDL.Vec(IDL.Nat8)), 'content_type' : IDL.Text, 'content_encoding' : IDL.Text, });
@@ -133,6 +134,9 @@ const assetFactory = ({ IDL }) => {
 	return IDL.Service({
 		'execute_batch': IDL.Func([IDL.Vec(BatchOperationKind)], [], []),
 		'store': IDL.Func([StoreArgs], [], []),
+		'commit_batch' : IDL.Func([ IDL.Record({ 'batch_id' : BatchId, 'operations' : IDL.Vec(BatchOperationKind) })], [],[],),
+		'create_batch' : IDL.Func([], [IDL.Record({ 'batch_id' : BatchId })],[]),
+		'create_chunk' : IDL.Func([IDL.Record({ 'content' : IDL.Vec(IDL.Nat8), 'batch_id' : BatchId })], [IDL.Record({ 'chunk_id' : ChunkId })],[],),
 		'list' : IDL.Func([],[IDL.Vec( IDL.Record({'key' : Key, 'encodings' : IDL.Vec( IDL.Record({ 'modified' : IDL.Int, 'sha256' : IDL.Opt(IDL.Vec(IDL.Nat8)), 'length' : IDL.Nat, 'content_encoding' : IDL.Text, }) ), 'content_type' : IDL.Text, }) ),], ['query'], ),
 	})
 }

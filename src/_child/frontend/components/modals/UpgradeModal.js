@@ -88,7 +88,7 @@ const UpgradeModal = () => {
 											<Text ml="4px" as="span">Version: <Tag>{u.version}</Tag></Text>
 										</Box>
 										<Text mb="16px">{u.description ?? 'No description'}</Text>
-										<Button size="sm" onClick={() => upgradeCanister(u.version, u.track)}>Upgrade</Button>
+										<Button size="sm" onClick={() => upgradeCanister(u.version, u.track.name)}>Upgrade</Button>
 									</Box>
 								)) :
 								<Text>No available upgrades</Text>}
