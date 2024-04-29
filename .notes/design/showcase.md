@@ -4,9 +4,12 @@ https://github.com/LiveDuo/communities/raw/master/.notes/assets/landing/hero.png
 
 Communities.ooo is a tool that allows creators to create online communities that they fully own. Creators can invite their followers, fans or readers to their community to discuss, share ideas and interact. Users can login with their Ethereum, Solana or IC account using the standard browser extensions.
 
-https://github.com/LiveDuo/communities/raw/master/.notes/assets/landing/features.png
+### Features
 
-Creators today have to relying on third-party platforms and we believe they should truly own the space they created, literally, in their wallet.
+https://github.com/LiveDuo/communities/raw/master/.notes/assets/screenshots/community.png
+https://github.com/LiveDuo/communities/raw/master/.notes/assets/screenshots/sign-in.png
+https://github.com/LiveDuo/communities/raw/master/.notes/assets/screenshots/reply-editor.png
+https://github.com/LiveDuo/communities/raw/master/.notes/assets/screenshots/moderation-page.png
 
 ### Decentralization
 
@@ -14,12 +17,7 @@ The canister-model of the Internet computer fits the design described above. New
 
 ### How it works
 
-https://github.com/LiveDuo/communities/raw/master/.notes/assets/screenshots/community.png
-https://github.com/LiveDuo/communities/raw/master/.notes/assets/screenshots/sign-in.png
-https://github.com/LiveDuo/communities/raw/master/.notes/assets/screenshots/reply-editor.png
-https://github.com/LiveDuo/communities/raw/master/.notes/assets/screenshots/moderation-page.png
-
-If you are looking to learn more about the technical details of this project check the [relevant section on Github](https://github.com/LiveDuo/communities?tab=readme-ov-file#how-it-works). That includes details about the deployment & upgrade process, our database design, Ethereum/Solana logins, custom domains and more.
+To learn more about the technical details of this project check the [relevant section on Github](https://github.com/LiveDuo/communities?tab=readme-ov-file#how-it-works). That includes details about the deployment & upgrade process, our database design, Ethereum/Solana logins, custom domains and more.
 
 ### Go-To-Market
 
@@ -34,8 +32,6 @@ We are planning the following:
 The project is currently in a working **beta** stage. This means that all core functionality of the project is expected to work but the current version is not extensively tested or audited.
 
 We welcome feedback on both the user experience and technical design of the project. Feel free to get in touch in the [Github](https://github.com/LiveDuo/communities/issues), on [Twitter](twitter.com/andreas_tzionis) or here in the forum.
-
-At this point we want to assess how different users see this idea that based on a different architecture and we either decentralize the parent canister or maintain it as an open source project.
 
 ### Links
 
