@@ -2,9 +2,11 @@
 
 https://github.com/LiveDuo/communities/raw/master/.notes/assets/landing/hero.png
 
-Communities.ooo is a tool to create online communities owned by the creators. Creators can invite their followers, fans or readers to their community to discuss, share ideas and interact. Users can login with their Ethereum, Solana or IC account using the standard browser extensions. Creators today have to relying on third-party platforms and we believe they should truly own the space they created, literally, in their wallet.
+Communities.ooo is a tool that allows creators to create online communities that they fully own. Creators can invite their followers, fans or readers to their community to discuss, share ideas and interact. Users can login with their Ethereum, Solana or IC account using the standard browser extensions.
 
 https://github.com/LiveDuo/communities/raw/master/.notes/assets/landing/features.png
+
+Creators today have to relying on third-party platforms and we believe they should truly own the space they created, literally, in their wallet.
 
 ### Decentralization
 
