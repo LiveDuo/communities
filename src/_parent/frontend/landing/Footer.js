@@ -30,10 +30,10 @@ const Footer = () => {
               <SocialButton href={'https://twitter.com/dfinity'}>
                 <FontAwesomeIcon icon={faTwitter} />
               </SocialButton>
-              <SocialButton href={'https://github.com/dfinity'}>
+              <SocialButton href={'https://github.com/LiveDuo/communities'}>
                 <FontAwesomeIcon icon={faGithub} />
               </SocialButton>
-              <SocialButton href={'https://www.youtube.com/dfinity'}>
+              <SocialButton href={'https://www.youtube.com/watch?v=GqROYKOaFv4&ab_channel=AndreasTzionis'}>
                 <FontAwesomeIcon icon={faYoutube} />
               </SocialButton>
             </Stack>
@@ -48,7 +48,7 @@ const Footer = () => {
           <Stack align={'flex-start'}>
             <ListHeader>External</ListHeader>
             <Link href={'https://dashboard.internetcomputer.org/'} target="_blank">Internet Computer</Link>
-            <Link href={'https://internetcomputer.org/how-it-works'} target="_blank">Technical details</Link>
+            <Link href={'https://github.com/LiveDuo/communities?tab=readme-ov-file#how-it-works'} target="_blank">Technical details</Link>
             <Link href={'https://icscan.io/canister/2227b-baaaa-aaaao-abd6a-cai'} target="_blank">IC Explorer</Link>
             <Link href={'https://forum.dfinity.org/'} target="_blank">Forum</Link>
           </Stack>
