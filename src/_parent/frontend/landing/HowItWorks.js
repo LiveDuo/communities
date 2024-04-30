@@ -13,7 +13,7 @@ const HowItWork = () => {
               </Box>
             </Heading>
           </Stack>
-          <Blur position={'absolute'} top={-10} right={-10} style={{ filter: 'blur(70px)' }}/>
+          <Blur position={'absolute'} top={-10} right={10} style={{ filter: 'blur(70px)' }}/>
         </Box>
         <Container maxW={'5xl'} py={12}>
           <SimpleGrid id='ownership' mb="80px" mt="20px" columns={{ base: 1, md: 2 }} spacing={10}>
