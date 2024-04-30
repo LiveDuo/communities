@@ -79,6 +79,8 @@ As every creator deploys their own canister we built a system to coordinate opt-
 
 To make communities accessible from end users this project supports authentication with Ethereum and Solana browser extensions. When a user clicks the login button a new principal is created for them in the background and the credentials of this principal are stored in their browser. Then their wallet extension pops up requiring them to sign a [specific message with their wallet](https://github.com/LiveDuo/communities/blob/ed5ebdba098359e726a4649d0b6231a1143fe85a/src/_child/frontend/store/child.js#L334). When they do, that message is [send to the backend](https://github.com/LiveDuo/communities/blob/ed5ebdba098359e726a4649d0b6231a1143fe85a/src/_child/backend/lib.rs#L85) where [both the content of the message is checked](https://github.com/LiveDuo/communities/blob/ed5ebdba098359e726a4649d0b6231a1143fe85a/src/_child/backend/lib.rs#L92) and the address that signed it. If a user clear their cookies or want to sign in from another divide they just have to start this process again and a new principal is created for them but is linked to the same profile.
 
+Note: We implement Ethereum and Solana login before [ic-siwe](https://github.com/kristoferlund/ic-siwe) and [ic-siws](https://github.com/kristoferlund/ic-siws). If you are looking to add this functionality to your project you might want to check these libraries too. They utilise [delegations](https://internetcomputer.org/docs/current/references/ic-interface-spec#authentication) to have a consistent principal among logins.
+
 </details>
 
 
