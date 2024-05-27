@@ -14,14 +14,14 @@ import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
 import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDownload, faGear, faArrowRightFromBracket, faHouse, faEllipsis, faServer } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faUserShield, faArrowRightFromBracket, faHouse, faEllipsis, faServer } from '@fortawesome/free-solid-svg-icons'
 
 const Header = () => {
 
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure, setupCustomDomainDisclosure  } = useContext(IdentityContext)
+  const { principal, disconnect, account, setSelectedNetwork, onWalletModalOpen, onUpgradeModalOpen, isWalletDetected, icWalletDisclosure, setupCustomDomainDisclosure, topUpDisclosure} = useContext(IdentityContext)
   const { getProfile, login, profile } = useContext(ChildContext)
 
   useEffect(() => {
@@ -88,7 +88,7 @@ const Header = () => {
               Sign in with...
             </MenuButton>
             <MenuList>
-              {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faGear} />} onClick={()=> navigate('/admin')} >Moderation</MenuItem>}
+              {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faUserShield} />} onClick={()=> navigate('/admin')} >Moderation</MenuItem>}
               {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faServer} />} onClick={()=> setupCustomDomainDisclosure.onOpen()} >Custom domain</MenuItem>}
               {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faDownload} />} onClick={()=> onUpgradeModalOpen()}>System updates</MenuItem>}
               <MenuItem icon={<FontAwesomeIcon icon={faArrowRightFromBracket} />} onClick={()=> disconnect()}>Logout</MenuItem>

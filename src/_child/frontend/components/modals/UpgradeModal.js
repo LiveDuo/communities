@@ -66,7 +66,7 @@ const UpgradeModal = () => {
 		<Modal isOpen={isUpgradeModalOpen} onClose={onUpgradeModalClose} isCentered>
 			<ModalOverlay />
 			<ModalContent minW="520px">
-				<ModalHeader>Admin Dashboard</ModalHeader>
+				<ModalHeader>System updates</ModalHeader>
 				<ModalCloseButton />
 				<ModalBody>
 					<Flex p="24px">

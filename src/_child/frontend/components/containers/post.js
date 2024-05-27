@@ -1,11 +1,11 @@
 import { useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { Spinner, Box, Heading, Tag } from '@chakra-ui/react'
+import { Spinner, Box, Heading, Tag, Link } from '@chakra-ui/react'
 import { Text, Flex, Button, IconButton, Divider } from '@chakra-ui/react'
 import { useDisclosure } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
-import { addressShort, getAddress, getSeedFromAuthentication, getAuthentication } from '../../utils/address'
+import { addressShort, getAddress, getAuthenticationType, getSeedFromAuthentication, getAuthentication } from '../../utils/address'
 import { getTempId } from '../../utils/random'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -14,7 +14,7 @@ import { faArrowLeft, faEyeSlash, faEye, faHeart } from '@fortawesome/free-solid
 import { ChildContext } from '../../store/child'
 import { IdentityContext } from '../../store/identity'
 
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { Link as RouterLink , useNavigate, useParams, useLocation } from 'react-router-dom'
 import Markdown from 'react-markdown'
 import Editor from '../Editor/Editor'
 import ToolBar from '../Editor/ToolBar'
@@ -182,9 +182,11 @@ const PostContainer = () => {
             {isAdmin && post.status.hasOwnProperty("Hidden") && <Tag ml="10px" colorScheme='orange' size={'md'}>Hidden</Tag>}
             <Text ml="auto">{timeSince(post.timestamp)}</Text>
           </Flex>
-          <Flex mb="20px" padding="20px 60px" alignItems="center">
+            <Flex mb="20px" padding="20px 60px" alignItems="center">
             <Jazzicon diameter={20} seed={getSeedFromAuthentication(post.authentication)} />
-            <Text ml="20px">{addressShort(getAddress(post.authentication))}</Text>
+            <Link as={RouterLink} to={`/user/${getAuthenticationType(post.authentication).toLocaleLowerCase()}/${getAddress(post.authentication)}`}>
+              <Text ml="20px">{addressShort(getAddress(post.authentication))}</Text>
+            </Link>
           </Flex>
           <Box mb="40px" padding="20px 60px">
           <Box textAlign="start" className="markdown-body">
@@ -221,7 +223,9 @@ const PostContainer = () => {
               <Flex opacity={r.status.hasOwnProperty('Hidden') ? '0.4' : '1'} key={r.reply_id} flexDirection={'column'}  borderBottom="1px solid #00000010" padding="20px">
                 <Flex flexDirection={'row'} alignItems={'center'} mb="6">
                   <Jazzicon diameter={20} seed={getSeedFromAuthentication(r?.authentication)} />
-                  <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
+                  <Link as={RouterLink} to={`/user/${getAuthenticationType(r?.authentication).toLocaleLowerCase()}/${getAddress(r?.authentication)}`}>
+                    <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
+                  </Link>
                   {!r.reply_id && <Spinner ml="10px" size={'xs'}/>}
                   <Text ml="auto">{timeSince(r?.timestamp)}</Text>
                 </Flex>
