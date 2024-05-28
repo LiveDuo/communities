@@ -14,7 +14,7 @@ import { ReactComponent as SolanaLogo } from '../../logos/solana.svg'
 import { ReactComponent as DfinityLogo } from '../../logos/dfinity.svg'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDownload, faUserShield, faArrowRightFromBracket, faHouse, faEllipsis, faServer } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faUserShield, faArrowRightFromBracket, faHouse, faEllipsis, faServer, faWallet } from '@fortawesome/free-solid-svg-icons'
 
 const Header = () => {
 
@@ -91,6 +91,7 @@ const Header = () => {
               {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faUserShield} />} onClick={()=> navigate('/admin')} >Moderation</MenuItem>}
               {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faServer} />} onClick={()=> setupCustomDomainDisclosure.onOpen()} >Custom domain</MenuItem>}
               {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faDownload} />} onClick={()=> onUpgradeModalOpen()}>System updates</MenuItem>}
+              {isAdmin && <MenuItem icon={<FontAwesomeIcon icon={faWallet} />} onClick={()=> topUpDisclosure.onOpen()}>Topup</MenuItem>}
               <MenuItem icon={<FontAwesomeIcon icon={faArrowRightFromBracket} />} onClick={()=> disconnect()}>Logout</MenuItem>
             </MenuList>
           </Menu>

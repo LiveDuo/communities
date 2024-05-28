@@ -13,7 +13,7 @@ import { getAuthentication } from '../utils/address'
 /* global BigInt */
 
 
-export const CHILD_CANISTER_ID =  process.env.REACT_APP_CHILD_CANISTER_ID ?? 'REACT_APP_CHILD_CANISTER_ID'
+export const CHILD_CANISTER_ID =process.env.REACT_APP_CHILD_CANISTER_ID ?? 'REACT_APP_CHILD_CANISTER_ID'
 
 
 const idlFactory = ({ IDL }) => {

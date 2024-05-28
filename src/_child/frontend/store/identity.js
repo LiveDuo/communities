@@ -26,6 +26,7 @@ const IdentityProvider = ({children}) => {
   const { isOpen: isUpgradeModalOpen, onOpen: onUpgradeModalOpen, onClose: onUpgradeModalClose } = useDisclosure()
   const setupCustomDomainDisclosure= useDisclosure()
   const icWalletDisclosure = useDisclosure()
+  const topUpDisclosure = useDisclosure()
 
   const host = isLocal ? 'http://localhost:8000/' : undefined
   
@@ -132,7 +133,12 @@ const IdentityProvider = ({children}) => {
     clearAccount()
   }
 
-  const value = { identity, account, principal, updateIdentity, disconnect, setAccount, createActor, isWalletDetected, getWallet, connectWallet, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork, icWalletDisclosure, setWalletIcName, setupCustomDomainDisclosure }
+  const batchTransactions = (txs) => {
+		const options = { host }
+		return window.ic?.[walletIcName].batchTransactions(txs, options)
+	}
+
+  const value = { identity, account, principal, updateIdentity, disconnect, batchTransactions, setAccount, createActor, isWalletDetected, getWallet, connectWallet, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork, icWalletDisclosure, setWalletIcName, setupCustomDomainDisclosure, topUpDisclosure }
   
   return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
   
