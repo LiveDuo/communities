@@ -39,10 +39,6 @@ pub enum TransferError {
     GenericBatchError { error_code: u128, message: String },
 }
 
-pub type TransferResult = Result<u128, TransferError>;
-
-pub type Icrc7TokenMetadata = HashMap<String, MetadataValue>;
-
 #[derive(CandidType, Deserialize, Clone)]
 pub struct MintArg {
     pub from_subaccount: Option<Subaccount>,
@@ -196,10 +192,10 @@ pub fn icrc7_token_metadata(token_ids: Vec<u128>) -> Vec<Option<HashMap<String, 
         }
         token_ids.iter().map(|token_id| {
             let role_opt =  state.roles.get(&(*token_id as u64));
-            if let Some(_) = role_opt {
+            if role_opt.is_some() {
                 let mut metadata: HashMap<String, MetadataValue> = HashMap::new();
                 metadata.insert("Name".into(), MetadataValue::Text(format!("Token {token_id}")));
-                metadata.insert("Symbol".into(), MetadataValue::Text(format!("COM-{}", &ic_cdk::id().to_text()[0..5])));
+                metadata.insert("Symbol".into(), MetadataValue::Text(icrc7_symbol()));
                 Some(metadata)
             } else {
                 return None;
@@ -426,7 +422,7 @@ fn transfer_check(state: &RefMut<'_, State>, current_time: &u64, caller: &Accoun
     Ok(())
 }
 #[update]
-async fn icrc7_transfer(mut args: Vec<TransferArg>) -> Vec<Option<TransferResult>> {
+async fn icrc7_transfer(mut args: Vec<TransferArg>) -> Vec<Option<Result<u128, TransferError>>> {
     let caller = ic_cdk::caller();
 
     let (canister_status, ) = canister_status(CanisterIdRecord{canister_id: ic_cdk::id()}).await.unwrap();
@@ -615,7 +611,6 @@ async fn burn(mut args: Vec<BurnArg>) -> Vec<Option<Result<u128, BurnError>>> {
             state.roles.remove(&(arg.token_id as u64));
             let profile_id = state.indexes.active_principal.get(&caller).unwrap().clone();
             state.relations.profile_id_to_role_id.remove(profile_id, arg.token_id as u64);
-
 
             let caller = account_transformer(Account { owner: caller.clone(), subaccount: arg.from_subaccount });
             let tid = log_transaction(
