@@ -25,10 +25,9 @@ const TopUpModal = () => {
 					<InputGroup ml="20px" mb="20px" width="50%">
 						<InputLeftAddon>Amount</InputLeftAddon>
 						<Select placeholder='Select value' onChange={(e) => setAmount(e.target.value)}>
+							<option value={0.01}>0.01 ICP</option>
 							<option value={0.1}>0.1 ICP</option>
-							<option value={0.5}>0.5 ICP</option>
 							<option value={1}>1 ICP</option>
-							<option value={5}>5 ICP</option>
 						</Select>
 					</InputGroup>
 					<Text><b>Note:</b> ICP coins are converted to cycles and transferred to the community canister.
