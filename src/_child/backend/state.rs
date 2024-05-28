@@ -5,7 +5,6 @@ use std::cmp::Ordering;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, BTreeSet};
 
-use crate::icrc7::Icrc7Token;
 use crate::icrc3::Transaction;
 use crate::domain::Domain;
 
@@ -202,6 +201,10 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
             self.backward.remove(&y);
         }
     }
+    pub fn clear(&mut self) {
+        self.forward.clear();
+        self.backward.clear();
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, CandidType, Deserialize)]
@@ -270,7 +273,6 @@ pub struct State {
     pub parent: Option<Principal>,
     pub version: Option<String>,
     pub track: Option<String>,
-    pub tokens: BTreeMap<u128, Icrc7Token>,
     pub txn_log: BTreeMap<u128, Transaction>,
     pub uuid_count: u64,
     pub domain: Option<Domain>
