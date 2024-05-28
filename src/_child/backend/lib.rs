@@ -40,7 +40,6 @@ fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Op
     if let Some(admin) = admin_opt { 
         let admin_id = create_profile_by_principal(&admin);
         add_profile_role(admin_id, UserRole::Admin);
-        add_icrc7_token(&admin)
     }
 }
 
@@ -67,19 +66,16 @@ fn add_profile_role(profile_id: u64, role: UserRole) {
     })
 }
 
-fn add_icrc7_token(principal: &Principal) {
-    STATE.with(|s| {
-        let mut state = s.borrow_mut();
-        let token_id = uuid(&mut state) as u128;
-        let admin_account = default_account(&principal);
-        let minter_account = default_account(&ic_cdk::caller());
-        let token_name = format!("{}", token_id);
-        let token = Icrc7Token::new(token_id, token_name.to_owned(), None, None, admin_account);
-        state.tokens.insert(token_id, token);
-        let tx_type = TransactionType::Mint { tid: token_id, from: minter_account, to: admin_account, meta: MetadataValue::Text(token_name) };
-        log_transaction(&mut state, tx_type, ic_cdk::api::time(), None);
-    })
-}
+// fn add_icrc7_token(principal: &Principal) {
+//     STATE.with(|s| {
+//         let mut state = s.borrow_mut();
+//         let token_id = uuid(&mut state) as u128;
+//         let admin_account = default_account(&principal);
+//         let minter_account = default_account(&ic_cdk::caller());
+//         let tx_type = TransactionType::Mint { tid: token_id, from: minter_account, to: admin_account, meta: MetadataValue::Text(token_name) };
+//         log_transaction(&mut state, tx_type, ic_cdk::api::time(), None);
+//     })
+// }
 
 #[update]
 #[candid_method(update)]
