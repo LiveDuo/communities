@@ -201,6 +201,10 @@ impl<X: Ord + Clone, Y: Ord + Clone> Relation<X, Y> {
             self.backward.remove(&y);
         }
     }
+    pub fn clear(&mut self) {
+        self.forward.clear();
+        self.backward.clear();
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, CandidType, Deserialize)]

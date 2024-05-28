@@ -329,7 +329,7 @@ async fn mint(arg: MintArg) -> Result<u128, MintError> {
                 tid: role_id as u128,
                 from: caller_account,
                 to: arg.to,
-                meta: MetadataValue::Text(format!("Community {}", &ic_cdk::id().to_text()[0..5])),
+                meta: MetadataValue::Text(format!("Token {role_id}")),
             },
             ic_cdk::api::time(),
             None,
@@ -648,50 +648,65 @@ async fn burn(mut args: Vec<BurnArg>) -> Vec<Option<Result<u128, BurnError>>> {
 
 #[update]
 async fn reset_tokens() -> Result<(), String> {
-    // let caller = ic_cdk::caller();
-    // let (canister_status, )= canister_status(CanisterIdRecord { canister_id: ic_cdk::id() }).await.unwrap();
-    // if !canister_status.settings.controllers.iter().any(|c| c == &caller) {
-    //     return Err("Unauthorized".to_owned());
-    // }
+    let caller = ic_cdk::caller();
+    let (canister_status, )= canister_status(CanisterIdRecord { canister_id: ic_cdk::id() }).await.unwrap();
+    if !canister_status.settings.controllers.iter().any(|c| c == &caller) {
+        return Err("Unauthorized".to_owned());
+    }
 
-    // STATE.with(|s| {
-    //     let mut state = s.borrow_mut();
-    //     let caller_account = default_account(&caller);
-    //     let tokens= state.tokens.clone();
-    //     for (token_id, _) in tokens.iter() {
-    //         log_transaction(
-    //             &mut state,
-    //             TransactionType::Burn {
-    //                 tid: token_id.to_owned(),
-    //                 from: caller_account,
-    //                 to: burn_account(),
-    //             },
-    //             ic_cdk::api::time(),
-    //             None,
-    //         );
-    //     }
-    //     state.tokens.clear();
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let caller_account = default_account(&caller);
+        let roles = state.roles.clone();
+        for (token_id, _) in roles {
+            log_transaction(
+                &mut state,
+                TransactionType::Burn {
+                    tid: token_id.to_owned() as u128,
+                    from: caller_account,
+                    to: burn_account(),
+                },
+                ic_cdk::api::time(),
+                None,
+            );
+        }
 
-    //     for controller in canister_status.settings.controllers.iter() {
-    //         if controller == &ic_cdk::id() { continue; }
-    //         let token_id = uuid(&mut state) as u128;
-    //         let token_name = format!("{}", token_id);
-    //         let token = Icrc7Token::new(token_id, token_name.to_owned(), None, None, default_account(controller));
-    //         state.tokens.insert(token_id, token);
-    //         log_transaction(
-    //             &mut state,
-    //             TransactionType::Mint { 
-    //                 tid: token_id,
-    //                 from: caller_account,
-    //                 to: caller_account,
-    //                 meta: MetadataValue::Text(token_name) 
-    //             },
-    //             ic_cdk::api::time(),
-    //             None)
-    //         ;
-    //     }
+        state.roles.clear();
+        state.relations.profile_id_to_role_id.clear();
 
-    // });
+        for controller in canister_status.settings.controllers.iter() {
+            if controller == &ic_cdk::id() { continue; }
+
+            let profile_id = if let Some(profile_id) = state.indexes.active_principal.get(controller) {
+                profile_id.to_owned()
+            } else {
+                let profile_id  = uuid(&mut state);
+                let profile = Profile { name:"".to_owned(), description: "".to_owned(), authentication: Authentication::Ic, active_principal: controller.to_owned(), timestamp: ic_cdk::api::time(), last_login: ic_cdk::api::time() };
+                state.profiles.insert(profile_id.to_owned(), profile);
+                state.indexes.active_principal.insert(controller.to_owned(), profile_id);
+                state.indexes.profile.insert(AuthenticationWithAddress::Ic(IcParams { principal: controller.to_owned() }), profile_id);
+                profile_id
+            };
+
+            let role_id = uuid(&mut state);
+            state.roles.insert(role_id, Role { timestamp: ic_cdk::api::time(), role: UserRole::Admin });
+            state.relations.profile_id_to_role_id.insert(profile_id, role_id);
+
+            log_transaction(
+                &mut state,
+                TransactionType::Mint { 
+                    tid: role_id as u128,
+                    from: caller_account,
+                    to: caller_account,
+                    meta: MetadataValue::Text(format!("Token {role_id}")),
+                },
+                ic_cdk::api::time(),
+                None
+            )
+            ;
+        }
+
+    });
 
     Ok(())
 }
