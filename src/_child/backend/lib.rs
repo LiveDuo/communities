@@ -15,7 +15,6 @@ use ic_cdk::api::management_canister::main::CanisterStatusResponse;
 use ic_cdk::api::management_canister::provisional::CanisterIdRecord;
 use ic_cdk::{update, query, init, pre_upgrade, post_upgrade};
 
-use crate::icrc7::Icrc7Token;
 use crate::icrc3::{log_transaction, TransactionType};
 use icrc_ledger_types::icrc::generic_metadata_value::MetadataValue;
 use crate::state::{*, STATE};
@@ -1060,6 +1059,7 @@ fn candid_interface_compatibility() {
     use candid_parser::utils::{service_compatible, CandidSource};
     use crate::domain::Domain;
     use crate::icrc7::*;
+    use std::collections::HashMap;
     use icrc_ledger_types::icrc1::account::Account;
     use std::path::PathBuf;
     use ic_cdk::api::management_canister::http_request::TransformArgs;
