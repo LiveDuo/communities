@@ -3,7 +3,7 @@ const minimist = require('minimist')
 const { Actor } = require('@dfinity/agent')
 
 const { getCanisters, getAgent, getHost } = require('../_meta/shared/utils')
-const { getFiles, addItemToBatches, executeBatch } = require('../_meta/shared/assets')
+const { getFiles, addItemToBatches, executeStoreBatch } = require('../_meta/shared/assets')
 const { getIdentity } = require('../_meta/shared/identity')
 const { assetFactory } = require('../_meta/shared/idl')
 
@@ -28,6 +28,6 @@ const version = argv.version ?? '0.0.1'
 		addItemToBatches(batches, assetBuf, `/${asset}`)
 	}
 
-	await executeBatch(actor, batches)
+	await executeStoreBatch(actor, batches)
 
 })()
