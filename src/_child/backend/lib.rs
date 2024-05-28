@@ -38,7 +38,8 @@ fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Op
     
     if let Some(admin) = admin_opt { 
         let admin_id = create_profile_by_principal(&admin);
-        add_profile_role(admin_id, UserRole::Admin);
+        let role_id = add_profile_role(admin_id, UserRole::Admin);
+        add_icrc7_token(&admin, role_id);
     }
 }
 
@@ -55,26 +56,26 @@ fn create_profile_by_principal(principal: &Principal) -> u64 {
     })
 }
 
-fn add_profile_role(profile_id: u64, role: UserRole) {
+fn add_profile_role(profile_id: u64, role: UserRole) -> u64 {
     STATE.with(|s| {
         let mut state = s.borrow_mut();
         let role_id = uuid(&mut state);
         let role = Role{timestamp: ic_cdk::api::time(), role};
         state.roles.insert(role_id.to_owned(), role);
-        state.relations.profile_id_to_role_id.insert(profile_id, role_id)
+        state.relations.profile_id_to_role_id.insert(profile_id, role_id);
+        role_id
     })
 }
 
-// fn add_icrc7_token(principal: &Principal) {
-//     STATE.with(|s| {
-//         let mut state = s.borrow_mut();
-//         let token_id = uuid(&mut state) as u128;
-//         let admin_account = default_account(&principal);
-//         let minter_account = default_account(&ic_cdk::caller());
-//         let tx_type = TransactionType::Mint { tid: token_id, from: minter_account, to: admin_account, meta: MetadataValue::Text(token_name) };
-//         log_transaction(&mut state, tx_type, ic_cdk::api::time(), None);
-//     })
-// }
+fn add_icrc7_token(principal: &Principal, token_id: u64) {
+    STATE.with(|s| {
+        let mut state = s.borrow_mut();
+        let admin_account = default_account(&principal);
+        let minter_account = default_account(&ic_cdk::caller());
+        let tx_type = TransactionType::Mint { tid: token_id as u128, from: minter_account, to: admin_account, meta: MetadataValue::Text(format!("Token {token_id}")) };
+        log_transaction(&mut state, tx_type, ic_cdk::api::time(), None);
+    })
+}
 
 #[update]
 #[candid_method(update)]

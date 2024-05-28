@@ -1,6 +1,5 @@
 use candid::{CandidType, Principal};
-use ic_cdk::api::call;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use ic_cdk::{query, update};
 
 use icrc_ledger_types::icrc1::account::{Subaccount, Account};
