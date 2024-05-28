@@ -6,7 +6,7 @@ import { Select, Text, Button, Link, InputGroup, InputLeftAddon, useToast } from
 import { IdentityContext } from '../../store/identity'
 import { CHILD_CANISTER_ID } from '../../store/child'
 import { LedgerContext, ledgerCanisterId } from '../../store/ledger'
-import { cmcCanisterId, CmcContext } from '../../store/cmc'
+import { cmcCanisterId, CmcContext, } from '../../store/cmc'
 
 import { getAccountId } from '../../utils/account'
 import { Principal } from '@dfinity/principal'
@@ -22,6 +22,10 @@ const TopUpModal = () => {
 	const toast = useToast()
 
 	const topupCanister = async () => {
+		if (!ledgerCanisterId || !cmcCanisterId) {
+			toast({status:'error', description: 'Ledger or CMC canisters not deployed'})
+			return
+		}
 		const accountId = getAccountId(cmcCanisterId, CHILD_CANISTER_ID)
 		const transferTx = getTransferIcpTx({accountId, amount: BigInt(+amount * 10 **8), memo: MINT_MEMO}, async (blockIndex) => {	
 			await cmcActor.notify_top_up({ block_index: blockIndex, canister_id: Principal.fromText(CHILD_CANISTER_ID) })
