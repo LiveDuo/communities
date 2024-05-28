@@ -133,7 +133,12 @@ const IdentityProvider = ({children}) => {
     clearAccount()
   }
 
-  const value = { identity, account, principal, updateIdentity, disconnect, setAccount, createActor, isWalletDetected, getWallet, connectWallet, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork, icWalletDisclosure, setWalletIcName, setupCustomDomainDisclosure, topUpDisclosure }
+  const batchTransactions = (txs) => {
+		const options = { host }
+		return window.ic?.[walletIcName].batchTransactions(txs, options)
+	}
+
+  const value = { identity, account, principal, updateIdentity, disconnect, batchTransactions, setAccount, createActor, isWalletDetected, getWallet, connectWallet, isWalletModalOpen, onWalletModalOpen, onWalletModalClose, isUpgradeModalOpen, onUpgradeModalOpen, onUpgradeModalClose,  setSelectedNetwork, selectedNetwork, icWalletDisclosure, setWalletIcName, setupCustomDomainDisclosure, topUpDisclosure }
   
   return <IdentityContext.Provider value={value}>{children}</IdentityContext.Provider>
   

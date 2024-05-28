@@ -5,6 +5,8 @@ import { ChakraProvider } from '@chakra-ui/react'
 
 import { IdentityProvider } from './store/identity'
 import { ChildProvider } from './store/child'
+import { LedgerProvider } from './store/ledger'
+import { CmcProvider } from './store/cmc'
 
 import Layout from './components/layout'
 
@@ -18,6 +20,8 @@ const App = () => (
     <ChakraProvider>
       <IdentityProvider>
           <ChildProvider>
+          <LedgerProvider>
+          <CmcProvider>
             <BrowserRouter>
                 <Routes>
                   <Route exact path="/" element={<Layout><Home /></Layout>}/>
@@ -26,6 +30,8 @@ const App = () => (
                   <Route path="/admin" element={<Layout><Admin /></Layout>}/>
                 </Routes>
             </BrowserRouter>
+            </CmcProvider>
+            </LedgerProvider>
           </ChildProvider>
       </IdentityProvider>
     </ChakraProvider>
