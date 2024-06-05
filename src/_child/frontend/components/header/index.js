@@ -73,11 +73,11 @@ const Header = () => {
         !location.pathname.startsWith('/user') &&
         <Box ml="auto">
           <Link as={RouterLink} to={`/user/${account?.type.toLowerCase()}/${account?.address}`}>
-            <Button >
-              <Box h="16px" w="16px" mr="8px">
+            <Button>
+              <Box h="16px" w="16px" mr="12px">
                 <Jazzicon diameter={20} seed={getSeedFromAccount(account)} />
               </Box>
-              {capitalizeFirstLetter(addressToName(account.address))}
+              {addressToName(account.address)}
             </Button>
           </Link>
         </Box>}

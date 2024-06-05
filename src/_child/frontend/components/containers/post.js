@@ -186,7 +186,7 @@ const PostContainer = () => {
             <Flex mb="20px" padding="20px 60px" alignItems="center">
             <Jazzicon diameter={20} seed={getSeedFromAuthentication(post.authentication)} />
             <Link as={RouterLink} to={`/user/${getAuthenticationType(post.authentication).toLocaleLowerCase()}/${getAddress(post.authentication)}`}>
-              <Text ml="20px">{capitalizeFirstLetter(addressToName(getAddress(post.authentication)))}</Text>
+              <Text fontWeight={'bold'} ml="20px">{capitalizeFirstLetter(addressToName(getAddress(post.authentication)))}</Text>
             </Link>
           </Flex>
           <Box mb="40px" padding="20px 60px">
@@ -225,7 +225,7 @@ const PostContainer = () => {
                 <Flex flexDirection={'row'} alignItems={'center'} mb="6">
                   <Jazzicon diameter={20} seed={getSeedFromAuthentication(r?.authentication)} />
                   <Link as={RouterLink} to={`/user/${getAuthenticationType(r?.authentication).toLocaleLowerCase()}/${getAddress(r?.authentication)}`}>
-                    <Text ml="5px" fontWeight="bold">{capitalizeFirstLetter(addressToName(getAddress(r?.authentication)) || '')}</Text>
+                    <Text ml="10px" fontWeight="bold">{capitalizeFirstLetter(addressToName(getAddress(r?.authentication)) || '')}</Text>
                   </Link>
                   {!r.reply_id && <Spinner ml="10px" size={'xs'}/>}
                   <Text ml="auto">{timeSince(r?.timestamp)}</Text>

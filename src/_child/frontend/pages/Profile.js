@@ -1,6 +1,6 @@
 import { useEffect, useContext, useState, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { Box, Text, Badge, Link } from '@chakra-ui/react'
+import { Box, Text, Badge, Link, Heading } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
@@ -59,8 +59,8 @@ const Profile = () => {
         <Box mb="20px">
           <Jazzicon diameter={60} seed={account ? getSeedFromAccount({type: capitalizeFirstLetter(type), address: address}) : ''} />
         </Box>
-        <Box mb="20px">
-          {address && <Text fontWeight={'bold'} fontSize={'lg'}>{capitalizeFirstLetter(addressToName(address))}</Text>}
+        <Box mb="26px">
+          {address && <Heading size={'xl'}>{capitalizeFirstLetter(addressToName(address))}</Heading>}
         </Box>
         <Box mb="20px">
           <Box mr="8px" display="inline">

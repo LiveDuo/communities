@@ -26,7 +26,7 @@ const addressToName = (seed) => {
     const part2 = buffer.subarray(buffer.length / 2, buffer.length)
     const index2 = BigInt('0x' + part2.toString('hex')) % BigInt(animals.length)
     
-    return `${adjectives[index1]} ${animals[index2]}`
+    return `${capitalizeFirstLetter(adjectives[index1])} ${capitalizeFirstLetter(animals[index2])}`
 }
 export { addressToName }
 
