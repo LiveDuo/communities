@@ -5,7 +5,7 @@ import { useDisclosure } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
 import { timeSince } from '../../utils/time'
-import { addressShort, getAddress, getAuthenticationType, getSeedFromAuthentication, getAuthentication } from '../../utils/address'
+import { capitalizeFirstLetter, getAddress, getAuthenticationType, getSeedFromAuthentication, getAuthentication, addressToName } from '../../utils/address'
 import { getTempId } from '../../utils/random'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -32,6 +32,7 @@ const PostContainer = () => {
 	const [isLoading, setIsLoading] = useState(false)
 	const [removedLikeReply, setRemovedLikeReply] = useState()
 	const [post, setPost] = useState()
+	const [replyLikes, setReplyLikes] = useState([])
   
   const location = useLocation()
   const navigate = useNavigate()
@@ -185,7 +186,7 @@ const PostContainer = () => {
             <Flex mb="20px" padding="20px 60px" alignItems="center">
             <Jazzicon diameter={20} seed={getSeedFromAuthentication(post.authentication)} />
             <Link as={RouterLink} to={`/user/${getAuthenticationType(post.authentication).toLocaleLowerCase()}/${getAddress(post.authentication)}`}>
-              <Text ml="20px">{addressShort(getAddress(post.authentication))}</Text>
+              <Text ml="20px">{capitalizeFirstLetter(addressToName(getAddress(post.authentication)))}</Text>
             </Link>
           </Flex>
           <Box mb="40px" padding="20px 60px">
@@ -224,7 +225,7 @@ const PostContainer = () => {
                 <Flex flexDirection={'row'} alignItems={'center'} mb="6">
                   <Jazzicon diameter={20} seed={getSeedFromAuthentication(r?.authentication)} />
                   <Link as={RouterLink} to={`/user/${getAuthenticationType(r?.authentication).toLocaleLowerCase()}/${getAddress(r?.authentication)}`}>
-                    <Text ml="5px" fontWeight="bold">{addressShort(getAddress(r?.authentication) || '')}</Text>
+                    <Text ml="5px" fontWeight="bold">{capitalizeFirstLetter(addressToName(getAddress(r?.authentication)) || '')}</Text>
                   </Link>
                   {!r.reply_id && <Spinner ml="10px" size={'xs'}/>}
                   <Text ml="auto">{timeSince(r?.timestamp)}</Text>
@@ -244,8 +245,7 @@ const PostContainer = () => {
                         <Spinner size={'xs'} color={'gray.600'}/>
                       </Box>
                     }
-                    {r.likes.length > 0 && <Button onClick={onReplyLikeModalOpen} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link">{r.likes.length}</Button>}
-                    <LikesModal isOpen={isReplyLikeModalOpen} onClose={onReplyLikeModalClose} likes={r.likes} title={"Reply likes"}/>
+                    {r.likes.length > 0 && <Button onClick={()=>{setReplyLikes(r.likes);onReplyLikeModalOpen()}} _focus={{boxShadow: 'none'}} color={'gray.600'} minW="2" variant="link">{r.likes.length}</Button>}
                   </Flex>
                   {isAdmin &&
                     <>
@@ -277,6 +277,7 @@ const PostContainer = () => {
         </Box> :
         <Spinner/>}
         <LikesModal isOpen={isPostLikeModalOpen} onClose={onPostLikeModalClose} likes={post.likes} title={"Post likes"}/>
+        <LikesModal isOpen={isReplyLikeModalOpen} onClose={()=> {setReplyLikes([]);onReplyLikeModalClose()}} likes={replyLikes} title={"Reply likes"}/>
     </Box>
 }
 export default PostContainer

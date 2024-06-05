@@ -1,7 +1,10 @@
 import { Buffer } from 'buffer'
 import {Principal} from '@dfinity/principal'
+import adjectives from '../dictionaries/adjectives'
+import animals from '../dictionaries/animals'
 
 window.Buffer = Buffer
+/* global BigInt */
 
 const getAddress = (authentication) => {
     if(authentication.Evm) {
@@ -13,6 +16,19 @@ const getAddress = (authentication) => {
     }
 }
 export { getAddress }
+
+const addressToName = (seed) => {
+    const buffer = Buffer.from(seed)
+    
+    const part1 = buffer.subarray(0, buffer.length / 2)
+    const index1 = BigInt('0x' + part1.toString('hex')) % BigInt(adjectives.length)
+    
+    const part2 = buffer.subarray(buffer.length / 2, buffer.length)
+    const index2 = BigInt('0x' + part2.toString('hex')) % BigInt(animals.length)
+    
+    return `${adjectives[index1]} ${animals[index2]}`
+}
+export { addressToName }
 
 const getAuthenticationType = (authentication) => {
     if(authentication.Evm) {

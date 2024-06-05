@@ -5,7 +5,7 @@ import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
-import { capitalizeFirstLetter, getSeedFromAccount, getExplorerUrl, getAuthentication } from '../utils/address'
+import { capitalizeFirstLetter, getSeedFromAccount, getExplorerUrl, getAuthentication, addressToName } from '../utils/address'
 import PostsContainer from '../components/containers/postsList'
 import RepliesContainer from '../components/containers/repliesList'
 import { IdentityContext } from '../store/identity'
@@ -60,11 +60,14 @@ const Profile = () => {
           <Jazzicon diameter={60} seed={account ? getSeedFromAccount({type: capitalizeFirstLetter(type), address: address}) : ''} />
         </Box>
         <Box mb="20px">
+          {address && <Text fontWeight={'bold'} fontSize={'lg'}>{capitalizeFirstLetter(addressToName(address))}</Text>}
+        </Box>
+        <Box mb="20px">
           <Box mr="8px" display="inline">
             <Badge fontSize={'md'}>{type?.toUpperCase()}</Badge>
           </Box>
-          {type && address && <Link href={getExplorerUrl(getAuthentication(address, capitalizeFirstLetter(type)))} isExternal>
-          
+          {type && address &&
+          <Link href={getExplorerUrl(getAuthentication(address, capitalizeFirstLetter(type)))} isExternal>
             <Text display="inline" mb="20px">{address} <FontAwesomeIcon icon={faArrowUpRightFromSquare}/></Text>
           </Link>}
         </Box>

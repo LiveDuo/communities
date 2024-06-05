@@ -3,9 +3,9 @@ import { Text, Flex, Tooltip } from '@chakra-ui/react'
 import Jazzicon from 'react-jazzicon'
 
 import { timeSinceShort } from '../../utils/time'
-import { getAddress, addressShort, getExplorerUrl, getSeedFromAuthentication } from '../../utils/address'
+import { getAddress, addressToName, getAuthenticationType, getSeedFromAuthentication } from '../../utils/address'
 
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link as RouterLink } from 'react-router-dom'
 
 const PostsContainer = ({ posts }) => {
   
@@ -35,8 +35,8 @@ const PostsContainer = ({ posts }) => {
                   </Link>
                   {!p.post_id && <Spinner ml="10px" size={'xs'}/>}
                 </Flex>
-                <Tooltip label={addressShort(getAddress(p?.authentication))}>
-                  <Link href={getExplorerUrl(p.authentication)} isExternal>
+                <Tooltip label={addressToName(getAddress(p?.authentication))}>
+                  <Link as={RouterLink} to={`/user/${getAuthenticationType(p?.authentication).toLocaleLowerCase()}/${getAddress(p?.authentication)}`}>
                     <Box width="40px" height="20px" textAlign="center" _hover={{cursor: 'pointer', opacity: 0.7}}>
                       <Jazzicon diameter={20} seed={getSeedFromAuthentication(p?.authentication)} />
                     </Box>
