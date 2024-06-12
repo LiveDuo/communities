@@ -23,7 +23,6 @@ const UserCommunities = () => {
 		else if (state === 'Installing') return 'pink'
 		else if (state === 'Uploading') return 'blue'
 		else if (state === 'Authorizing') return 'cyan'
-		else if (state === 'Finalize') return 'teal'
 		else if (state === 'Ready') return 'purple'
 	}
 

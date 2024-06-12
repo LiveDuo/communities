@@ -57,13 +57,12 @@ async fn create_child() -> Result<Principal, String> {
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, ()>(canister_id, "authorize", (canister_id,)).await.unwrap();});
     set_canister_controllers(canister_id, caller).await.unwrap();
 
-    if LEDGER_CANISTER.is_some() && CMC_CANISTER.is_some() {
-        ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Finalize, )).await.unwrap().0.unwrap();});
-        mint_cycles(caller, canister_id, account_balance).await.unwrap();
-    }
-
     // mark as done
     ic_cdk::spawn(async move {ic_cdk::api::call::call::<_, (Result<(), String>,)>(id, "update_canister_state_callback", (canister_data_id, CanisterState::Ready,)).await.unwrap().0.unwrap();});
+
+    if LEDGER_CANISTER.is_some() && CMC_CANISTER.is_some() {
+        ic_cdk::spawn(async move {mint_cycles(caller, canister_id, account_balance).await.unwrap();});
+    }
     Ok(canister_id)
 }
 
