@@ -33,6 +33,9 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
 
     // mint cycles
     let (tokens, ) = balance_result;
+    if tokens.e8s == 0 {
+        return Err("Insufficient balance".to_owned());
+    }
     let transfer_args = TransferArgs {
         memo: Memo(MINT_MEMO),
         amount: Tokens { e8s: tokens.e8s - TRANSFER_FEE, },

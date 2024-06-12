@@ -66,6 +66,11 @@ type UpgradeWithTrack = record {
   description: text;
   upgrade_from : opt UpgradeFrom;
 };
+type Metadata = record {
+  ledger_canister: opt principal;
+  cmc_canister: opt principal;
+  default_track: text;
+};
 service : () -> {
   create_child : () -> (CreateChildResult);
   create_track : (text) -> (CreateTrackResult);
@@ -74,6 +79,7 @@ service : () -> {
   get_upgrade : (text, text) -> (opt UpgradeWithTrack) query;
   get_upgrades : () -> (vec UpgradeWithTrack) query;
   get_user_canisters : () -> (vec CanisterData) query;
+  get_metadata : () -> (Metadata) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   handle_interface: (text, text, vec nat8) -> (variant { Ok: vec nat8; Err : text }) query;
   remove_track : (text) -> (RemoveTrackResult);

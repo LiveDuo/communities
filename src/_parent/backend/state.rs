@@ -154,6 +154,13 @@ pub struct Track {
     pub timestamp: u64
 }
 
+#[derive(Clone, Debug, CandidType, Deserialize, Serialize)]
+pub struct Metadata {
+    pub ledger_canister: Option<Principal>,
+    pub  cmc_canister: Option<Principal>,
+    pub default_track: String,
+}
+
 #[derive(Default, CandidType, Clone, Deserialize, Debug)]
 pub struct Relation<X: Ord, Y: Ord> {
     pub forward: BTreeMap<X, BTreeMap<Y, ()>>,

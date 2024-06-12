@@ -386,6 +386,11 @@ async fn remove_upgrade(version: String, track: String) -> Result<(), String> {
     })
 }
 
+#[query]
+#[candid_method(query)]
+fn get_metadata() -> Metadata {
+    Metadata { ledger_canister: LEDGER_CANISTER, cmc_canister: CMC_CANISTER, default_track: DEFAULT_TRACK.to_owned() }
+}
 
 #[query]
 #[candid_method(query)]
