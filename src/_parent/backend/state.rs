@@ -106,7 +106,8 @@ pub enum CanisterState {
     Installing,
     Uploading,
     Authorizing,
-    Ready,
+    Finalize,
+    Ready
 }
 
 #[derive(CandidType, Deserialize, Clone)]

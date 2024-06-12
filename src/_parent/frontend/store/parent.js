@@ -17,7 +17,7 @@ const CREATE_CHILD_CYCLES = getBigIntAllowance(200, 12, 0.1)
 
 const idlParentFactory = ({ IDL }) => {
 
-	const canisterState = IDL.Variant({ Preparing: IDL.Null, Creating: IDL.Null, Installing: IDL.Null, Uploading: IDL.Null, Authorizing: IDL.Null, Ready: IDL.Null })
+	const canisterState = IDL.Variant({ Preparing: IDL.Null, Creating: IDL.Null, Installing: IDL.Null, Uploading: IDL.Null, Authorizing: IDL.Null, Finalize: IDL.Null, Ready: IDL.Null })
 	const canisterData = IDL.Record({ id: IDL.Opt(IDL.Principal), timestamp: IDL.Nat64, state: canisterState, })
 	const UpgradeFrom = IDL.Record({ version: IDL.Text, track: IDL.Text })
 	const Track = IDL.Record({ name: IDL.Text, timestamp: IDL.Nat64 })

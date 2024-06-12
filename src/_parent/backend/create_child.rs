@@ -17,14 +17,13 @@ pub const MAX_MESSAGE_SIZE: u32 = 2097152 - 20000;// 2mb max message size - 20kb
 pub static LEDGER_CANISTER: Option<Principal> = get_canister!("ledger");
 pub static CMC_CANISTER: Option<Principal> = get_canister!("cmc");
 
-pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<(), String> {
-
+pub async fn get_balance(caller: Principal, canister_id: Principal) -> Result<Tokens, String> {
     // get icp balance
     let account = AccountIdentifier::new(&canister_id, &principal_to_subaccount(&caller));
     let balance_result = ic_cdk::call::<_, (Tokens, )>(
-        LEDGER_CANISTER.unwrap(),
-        "account_balance",
-        (AccountBalanceArgs { account },),
+    LEDGER_CANISTER.unwrap(),
+    "account_balance",
+    (AccountBalanceArgs { account },),
     )
     .await
     .map_err(|(code, msg)|
@@ -36,9 +35,13 @@ pub async fn mint_cycles(caller: Principal, canister_id: Principal) -> Result<()
     if tokens.e8s == 0 {
         return Err("Insufficient balance".to_owned());
     }
+
+    Ok(tokens)
+}
+pub async fn mint_cycles(caller: Principal, canister_id: Principal, amount: Tokens) -> Result<(), String> {
     let transfer_args = TransferArgs {
         memo: Memo(MINT_MEMO),
-        amount: Tokens { e8s: tokens.e8s - TRANSFER_FEE, },
+        amount: Tokens { e8s: amount.e8s - TRANSFER_FEE, },
         fee: Tokens { e8s: TRANSFER_FEE },
         from_subaccount: Some(principal_to_subaccount(&caller)),
         to: AccountIdentifier::new(&CMC_CANISTER.unwrap(), &principal_to_subaccount(&canister_id)),
