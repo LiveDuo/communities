@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useContext, useEffect } from 'react'
 import { Box, Text, Spinner, Tag, Link, Button, Flex} from '@chakra-ui/react'
 import { TableContainer, Table, TableCaption, Thead, Tr, Th, Tbody, Td} from '@chakra-ui/react'
 
@@ -15,7 +15,7 @@ import { ParentContext } from '../store/parent'
 const UserCommunities = () => {
 
 	const { userPrincipal } = useContext(IdentityContext)
-	const { createUserCommunity, userCommunities } = useContext(ParentContext)
+	const { createUserCommunity, userCommunities, parentActor, getUserCommunities } = useContext(ParentContext)
 
 	const getStateColor = (state) => {
 		if (state === 'Preparing') return 'green'
@@ -25,6 +25,10 @@ const UserCommunities = () => {
 		else if (state === 'Authorizing') return 'cyan'
 		else if (state === 'Ready') return 'purple'
 	}
+	useEffect(() => {
+		if (parentActor)
+			getUserCommunities()
+	}, [parentActor, getUserCommunities])
 
 	return (
 		<Box  p="20px 0px">

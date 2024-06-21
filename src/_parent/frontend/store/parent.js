@@ -136,12 +136,7 @@ const ParentProvider = ({ children }) => {
 		return upgrades
 	},[parentActor])
 
-	useEffect(() => {
-		if (parentActor)
-			getUserCommunities()
-	}, [parentActor, getUserCommunities])
-
-	const value = { createUserCommunity, userCommunities, loading, setLoading, parentActor, getUpgrades }
+	const value = { createUserCommunity, userCommunities, loading, setLoading, parentActor, getUpgrades, getUserCommunities }
 
 	return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
 }
