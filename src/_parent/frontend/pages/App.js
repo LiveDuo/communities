@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useContext, useEffect } from 'react'
 import { Box} from '@chakra-ui/react'
 
 import { ParentContext } from '../store/parent'
@@ -13,7 +13,12 @@ import IcWalletModal from '../app/IcWalletModal'
 const App = () => {
 
 	const { walletConnected } = useContext(IdentityContext)
-	const { userCommunities } = useContext(ParentContext)
+	const { userCommunities, parentActor, getUserCommunities } = useContext(ParentContext)
+
+	useEffect(() => {
+		if (parentActor)
+			getUserCommunities()
+	}, [parentActor, getUserCommunities])
 
 	return (
 		<Box>
