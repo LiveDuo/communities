@@ -35,8 +35,8 @@ fn init(admin_opt: Option<Principal>, version_opt: Option<String>, track_opt: Op
         state.version = version_opt;
         state.track = track_opt;
 	});
-    
-    if let Some(admin) = admin_opt { 
+
+    if let Some(admin) = admin_opt {
         let admin_id = create_profile_by_principal(&admin);
         let role_id = add_profile_role(admin_id, UserRole::Admin);
         add_icrc7_token(&admin, role_id);
@@ -115,7 +115,7 @@ fn create_profile(auth: AuthenticationWith) -> Result<Profile, String> {
                 profile.active_principal = caller.clone();
                 state.indexes.active_principal.insert(caller.clone(), profile_id);
             }
-            
+
             profile.last_login = ic_cdk::api::time();
             state.profiles.insert(profile_id.clone(), profile.clone());
             return Ok(profile);
@@ -211,15 +211,15 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
         };
 
         let profile_id = state.indexes.active_principal.get(&caller).cloned().unwrap();
-        
+
         let reply_id = uuid(&mut state);
-        
+
         state.replies.insert(reply_id, reply.clone());
-        
+
         state.relations.profile_id_to_reply_id.insert(profile_id.clone(), reply_id.clone());
-        
+
         state.relations.reply_id_to_post_id.insert(reply_id.clone(), post_id.clone());
-        
+
         let profile = state.profiles.get(&profile_id).unwrap();
         let authentication = get_authentication_with_address(&profile.authentication, &profile.active_principal);
 
@@ -238,7 +238,7 @@ fn create_reply(post_id: u64, context: String) -> Result<ReplyResponse, String> 
 #[update]
 #[candid_method(update)]
 fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
-    
+
     let caller = ic_cdk::caller();
     let caller_roles_opt = get_user_roles(&caller);
     let caller_is_admin = match caller_roles_opt {
@@ -249,7 +249,7 @@ fn update_post_status(post_id: u64, status: PostStatus) -> Result<(), String> {
     if !caller_is_admin {
         return Err("Caller is not admin".to_owned())
     }
-    
+
     STATE.with(|s| {
         let mut state = s.borrow_mut();
 
@@ -276,14 +276,14 @@ fn update_reply_status(reply_id: u64, status: ReplyStatus) -> Result<(), String>
     if !caller_is_admin {
         return Err("Caller is not admin".to_owned())
     }
-    
+
     STATE.with(|s| {
         let mut state = s.borrow_mut();
         let reply_opt = state.replies.get_mut(&reply_id);
         if reply_opt.is_none() {
             return Err("Post does not exist".to_owned());
         }
-        let reply = reply_opt.unwrap(); 
+        let reply = reply_opt.unwrap();
         reply.status = status;
 
         Ok(())
@@ -297,7 +297,7 @@ fn get_profile_by_auth(authentication: AuthenticationWithAddress) -> Option<Prof
         let state = s.borrow();
         let profile_id_opt = state.indexes.profile.get(&authentication);
         if profile_id_opt == None {
-            return None; 
+            return None;
         }
         let profile_id = profile_id_opt.unwrap();
         let profile  = state.profiles.get(profile_id).unwrap();
@@ -349,9 +349,9 @@ fn like_post(post_id: u64) -> Result<u64, String> {
         state.relations.post_id_to_liked_post_id.insert(post_id, liked_post_id.to_owned());
         state.relations.profile_id_to_liked_post_id.insert(profile_id, liked_post_id.to_owned());
         state.indexes.has_liked_post.insert((profile_id.to_owned(), post_id.to_owned()), ());
- 
+
         let profile_ids = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().to_owned();
-        let (profile_id, _) = profile_ids.first_key_value().unwrap(); 
+        let (profile_id, _) = profile_ids.first_key_value().unwrap();
         let post_likes = state.relations.post_id_to_liked_post_id.forward.get(&post_id).unwrap().len() as u64;
         let most_liked_posts_opt = state.indexes.most_liked_posts.get(profile_id);
         if most_liked_posts_opt.is_none() {
@@ -397,7 +397,7 @@ fn unlike_post(liked_post_id: u64) -> Result<(), String> {
         let post_likes_opt = state.relations.post_id_to_liked_post_id.forward.get(post_id);
         let mut most_liked_posts = state.indexes.most_liked_posts.get(profile_id).unwrap().clone();
         most_liked_posts.retain(|a| {&a.get().0 != &post_id});
-        
+
         if post_likes_opt.is_some(){
             most_liked_posts.insert(ValueEntry::new(post_id.to_owned(), post_likes_opt.unwrap().len() as u64));
         }
@@ -426,7 +426,7 @@ fn like_reply(reply_id: u64) -> Result<u64, String> {
         if state.indexes.has_liked_reply.contains_key(&(profile_id.to_owned(), reply_id.to_owned())) {
             return Err("Liked already".to_owned());
         }
-        // insert like 
+        // insert like
         let liked_reply_id = uuid(&mut state);
         let liked_reply = LikedReply {timestamp: ic_cdk::api::time() };
         state.liked_replies.insert(liked_reply_id.to_owned(), liked_reply);
@@ -435,7 +435,7 @@ fn like_reply(reply_id: u64) -> Result<u64, String> {
         state.indexes.has_liked_reply.insert((profile_id.to_owned(), reply_id.to_owned()), ());
 
         let profile_ids = state.relations.profile_id_to_reply_id.backward.get(&reply_id).unwrap().to_owned();
-        let (profile_id, _) = profile_ids.first_key_value().unwrap(); 
+        let (profile_id, _) = profile_ids.first_key_value().unwrap();
         let reply_likes = state.relations.reply_id_to_liked_reply_id.forward.get(&reply_id).unwrap().len() as u64;
         let most_liked_replies_opt = state.indexes.most_liked_replies.get(profile_id);
         if most_liked_replies_opt.is_none() {
@@ -477,11 +477,11 @@ fn unlike_reply(liked_reply_id: u64) -> Result<(), String> {
         state.indexes.has_liked_reply.remove(&(profile_id.to_owned(), reply_id.to_owned()));
         state.liked_replies.remove(&liked_reply_id);
 
-        let reply_likes_otp = state.relations.reply_id_to_liked_reply_id.forward.get(reply_id);
+        let reply_likes_opt = state.relations.reply_id_to_liked_reply_id.forward.get(reply_id);
         let mut most_liked_replies = state.indexes.most_liked_replies.get(profile_id).unwrap().clone();
         most_liked_replies.retain(|a| {&a.get().0 != &reply_id});
-        if reply_likes_otp.is_some() {
-            most_liked_replies.insert(ValueEntry::new(reply_id.to_owned(), reply_likes_otp.unwrap().len() as u64));
+        if reply_likes_opt.is_some() {
+            most_liked_replies.insert(ValueEntry::new(reply_id.to_owned(), reply_likes_opt.unwrap().len() as u64));
         }
         state.indexes.most_liked_replies.insert(profile_id.to_owned(), most_liked_replies.to_owned());
         Ok(())
@@ -513,7 +513,7 @@ fn get_posts() -> Vec<PostSummary> {
                 let replies_count = if replies_opt == None {
                     0
                 } else {
-                    replies_opt.unwrap().iter().filter_map(|(reply_id, _)| { 
+                    replies_opt.unwrap().iter().filter_map(|(reply_id, _)| {
                         let reply = state.replies.get(reply_id).unwrap();
                         if reply.status == ReplyStatus::Hidden {
                             return None;
@@ -627,7 +627,7 @@ fn get_post(post_id: u64) -> Result<PostResponse, String> {
             }).collect::<Vec<_>>()
         };
 
-        
+
 
         let (profile_id, _) = state.relations.profile_id_to_post_id.backward.get(&post_id).unwrap().first_key_value().unwrap();
 
@@ -687,7 +687,7 @@ fn get_most_recent_posts(authentication: AuthenticationWithAddress) -> Result<Ve
             Some(caller_roles) => caller_roles.iter().any(|r| r == &UserRole::Admin),
             None => false
         };
-    
+
         let mut user_posts =  post_ids_opt
             .unwrap()
             .iter()
@@ -701,7 +701,7 @@ fn get_most_recent_posts(authentication: AuthenticationWithAddress) -> Result<Ve
                 let replies_count = if replies_opt == None {
                     0
                 } else {
-                    replies_opt.unwrap().iter().filter_map(|(reply_id, _)| { 
+                    replies_opt.unwrap().iter().filter_map(|(reply_id, _)| {
                         let reply = state.replies.get(reply_id).unwrap();
                         if reply.status == ReplyStatus::Hidden {
                             return None;
@@ -785,9 +785,9 @@ fn get_most_liked_posts(authentication: AuthenticationWithAddress) -> Result<Vec
             };
 
             let respond = PostResponse {
-                title: posts.title.to_owned(), 
-                post_id: post_id.to_owned(), 
-                description: posts.description.to_owned(), 
+                title: posts.title.to_owned(),
+                post_id: post_id.to_owned(),
+                description: posts.description.to_owned(),
                 timestamp: posts.timestamp.to_owned(),
                 status: posts.status.to_owned(),
                 replies: vec![],
@@ -811,7 +811,7 @@ fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<V
             return Err("Profile does not exists".to_owned());
         }
         let profile_id = profile_id_opt.unwrap();
-        
+
         let most_liked_replies_opt = state.indexes.most_liked_replies.get(profile_id);
         if most_liked_replies_opt.is_none() {
             return Ok(vec![]);
@@ -844,7 +844,7 @@ fn get_most_liked_replies(authentication: AuthenticationWithAddress) -> Result<V
                 timestamp: reply.timestamp.to_owned(),
                 authentication: authentication.to_owned(),
                 reply_id: reply_id.to_owned(),
-                likes: likes, 
+                likes: likes,
                 status: reply.status.to_owned()
             };
             let (post_id, _) = state.relations.reply_id_to_post_id.forward.get(reply_id).unwrap().first_key_value().unwrap();
@@ -956,7 +956,7 @@ fn get_metadata() -> Result<Metadata, String> {
 #[update]
 #[candid_method(update)]
 async fn canister_status() ->  CanisterStatusResponse {
-    let args = CanisterIdRecord { canister_id: ic_cdk::id() }; 
+    let args = CanisterIdRecord { canister_id: ic_cdk::id() };
     let (canister_status, ) = ic_cdk::call::<_,(CanisterStatusResponse,)>(Principal::management_canister(), "canister_status", (args,)).await.unwrap();
     canister_status
 }
@@ -1025,7 +1025,7 @@ async fn get_next_upgrades() -> Result<Vec<UpgradeWithTrack>, String> {
 #[update]
 #[candid_method(update)]
 async fn upgrade_canister(version: String, track: String) -> Result<(), String> {
-    
+
     let caller = ic_cdk::caller();
     authorize(&caller).await?;
 
@@ -1035,7 +1035,7 @@ async fn upgrade_canister(version: String, track: String) -> Result<(), String> 
     // get parent canister
     let parent_canister_opt = STATE.with(|s| { s.borrow().parent });
     if parent_canister_opt.is_none() { return Err("Parent canister not found".to_owned()); }
-    
+
     // get upgrade from parent
     let parent_canister = parent_canister_opt.unwrap();
     let payload = candid::Encode!(&(version, track)).unwrap();
