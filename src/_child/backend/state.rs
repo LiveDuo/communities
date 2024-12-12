@@ -213,7 +213,7 @@ pub struct ValueEntry<K, V>((K, V)); // index key, index value
 impl <K: Ord, V: Eq + PartialOrd + Ord>Ord for ValueEntry<K, V> {
     fn cmp(&self, other: &Self) -> Ordering {
         if self == other { Ordering::Equal } // same entry
-        else if self.0.1 == other.0.1 { Ordering::Greater } // diffent entry with same values
+        else if self.0.1 == other.0.1 { Ordering::Greater } // different entry with same values
         else { self.0.1.cmp(&other.0.1).reverse() } // different entry with different values
     }
 }
